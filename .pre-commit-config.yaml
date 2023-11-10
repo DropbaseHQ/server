@@ -1,0 +1,42 @@
+# source: https://pre-commit.com/
+# https://rednafi.github.io/digressions/python/2020/04/06/python-precommit.html
+
+repos:
+  # isort
+  # https://pycqa.github.io/isort/docs/configuration/pre-commit.html#seed-isort-config
+  - repo: https://github.com/pycqa/isort
+    rev: 5.12.0
+    hooks:
+      - id: isort
+        name: isort
+        args:
+          - "--profile=black"
+          - "--line-length=105"
+        exclude: ^lsp/
+
+  # black
+  - repo: https://github.com/psf/black
+    rev: 22.3.0
+    hooks:
+      - id: black
+        args: # arguments to configure black
+          - "--line-length=105"
+          # - --include='\.pyi?$']
+        exclude: (^lsp/)
+        language_version: python3.11
+
+  # flake8
+  - repo: https://github.com/PyCQA/flake8
+    rev: 6.1.0
+    hooks:
+      - id: flake8
+        exclude: (^lsp/)
+        args: # arguments to configure flake8
+          # making isort line length compatible with black
+          - "--max-line-length=105"
+          - "--max-complexity=18"
+          - "--select=B,C,E,F,W,T4,B9"
+          # these are errors that will be ignored by flake8
+          # check out their meaning here
+          # https://flake8.pycqa.org/en/latest/user/error-codes.html
+          - "--ignore=E203,E266,E501,W503,F403,F401,E402,F405,W605,C901"
