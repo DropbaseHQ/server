@@ -10,7 +10,7 @@ FROM alpine:3
 RUN apk add --no-cache gettext
 
 COPY --from=building /building/proxy/frp/bin/frpc /usr/bin/frpc
-COPY proxy-config.sh /proxy-config.sh
+COPY --from=building /building/proxy/proxy-config.sh /proxy-config.sh
 
 RUN chmod +x /proxy-config.sh
 
