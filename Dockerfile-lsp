@@ -1,0 +1,19 @@
+FROM python:3.11-slim-buster
+
+# Install basic packages
+RUN apt-get update -y && apt-get install libffi-dev libmagic1 git -y \
+    && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /project
+
+# Install python libraries
+COPY requirements.txt requirements.txt
+ADD lsp/. lsp/.
+
+RUN pip3 install --no-cache-dir --upgrade -r requirements.txt
+RUN pip install lsp/.
+RUN pip install 'python-lsp-server[websockets]'
+
+EXPOSE 9001
+
+CMD pylsp --ws --port 9001
