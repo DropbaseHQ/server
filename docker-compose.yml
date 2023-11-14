@@ -20,13 +20,13 @@ services:
       - "9001:9001"
     environment:
       - PYTHONUNBUFFERED=1
-  # proxy:
-  #   build:
-  #     context: .
-  #     dockerfile: Dockerfile-proxy
-  #   environment:
-  #     - FRPS_SERVER_PORT
-  #     - DROPBASE_WORKER_PORT
-  #     - DROPBASE_LSP_PORT
-  #     - DROPBASE_PROXY_SERVER_URL
-  #     - DROPBASE_PROXY_SERVER_TOKEN
+  proxy:
+    build:
+      context: .
+      dockerfile: Dockerfile-proxy
+    environment:
+      - FRPS_SERVER_PORT
+      - DROPBASE_WORKER_PORT
+      - DROPBASE_LSP_PORT
+      - DROPBASE_PROXY_SERVER_URL
+      - DROPBASE_PROXY_SERVER_TOKEN

@@ -3,7 +3,7 @@ FROM golang:1.21 AS building
 COPY . /building
 WORKDIR /building
 
-RUN make frpc
+RUN cd /building/proxy/frp && make frpc
 
 FROM alpine:3
 
