@@ -1,0 +1,17 @@
+# frpc.toml
+serverAddr = "{{ frpsServerAddr }}"
+serverPort = {{ frpsServerPort }}
+
+metadatas.token = "{{ authToken }}"
+
+[[proxies]]
+name = "{{ workerProxyName }}"
+type = "tcp"
+localIP = "127.0.0.1"
+localPort = {{ workerLocalPort }}
+
+[[proxies]]
+name = "{{ lspProxyName }}"
+type = "tcp"
+localIP = "127.0.0.1"
+localPort = {{ lspLocalPort }}
