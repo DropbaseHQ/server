@@ -1,12 +1,8 @@
-from dotenv import load_dotenv
-
 from server.controllers.python import run_df_function
 from server.controllers.query import get_table_sql, run_df_query
 from server.controllers.utils import get_state
 from server.schemas.files import DataFile
 from server.schemas.table import FilterSort
-
-load_dotenv()
 
 
 def _get_table_columns(app_name: str, page_name: str, file: DataFile, state):

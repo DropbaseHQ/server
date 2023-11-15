@@ -7,9 +7,6 @@ import tempfile
 from pathlib import Path
 import requests
 from jinja2 import Environment, FileSystemLoader
-from dotenv import load_dotenv
-
-load_dotenv()
 
 DROPBASE_PROXY_SERVER_URL = os.getenv("DROPBASE_PROXY_SERVER_URL") or "proxy.app.dropbase.io"
 DROPBASE_PROXY_SERVER_TOKEN = os.getenv("DROPBASE_PROXY_SERVER_TOKEN")
