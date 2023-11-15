@@ -1,0 +1,31 @@
+name: Workflow for Codecov
+
+on:
+  push:
+    branches:
+      - main
+      - dev
+    paths:
+      - server/**
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    name: Test python API
+    steps:
+      - uses: actions/checkout@v1
+      - name: Install requirements
+        run: |
+          pip install -r requirements.txt
+          pip install -r requirements-dev.txt
+          python3 -m pytest server/tests
+      - name: Run tests and collect coverage
+        run: python3 -m pytest --cov=server --cov-config=server/.coveragerc server/tests
+      - name: Upload coverage reports to Codecov
+        uses: codecov/codecov-action@v3
+        env:
+          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
