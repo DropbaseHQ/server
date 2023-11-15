@@ -2,9 +2,7 @@ import glob
 import importlib
 import os
 from uuid import UUID
-
-from fastapi import APIRouter, Response, Depends
-
+from fastapi import APIRouter, Response
 from server import requests as dropbase_router
 from server.constants import cwd
 from server.controllers.files import (
@@ -12,12 +10,8 @@ from server.controllers.files import (
     get_function_by_return_type,
     get_signature_models,
 )
-from server.controllers.utils import (
-    find_functions_by_signature,
-    rename_function_in_file,
-)
+from server.controllers.utils import find_functions_by_signature, rename_function_in_file
 from server.schemas.files import CreateFile, DeleteFile, RenameFile, UpdateFile
-from server.requests.dropbase_router import DropbaseRouter, get_dropbase_router
 
 router = APIRouter(
     prefix="/files", tags=["files"], responses={404: {"description": "Not found"}}
@@ -35,20 +29,14 @@ async def read_file(path: str):
 
 
 @router.post("/")
-async def create_file_req(
-    req: CreateFile,
-    resp: Response,
-    router: DropbaseRouter = Depends(get_dropbase_router),
-):
-    status_code, resonse = create_file(req, router)
+async def create_file_req(req: CreateFile, resp: Response):
+    status_code, resonse = create_file(req)
     resp.status_code = status_code
     return resonse
 
 
 @router.put("/rename")
-async def rename_file(
-    req: RenameFile, router: DropbaseRouter = Depends(get_dropbase_router)
-):
+async def rename_file(req: RenameFile):
     try:
         file_ext = ".sql" if req.type == "sql" else ".py"
         file_name = req.old_name + file_ext
@@ -66,7 +54,7 @@ async def rename_file(
             old_name=req.old_name,
             new_name=req.new_name,
         )
-        router.file.update_file_name(
+        dropbase_router.update_file_name(
             update_data={
                 "page_id": req.page_id,
                 "old_name": req.old_name,
@@ -79,11 +67,7 @@ async def rename_file(
 
 
 @router.put("/{file_id}")
-async def update_file_req(
-    file_id: UUID,
-    req: UpdateFile,
-    router: DropbaseRouter = Depends(get_dropbase_router),
-):
+async def update_file_req(file_id: UUID, req: UpdateFile):
     try:
         file_name = req.name + ".sql" if req.type == "sql" else req.name + ".py"
         file_path = (
@@ -93,7 +77,7 @@ async def update_file_req(
             f.write(req.sql)
 
         payload = {"name": req.name, "source": req.source}
-        resp = router.file.update_file(file_id=file_id, update_data=payload)
+        resp = dropbase_router.update_file(file_id=file_id, update_data=payload)
         return resp.json()
     except Exception as e:
         return {"status": "error", "message": str(e)}
@@ -101,7 +85,7 @@ async def update_file_req(
 
 @router.delete("/{file_id}/")
 def delete_file_req(file_id: str, req: DeleteFile, resp: Response):
-    resp = router.file.delete_file(file_id=file_id)
+    resp = dropbase_router.delete_file(file_id=file_id)
     if resp.status_code == 200:
         path = (
             cwd + f"/workspace/{req.app_name}/{req.page_name}/scripts/{req.file_name}"
