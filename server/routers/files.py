@@ -14,7 +14,6 @@ from server.controllers.files import (
 )
 from server.controllers.utils import (
     find_functions_by_signature,
-    get_function_by_name,
     rename_function_in_file,
 )
 from server.schemas.files import CreateFile, DeleteFile, RenameFile, UpdateFile
@@ -93,7 +92,6 @@ async def update_file_req(
         with open(file_path, "w") as f:
             f.write(req.sql)
 
-        # if req.file.get("id") != file_id or req.file.get("source") != req.source:
         payload = {"name": req.name, "source": req.source}
         resp = router.file.update_file(file_id=file_id, update_data=payload)
         return resp.json()

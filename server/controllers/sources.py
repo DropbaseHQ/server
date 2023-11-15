@@ -1,15 +1,14 @@
 import logging
-
-from dotenv import dotenv_values
+import os
 from pydantic import ValidationError
-
 from server.schemas.database import PgCreds
 
 db_type_to_class = {"postgres": PgCreds, "pg": PgCreds}
 
 
 def get_sources():
-    config = dotenv_values(".env")
+    # config = dotenv_values(".env")
+    config = {key: os.getenv(key) for key in os.environ.keys()}
     sources = {}
     for key, value in config.items():
         if key.startswith("SOURCE"):

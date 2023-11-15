@@ -8,6 +8,8 @@ services:
       - ./workspace:/project/workspace
     ports:
       - "9000:9000"
+    env_file:
+      - .env
     environment:
       - PYTHONUNBUFFERED=1
   dropbase-lsp:
