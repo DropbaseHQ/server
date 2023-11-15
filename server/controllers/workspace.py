@@ -3,22 +3,30 @@ import shutil
 
 from fastapi import HTTPException
 
-from server import requests as dropbase_router
 from server.controllers.utils import update_state_context_files
+from server.requests.dropbase_router import DropbaseRouter
 
 
 class AppCreator:
     def __init__(
-        self, app_object: dict, app_template: dict, r_path_to_workspace: str, dropbase_api_url: str
+        self,
+        app_object: dict,
+        app_template: dict,
+        r_path_to_workspace: str,
+        dropbase_api_url: str,
+        router: DropbaseRouter,
     ):
         self.app_object = app_object
         self.app_template = app_template
         self.r_path_to_workspace = r_path_to_workspace
         self.dropbase_api_url = dropbase_api_url
+        self.router = router
 
     def _create_default_workspace_files(self) -> str | None:
         try:
-            app_folder_path = os.path.join(self.r_path_to_workspace, self.app_object.get("name"))
+            app_folder_path = os.path.join(
+                self.r_path_to_workspace, self.app_object.get("name")
+            )
 
             # Create new app folder
             create_folder(path=app_folder_path)
@@ -46,7 +54,7 @@ class AppCreator:
     def _get_initial_state_and_context(self, token: str):
         try:
             page_name = self.app_template.get("page").get("name")
-            resp = dropbase_router.sync_components(
+            resp = self.router.misc.sync_components(
                 app_name=self.app_object.get("name"),
                 page_name=page_name,
                 token=token,
@@ -63,19 +71,25 @@ class AppCreator:
             )
         except Exception as e:
             print("Unable to update app state and context", e)
-            raise HTTPException(status_code=500, detail="Unable to update app state and context")
+            raise HTTPException(
+                status_code=500, detail="Unable to update app state and context"
+            )
 
     def _update_app_draft_status(self):
-        new_app_path = os.path.join(self.r_path_to_workspace, self.app_object.get("name"))
+        new_app_path = os.path.join(
+            self.r_path_to_workspace, self.app_object.get("name")
+        )
         app_id = self.app_object.get("id")
-        create_app_response = dropbase_router.update_app(app_id, {"is_draft": False})
+        create_app_response = self.router.app.update_app(app_id, {"is_draft": False})
         if create_app_response.status_code != 200:
             shutil.rmtree(new_app_path)
             raise HTTPException(status_code=500, detail="Unable to create app")
 
     def create(self):
         self._create_default_workspace_files()
-        self._get_initial_state_and_context(token=os.getenv("DROPBASE_PROXY_SERVER_TOKEN"))
+        self._get_initial_state_and_context(
+            token=os.getenv("DROPBASE_PROXY_SERVER_TOKEN")
+        )
         self._update_app_draft_status()
         return {"success": True, "app_id": self.app_object.get("id")}
 
