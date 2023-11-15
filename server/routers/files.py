@@ -2,9 +2,7 @@ import glob
 import importlib
 import os
 from uuid import UUID
-
 from fastapi import APIRouter, Response
-
 from server import requests as dropbase_router
 from server.constants import cwd
 from server.controllers.files import (
@@ -12,11 +10,7 @@ from server.controllers.files import (
     get_function_by_return_type,
     get_signature_models,
 )
-from server.controllers.utils import (
-    find_functions_by_signature,
-    get_function_by_name,
-    rename_function_in_file,
-)
+from server.controllers.utils import find_functions_by_signature, rename_function_in_file
 from server.schemas.files import CreateFile, DeleteFile, RenameFile, UpdateFile
 
 router = APIRouter(
@@ -82,7 +76,6 @@ async def update_file_req(file_id: UUID, req: UpdateFile):
         with open(file_path, "w") as f:
             f.write(req.sql)
 
-        # if req.file.get("id") != file_id or req.file.get("source") != req.source:
         payload = {"name": req.name, "source": req.source}
         resp = dropbase_router.update_file(file_id=file_id, update_data=payload)
         return resp.json()

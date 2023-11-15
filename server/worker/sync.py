@@ -1,15 +1,11 @@
 import os
 from typing import List
-
-from dotenv import load_dotenv
-
 from server import requests as dropbase_router
 from server.controllers.sync import _get_table_columns
 from server.controllers.utils import handle_state_context_updates
 from server.schemas.files import DataFile
 from server.schemas.table import TableBase
 
-load_dotenv()
 
 token = os.getenv("DROPBASE_PROXY_SERVER_TOKEN")
 
