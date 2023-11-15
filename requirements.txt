@@ -1,6 +1,6 @@
 fastapi==0.98.0
 sqlalchemy==1.4.46
-psycopg2-binary==2.9.5
+psycopg2-binary==2.9.9
 uvicorn==0.20.0
 python-dotenv==1.0.0
 requests==2.31.0
