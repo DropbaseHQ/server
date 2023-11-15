@@ -37,6 +37,7 @@ def create_app_req(
         app_template=req.app_template,
         r_path_to_workspace=r_path_to_workspace,
         dropbase_api_url=DROPBASE_API_URL,
+        router=router,
     )
     return app_creator.create()
 

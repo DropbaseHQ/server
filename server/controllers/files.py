@@ -8,6 +8,7 @@ from server import requests as dropbase_router
 from server.constants import cwd
 from server.controllers.utils import find_functions_by_signature
 from server.schemas.files import CreateFile
+from server.requests.dropbase_router import DropbaseRouter
 
 
 def get_function_by_return_type(app_name, page_name, return_type):
@@ -55,12 +56,14 @@ def get_signature_models(app_name, page_name, return_type) -> (list, any):
     return req_param_models, opt_param_models, return_model
 
 
-def create_file(req: CreateFile):
+def create_file(req: CreateFile, router: DropbaseRouter):
     try:
-        resp = dropbase_router.create_file(req.dict())
+        resp = router.file.create_file(req.dict())
         if resp.status_code == 200:
             file_name = req.name + ".sql" if req.type == "sql" else req.name + ".py"
-            path = cwd + f"/workspace/{req.app_name}/{req.page_name}/scripts/{file_name}"
+            path = (
+                cwd + f"/workspace/{req.app_name}/{req.page_name}/scripts/{file_name}"
+            )
             boilerplate_code = compose_boilerplate_code(req)
 
             with open(path, "a") as f:

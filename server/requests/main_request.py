@@ -6,6 +6,8 @@ base_url = DROPBASE_API_URL + "/worker/"
 
 
 class DropbaseSession(Session):
+    base_url = None
+
     def __init__(self, base_url=None):
         super().__init__()
         self.base_url = base_url
