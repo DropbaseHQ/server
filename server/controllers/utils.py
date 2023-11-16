@@ -1,4 +1,3 @@
-import copy
 import glob
 import importlib
 import inspect
@@ -27,33 +26,6 @@ def call_function(fn, **kwargs):
 
 def find_files(directory, extension="*.py"):
     return glob.glob(os.path.join(directory, extension))
-
-
-def find_functions_by_signature(
-    module, *, req_param_types=[], opt_param_types=[], return_type=pd.DataFrame
-):
-    # Find functions returning pandas DataFrame
-    pandas_functions = []
-    for name, obj in vars(module).items():
-        if inspect.isfunction(obj):
-            req_param_types_copy = copy.deepcopy(req_param_types)
-            opt_param_types_copy = copy.deepcopy(opt_param_types)
-            sig = inspect.signature(obj)
-            if sig.return_annotation != return_type:
-                continue
-            for param in sig.parameters.values():
-                if param.annotation in req_param_types_copy:
-                    req_param_types_copy.remove(param.annotation)
-                elif param.annotation in opt_param_types_copy:
-                    opt_param_types_copy.remove(param.annotation)
-                else:
-                    break
-            else:
-                if len(req_param_types_copy) == 0:
-                    # all req params are satisfied
-                    pandas_functions.append(name)
-
-    return pandas_functions
 
 
 def rename_function_in_file(
