@@ -60,7 +60,9 @@ def create_file(req: CreateFile):
         resp = dropbase_router.create_file(req.dict())
         if resp.status_code == 200:
             file_name = req.name + ".sql" if req.type == "sql" else req.name + ".py"
-            path = cwd + f"/workspace/{req.app_name}/{req.page_name}/scripts/{file_name}"
+            path = (
+                cwd + f"/workspace/{req.app_name}/{req.page_name}/scripts/{file_name}"
+            )
             boilerplate_code = compose_boilerplate_code(req)
 
             with open(path, "a") as f:
@@ -84,7 +86,14 @@ def {req.name}(state: State, context: Context) -> Context:
         return f"""from workspace.{req.app_name}.{req.page_name} import State
 import pandas as pd\n\n
 def {req.name}(state: State) -> pd.DataFrame:
-    df = pd.DataFrame()
+    data = {{
+        'CustomerID': [1, 2, 3, 4, 5],
+        'Name': ['Alice', 'Bob', 'Charlie', 'David', 'Eva'],
+        'Age': [25, 30, 28, 35, 22],
+        'Email': ['alice@email.com', 'bob@email.com', 'charlie@email.com', 'david@email.com', 'eva@email.com'],
+        'City': ['San Francisco', 'New York', 'Los Angeles', 'Toronto', 'Montreal']
+    }}
+    df = pd.DataFrame(data)
     return df
 """
     else:
