@@ -21,8 +21,6 @@ from server.worker.tables import update_table
 @router.put("/{table_id}/")
 def update_table_req(table_id: str, req: UpdateTableRequest):
     return update_table(table_id=table_id, req=req.dict())
-    args = {"table_id": table_id, "req": req.dict()}
-    return run_process_task("update_table", args)
 
 
 @router.post("/convert/")

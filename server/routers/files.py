@@ -38,30 +38,35 @@ async def create_file_req(req: CreateFile, resp: Response):
 @router.put("/rename")
 async def rename_file(req: RenameFile):
     try:
-        file_ext = ".sql" if req.type == "sql" else ".py"
-        file_name = req.old_name + file_ext
-        file_path = (
-            cwd + f"/workspace/{req.app_name}/{req.page_name}/scripts/{file_name}"
-        )
-        new_file_name = req.new_name + file_ext
-        new_path = (
-            cwd + f"/workspace/{req.app_name}/{req.page_name}/scripts/{new_file_name}"
-        )
-        if os.path.exists(file_path):
-            os.rename(file_path, new_path)
-        rename_function_in_file(
-            file_path=new_path,
-            old_name=req.old_name,
-            new_name=req.new_name,
-        )
-        dropbase_router.update_file_name(
+
+        resp = dropbase_router.update_file_name(
             update_data={
                 "page_id": req.page_id,
                 "old_name": req.old_name,
                 "new_name": req.new_name,
             }
         )
-        return {"status": "success"}
+        if resp.status_code == 200:
+
+            file_ext = ".sql" if req.type == "sql" else ".py"
+            file_name = req.old_name + file_ext
+            file_path = (
+                cwd + f"/workspace/{req.app_name}/{req.page_name}/scripts/{file_name}"
+            )
+            new_file_name = req.new_name + file_ext
+            new_path = (
+                cwd + f"/workspace/{req.app_name}/{req.page_name}/scripts/{new_file_name}"
+            )
+            if os.path.exists(file_path):
+                os.rename(file_path, new_path)
+            rename_function_in_file(
+                file_path=new_path,
+                old_name=req.old_name,
+                new_name=req.new_name,
+            )
+            return {"status": "success"}
+        else:
+            return {"status": "error", "message": resp.text}
     except Exception as e:
         return {"status": "error", "message": str(e)}
 
