@@ -10,10 +10,6 @@ def workspace_object_exists(
     if proc.returncode == 0:
         return True
     else:
-        print("STDOUT")
-        print(proc.stdout.decode())
-        print("STDERR")
-        print(proc.stderr.decode())
         return False
 
 

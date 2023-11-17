@@ -82,7 +82,6 @@ def clean_df(df: pd.DataFrame) -> pd.DataFrame:
 
 
 def handle_state_context_updates(response):
-    print('overwrigint this!!!')
     sys.path.insert(0, cwd)
     if response.status_code == 200:
         resp = response.json()

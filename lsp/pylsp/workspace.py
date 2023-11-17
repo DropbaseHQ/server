@@ -160,7 +160,6 @@ class Workspace:
             self.get_document(doc_uri).update_config(settings)
 
     def apply_edit(self, edit):
-        print("editting")
         return self._endpoint.request(self.M_APPLY_EDIT, {"edit": edit})
 
     def publish_diagnostics(self, doc_uri, diagnostics):

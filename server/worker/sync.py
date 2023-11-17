@@ -40,3 +40,8 @@ def sync_components(app_name: str, page_name: str):
     payload = {"app_name": app_name, "page_name": page_name, "token": token}
     resp = dropbase_router.sync_components(**payload)
     return handle_state_context_updates(resp)
+
+
+def sync_page(page_id: str):
+    resp = dropbase_router.sync_page(page_id=page_id)
+    return handle_state_context_updates(resp)
