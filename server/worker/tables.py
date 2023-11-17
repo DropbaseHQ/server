@@ -10,8 +10,7 @@ from server.schemas.workspace import ConvertTableRequest, UpdateTableRequest
 from server.worker.sync import get_table_columns
 
 
-def update_table(table_id: str, req: dict):
-    req: UpdateTableRequest = UpdateTableRequest(**req)
+def update_table(table_id: str, req: UpdateTableRequest):
     update_table_payload = {
         "name": req.name,
         "table_id": req.table.get("id"),
@@ -19,21 +18,26 @@ def update_table(table_id: str, req: dict):
         "page_id": req.page_id,
         "property": req.table.get("property"),
     }
-    # check if file has changed
-    table_columns = []
-    if req.file.get("id") == req.table.get("file_id"):
-        resp = dropbase_router.update_table(table_id=table_id, update_data=update_table_payload)
 
-    else:
-        if req.file.get("type") == "sql":
-            sql = get_table_sql(req.app_name, req.page_name, req.file.get("name"))
-            depends_on = get_sql_variables(user_sql=sql)
-            update_table_payload["depends_on"] = depends_on
-        table_columns = get_table_columns(req.app_name, req.page_name, req.table, req.file, req.state)
-        update_table_payload["table_columns"] = table_columns
-        resp = dropbase_router.update_table_columns(table_id=table_id, update_data=update_table_payload)
-    handle_state_context_updates(resp)
-    return resp.json()
+    # get depends on for sql files
+    if req.file.get("type") == "sql":
+        sql = get_table_sql(req.app_name, req.page_name, req.file.get("name"))
+        depends_on = get_sql_variables(user_sql=sql)
+        update_table_payload["depends_on"] = depends_on
+
+    return dropbase_router.update_table(table_id=table_id, update_data=update_table_payload)
+
+
+def update_table_columns(table_id: str, req: UpdateTableRequest):
+    try:
+        columns = get_table_columns(req.app_name, req.page_name, req.table, req.file, req.state)
+        payload = {"table_id": table_id, "columns": columns, "type": req.file.get('type')}
+        resp = dropbase_router.sync_columns(payload)
+        handle_state_context_updates(resp)
+        return "Columns updated successfully"
+    except Exception as e:
+        print(e)
+        return "Failed to update table columns"
 
 
 def convert_table(req: dict):
