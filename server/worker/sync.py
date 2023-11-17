@@ -18,8 +18,7 @@ def sync_table_columns(app_name: str, page_name: str, table: dict, file: dict, s
     payload = {
         "table_id": table.id,
         "columns": columns,
-        "type": file.type,
-        "token": token,
+        "type": file.type
     }
     resp = dropbase_router.sync_columns(payload)
     return handle_state_context_updates(resp)
