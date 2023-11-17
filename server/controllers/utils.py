@@ -1,4 +1,3 @@
-import glob
 import importlib
 import inspect
 import json
@@ -13,7 +12,6 @@ from sqlalchemy import create_engine
 
 from server.controllers.sources import db_type_to_class, get_sources
 from server.schemas.files import DataFile
-from server.schemas.table import QueryTablePayload
 
 cwd = os.getcwd()
 
@@ -22,10 +20,6 @@ def call_function(fn, **kwargs):
     sig = inspect.signature(fn)
     kwargs = {k: v for k, v in kwargs.items() if k in sig.parameters}
     return fn(**kwargs)
-
-
-def find_files(directory, extension="*.py"):
-    return glob.glob(os.path.join(directory, extension))
 
 
 def rename_function_in_file(
@@ -59,24 +53,11 @@ def get_function_by_name(app_name: str, page_name: str, function_name: str):
     return function
 
 
-def get_data_function_by_file(app_name: str, page_name: str, file: dict):
-    # TODO: refactor this to make it more robust. get_data on each file is prone to errors
-    file = DataFile(**file)
-    file_name = file.name.split(".")[0]
-    file_module = f"workspace.{app_name}.{page_name}.scripts.{file_name}"
+def get_data_function_by_file(app_name: str, page_name: str, file: DataFile):
+    file_module = f"workspace.{app_name}.{page_name}.scripts.{file.name}"
     scripts = importlib.import_module(file_module)
-    function = getattr(scripts, file_name)
+    function = getattr(scripts, file.name)
     return function
-
-
-def extract_state_context_from_payload(app_name: str, page_name: str, payload: str):
-    page_module = f"workspace.{app_name}.{page_name}"
-    page = importlib.import_module(page_module)
-    payload = json.loads(payload)
-    payload = QueryTablePayload(**payload)
-    Context = getattr(page, "Context")
-    State = getattr(page, "State")
-    return {"context": Context(**payload.context), "state": State(**payload.state)}
 
 
 def get_state_context(app_name: str, page_name: str, state: dict, context: dict):
@@ -101,6 +82,7 @@ def clean_df(df: pd.DataFrame) -> pd.DataFrame:
 
 
 def handle_state_context_updates(response):
+    print('overwrigint this!!!')
     sys.path.insert(0, cwd)
     if response.status_code == 200:
         resp = response.json()
