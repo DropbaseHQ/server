@@ -14,7 +14,7 @@ def create_table(page_id: str, name: str, property: str, depends_on: str):
 
 
 def update_table(table_id: str, update_data: dict):
-    return session.put(url=f"table/", json=update_data)
+    return session.put(url="table/", json=update_data)
 
 
 def update_table_property(table_id: str, update_data: dict):

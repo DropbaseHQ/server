@@ -1,4 +1,5 @@
 import importlib
+from typing import List
 from pydantic import BaseModel
 from server.controllers.python import run_df_function
 from server.controllers.query import get_table_sql, run_df_query
@@ -27,7 +28,7 @@ def _dict_from_pydantic_model(model):
     return data
 
 
-def _get_table_columns(app_name: str, page_name: str, file: DataFile, state):
+def _get_table_columns(app_name: str, page_name: str, file: DataFile, state) -> List[str]:
     filter_sort = FilterSort(filters=[], sorts=[])
     state = get_state(app_name, page_name, state)
 

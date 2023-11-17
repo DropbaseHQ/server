@@ -4,6 +4,7 @@ from server import requests as dropbase_router
 from server.controllers.utils import handle_state_context_updates
 from server.schemas.workspace import ConvertTableRequest, CreateTableRequest, UpdateTableRequest
 from server.worker.python_subprocess import run_process_task
+from server.worker.tables import update_table
 
 router = APIRouter(prefix="/tables", tags=["tables"], responses={404: {"description": "Not found"}})
 
@@ -13,9 +14,6 @@ def create_table_req(req: CreateTableRequest):
     resp = dropbase_router.create_table(**req.dict())
     handle_state_context_updates(resp)
     return resp.json()
-
-
-from server.worker.tables import update_table
 
 
 @router.put("/{table_id}/")

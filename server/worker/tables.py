@@ -11,6 +11,7 @@ from server.worker.sync import get_table_columns
 
 
 def update_table(table_id: str, req: dict):
+    # TODO: split into separate dropbase server calls
     req: UpdateTableRequest = UpdateTableRequest(**req)
     update_table_payload = {
         "name": req.name,
@@ -23,7 +24,6 @@ def update_table(table_id: str, req: dict):
     table_columns = []
     if req.file.get("id") == req.table.get("file_id"):
         resp = dropbase_router.update_table(table_id=table_id, update_data=update_table_payload)
-
     else:
         if req.file.get("type") == "sql":
             sql = get_table_sql(req.app_name, req.page_name, req.file.get("name"))
