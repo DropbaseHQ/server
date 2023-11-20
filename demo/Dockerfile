@@ -1,4 +1,4 @@
-FROM postgres:latest
+FROM postgres:alpine
 
 ARG POSTGRES_DB
 ARG POSTGRES_USER
