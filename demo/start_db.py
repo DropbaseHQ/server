@@ -8,7 +8,7 @@ import dotenv
 # Setup .env
 dotenv_path = dotenv.find_dotenv()
 
-dotenv.set_key(dotenv_path, "SOURCE_PG_DROPBASEDEMODB_HOST", "host.docker.internal")
+dotenv.set_key(dotenv_path, "SOURCE_PG_DROPBASEDEMODB_HOST", "dropbasedemodb")
 dotenv.set_key(dotenv_path, "SOURCE_PG_DROPBASEDEMODB_DATABASE", "dropbasedemodb")
 dotenv.set_key(dotenv_path, "SOURCE_PG_DROPBASEDEMODB_USERNAME", "demouser")
 dotenv.set_key(dotenv_path, "SOURCE_PG_DROPBASEDEMODB_PASSWORD", secrets.token_urlsafe(16))
@@ -36,5 +36,6 @@ subprocess.run([
     "docker", "run",
     "-p", "5432:5432",
     "--network", "dropbase_default",
+    "--hostname", "dropbasedemodb",
     "dropbasedemodb"
 ]).check_returncode()
