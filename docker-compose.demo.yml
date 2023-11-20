@@ -1,42 +1,23 @@
 version: "3.8"
 services:
   dropbase-server:
-    build:
-      context: .
-      dockerfile: Dockerfile-server
-    volumes:
-      - ./workspace:/project/workspace
-    ports:
-      - "9000:9000"
-    env_file:
-      - .env
+    extends:
+      file: docker-compose.yml
+      service: dropbase-server
     environment:
-      - PYTHONUNBUFFERED=1
       - SOURCE_PG_DROPBASEDEMODB_HOST=demo-db
       - SOURCE_PG_DROPBASEDEMODB_DATABASE=dropbasedemodb
       - SOURCE_PG_DROPBASEDEMODB_USERNAME=demouser
-      - SOURCE_PG_DROPBASEDEMODB_PASSWORD=Rz_QyzvQ57trv4nWIjUClQ
+      - SOURCE_PG_DROPBASEDEMODB_PASSWORD=demopass
       - SOURCE_PG_DROPBASEDEMODB_PORT=5432
   dropbase-lsp:
-    build:
-      context: .
-      dockerfile: Dockerfile-lsp
-    volumes:
-      - ./workspace:/project/workspace
-    ports:
-      - "9001:9001"
-    environment:
-      - PYTHONUNBUFFERED=1
+    extends:
+      file: docker-compose.yml
+      service: dropbase-lsp
   proxy:
-    build:
-      context: .
-      dockerfile: Dockerfile-proxy
-    environment:
-      - FRPS_SERVER_PORT
-      - DROPBASE_WORKER_PORT
-      - DROPBASE_LSP_PORT
-      - DROPBASE_PROXY_SERVER_URL
-      - DROPBASE_PROXY_SERVER_TOKEN
+    extends:
+      file: docker-compose.yml
+      service: proxy
   demo-db:
     build:
       context: demo
@@ -44,4 +25,4 @@ services:
     environment:
       - POSTGRES_DB=dropbasedemodb
       - POSTGRES_USER=demouser
-      - POSTGRES_PASSWORD=Rz_QyzvQ57trv4nWIjUClQ
+      - POSTGRES_PASSWORD=demopass
