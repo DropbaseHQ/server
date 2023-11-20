@@ -4,9 +4,9 @@ from server.tests.verify_object_exists import workspace_object_exists
 
 
 def test_create_widget_req(test_client, mocker):
+    # Arrange
     mocker.patch("server.requests.create_widget", create_widget_response)
 
-    # Arrange
     data = {
         "name": "test_widget",
         "property": {"name": "widget12", "description": ""},

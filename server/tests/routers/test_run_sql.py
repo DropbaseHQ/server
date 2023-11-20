@@ -2,10 +2,10 @@ from server.tests.mocks.worker.python_subprocess import mock_run_process_task
 
 
 def test_run_sql_string(test_client, mocker):
+    # Arrange
     run_process_task = mock_run_process_task(True, {"columns": ["?column?"], "data": [[1]]}, "")
     mocker.patch("server.routers.run_sql.run_process_task", side_effect=run_process_task)
 
-    # Arrange
     data = {
         "app_name": "dropbase_test_app",
         "page_name": "page1",

@@ -4,9 +4,9 @@ from server.tests.verify_folder_structure import is_valid_folder_structure
 
 
 def test_create_file_req(test_client, mocker):
+    # Arrange
     mocker.patch("server.requests.create_file", side_effect=create_file_response)
 
-    # Arrange
     data = {
         "app_name": "dropbase_test_app",
         "page_name": "page1",

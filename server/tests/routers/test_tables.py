@@ -4,9 +4,9 @@ from server.tests.verify_object_exists import workspace_object_exists
 
 
 def test_create_table_req(test_client, mocker):
+    # Arrange
     mocker.patch("server.requests.create_table", side_effect=create_table_response)
 
-    # Arrange
     data = {
         "name": "test_table",
         "property": {

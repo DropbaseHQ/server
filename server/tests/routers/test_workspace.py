@@ -9,11 +9,11 @@ from server.tests.verify_object_exists import workspace_object_exists
 
 def test_create_app_req(test_client, mocker):
     try:
+        # Arrange
         mocker.patch("server.requests.sync_components", side_effect=sync_components_response_empty)
         mocker.patch("server.requests.get_app", side_effect=get_app_response(name="test_create_app"))
         mocker.patch("server.requests.update_app", side_effect=update_app_response)
 
-        # Arrange
         data = {"app_id": "123456123456", "app_template": {"page": {"name": "page1"}}}
 
         # Act
