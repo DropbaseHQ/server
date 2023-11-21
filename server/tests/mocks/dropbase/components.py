@@ -159,9 +159,11 @@ def create_component_response(property: dict, widget_id: UUID, after: Optional[U
 
 
 def update_component_response(component_id: str, update_data: dict):
+    property = update_data["property"]
+    type = update_data["type"]
     return mock_response(
         json={
-            "app_name": "yahoo",
+            "app_name": "dropbase_test_app",
             "page_name": "page1",
             "state": {
                 "title": "State",
@@ -176,8 +178,11 @@ def update_component_response(component_id: str, update_data: dict):
                         "title": "Widget1State",
                         "type": "object",
                         "properties": {
-                            "input1": {"title": "Input1", "default": "str", "type": "string"},
-                            "select1": {"title": "Select1", "default": "str", "type": "string"},
+                            property["name"]: {
+                                "title": property["name"].capitalize(),
+                                "default": "str",
+                                "type": "string",
+                            }
                         },
                     },
                     "WidgetsState": {
@@ -186,14 +191,7 @@ def update_component_response(component_id: str, update_data: dict):
                         "properties": {"widget1": {"$ref": "#/definitions/Widget1State"}},
                         "required": ["widget1"],
                     },
-                    "Table1State": {
-                        "title": "Table1State",
-                        "type": "object",
-                        "properties": {
-                            "id": {"title": "Id", "default": "str", "type": "string"},
-                            "name": {"title": "Name", "default": "str", "type": "string"},
-                        },
-                    },
+                    "Table1State": {"title": "Table1State", "type": "object", "properties": {}},
                     "TablesState": {
                         "title": "TablesState",
                         "type": "object",
@@ -255,13 +253,11 @@ def update_component_response(component_id: str, update_data: dict):
                         "title": "Widget1ComponentsContext",
                         "type": "object",
                         "properties": {
-                            "text91": {"$ref": "#/definitions/TextContextProperty"},
-                            "text1": {"$ref": "#/definitions/TextContextProperty"},
-                            "input1": {"$ref": "#/definitions/InputContextProperty"},
-                            "select1": {"$ref": "#/definitions/SelectContextProperty"},
-                            "button1": {"$ref": "#/definitions/ButtonContextProperty"},
+                            property["name"]: {
+                                "$ref": f"#/definitions/{type.capitalize()}ContextProperty"
+                            }
                         },
-                        "required": ["text91", "text1", "input1", "select1", "button1"],
+                        "required": [property["name"]],
                     },
                     "Widget1Context": {
                         "title": "Widget1Context",
@@ -292,11 +288,8 @@ def update_component_response(component_id: str, update_data: dict):
                     "Table1ColumnsContext": {
                         "title": "Table1ColumnsContext",
                         "type": "object",
-                        "properties": {
-                            "id": {"$ref": "#/definitions/PgColumnContextProperty"},
-                            "name": {"$ref": "#/definitions/PgColumnContextProperty"},
-                        },
-                        "required": ["id", "name"],
+                        "properties": {},
+                        "required": [],
                     },
                     "Table1Context": {
                         "title": "Table1Context",
@@ -324,7 +317,7 @@ def update_component_response(component_id: str, update_data: dict):
 def delete_component_response(component_id: str):
     return mock_response(
         json={
-            "app_name": "yahoo",
+            "app_name": "dropbase_test_app",
             "page_name": "page1",
             "state": {
                 "title": "State",
@@ -338,10 +331,7 @@ def delete_component_response(component_id: str):
                     "Widget1State": {
                         "title": "Widget1State",
                         "type": "object",
-                        "properties": {
-                            "input1": {"title": "Input1", "default": "str", "type": "string"},
-                            "select1": {"title": "Select1", "default": "str", "type": "string"},
-                        },
+                        "properties": {},
                     },
                     "WidgetsState": {
                         "title": "WidgetsState",
@@ -349,14 +339,7 @@ def delete_component_response(component_id: str):
                         "properties": {"widget1": {"$ref": "#/definitions/Widget1State"}},
                         "required": ["widget1"],
                     },
-                    "Table1State": {
-                        "title": "Table1State",
-                        "type": "object",
-                        "properties": {
-                            "id": {"title": "Id", "default": "str", "type": "string"},
-                            "name": {"title": "Name", "default": "str", "type": "string"},
-                        },
-                    },
+                    "Table1State": {"title": "Table1State", "type": "object", "properties": {}},
                     "TablesState": {
                         "title": "TablesState",
                         "type": "object",
@@ -417,13 +400,8 @@ def delete_component_response(component_id: str):
                     "Widget1ComponentsContext": {
                         "title": "Widget1ComponentsContext",
                         "type": "object",
-                        "properties": {
-                            "text1": {"$ref": "#/definitions/TextContextProperty"},
-                            "input1": {"$ref": "#/definitions/InputContextProperty"},
-                            "select1": {"$ref": "#/definitions/SelectContextProperty"},
-                            "button1": {"$ref": "#/definitions/ButtonContextProperty"},
-                        },
-                        "required": ["text1", "input1", "select1", "button1"],
+                        "properties": {},
+                        "required": [],
                     },
                     "Widget1Context": {
                         "title": "Widget1Context",
@@ -454,11 +432,8 @@ def delete_component_response(component_id: str):
                     "Table1ColumnsContext": {
                         "title": "Table1ColumnsContext",
                         "type": "object",
-                        "properties": {
-                            "id": {"$ref": "#/definitions/PgColumnContextProperty"},
-                            "name": {"$ref": "#/definitions/PgColumnContextProperty"},
-                        },
-                        "required": ["id", "name"],
+                        "properties": {},
+                        "required": [],
                     },
                     "Table1Context": {
                         "title": "Table1Context",
