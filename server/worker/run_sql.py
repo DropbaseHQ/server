@@ -7,7 +7,7 @@ from server.schemas.files import DataFile
 from server.schemas.table import FilterSort
 
 
-def run_sql(app_name: str, page_name: str, file: DataFile, state: dict, filter_sort: FilterSort):
+def run_sql_query(app_name: str, page_name: str, file: DataFile, state: dict, filter_sort: FilterSort):
     sys.path.insert(0, cwd)
     state = get_state(app_name, page_name, state)
     file = DataFile(**file)

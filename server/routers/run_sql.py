@@ -7,5 +7,5 @@ router = APIRouter(prefix="/run_sql", tags=["run_sql"], responses={404: {"descri
 
 
 @router.post("/run_sql_string/")
-async def run_sql(req: RunSQLRequest):
+async def run_sql_from_string_req(req: RunSQLRequest):
     return run_process_task("run_sql_from_string", req.dict())
