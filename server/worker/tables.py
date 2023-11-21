@@ -1,12 +1,10 @@
-import json
-
 from server import requests as dropbase_router
 from server.controllers.query import get_column_names, get_sql_variables, get_table_sql, render_sql
 from server.controllers.source import get_db_schema
 from server.controllers.utils import connect_to_user_db, get_state, handle_state_context_updates
 from server.controllers.validation import validate_smart_cols
 from server.schemas.files import DataFile
-from server.schemas.workspace import ConvertTableRequest, UpdateTableRequest
+from server.schemas.workspace import UpdateTableRequest
 from server.worker.sync import get_table_columns
 
 
@@ -40,35 +38,38 @@ def update_table_columns(table_id: str, req: UpdateTableRequest):
         return "Failed to update table columns"
 
 
-def convert_table(req: dict):
-    req = ConvertTableRequest(**req)
-    state = json.loads(req.state)
-    state = get_state(req.app_name, req.page_name, state)
-    file = DataFile(**req.file)
+def convert_table(app_name: str, page_name: str, table: dict, file: dict, state: dict):
+    state = get_state(app_name, page_name, state)
+    file = DataFile(**file)
     # get db schema
     user_db_engine = connect_to_user_db(file.source)
     db_schema, gpt_schema = get_db_schema(user_db_engine)
     # get columns
-    # TODO: get user sql from file
-    user_sql = ""
+    user_sql = get_table_sql(app_name, page_name, file.name)
     column_names = get_column_names(user_db_engine, user_sql)
-    sql = render_sql(req.user_sql, state)
+    user_sql = render_sql(user_sql, state)
 
     # get columns from file
     get_smart_table_payload = {
-        "db_schema": db_schema,
-        "gpt_schema": gpt_schema,
+        "user_sql": user_sql,
         "column_names": column_names,
-        "sql": sql,
+        "gpt_schema": gpt_schema,
+        "db_schema": db_schema,
     }
-    resp = dropbase_router.get_smart_columns(**get_smart_table_payload)
+
+    resp = dropbase_router.get_smart_columns(get_smart_table_payload)
+    if resp.status_code != 200:
+        return resp.text
+
+    resp = resp.json()
     smart_cols = resp.get("columns")
 
     # validate columns
-    validated = validate_smart_cols(user_db_engine, smart_cols, req.user_sql)
+    validated = validate_smart_cols(user_db_engine, smart_cols, user_sql)
     smart_columns = {name: value for name, value in smart_cols.items() if name in validated}
 
     # get columns from file
-    update_smart_cols_payload = {"smart_columns": smart_columns, "table": req.table}
-    resp = dropbase_router.update_smart_columns(**update_smart_cols_payload)
+    update_smart_cols_payload = {"smart_columns": smart_columns, "table": table}
+    # print(update_smart_cols_payload)
+    resp = dropbase_router.update_smart_columns(update_smart_cols_payload)
     return handle_state_context_updates(resp)
