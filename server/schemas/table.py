@@ -15,8 +15,8 @@ class TableSort(BaseModel):
 
 
 class FilterSort(BaseModel):
-    filters: Optional[List[TableFilter]]
-    sorts: Optional[List[TableSort]]
+    filters: List[Optional[TableFilter]]
+    sorts: List[Optional[TableSort]]
 
 
 class TableBase(BaseModel):

@@ -69,20 +69,21 @@ def get_table_path(col_data: PgColumn) -> str:
     return f"{col_data.schema_name}.{col_data.table_name}"
 
 
-def get_primary_keys(smart_cols: dict[str, PgColumn]) -> dict[str, PgColumn]:
-    # Returns dict in the format {schema.table : pk_column_name}
+def get_primary_keys(smart_cols: dict[str, dict]) -> dict[str, dict]:
     primary_keys = {}
     for col_data in smart_cols.values():
+        col_data = PgColumn(**col_data)
         if col_data.primary_key:
             primary_keys[get_table_path(col_data)] = col_data.column_name
     return primary_keys
 
 
-def validate_smart_cols(user_db_engine, smart_cols: dict[str, PgColumn], user_sql: str) -> list[str]:
+def validate_smart_cols(user_db_engine, smart_cols: dict[str, dict], user_sql: str) -> list[str]:
     # Will delete any columns that are invalid from smart_cols
     primary_keys = get_primary_keys(smart_cols)
     validated = []
     for col_name, col_data in smart_cols.items():
+        col_data = PgColumn(**col_data)
         pk_name = primary_keys.get(get_table_path(col_data))
         if pk_name:
             validation_sql = get_fast_sql(
