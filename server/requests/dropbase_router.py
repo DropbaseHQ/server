@@ -23,9 +23,10 @@ class DropbaseRouter:
         self.session.cookies["access_token_cookie"] = self.cookies[
             "access_token_cookie"
         ]
-        self.session.cookies["refresh_token_cookie"] = self.cookies[
-            "refresh_token_cookie"
-        ]
+        if "refresh_token_cookie" in self.cookies:
+            self.session.cookies["refresh_token_cookie"] = self.cookies[
+                "refresh_token_cookie"
+            ]
         self._assign_sub_routers()
 
     def _assign_sub_routers(self):
@@ -44,19 +45,24 @@ class AccessCookies(BaseModel):
 
 def get_access_cookies(request: Request):
     access_token_header = request.cookies.get("access_token_cookie")
-    refresh_token_header = request.cookies.get("refresh_token_cookie")
+    if not access_token_header and "access-token" in request.headers:
+        access_token_header = request.headers.get("access-token")
+    # refresh_token_header = request.cookies.get("refresh_token_cookie")
     return AccessCookies(
         access_token_cookie=access_token_header,
-        refresh_token_cookie=refresh_token_header,
+        # refresh_token_cookie=refresh_token_header,
     )
 
 
 def get_dropbase_router(request: Request):
     access_token_header = request.cookies.get("access_token_cookie")
-    refresh_token_header = request.cookies.get("refresh_token_cookie")
+    if not access_token_header and "access-token" in request.headers:
+        access_token_header = request.headers.get("access-token")
+    if not access_token_header:
+        raise Exception("No access token found")
+    print("access_token_header", access_token_header)
     return DropbaseRouter(
         cookies={
             "access_token_cookie": access_token_header,
-            "refresh_token_cookie": refresh_token_header,
         }
     )
