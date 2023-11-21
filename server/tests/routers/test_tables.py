@@ -3,9 +3,9 @@ import pandas as pd
 from server.tests.mocks.dropbase.table import (
     create_table_response,
     update_table_response,
-    update_table_columns_response,
     delete_table_response
 )
+from server.tests.mocks.dropbase.sync import sync_columns_response
 from server.tests.verify_folder_structure import is_valid_folder_structure
 from server.tests.verify_object_exists import workspace_object_exists
 from server.tests.constants import WORKSPACE_PATH
@@ -42,7 +42,8 @@ def test_update_table_req_file_changed(test_client, mocker):
     assert workspace_object_exists("State", "tables.test_table")
     assert workspace_object_exists("Context", "tables.test_table")
 
-    mocker.patch("server.requests.update_table_columns", side_effect=update_table_columns_response)
+    mocker.patch("server.requests.update_table", side_effect=update_table_response)
+    mocker.patch("server.requests.sync_columns", side_effect=sync_columns_response)
     mocker.patch("server.controllers.query.query_db", side_effect=lambda *args: pd.DataFrame([[1]], columns=["?column?"]))
 
     scripts_path = WORKSPACE_PATH.joinpath("dropbase_test_app/page1/scripts/")
@@ -92,6 +93,7 @@ def test_update_table_req_file_changed(test_client, mocker):
 
 
 def test_update_table_req_file_unchanged(test_client, mocker):
+    # FIXME handle_state_context_updates is not called when file is unchanged
     # Arrange
     test_create_table_req(test_client, mocker)
     assert workspace_object_exists("State", "tables.test_table")

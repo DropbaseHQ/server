@@ -8,7 +8,7 @@ from server.tests.mocks.dropbase.app import (
     delete_app_response,
     rename_app_response,
 )
-from server.tests.mocks.dropbase.misc import sync_components_response_empty
+from server.tests.mocks.dropbase.sync import sync_components_response_empty
 from server.tests.verify_folder_structure import is_valid_folder_structure
 from server.tests.verify_object_exists import workspace_object_exists
 
