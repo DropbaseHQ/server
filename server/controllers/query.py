@@ -90,7 +90,6 @@ def apply_filters(table_sql: str, filters: List[TableFilter], sorts: List[TableS
     if pagination:
         filter_sql += f"LIMIT {pagination.page_size} OFFSET {pagination.page * pagination.page_size}"
 
-    print(filter_sql)
     return filter_sql, filter_values
 
 

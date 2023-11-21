@@ -1,10 +1,10 @@
 import sys
 
-from server.constants import cwd
+from server.constants import cwd, DATA_PREVIEW_SIZE
 from server.controllers.query import get_table_sql, run_df_query
 from server.controllers.utils import get_state
 from server.schemas.files import DataFile
-from server.schemas.table import FilterSort
+from server.schemas.table import FilterSort, TablePagination
 
 
 def run_sql_query(app_name: str, page_name: str, file: DataFile, state: dict, filter_sort: FilterSort):
@@ -20,6 +20,7 @@ def run_sql_query(app_name: str, page_name: str, file: DataFile, state: dict, fi
 def run_sql_from_string(app_name: str, page_name: str, file_content: str, source: str, state: dict):
     sys.path.insert(0, cwd)
     state = get_state(app_name, page_name, state)
-    filter_sort = FilterSort(filters=[], sorts=[])
+    pagination = TablePagination(page=0, page_size=DATA_PREVIEW_SIZE)
+    filter_sort = FilterSort(filters=[], sorts=[], pagination=pagination)
     df = run_df_query(file_content, source, state, filter_sort)
     return {"columns": df.columns.tolist(), "data": df.values.tolist()}
