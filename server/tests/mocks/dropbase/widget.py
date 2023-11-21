@@ -100,8 +100,7 @@ def create_widget_response(page_id: str, name: str, property: str, depends_on: s
                         "required": ["table1"],
                     },
                 },
-            },
-            "status": "success",
+            }
         })
 
 

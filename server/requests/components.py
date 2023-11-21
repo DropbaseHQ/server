@@ -1,14 +1,8 @@
-from typing import Optional
-from uuid import UUID
-
 from server.requests.main_request import session
 
 
-def create_component(property: dict, widget_id: UUID, after: Optional[UUID], type: str):
-    return session.post(
-        url="components/",
-        json={"property": property, "widget_id": widget_id, "after": after, "type": type},
-    )
+def create_component(payload: dict):
+    return session.post(url="components/", json=payload)
 
 
 def update_component(component_id: str, update_data: dict):

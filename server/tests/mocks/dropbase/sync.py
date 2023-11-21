@@ -137,8 +137,7 @@ def sync_columns_response(payload: dict):
                         "required": ["table1", "test_table_renamed"],
                     },
                 },
-            },
-            "status": "success",
+            }
         }
     )
 
@@ -231,8 +230,7 @@ def sync_components_response(app_name: str, page_name: str, token: str):
                         "required": ["table1"],
                     },
                 },
-            },
-            "status": "success",
+            }
         }
     )
 
@@ -321,7 +319,6 @@ def sync_components_response_empty(app_name: str, page_name: str, token: str):
                         "required": ["table1"],
                     },
                 },
-            },
-            "status": "success",
+            }
         }
     )

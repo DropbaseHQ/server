@@ -179,8 +179,7 @@ def create_table_response(page_id: str, name: str, property: str, depends_on: st
                         "required": ["table1", "test_table"],
                     },
                 },
-            },
-            "status": "success",
+            }
         }
     )
 
@@ -314,8 +313,7 @@ def update_table_response(table_id: str, update_data: dict):
                         "required": ["table1", "test_table_renamed"],
                     },
                 },
-            },
-            "status": "success",
+            }
         }
     )
 
@@ -494,7 +492,6 @@ def delete_table_response(*args, **kwargs):
                         "required": ["table1"],
                     },
                 },
-            },
-            "status": "success",
+            }
         }
     )
