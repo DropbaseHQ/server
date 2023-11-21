@@ -76,7 +76,7 @@ def update_file_response(
 
 
 def update_file_name_response(*args, **kwargs):
-    # not implemented
+    # does not need implementation
     return mock_response(json={})
 
 
@@ -86,8 +86,8 @@ def delete_file_response(file_id: str):
             "source": "replica",
             "id": file_id,
             "date": "2023-11-07T21:06:02.002553",
-            "type": "python",
+            "type": "sql",
             "page_id": "9f1dabeb-907b-4e59-8417-ba67a801ba0e",
-            "name": "bruh2",
+            "name": "test_delete",
         }
     )

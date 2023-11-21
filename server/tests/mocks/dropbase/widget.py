@@ -106,7 +106,9 @@ def create_widget_response(page_id: str, name: str, property: str, depends_on: s
 
 
 def update_widget_response(widget_id: str, update_data: dict):
-    return mock_response(json=None)
+    name = update_data["property"]["name"]
+    property = update_data["property"]
+    return create_widget_response(None, name, property)
 
 
 def delete_widget_response(widget_id: str):
