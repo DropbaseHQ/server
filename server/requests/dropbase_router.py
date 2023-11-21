@@ -5,6 +5,7 @@ from .file import FileRouter
 from .misc import MiscRouter
 from .table import TableRouter
 from .widget import WidgetRouter
+from .sync import SyncRouter
 
 from server.constants import DROPBASE_API_URL
 from fastapi import Request
@@ -36,6 +37,7 @@ class DropbaseRouter:
         self.widget = WidgetRouter(session=self.session)
         self.component = ComponentRouter(session=self.session)
         self.misc = MiscRouter(session=self.session)
+        self.sync = SyncRouter(session=self.session)
 
 
 class AccessCookies(BaseModel):
