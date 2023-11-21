@@ -7,10 +7,8 @@ import tempfile
 import traceback
 from io import StringIO
 from multiprocessing import Pipe, Process
-
 import astor
 import pandas as pd
-
 from server.constants import cwd
 from server.controllers.utils import clean_df, get_data_function_by_file
 
@@ -111,8 +109,8 @@ state = State(**payload.get('state'))\n\n
     return compose_run_python_str, last_expr
 
 
-def run_df_function(app_name, page_name, file, state, filter_sort):
-    function_name = get_data_function_by_file(app_name, page_name, file.dict())
+def run_df_function(app_name, page_name, file, state):
+    function_name = get_data_function_by_file(app_name, page_name, file)
     df = function_name(state)
     df = clean_df(df)
     return df

@@ -18,7 +18,7 @@ class TableRouter:
         )
 
     def update_table(self, table_id: str, update_data: dict):
-        return self.session.put(url=f"table/{table_id}", json=update_data)
+        return self.session.put(url="table/", json=update_data)
 
     def update_table_property(self, table_id: str, update_data: dict):
         return self.session.put(url=f"table/properpy/{table_id}", json=update_data)

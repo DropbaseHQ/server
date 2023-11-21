@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Response, Depends
 
 from server import requests as dropbase_router
 from server.controllers.utils import handle_state_context_updates
@@ -14,6 +14,7 @@ from server.requests.dropbase_router import (
     AccessCookies,
     get_access_cookies,
 )
+from server.worker.tables import update_table, update_table_columns
 
 router = APIRouter(
     prefix="/tables", tags=["tables"], responses={404: {"description": "Not found"}}
@@ -29,20 +30,22 @@ def create_table_req(
     return resp.json()
 
 
-from server.worker.tables import update_table
-
-
 @router.put("/{table_id}/")
 def update_table_req(
     table_id: str,
+    response: Response,
     req: UpdateTableRequest,
     access_cookies: AccessCookies = Depends(get_access_cookies),
 ):
-    return update_table(
-        table_id=table_id, req=req.dict(), access_cookies=access_cookies
-    )
-    args = {"table_id": table_id, "req": req.dict()}
-    return run_process_task("update_table", args)
+    # TODO: sync this flow with client
+    resp = update_table(table_id, req, access_cookies)
+    if resp.status_code != 200:
+        response.status_code = resp.status_code
+        return resp.text
+    if req.file.get("id") != req.table.get("file_id"):
+        resp = update_table_columns(table_id, req)
+        return resp
+    return resp.json()
 
 
 @router.post("/convert/")

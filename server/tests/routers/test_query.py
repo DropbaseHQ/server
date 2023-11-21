@@ -1,5 +1,11 @@
-def test_run_query(test_client):
+from server.tests.mocks.worker.python_subprocess import mock_run_process_task
+
+
+def test_run_query(test_client, mocker):
     # Arrange
+    run_process_task = mock_run_process_task(True, {"columns": ["?column?"], "data": [[1]]}, "")
+    mocker.patch("server.routers.query.run_process_task", side_effect=run_process_task)
+
     data = {
         "app_name": "dropbase_test_app",
         "page_name": "page1",

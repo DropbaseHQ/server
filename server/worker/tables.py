@@ -1,5 +1,3 @@
-import json
-
 from server import requests as dropbase_router
 from server.controllers.query import (
     get_column_names,
@@ -15,13 +13,12 @@ from server.controllers.utils import (
 )
 from server.controllers.validation import validate_smart_cols
 from server.schemas.files import DataFile
-from server.schemas.workspace import ConvertTableRequest, UpdateTableRequest
+from server.schemas.workspace import UpdateTableRequest
 from server.worker.sync import get_table_columns
 from server.requests.dropbase_router import DropbaseRouter, AccessCookies
 
 
-def update_table(table_id: str, req: dict, access_cookies: AccessCookies):
-    req: UpdateTableRequest = UpdateTableRequest(**req)
+def update_table(table_id: str, req: UpdateTableRequest, access_cookies: AccessCookies):
     update_table_payload = {
         "name": req.name,
         "table_id": req.table.get("id"),
@@ -30,61 +27,77 @@ def update_table(table_id: str, req: dict, access_cookies: AccessCookies):
         "property": req.table.get("property"),
     }
     router = DropbaseRouter(cookies=access_cookies)
-    # check if file has changed
-    table_columns = []
-    if req.file.get("id") == req.table.get("file_id"):
-        resp = router.table.update_table(
-            table_id=table_id, update_data=update_table_payload
-        )
+    # get depends on for sql files
+    if req.file.get("type") == "sql":
+        sql = get_table_sql(req.app_name, req.page_name, req.file.get("name"))
+        depends_on = get_sql_variables(user_sql=sql)
+        update_table_payload["depends_on"] = depends_on
 
-    else:
-        if req.file.get("type") == "sql":
-            sql = get_table_sql(req.app_name, req.page_name, req.file.get("name"))
-            depends_on = get_sql_variables(user_sql=sql)
-            update_table_payload["depends_on"] = depends_on
-        table_columns = get_table_columns(
+    return router.table.update_table(
+        table_id=table_id, update_data=update_table_payload
+    )
+
+
+def update_table_columns(table_id: str, req: UpdateTableRequest):
+    try:
+        columns = get_table_columns(
             req.app_name, req.page_name, req.table, req.file, req.state
         )
-        update_table_payload["table_columns"] = table_columns
-        resp = router.table.update_table_columns(
-            table_id=table_id, update_data=update_table_payload
-        )
-    handle_state_context_updates(resp)
-    return resp.json()
+        payload = {
+            "table_id": table_id,
+            "columns": columns,
+            "type": req.file.get("type"),
+        }
+        resp = dropbase_router.sync_columns(payload)
+        handle_state_context_updates(resp)
+        return "Columns updated successfully"
+    except Exception as e:
+        print(e)
+        return "Failed to update table columns"
 
 
-def convert_table(req: dict, access_cookies: AccessCookies):
-    req = ConvertTableRequest(**req)
-    router = DropbaseRouter(cookies=access_cookies)
-    state = json.loads(req.state)
-    state = get_state(req.app_name, req.page_name, state)
-    file = DataFile(**req.file)
+def convert_table(
+    app_name: str,
+    page_name: str,
+    table: dict,
+    file: dict,
+    state: dict,
+    access_cookies: AccessCookies,
+):
+    state = get_state(app_name, page_name, state)
+    file = DataFile(**file)
     # get db schema
     user_db_engine = connect_to_user_db(file.source)
     db_schema, gpt_schema = get_db_schema(user_db_engine)
     # get columns
-    # TODO: get user sql from file
-    user_sql = ""
+    user_sql = get_table_sql(app_name, page_name, file.name)
     column_names = get_column_names(user_db_engine, user_sql)
-    sql = render_sql(req.user_sql, state)
+    user_sql = render_sql(user_sql, state)
+    router = DropbaseRouter(cookies=access_cookies)
 
     # get columns from file
     get_smart_table_payload = {
-        "db_schema": db_schema,
-        "gpt_schema": gpt_schema,
+        "user_sql": user_sql,
         "column_names": column_names,
-        "sql": sql,
+        "gpt_schema": gpt_schema,
+        "db_schema": db_schema,
     }
-    resp = router.misc.get_smart_columns(**get_smart_table_payload)
+
+    resp = router.misc.get_smart_columns(get_smart_table_payload)
+    if resp.status_code != 200:
+        return resp.text
+
+    resp = resp.json()
     smart_cols = resp.get("columns")
 
     # validate columns
-    validated = validate_smart_cols(user_db_engine, smart_cols, req.user_sql)
+    validated = validate_smart_cols(user_db_engine, smart_cols, user_sql)
     smart_columns = {
         name: value for name, value in smart_cols.items() if name in validated
     }
 
     # get columns from file
-    update_smart_cols_payload = {"smart_columns": smart_columns, "table": req.misc}
-    resp = router.misc.update_smart_columns(**update_smart_cols_payload)
+    update_smart_cols_payload = {"smart_columns": smart_columns, "table": table}
+    # print(update_smart_cols_payload)
+    resp = router.misc.update_smart_columns(update_smart_cols_payload)
     return handle_state_context_updates(resp)

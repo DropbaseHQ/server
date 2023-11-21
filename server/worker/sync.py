@@ -1,5 +1,5 @@
 import os
-from typing import List
+from server import requests as dropbase_router
 from server.controllers.sync import _get_table_columns
 from server.controllers.utils import handle_state_context_updates
 from server.schemas.files import DataFile
@@ -13,25 +13,17 @@ token = os.getenv("DROPBASE_PROXY_SERVER_TOKEN")
 def sync_table_columns(
     app_name: str,
     page_name: str,
-    tables: List[dict],
+    table: dict,
+    file: dict,
     state,
     access_cookies: AccessCookies,
 ):
-    compiled_table_columns = {}
-    for items in tables:
-        table = TableBase(**items.get("table"))
-        file = DataFile(**items.get("file"))
-        table_columns = _get_table_columns(app_name, page_name, file, state=state)
-        compiled_table_columns[table.id] = table_columns
+    table = TableBase(**table)
+    file = DataFile(**file)
+    columns = _get_table_columns(app_name, page_name, file, state=state)
 
     # call dropbase server
-    payload = {
-        "app_name": app_name,
-        "page_name": page_name,
-        "table_columns": compiled_table_columns,
-        "table_type": file.type,
-        "token": token,
-    }
+    payload = {"table_id": table.id, "columns": columns, "type": file.type}
     router = DropbaseRouter(cookies=access_cookies)
     resp = router.misc.sync_table_columns(**payload)
     return handle_state_context_updates(resp)
@@ -47,4 +39,9 @@ def sync_components(app_name: str, page_name: str, access_cookies: AccessCookies
     payload = {"app_name": app_name, "page_name": page_name, "token": token}
     router = DropbaseRouter(cookies=access_cookies.dict())
     resp = router.misc.sync_table_columns(**payload)
+    return handle_state_context_updates(resp)
+
+
+def sync_page(page_id: str):
+    resp = dropbase_router.sync_page(page_id=page_id)
     return handle_state_context_updates(resp)

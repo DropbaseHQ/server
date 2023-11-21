@@ -1,23 +1,9 @@
-from uuid import UUID
-from typing import Optional
-
-
 class ComponentRouter:
     def __init__(self, session):
         self.session = session
 
-    def create_component(
-        self, property: dict, widget_id: UUID, after: Optional[UUID], type: str
-    ):
-        return self.session.post(
-            url=f"components/",
-            json={
-                "property": property,
-                "widget_id": widget_id,
-                "after": after,
-                "type": type,
-            },
-        )
+    def create_component(self, payload: dict):
+        return self.session.post(url="components/", json=payload)
 
     def update_component(self, component_id: str, update_data: dict):
         return self.session.put(url=f"components/{component_id}", json=update_data)

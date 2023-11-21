@@ -186,8 +186,138 @@ def create_table_response(page_id: str, name: str, property: str, depends_on: st
 
 
 def update_table_response(table_id: str, update_data: dict):
-    # FIXME dropbase api does not have update table endpoint as of Nov 7 2023
-    raise NotImplementedError
+    return mock_response(
+        json={
+            "app_name": "dropbase_test_app",
+            "page_name": "page1",
+            "state": {
+                "title": "State",
+                "type": "object",
+                "properties": {
+                    "widgets": {"$ref": "#/definitions/WidgetsState"},
+                    "tables": {"$ref": "#/definitions/TablesState"},
+                },
+                "required": ["widgets", "tables"],
+                "definitions": {
+                    "Widget1State": {
+                        "title": "Widget1State",
+                        "type": "object",
+                        "properties": {},
+                    },
+                    "WidgetsState": {
+                        "title": "WidgetsState",
+                        "type": "object",
+                        "properties": {"widget1": {"$ref": "#/definitions/Widget1State"}},
+                        "required": ["widget1"],
+                    },
+                    "Table1State": {
+                        "title": "Table1State",
+                        "type": "object",
+                        "properties": {},
+                    },
+                    "Test_table_renamedState": {
+                        "title": "Test_table_renamedState",
+                        "type": "object",
+                        "properties": {},
+                    },
+                    "TablesState": {
+                        "title": "TablesState",
+                        "type": "object",
+                        "properties": {
+                            "table1": {"$ref": "#/definitions/Table1State"},
+                            "test_table_renamed": {"$ref": "#/definitions/Test_table_renamedState"},
+                        },
+                        "required": ["table1", "test_table_renamed"],
+                    },
+                },
+            },
+            "context": {
+                "title": "Context",
+                "type": "object",
+                "properties": {
+                    "widgets": {"$ref": "#/definitions/WidgetsContext"},
+                    "tables": {"$ref": "#/definitions/TablesContext"},
+                },
+                "required": ["widgets", "tables"],
+                "definitions": {
+                    "Widget1ComponentsContext": {
+                        "title": "Widget1ComponentsContext",
+                        "type": "object",
+                        "properties": {},
+                        "required": [],
+                    },
+                    "Widget1Context": {
+                        "title": "Widget1Context",
+                        "type": "object",
+                        "properties": {
+                            "message": {"title": "Message", "type": "string"},
+                            "message_type": {"title": "Message Type", "type": "string"},
+                            "components": {"$ref": "#/definitions/Widget1ComponentsContext"},
+                        },
+                        "required": ["components"],
+                    },
+                    "WidgetsContext": {
+                        "title": "WidgetsContext",
+                        "type": "object",
+                        "properties": {"widget1": {"$ref": "#/definitions/Widget1Context"}},
+                        "required": ["widget1"],
+                    },
+                    "PgColumnContextProperty": {
+                        "title": "PgColumnContextProperty",
+                        "type": "object",
+                        "properties": {
+                            "editable": {"title": "Editable", "default": False, "type": "boolean"},
+                            "visible": {"title": "Visible", "default": True, "type": "boolean"},
+                            "message": {"title": "Message", "type": "string"},
+                            "message_type": {"title": "Message Type", "type": "string"},
+                        },
+                    },
+                    "Table1ColumnsContext": {
+                        "title": "Table1ColumnsContext",
+                        "type": "object",
+                        "properties": {},
+                        "required": [],
+                    },
+                    "Table1Context": {
+                        "title": "Table1Context",
+                        "type": "object",
+                        "properties": {
+                            "message": {"title": "Message", "type": "string"},
+                            "message_type": {"title": "Message Type", "type": "string"},
+                            "columns": {"$ref": "#/definitions/Table1ColumnsContext"},
+                        },
+                        "required": ["columns"],
+                    },
+                    "Test_table_renamedColumnsContext": {
+                        "title": "Test_table_renamedColumnsContext",
+                        "type": "object",
+                        "properties": {},
+                        "required": [],
+                    },
+                    "Test_table_renamedContext": {
+                        "title": "Test_table_renamedContext",
+                        "type": "object",
+                        "properties": {
+                            "message": {"title": "Message", "type": "string"},
+                            "message_type": {"title": "Message Type", "type": "string"},
+                            "columns": {"$ref": "#/definitions/Test_table_renamedColumnsContext"},
+                        },
+                        "required": ["columns"],
+                    },
+                    "TablesContext": {
+                        "title": "TablesContext",
+                        "type": "object",
+                        "properties": {
+                            "table1": {"$ref": "#/definitions/Table1Context"},
+                            "test_table_renamed": {"$ref": "#/definitions/Test_table_renamedContext"},
+                        },
+                        "required": ["table1", "test_table_renamed"],
+                    },
+                },
+            },
+            "status": "success",
+        }
+    )
 
 
 def update_table_property_response(table_id: str, update_data: dict, depends_on=None):
@@ -207,7 +337,142 @@ def update_table_property_response(table_id: str, update_data: dict, depends_on=
 def update_table_columns_response(table_id: str, update_data: dict):
     return mock_response(
         json={
-            "app_name": "yahoo",
+            "app_name": "dropbase_test_app",
+            "page_name": "page1",
+            "state": {
+                "title": "State",
+                "type": "object",
+                "properties": {
+                    "widgets": {"$ref": "#/definitions/WidgetsState"},
+                    "tables": {"$ref": "#/definitions/TablesState"},
+                },
+                "required": ["widgets", "tables"],
+                "definitions": {
+                    "Widget1State": {
+                        "title": "Widget1State",
+                        "type": "object",
+                        "properties": {},
+                    },
+                    "WidgetsState": {
+                        "title": "WidgetsState",
+                        "type": "object",
+                        "properties": {"widget1": {"$ref": "#/definitions/Widget1State"}},
+                        "required": ["widget1"],
+                    },
+                    "Table1State": {
+                        "title": "Table1State",
+                        "type": "object",
+                        "properties": {},
+                    },
+                    "Test_table_renamedState": {
+                        "title": "Test_table_renamedState",
+                        "type": "object",
+                        "properties": {},
+                    },
+                    "TablesState": {
+                        "title": "TablesState",
+                        "type": "object",
+                        "properties": {
+                            "table1": {"$ref": "#/definitions/Table1State"},
+                            "test_table_renamed": {"$ref": "#/definitions/Test_table_renamedState"},
+                        },
+                        "required": ["table1", "test_table_renamed"],
+                    },
+                },
+            },
+            "context": {
+                "title": "Context",
+                "type": "object",
+                "properties": {
+                    "widgets": {"$ref": "#/definitions/WidgetsContext"},
+                    "tables": {"$ref": "#/definitions/TablesContext"},
+                },
+                "required": ["widgets", "tables"],
+                "definitions": {
+                    "Widget1ComponentsContext": {
+                        "title": "Widget1ComponentsContext",
+                        "type": "object",
+                        "properties": {},
+                        "required": [],
+                    },
+                    "Widget1Context": {
+                        "title": "Widget1Context",
+                        "type": "object",
+                        "properties": {
+                            "message": {"title": "Message", "type": "string"},
+                            "message_type": {"title": "Message Type", "type": "string"},
+                            "components": {"$ref": "#/definitions/Widget1ComponentsContext"},
+                        },
+                        "required": ["components"],
+                    },
+                    "WidgetsContext": {
+                        "title": "WidgetsContext",
+                        "type": "object",
+                        "properties": {"widget1": {"$ref": "#/definitions/Widget1Context"}},
+                        "required": ["widget1"],
+                    },
+                    "PgColumnContextProperty": {
+                        "title": "PgColumnContextProperty",
+                        "type": "object",
+                        "properties": {
+                            "editable": {"title": "Editable", "default": False, "type": "boolean"},
+                            "visible": {"title": "Visible", "default": True, "type": "boolean"},
+                            "message": {"title": "Message", "type": "string"},
+                            "message_type": {"title": "Message Type", "type": "string"},
+                        },
+                    },
+                    "Table1ColumnsContext": {
+                        "title": "Table1ColumnsContext",
+                        "type": "object",
+                        "properties": {},
+                        "required": [],
+                    },
+                    "Table1Context": {
+                        "title": "Table1Context",
+                        "type": "object",
+                        "properties": {
+                            "message": {"title": "Message", "type": "string"},
+                            "message_type": {"title": "Message Type", "type": "string"},
+                            "columns": {"$ref": "#/definitions/Table1ColumnsContext"},
+                        },
+                        "required": ["columns"],
+                    },
+                    "Test_table_renamedColumnsContext": {
+                        "title": "Test_table_renamedColumnsContext",
+                        "type": "object",
+                        "properties": {},
+                        "required": [],
+                    },
+                    "Test_table_renamedContext": {
+                        "title": "Test_table_renamedContext",
+                        "type": "object",
+                        "properties": {
+                            "message": {"title": "Message", "type": "string"},
+                            "message_type": {"title": "Message Type", "type": "string"},
+                            "columns": {"$ref": "#/definitions/Test_table_renamedColumnsContext"},
+                        },
+                        "required": ["columns"],
+                    },
+                    "TablesContext": {
+                        "title": "TablesContext",
+                        "type": "object",
+                        "properties": {
+                            "table1": {"$ref": "#/definitions/Table1Context"},
+                            "test_table_renamed": {"$ref": "#/definitions/Test_table_renamedContext"},
+                        },
+                        "required": ["table1", "test_table_renamed"],
+                    },
+                },
+            },
+            "status": "success",
+        }
+    )
+
+
+def delete_table_response(*args, **kwargs):
+    return mock_response(
+        json={
+            "app_name": "dropbase_test_app",
             "page_name": "page1",
             "state": {
                 "title": "State",
@@ -240,22 +505,13 @@ def update_table_columns_response(table_id: str, update_data: dict):
                             "name": {"title": "Name", "default": "str", "type": "string"},
                         },
                     },
-                    "BruhState": {
-                        "title": "BruhState",
-                        "type": "object",
-                        "properties": {
-                            "test": {"title": "Test", "default": "str", "type": "string"},
-                            "bruh": {"title": "Bruh", "default": "str", "type": "string"},
-                        },
-                    },
                     "TablesState": {
                         "title": "TablesState",
                         "type": "object",
                         "properties": {
                             "table1": {"$ref": "#/definitions/Table1State"},
-                            "bruh": {"$ref": "#/definitions/BruhState"},
                         },
-                        "required": ["table1", "bruh"],
+                        "required": ["table1"],
                     },
                 },
             },
@@ -364,41 +620,16 @@ def update_table_columns_response(table_id: str, update_data: dict):
                         },
                         "required": ["columns"],
                     },
-                    "BruhColumnsContext": {
-                        "title": "BruhColumnsContext",
-                        "type": "object",
-                        "properties": {
-                            "test": {"$ref": "#/definitions/PgColumnContextProperty"},
-                            "bruh": {"$ref": "#/definitions/PgColumnContextProperty"},
-                        },
-                        "required": ["test", "bruh"],
-                    },
-                    "BruhContext": {
-                        "title": "BruhContext",
-                        "type": "object",
-                        "properties": {
-                            "message": {"title": "Message", "type": "string"},
-                            "message_type": {"title": "Message Type", "type": "string"},
-                            "columns": {"$ref": "#/definitions/BruhColumnsContext"},
-                        },
-                        "required": ["columns"],
-                    },
                     "TablesContext": {
                         "title": "TablesContext",
                         "type": "object",
                         "properties": {
                             "table1": {"$ref": "#/definitions/Table1Context"},
-                            "bruh": {"$ref": "#/definitions/BruhContext"},
                         },
-                        "required": ["table1", "bruh"],
+                        "required": ["table1"],
                     },
                 },
             },
             "status": "success",
         }
     )
-
-
-def delete_table_response(*args, **kwargs):
-    # not implemented
-    return mock_response(json={})

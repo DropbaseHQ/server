@@ -1,7 +1,10 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Response, Depends
 
 from server import requests as dropbase_router
-from server.controllers.utils import handle_state_context_updates
+from server.controllers.utils import (
+    handle_state_context_updates,
+    update_state_context_files,
+)
 from server.schemas.components import CreateComponent, UpdateComponent
 from server.requests.dropbase_router import DropbaseRouter, get_dropbase_router
 
@@ -14,11 +17,19 @@ router = APIRouter(
 
 @router.post("/")
 def create_component_req(
-    req: CreateComponent, router: DropbaseRouter = Depends(get_dropbase_router)
+    req: CreateComponent,
+    response: Response,
+    router: DropbaseRouter = Depends(get_dropbase_router),
 ):
-    resp = router.component.create_component(**req.dict())
-    handle_state_context_updates(resp)
-    return resp.json()
+    resp = router.component.create_component(req.dict())
+    if resp.status_code != 200:
+        response.status_code = resp.status_code
+        return resp.text
+
+    resp = resp.json()
+    state_context = resp.get("state_context")
+    update_state_context_files(**state_context)
+    return resp.get("component")
 
 
 @router.put("/{component_id}/")
