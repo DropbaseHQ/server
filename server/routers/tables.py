@@ -35,15 +35,15 @@ def update_table_req(
     table_id: str,
     response: Response,
     req: UpdateTableRequest,
-    access_cookies: AccessCookies = Depends(get_access_cookies),
+    router: DropbaseRouter = Depends(get_dropbase_router),
 ):
     # TODO: sync this flow with client
-    resp = update_table(table_id, req, access_cookies)
+    resp = update_table(table_id, req, router)
     if resp.status_code != 200:
         response.status_code = resp.status_code
         return resp.text
     if req.file.get("id") != req.table.get("file_id"):
-        resp = update_table_columns(table_id, req)
+        resp = update_table_columns(table_id, req, router)
         return resp
     return resp.json()
 

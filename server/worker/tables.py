@@ -18,7 +18,7 @@ from server.worker.sync import get_table_columns
 from server.requests.dropbase_router import DropbaseRouter, AccessCookies
 
 
-def update_table(table_id: str, req: UpdateTableRequest, access_cookies: AccessCookies):
+def update_table(table_id: str, req: UpdateTableRequest, router: DropbaseRouter):
     update_table_payload = {
         "name": req.name,
         "table_id": req.table.get("id"),
@@ -26,7 +26,6 @@ def update_table(table_id: str, req: UpdateTableRequest, access_cookies: AccessC
         "page_id": req.page_id,
         "property": req.table.get("property"),
     }
-    router = DropbaseRouter(cookies=access_cookies)
     # get depends on for sql files
     if req.file.get("type") == "sql":
         sql = get_table_sql(req.app_name, req.page_name, req.file.get("name"))
@@ -38,7 +37,9 @@ def update_table(table_id: str, req: UpdateTableRequest, access_cookies: AccessC
     )
 
 
-def update_table_columns(table_id: str, req: UpdateTableRequest):
+def update_table_columns(
+    table_id: str, req: UpdateTableRequest, router: DropbaseRouter
+):
     try:
         columns = get_table_columns(
             req.app_name, req.page_name, req.table, req.file, req.state
@@ -48,7 +49,7 @@ def update_table_columns(table_id: str, req: UpdateTableRequest):
             "columns": columns,
             "type": req.file.get("type"),
         }
-        resp = dropbase_router.sync_columns(payload)
+        resp = router.sync.sync_columns(payload)
         handle_state_context_updates(resp)
         return "Columns updated successfully"
     except Exception as e:

@@ -95,7 +95,12 @@ async def update_file_req(
 
 
 @router.delete("/{file_id}/")
-def delete_file_req(file_id: str, req: DeleteFile, resp: Response):
+def delete_file_req(
+    file_id: str,
+    req: DeleteFile,
+    resp: Response,
+    router: DropbaseRouter = Depends(get_dropbase_router),
+):
     resp = router.file.delete_file(file_id=file_id)
     if resp.status_code == 200:
         path = (

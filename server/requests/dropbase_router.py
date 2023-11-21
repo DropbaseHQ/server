@@ -1,3 +1,4 @@
+from typing import Optional
 from .main_request import DropbaseSession
 from .app import AppRouter
 from .components import ComponentRouter
@@ -42,7 +43,7 @@ class DropbaseRouter:
 
 class AccessCookies(BaseModel):
     access_token_cookie: str
-    refresh_token_cookie: str
+    refresh_token_cookie: Optional[str]
 
 
 def get_access_cookies(request: Request):

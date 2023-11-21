@@ -4,22 +4,9 @@ class MiscRouter:
 
     def sync_table_columns(
         self,
-        app_name: str,
-        page_name: str,
-        table_columns: dict,
-        token: str,
-        table_type: str,
+        payload: dict,
     ):
-        return self.session.post(
-            url="sync/columns/",
-            json={
-                "app_name": app_name,
-                "page_name": page_name,
-                "table_columns": table_columns,
-                "token": token,
-                "table_type": table_type,
-            },
-        )
+        return self.session.post(url="sync/columns/", json=payload)
 
     def sync_components(self, app_name: str, page_name: str, token: str):
         return self.session.post(
