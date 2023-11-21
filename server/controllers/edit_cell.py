@@ -3,7 +3,8 @@ from sqlalchemy import text
 from server.schemas.edit_cell import CellEdit
 
 
-def update_value(user_db_engine, edit: CellEdit):
+def update_value(user_db_engine, edit: dict):
+    edit = CellEdit(**edit)
     try:
         columns_name = edit.column_name
         column = edit.columns[columns_name]

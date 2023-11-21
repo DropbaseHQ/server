@@ -14,6 +14,7 @@ from server.routers import (
     sync_router,
     tables_router,
     widgets_router,
+    edit_cell_router
 )
 
 
@@ -50,3 +51,4 @@ app.include_router(widgets_router)
 app.include_router(tables_router)
 app.include_router(component_router)
 app.include_router(app_router)
+app.include_router(edit_cell_router)
