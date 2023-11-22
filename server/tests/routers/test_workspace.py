@@ -13,12 +13,12 @@ from server.tests.verify_folder_structure import is_valid_folder_structure
 from server.tests.verify_object_exists import workspace_object_exists
 
 
-def test_create_app_req(test_client, mocker):
+def test_create_app_req(test_client, dropbase_router_mocker):
     try:
         # Arrange
-        mocker.patch("server.requests.sync_components", side_effect=sync_components_response_empty)
-        mocker.patch("server.requests.get_app", side_effect=get_app_response(name="test_create_app"))
-        mocker.patch("server.requests.update_app", side_effect=update_app_response)
+        dropbase_router_mocker.patch("misc", "sync_components", side_effect=sync_components_response_empty)
+        dropbase_router_mocker.patch("app", "get_app", side_effect=get_app_response(name="test_create_app"))
+        dropbase_router_mocker.patch("app", "update_app", side_effect=update_app_response)
 
         data = {"app_id": "123456123456", "app_template": {"page": {"name": "page1"}}}
 
@@ -36,10 +36,10 @@ def test_create_app_req(test_client, mocker):
         shutil.rmtree(WORKSPACE_PATH.joinpath("test_create_app"))
 
 
-def test_rename_app_req(test_client, mocker):
+def test_rename_app_req(test_client, dropbase_router_mocker):
     try:
         # Arrange
-        mocker.patch("server.requests.rename_app", side_effect=rename_app_response)
+        dropbase_router_mocker.patch("app", "rename_app", side_effect=rename_app_response)
 
         data = {
             "old_name": "dropbase_test_app",
@@ -57,9 +57,9 @@ def test_rename_app_req(test_client, mocker):
         shutil.rmtree(WORKSPACE_PATH.joinpath("dropbase_test_app_renamed"))
 
 
-def test_delete_app_req(test_client, mocker):
+def test_delete_app_req(test_client, dropbase_router_mocker):
     # Arrange
-    mocker.patch("server.requests.delete_app", side_effect=delete_app_response)
+    dropbase_router_mocker.patch("app", "delete_app", side_effect=delete_app_response)
 
     data = {"app_name": "dropbase_test_app"}
 

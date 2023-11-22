@@ -37,7 +37,7 @@ def get_table_columns(app_name: str, page_name: str, table: dict, file: dict, st
 
 def sync_components(app_name: str, page_name: str, router: DropbaseRouter):
     payload = {"app_name": app_name, "page_name": page_name, "token": token}
-    resp = router.misc.sync_table_columns(**payload)
+    resp = router.misc.sync_components(**payload)
     return handle_state_context_updates(resp)
 
 

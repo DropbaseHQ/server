@@ -3,9 +3,9 @@ from server.tests.verify_folder_structure import is_valid_folder_structure
 from server.tests.verify_object_exists import workspace_object_exists
 
 
-def test_create_widget_req(test_client, mocker):
+def test_create_widget_req(test_client, dropbase_router_mocker):
     # Arrange
-    mocker.patch("server.requests.create_widget", create_widget_response)
+    dropbase_router_mocker.patch("widget", "create_widget", side_effect=create_widget_response)
 
     data = {
         "name": "test_widget",
@@ -23,13 +23,13 @@ def test_create_widget_req(test_client, mocker):
     assert workspace_object_exists("Context", "widgets.widget12")
 
 
-def test_update_widget_req(test_client, mocker):
+def test_update_widget_req(test_client, dropbase_router_mocker):
     # Arrange
-    test_create_widget_req(test_client, mocker)
+    test_create_widget_req(test_client, dropbase_router_mocker)
     assert workspace_object_exists("State", "widgets.widget12")
     assert workspace_object_exists("Context", "widgets.widget12")
 
-    mocker.patch("server.requests.update_widget", update_widget_response)
+    dropbase_router_mocker.patch("widget", "update_widget", side_effect=update_widget_response)
 
     data = {
         "name": "widget13",

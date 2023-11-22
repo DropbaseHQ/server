@@ -9,9 +9,9 @@ def test_sync_table_columns_req(test_client):
     raise NotImplementedError("endpoint is broken in platform")
 
 
-def test_sync_components_req(test_client, mocker):
+def test_sync_components_req(test_client, dropbase_router_mocker):
     assert not workspace_object_exists("Context", "widgets.widget1.components.text1")
-    mocker.patch("server.requests.sync_components", side_effect=sync_components_response)
+    dropbase_router_mocker.patch("misc", "sync_components", side_effect=sync_components_response)
 
     # Arrange
     data = {
