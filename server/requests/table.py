@@ -1,29 +1,30 @@
-from server.requests.main_request import session
+from .main_request import session
+from requests import Session
 
 
-def create_table(page_id: str, name: str, property: str, depends_on: str):
-    return session.post(
-        url="table/",
-        json={
-            "name": name,
-            "property": property,
-            "page_id": page_id,
-            "depends_on": depends_on,
-        },
-    )
+class TableRouter:
+    def __init__(self, session: Session):
+        self.session = session
 
+    def create_table(self, page_id: str, name: str, property: str, depends_on: str):
+        return self.session.post(
+            url="table/",
+            json={
+                "name": name,
+                "property": property,
+                "page_id": page_id,
+                "depends_on": depends_on,
+            },
+        )
 
-def update_table(table_id: str, update_data: dict):
-    return session.put(url="table/", json=update_data)
+    def update_table(self, table_id: str, update_data: dict):
+        return self.session.put(url="table/", json=update_data)
 
+    def update_table_property(self, table_id: str, update_data: dict):
+        return self.session.put(url=f"table/properpy/{table_id}", json=update_data)
 
-def update_table_property(table_id: str, update_data: dict):
-    return session.put(url=f"table/properpy/{table_id}/", json=update_data)
+    def update_table_columns(self, table_id: str, update_data: dict):
+        return self.session.put(url=f"table/columns/{table_id}", json=update_data)
 
-
-def update_table_columns(table_id: str, update_data: dict):
-    return session.put(url=f"table/columns/{table_id}/", json=update_data)
-
-
-def delete_table(table_id: str):
-    return session.delete(url=f"table/{table_id}/")
+    def delete_table(self, table_id: str):
+        return self.session.delete(url=f"table/{table_id}/")
