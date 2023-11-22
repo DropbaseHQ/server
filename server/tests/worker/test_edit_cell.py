@@ -1,25 +1,21 @@
-from server.tests.mocks.worker.python_subprocess import mock_run_process_task
+import unittest.mock
 
 
-def test_edit_sql_table_req(test_client, mocker):
+def test_edit_cell(test_client, mocker):
     # Arrange
-    run_process_task = mock_run_process_task(
-        True,
-        {
-            "result": ["updated name from trevor to rovert"],
-            "errors": None,
-        },
-        "",
-    )
-    mocker.patch("server.routers.query.run_process_task", side_effect=run_process_task)
+    mock_db = unittest.mock.MagicMock()
+    mocker.patch("server.worker.edit_cell.connect_to_user_db", return_value=mock_db)
+    from server.worker.edit_cell import edit_cell
 
-    data = {
-        "edits": [
+    # Act
+    output = edit_cell(
+        file={"source": "mock_db"},
+        edits=[
             {
                 "column_name": "name",
                 "old_value": "trevor",
                 "new_value": "rovert",
-                "row": {},
+                "row": {"id": "trevors_id"},
                 "columns": {
                     "id": {
                         "name": "id",
@@ -37,12 +33,12 @@ def test_edit_sql_table_req(test_client, mocker):
                     }
                 }
             }
-        ],
-        "file": {"source": "mock_db"},
-    }
-
-    # Act
-    res = test_client.post("/edit_cell/edit_sql_table/", json=data)
+        ]
+    )
 
     # Assert
-    assert res.status_code == 200
+    sql_text, values = mock_db.connect().__enter__().execute.call_args.args
+    assert "UPDATE \"public\".\"users\"" in str(sql_text)
+    assert "SET name = :new_value" in str(sql_text)
+    assert "WHERE id = :id AND name = :old_value" in str(sql_text)
+    assert values == {'new_value': 'rovert', 'old_value': 'trevor', 'id': 'trevors_id'}

@@ -1,4 +1,5 @@
 from server.tests.mocks.dropbase.sync import sync_components_response, sync_page_response
+from server.tests.mocks.worker.python_subprocess import mock_run_process_task
 from server.tests.verify_folder_structure import is_valid_folder_structure
 from server.tests.verify_object_exists import workspace_object_exists
 
@@ -18,19 +19,34 @@ def test_get_state_context(test_client):
     assert context["tables"].get("table1")
 
 
-def test_sync_table_columns_req(test_client, dropbase_router_mocker):
-    # TODO implement when mocking worker is figured out
-    return
-    dropbase_router_mocker.patch("misc", "sync_components", side_effect=sync_components_response)
-
+def test_sync_table_columns_req(test_client, mocker):
     # Arrange
+    run_process_task = mock_run_process_task(True, {"message": "success"}, "")
+    mocker.patch("server.routers.query.run_process_task", side_effect=run_process_task)
+
     data = {
         "app_name": "dropbase_test_app",
         "page_name": "page1",
+        "table": {
+            "name": "table1",
+            "property": {
+                "filters": [],
+                "appears_after": None,
+                "on_row_change": None,
+                "on_row_selection": None,
+            },
+            "page_id": "8f1dabeb-907b-4e59-8417-ba67a801ba0e",
+        },
+        "file": {
+            "name": "test_sql",
+            "type": "sql",
+            "source": "replica",
+        },
+        "state": {"widgets": {"widget1": {}}, "tables": {"table1": {}}},
     }
 
     # Act
-    res = test_client.post("/sync/columns/", json=data)
+    res = test_client.post("/sync/columns/", json=data, cookies={"access_token_cookie": "mock access cookie"})
 
     # Assert
     assert res.status_code == 200
