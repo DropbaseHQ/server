@@ -3,6 +3,21 @@ from server.tests.verify_folder_structure import is_valid_folder_structure
 from server.tests.verify_object_exists import workspace_object_exists
 
 
+def test_get_state_context(test_client):
+    # Act
+    res = test_client.get("/sync/dropbase_test_app/page1")
+
+    # Assert
+    res_json = res.json()
+    state = res_json["state"]
+    context = res_json["context"]
+    assert res.status_code == 200
+    assert state["widgets"].get("widget1") is not None
+    assert state["tables"].get("table1") is not None
+    assert context["widgets"].get("widget1")
+    assert context["tables"].get("table1")
+
+
 def test_sync_table_columns_req(test_client):
     # FIXME
     return
