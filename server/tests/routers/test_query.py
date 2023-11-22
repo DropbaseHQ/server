@@ -9,7 +9,10 @@ def test_run_query(test_client, mocker):
     data = {
         "app_name": "dropbase_test_app",
         "page_name": "page1",
-        "filter_sort": {},
+        "filter_sort": {
+            "filters": [],
+            "sorts": [],
+        },
         "file": {"name": "test_sql", "type": "sql", "source": "replica"},
         "state": {"widgets": {"widget1": {}}, "tables": {"table1": {}}},
     }

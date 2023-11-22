@@ -27,7 +27,7 @@ def pytest_sessionstart():
 
     from server.controllers.workspace import AppCreator, create_file
     from server.tests.mocks.dropbase.app import get_app_response, update_app_response
-    from server.tests.mocks.dropbase.misc import sync_components_response_empty
+    from server.tests.mocks.dropbase.sync import sync_components_response_empty
 
     with patch("server.requests.sync_components", side_effect=sync_components_response_empty):
         with patch("server.requests.update_app", side_effect=update_app_response):
