@@ -7,7 +7,7 @@ from sqlalchemy import text
 from sqlalchemy.engine import Engine
 
 from server.controllers.utils import clean_df, connect_to_user_db
-from server.schemas.table import FilterSort, TableFilter, TableSort
+from server.schemas.table import FilterSort, TableFilter, TableSort, TablePagination
 
 cwd = os.getcwd()
 
@@ -15,7 +15,7 @@ cwd = os.getcwd()
 def run_df_query(sql: str, source: str, state, filter_sort: FilterSort):
     sql = clean_sql(sql)
     sql = render_sql(sql, state)
-    filter_sql, filter_values = apply_filters(sql, filter_sort.filters, filter_sort.sorts)
+    filter_sql, filter_values = apply_filters(sql, filter_sort.filters, filter_sort.sorts, filter_sort.pagination)
     res = query_db(filter_sql, filter_values, source)
     df = pd.DataFrame(res)
     df = clean_df(df)
@@ -53,7 +53,7 @@ def query_db(sql, values, source_name):
     return res
 
 
-def apply_filters(table_sql: str, filters: List[TableFilter], sorts: List[TableSort]):
+def apply_filters(table_sql: str, filters: List[TableFilter], sorts: List[TableSort], pagination: TablePagination = {}):
     # clean sql
     table_sql = table_sql.strip("\n ;")
     filter_sql = f"""WITH user_query as ({table_sql}) SELECT * FROM user_query\n"""
@@ -86,6 +86,9 @@ def apply_filters(table_sql: str, filters: List[TableFilter], sorts: List[TableS
 
         filter_sql += ", ".join(sort_list)
     filter_sql += "\n"
+
+    if pagination:
+        filter_sql += f"LIMIT {pagination.page_size} OFFSET {pagination.page * pagination.page_size}"
 
     return filter_sql, filter_values
 

@@ -9,7 +9,7 @@ from io import StringIO
 from multiprocessing import Pipe, Process
 import astor
 import pandas as pd
-from server.constants import cwd
+from server.constants import cwd, DATA_PREVIEW_SIZE
 from server.controllers.utils import clean_df, get_data_function_by_file
 
 
@@ -63,6 +63,8 @@ def run_exec_task(child_conn, args):
             compile(last_expr, filename="<ast>", mode="eval"), globals_for_exec, locals_for_exec
         )
         if type(last_var) is pd.DataFrame:
+            last_var = clean_df(last_var)
+            last_var = last_var[:DATA_PREVIEW_SIZE]
             output = {
                 "columns": last_var.columns.tolist(),
                 "data": last_var.values.tolist(),

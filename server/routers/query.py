@@ -18,4 +18,4 @@ async def run_query(req: QueryPythonRequest):
     if req.file.type == "data_fetcher":
         return run_process_task("run_python_query", args)
     else:
-        return run_process_task("run_sql", args)
+        return run_process_task("run_sql_query", args)
