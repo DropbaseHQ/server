@@ -14,9 +14,15 @@ class TableSort(BaseModel):
     value: Literal["asc", "desc"]
 
 
+class TablePagination(BaseModel):
+    page: int
+    page_size: int
+
+
 class FilterSort(BaseModel):
     filters: List[Optional[TableFilter]]
     sorts: List[Optional[TableSort]]
+    pagination: Optional[TablePagination]
 
 
 class TableBase(BaseModel):
