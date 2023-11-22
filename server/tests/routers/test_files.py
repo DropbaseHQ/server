@@ -4,6 +4,7 @@ import shutil
 from server.tests.mocks.dropbase.file import (
     create_file_response,
     delete_file_response,
+    update_file_response,
     update_file_name_response,
 )
 from server.tests.verify_file_exists import workspace_file_exists
@@ -107,3 +108,27 @@ def test_delete_file_req(test_client, dropbase_router_mocker):
     assert res.status_code == 200
     assert is_valid_folder_structure()
     assert not workspace_file_exists("scripts/test_delete.sql")
+
+
+def test_update_file_req(test_client, dropbase_router_mocker):
+    # Arrange
+    dropbase_router_mocker.patch("file", "update_file", side_effect=update_file_response)
+
+    data = {
+        "app_name": "dropbase_test_app",
+        "page_name": "page1",
+        "name": "test_sql",
+        "sql": "mock sql",
+        "file_id": "8f1dabeb-907b-4e59-8417-ba67a801ba0e",
+        "type": "sql",
+    }
+
+    # Act
+    res = test_client.put("/files/8f1dabeb-907b-4e59-8417-ba67a801ba0e", json=data)
+
+    # Assert
+    assert res.status_code == 200
+    assert is_valid_folder_structure()
+
+    with open(WORKSPACE_PATH.joinpath("dropbase_test_app/page1/scripts/test_sql.sql"), "r") as rf:
+        assert rf.read() == "mock sql"
