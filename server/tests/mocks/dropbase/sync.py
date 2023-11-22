@@ -322,3 +322,91 @@ def sync_components_response_empty(app_name: str, page_name: str, token: str):
             }
         }
     )
+
+
+def sync_page_response(*args, **kwargs):
+    return mock_response(
+        json={
+            "app_name": "dropbase_test_app",
+            "page_name": "page1",
+            "state": {
+                "title": "State",
+                "type": "object",
+                "properties": {
+                    "widgets": {"$ref": "#/definitions/WidgetsState"},
+                    "tables": {"$ref": "#/definitions/TablesState"},
+                },
+                "required": ["widgets", "tables"],
+                "definitions": {
+                    "Widget2State": {"title": "Widget2State", "type": "object", "properties": {}},
+                    "WidgetsState": {
+                        "title": "WidgetsState",
+                        "type": "object",
+                        "properties": {"widget2": {"$ref": "#/definitions/Widget2State"}},
+                        "required": ["widget2"],
+                    },
+                    "Table1State": {"title": "Table1State", "type": "object", "properties": {}},
+                    "TablesState": {
+                        "title": "TablesState",
+                        "type": "object",
+                        "properties": {"table1": {"$ref": "#/definitions/Table1State"}},
+                        "required": ["table1"],
+                    },
+                },
+            },
+            "context": {
+                "title": "Context",
+                "type": "object",
+                "properties": {
+                    "widgets": {"$ref": "#/definitions/WidgetsContext"},
+                    "tables": {"$ref": "#/definitions/TablesContext"},
+                },
+                "required": ["widgets", "tables"],
+                "definitions": {
+                    "Widget2ComponentsContext": {
+                        "title": "Widget2ComponentsContext",
+                        "type": "object",
+                        "properties": {},
+                        "required": [],
+                    },
+                    "Widget2Context": {
+                        "title": "Widget2Context",
+                        "type": "object",
+                        "properties": {
+                            "message": {"title": "Message", "type": "string"},
+                            "message_type": {"title": "Message Type", "type": "string"},
+                            "components": {"$ref": "#/definitions/Widget2ComponentsContext"},
+                        },
+                        "required": ["components"],
+                    },
+                    "WidgetsContext": {
+                        "title": "WidgetsContext",
+                        "type": "object",
+                        "properties": {"widget2": {"$ref": "#/definitions/Widget2Context"}},
+                        "required": ["widget2"],
+                    },
+                    "Table1ColumnsContext": {
+                        "title": "Table1ColumnsContext",
+                        "type": "object",
+                        "properties": {},
+                    },
+                    "Table1Context": {
+                        "title": "Table1Context",
+                        "type": "object",
+                        "properties": {
+                            "message": {"title": "Message", "type": "string"},
+                            "message_type": {"title": "Message Type", "type": "string"},
+                            "columns": {"$ref": "#/definitions/Table1ColumnsContext"},
+                        },
+                        "required": ["columns"],
+                    },
+                    "TablesContext": {
+                        "title": "TablesContext",
+                        "type": "object",
+                        "properties": {"table1": {"$ref": "#/definitions/Table1Context"}},
+                        "required": ["table1"],
+                    },
+                },
+            }
+        }
+    )
