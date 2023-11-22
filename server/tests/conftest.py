@@ -33,12 +33,13 @@ def dropbase_router_mocker():
 
 
 def pytest_sessionstart():
-    from unittest.mock import MagicMock
+    import unittest.mock
+
     from server.controllers.workspace import AppCreator, create_file
     from server.tests.mocks.dropbase.app import get_app_response, update_app_response
     from server.tests.mocks.dropbase.sync import sync_components_response_empty
 
-    mock_dropbase_router = MagicMock()
+    mock_dropbase_router = unittest.mock.MagicMock()
     mock_dropbase_router.misc.sync_components.side_effect = sync_components_response_empty
     mock_dropbase_router.app.update_app.side_effect = update_app_response
 
