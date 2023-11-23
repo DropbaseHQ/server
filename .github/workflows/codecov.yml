@@ -5,6 +5,7 @@ on:
     branches:
       - main
       - dev
+      - unit-test
     paths:
       - server/**
   pull_request:
