@@ -24,6 +24,7 @@ def test_create_widget_req(test_client, dropbase_router_mocker):
 
 
 def test_update_widget_req(test_client, dropbase_router_mocker):
+    # FIXME this test randomly fails
     # Arrange
     test_create_widget_req(test_client, dropbase_router_mocker)
     assert workspace_object_exists("State", "widgets.widget12")
@@ -38,9 +39,6 @@ def test_update_widget_req(test_client, dropbase_router_mocker):
 
     # Act
     res = test_client.put("/widgets/4f1dabeb-907b-4e59-8417-ba67a801ba0e", json=data)
-
-    # FIXME might be a data race between updating state file and the asserts below
-    import time;time.sleep(5)
 
     # Assert
     assert res.status_code == 200
