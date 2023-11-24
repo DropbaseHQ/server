@@ -21,7 +21,7 @@ def test_create_file_req(test_client, dropbase_router_mocker):
         "app_name": "dropbase_test_app",
         "page_name": "page1",
         "name": "test_file",
-        "type": "python",
+        "type": "random gibberish type",
         "page_id": "8f1dabeb-907b-4e59-8417-ba67a801ba0e",
     }
 
@@ -32,6 +32,94 @@ def test_create_file_req(test_client, dropbase_router_mocker):
     assert res.status_code == 200
     assert is_valid_folder_structure()
     assert workspace_file_exists("scripts/test_file.py")
+
+
+def test_create_file_req_ui(test_client, dropbase_router_mocker):
+    # Arrange
+    dropbase_router_mocker.patch("file", "create_file", side_effect=create_file_response)
+
+    data = {
+        "app_name": "dropbase_test_app",
+        "page_name": "page1",
+        "name": "test_file",
+        "type": "ui",
+        "page_id": "8f1dabeb-907b-4e59-8417-ba67a801ba0e",
+    }
+
+    # Act
+    res = test_client.post("/files", json=data)
+
+    # Assert
+    assert res.status_code == 200
+    assert is_valid_folder_structure()
+    assert workspace_file_exists("scripts/test_file.py")
+
+
+def test_create_file_req_data_fetcher(test_client, dropbase_router_mocker):
+    # Arrange
+    dropbase_router_mocker.patch("file", "create_file", side_effect=create_file_response)
+
+    data = {
+        "app_name": "dropbase_test_app",
+        "page_name": "page1",
+        "name": "test_file",
+        "type": "data_fetcher",
+        "page_id": "8f1dabeb-907b-4e59-8417-ba67a801ba0e",
+    }
+
+    # Act
+    res = test_client.post("/files", json=data)
+
+    # Assert
+    assert res.status_code == 200
+    assert is_valid_folder_structure()
+    assert workspace_file_exists("scripts/test_file.py")
+
+
+def test_create_file_req_bad_request(test_client, dropbase_router_mocker):
+    # Arrange
+    dropbase_router_mocker.patch(
+        "file",
+        "create_file",
+        side_effect=lambda *args, **kwargs: mock_response(json={}, status_code=500),
+    )
+
+    data = {
+        "app_name": "dropbase_test_appadasdadsd",
+        "page_name": "page1",
+        "name": "test_file",
+        "type": "random gibberish type",
+        "page_id": "8f1dabeb-907b-4e59-8417-ba67a801ba0e",
+    }
+
+    # Act
+    res = test_client.post("/files", json=data)
+
+    # Assert
+    assert res.status_code != 200
+    assert is_valid_folder_structure()
+    assert not workspace_file_exists("scripts/test_file.py")
+
+
+def test_create_file_req_block_path_traversal_vulnerability(test_client, dropbase_router_mocker):
+    # Arrange
+    dropbase_router_mocker.patch("file", "create_file", side_effect=create_file_response)
+
+    data = {
+        "app_name": "dropbase_test_app",
+        "page_name": "page1",
+        "name": "../test_file",
+        "type": "random gibberish type",
+        "page_id": "8f1dabeb-907b-4e59-8417-ba67a801ba0e",
+    }
+
+    # Act
+    res = test_client.post("/files", json=data)
+
+    # Assert
+    assert res.status_code != 200
+    assert is_valid_folder_structure()
+    assert not workspace_file_exists("test_file.py")
 
 
 def test_get_all_files(test_client, dropbase_router_mocker):
