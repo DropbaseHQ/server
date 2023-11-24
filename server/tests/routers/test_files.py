@@ -7,6 +7,7 @@ from server.tests.mocks.dropbase.file import (
     update_file_response,
     update_file_name_response,
 )
+from server.tests.mocks.util import mock_response
 from server.tests.verify_file_exists import workspace_file_exists
 from server.tests.verify_folder_structure import is_valid_folder_structure
 from server.tests.constants import WORKSPACE_PATH
@@ -82,6 +83,61 @@ def test_rename_file_req(test_client, dropbase_router_mocker):
     assert is_valid_folder_structure()
     assert not workspace_file_exists("scripts/test_rename.sql")
     assert workspace_file_exists("scripts/test_renamed.sql")
+
+
+def test_rename_file_req_dropbase_call_failed(test_client, dropbase_router_mocker):
+    # Arrange
+    update_file_name_response_failure = lambda *args, **kwargs: mock_response(json={}, status_code=500, text="fail")
+    dropbase_router_mocker.patch("file", "update_file_name", side_effect=update_file_name_response_failure)
+
+    scripts_path = WORKSPACE_PATH.joinpath("dropbase_test_app/page1/scripts/")
+    with open(scripts_path.joinpath("test_rename.sql"), "w") as wf:
+        pass
+
+    assert workspace_file_exists("scripts/test_rename.sql")
+
+    data = {
+        "page_id": "8f1dabeb-907b-4e59-8417-ba67a801ba0e",
+        "old_name": "test_rename",
+        "new_name": "test_renamed",
+        "app_name": "dropbase_test_app",
+        "page_name": "page1",
+        "type": "sql",
+    }
+
+    # Act
+    res = test_client.put("/files/rename", json=data)
+
+    # Assert
+    assert res.status_code == 200
+    assert res.json()["status"] == "error"
+    assert is_valid_folder_structure()
+    assert workspace_file_exists("scripts/test_rename.sql")
+    assert not workspace_file_exists("scripts/test_renamed.sql")
+
+
+def test_rename_file_req_file_not_exists(test_client, dropbase_router_mocker):
+    # Arrange
+    dropbase_router_mocker.patch("file", "update_file_name", side_effect=update_file_name_response)
+
+    assert not workspace_file_exists("scripts/test_rename.sql")
+
+    data = {
+        "page_id": "8f1dabeb-907b-4e59-8417-ba67a801ba0e",
+        "old_name": "test_rename",
+        "new_name": "test_renamed",
+        "app_name": "dropbase_test_app",
+        "page_name": "page1",
+        "type": "sql",
+    }
+
+    # Act
+    res = test_client.put("/files/rename", json=data)
+
+    # Assert
+    assert res.status_code == 200
+    assert res.json()["status"] == "error"
+    assert is_valid_folder_structure()
 
 
 def test_delete_file_req(test_client, dropbase_router_mocker):
