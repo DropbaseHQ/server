@@ -1,5 +1,4 @@
-from fastapi import APIRouter, Response, Depends
-
+from fastapi import APIRouter, Depends, Response
 from server.schemas.sync import GetTableColumns, SyncComponents, SyncTableColumns
 from server.worker.python_subprocess import run_process_task
 from server.worker.sync import sync_components, sync_page
@@ -23,11 +22,14 @@ async def get_state_context(app_name: str, page_name: str):
 
 @router.post("/columns/")
 async def sync_table_columns_req(
-    req: SyncTableColumns, access_cookies: AccessCookies = Depends(get_access_cookies)
+    req: SyncTableColumns, response: Response, access_cookies: AccessCookies = Depends(get_access_cookies)
 ):
     args = req.dict()
     args["access_cookies"] = access_cookies.dict()
-    return run_process_task("sync_table_columns", args)
+    resp = run_process_task("sync_table_columns", args)
+    if not resp.get("success"):
+        response.status_code = 400
+    return resp
 
 
 @router.post("/get_table_columns/")

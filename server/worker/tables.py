@@ -1,4 +1,3 @@
-from server import requests as dropbase_router
 from server.controllers.query import (
     get_column_names,
     get_sql_variables,
@@ -10,6 +9,7 @@ from server.controllers.utils import (
     connect_to_user_db,
     get_state,
     handle_state_context_updates,
+    validate_column_name
 )
 from server.controllers.validation import validate_smart_cols
 from server.schemas.files import DataFile
@@ -44,6 +44,8 @@ def update_table_columns(
         columns = get_table_columns(
             req.app_name, req.page_name, req.table, req.file, req.state
         )
+        if not validate_column_name(columns):
+            raise Exception("Invalid column names present in the table")
         payload = {
             "table_id": table_id,
             "columns": columns,

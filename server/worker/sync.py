@@ -1,7 +1,6 @@
 import os
-from server import requests as dropbase_router
 from server.controllers.sync import _get_table_columns
-from server.controllers.utils import handle_state_context_updates
+from server.controllers.utils import handle_state_context_updates, validate_column_name
 from server.schemas.files import DataFile
 from server.schemas.table import TableBase
 from server.requests.dropbase_router import DropbaseRouter, AccessCookies
@@ -21,6 +20,8 @@ def sync_table_columns(
     table = TableBase(**table)
     file = DataFile(**file)
     columns = _get_table_columns(app_name, page_name, file, state=state)
+    if not validate_column_name(columns):
+        raise Exception("Invalid column names present in the table")
 
     # call dropbase server
     payload = {"table_id": table.id, "columns": columns, "type": file.type}

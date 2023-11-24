@@ -63,7 +63,6 @@ def get_dropbase_router(request: Request):
         access_token_header = request.headers.get("access-token")
     if not access_token_header:
         raise Exception("No access token found")
-    print("access_token_header", access_token_header)
     return DropbaseRouter(
         cookies={
             "access_token_cookie": access_token_header,

@@ -5,7 +5,8 @@ import os
 import sys
 import ast
 from pathlib import Path
-
+import re
+from typing import List
 import pandas as pd
 from datamodel_code_generator import generate
 from sqlalchemy import create_engine
@@ -114,3 +115,11 @@ def connect_to_user_db(source_name: str):
     creds = CredsClass(**creds)
     SQLALCHEMY_DATABASE_URL = f"postgresql+psycopg2://{creds.username}:{creds.password}@{creds.host}:{creds.port}/{creds.database}"
     return create_engine(SQLALCHEMY_DATABASE_URL, future=True)
+
+
+def validate_column_name(columns: List[str]):
+    pattern = re.compile(r'^[a-zA-Z_][a-zA-Z0-9_]*$')
+    for column in columns:
+        if pattern.fullmatch(column) is None:
+            return False
+    return True
