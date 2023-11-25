@@ -16,7 +16,7 @@ router = APIRouter(
 
 
 @router.get("/read/{path}/")
-async def read_file(path: str):
+async def read_file_req(path: str):
     try:
         with open(path, "r") as f:
             content = f.read()
@@ -37,7 +37,7 @@ async def create_file_req(
 
 
 @router.put("/rename")
-async def rename_file(
+async def rename_file_req(
     req: RenameFile, router: DropbaseRouter = Depends(get_dropbase_router)
 ):
     try:
@@ -118,7 +118,7 @@ def delete_file_req(
 
 
 @router.get("/all/{app_name}/{page_name}/")
-async def get_all_files(app_name, page_name):
+async def get_all_files_req(app_name, page_name):
     dir_path = cwd + f"/workspace/{app_name}/{page_name}/scripts"
     py_files = glob.glob(os.path.join(dir_path, "*.py"))
     py_files = [file for file in py_files if not file.endswith("__init__.py")]

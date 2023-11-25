@@ -16,25 +16,28 @@ router = APIRouter(
 
 
 @router.get("/{app_name}/{page_name}")
-async def get_state_context(app_name: str, page_name: str):
+async def get_state_context_req(app_name: str, page_name: str):
     return get_page_state_context(app_name, page_name)
 
 
 @router.post("/columns/")
 async def sync_table_columns_req(
-    req: SyncTableColumns, response: Response, access_cookies: AccessCookies = Depends(get_access_cookies)
+    req: SyncTableColumns,
+    response: Response,
+    access_cookies: AccessCookies = Depends(get_access_cookies)
 ):
     args = req.dict()
     args["access_cookies"] = access_cookies.dict()
-    resp = run_process_task("sync_table_columns", args)
-    if not resp.get("success"):
-        response.status_code = 400
+    resp, status_code = run_process_task("sync_table_columns", args)
+    response.status_code = status_code
     return resp
 
 
 @router.post("/get_table_columns/")
-async def get_table_columns_req(req: GetTableColumns):
-    return run_process_task("get_table_columns", req.dict())
+async def get_table_columns_req(req: GetTableColumns, response: Response):
+    resp, status_code = run_process_task("get_table_columns", req.dict())
+    response.status_code = status_code
+    return resp
 
 
 async def sync_components_req(
