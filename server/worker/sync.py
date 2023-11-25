@@ -1,7 +1,6 @@
 import os
-from server import requests as dropbase_router
 from server.controllers.sync import _get_table_columns
-from server.controllers.utils import handle_state_context_updates
+from server.controllers.utils import handle_state_context_updates, validate_column_name
 from server.schemas.files import DataFile
 from server.schemas.table import TableBase
 from server.requests.dropbase_router import DropbaseRouter, AccessCookies
@@ -18,15 +17,21 @@ def sync_table_columns(
     state,
     access_cookies: AccessCookies,
 ):
-    table = TableBase(**table)
-    file = DataFile(**file)
-    columns = _get_table_columns(app_name, page_name, file, state=state)
+    try:
+        table = TableBase(**table)
+        file = DataFile(**file)
+        columns = _get_table_columns(app_name, page_name, file, state=state)
+        if not validate_column_name(columns):
+            return "Invalid column names present in the table", 400
 
-    # call dropbase server
-    payload = {"table_id": table.id, "columns": columns, "type": file.type}
-    router = DropbaseRouter(cookies=access_cookies)
-    resp = router.misc.sync_table_columns(payload)
-    return handle_state_context_updates(resp)
+        # call dropbase server
+        payload = {"table_id": table.id, "columns": columns, "type": file.type}
+        router = DropbaseRouter(cookies=access_cookies)
+        resp = router.misc.sync_table_columns(payload)
+        handle_state_context_updates(resp)
+        return resp.json(), resp.status_code
+    except Exception as e:
+        return str(e), 500
 
 
 def get_table_columns(app_name: str, page_name: str, table: dict, file: dict, state):
@@ -36,9 +41,13 @@ def get_table_columns(app_name: str, page_name: str, table: dict, file: dict, st
 
 
 def sync_components(app_name: str, page_name: str, router: DropbaseRouter):
-    payload = {"app_name": app_name, "page_name": page_name, "token": token}
-    resp = router.misc.sync_table_columns(**payload)
-    return handle_state_context_updates(resp)
+    try:
+        payload = {"app_name": app_name, "page_name": page_name, "token": token}
+        resp = router.misc.sync_table_columns(**payload)
+        handle_state_context_updates(resp)
+        return resp.json(), 200
+    except Exception as e:
+        return {"error": str(e)}, 500
 
 
 def sync_page(page_id: str, router: DropbaseRouter):
