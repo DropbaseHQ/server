@@ -27,8 +27,8 @@ class NoCacheStaticFiles(StaticFiles):
 
 
 app = FastAPI()
-origins = ["http://localhost:3000",
-           "http://www.localhost:3000",
+origins = ["http://localhost:3030",
+           "http://www.localhost:3030",
            "https://dev.dropbase.io",
            "https://www.dev.dropbase.io"
            "https://app.dropbase.io",
