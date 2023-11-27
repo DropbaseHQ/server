@@ -1,6 +1,6 @@
 import unittest.mock
 
-from server.controllers.python import run_exec_task
+from server.controllers.python_from_string import run_exec_task
 
 
 def test_run_exec_task():
