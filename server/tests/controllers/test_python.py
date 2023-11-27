@@ -113,5 +113,30 @@ def test_run_exec_task_last_var_is_df():
 
 
 def test_run_exec_task_last_var_is_context():
-    # TODO
-    return
+    # Arrange
+    mock_child_conn = unittest.mock.MagicMock()
+    args = {
+        "app_name": "dropbase_test_app",
+        "page_name": "page1",
+        "python_string": "from workspace.dropbase_test_app.page1 import Context\nContext(widgets={'widget1': {'components': {}}}, tables={'table1': {'columns': {}}})",
+        "payload": {
+            "state": {"widgets": {"widget1": {}}, "tables": {"table1": {}}},
+            "context": {
+                "widgets": {"widget1": {"components": {}}},
+                "tables": {"table1": {"columns": {}}},
+            },
+        },
+        "file": {"name": "function1"},
+    }
+
+    # Act
+    run_exec_task(mock_child_conn, args)
+
+    # Assert
+    success, stdout, output = mock_child_conn.send.call_args.args[0]
+    print(success, stdout, output)
+    assert success
+    assert stdout == ""
+    assert output == {
+        "context": {'widgets': {'widget1': {'components': {}, 'message': None, 'message_type': None}}, 'tables': {'table1': {'columns': {}, 'message': None, 'message_type': None}}}
+    }

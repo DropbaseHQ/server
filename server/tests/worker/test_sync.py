@@ -29,8 +29,8 @@ def test_sync_table_columns(test_client, mocker):
             "page_id": "8f1dabeb-907b-4e59-8417-ba67a801ba0e",
         },
         file={
-            "name": "test_sql",
-            "type": "sql",
+            "name": "test_function_data_fetcher",
+            "type": "data_fetcher",
             "source": "replica",
         },
         state={"widgets": {"widget1": {}}, "tables": {"table1": {}}},

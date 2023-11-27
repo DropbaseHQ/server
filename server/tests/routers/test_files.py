@@ -254,6 +254,50 @@ def test_delete_file_req(test_client, dropbase_router_mocker):
     assert not workspace_file_exists("scripts/test_delete.sql")
 
 
+def test_delete_file_req_platform_error(test_client, dropbase_router_mocker):
+    # Arrange
+    dropbase_router_mocker.patch("file", "delete_file", side_effect=lambda *args, **kwargs: mock_response(json={}, status_code=500))
+
+    scripts_path = WORKSPACE_PATH.joinpath("dropbase_test_app/page1/scripts/")
+    with open(scripts_path.joinpath("test_delete.sql"), "w") as wf:
+        pass
+
+    assert workspace_file_exists("scripts/test_delete.sql")
+
+    data = {
+        "app_name": "dropbase_test_app",
+        "page_name": "page1",
+        "file_name": "test_delete.sql",
+        "type": "sql",
+    }
+
+    # Act
+    res = test_client.request("DELETE", "/files/8f1dabeb-907b-4e59-8417-ba67a801ba0e/", json=data)
+
+    # Assert
+    assert res.status_code != 200
+    assert is_valid_folder_structure()
+    assert workspace_file_exists("scripts/test_delete.sql")
+
+
+def test_delete_file_req_not_exists(test_client, dropbase_router_mocker):
+    # Arrange
+    dropbase_router_mocker.patch("file", "delete_file", side_effect=delete_file_response)
+
+    data = {
+        "app_name": "dropbase_test_app",
+        "page_name": "page1",
+        "file_name": "test_delete.sql",
+        "type": "sql",
+    }
+
+    # Act
+    res = test_client.request("DELETE", "/files/8f1dabeb-907b-4e59-8417-ba67a801ba0e/", json=data)
+
+    # Assert
+    assert res.status_code != 200
+
+
 def test_update_file_req(test_client, dropbase_router_mocker):
     # Arrange
     dropbase_router_mocker.patch("file", "update_file", side_effect=update_file_response)

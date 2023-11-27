@@ -1,2 +1,5 @@
 [run]
 omit = server/tests/*
+       server/requests/*
+       !server/requests/dropbase_router.py
+       !server/requests/main_request.py

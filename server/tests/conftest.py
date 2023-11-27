@@ -58,6 +58,11 @@ def pytest_sessionstart():
         'from workspace.dropbase_test_app.page1 import State, Context\ndef test_function(state: State, context: Context) -> Context:\n    print("test")\n    return context',
         "test_function.py",
     )
+    create_file(
+        scripts_path,
+        'import pandas as pd\nfrom workspace.dropbase_test_app.page1 import State, Context\ndef test_function_data_fetcher(state: State) -> pd.DataFrame:\n    return pd.DataFrame(data=[[1]], columns=["x"])\n    return context',
+        "test_function_data_fetcher.py",
+    )
     create_file(scripts_path, "select 1;", "test_sql.sql")
 
 
