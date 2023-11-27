@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Response, Depends
-from server.controllers.utils import handle_state_context_updates
+from server.controllers.utils import handle_state_context_updates, update_state_context_files
 from server.schemas.workspace import (
     ConvertTableRequest,
     CreateTableRequest,
@@ -21,11 +21,18 @@ router = APIRouter(
 
 @router.post("/")
 def create_table_req(
-    req: CreateTableRequest, router: DropbaseRouter = Depends(get_dropbase_router)
+    req: CreateTableRequest, response: Response, router: DropbaseRouter = Depends(get_dropbase_router)
 ):
-    resp = router.table.create_table(**req.dict())
-    handle_state_context_updates(resp)
-    return resp.json()
+    resp = router.table.create_table(req.dict())
+
+    if resp.status_code != 200:
+        response.status_code = resp.status_code
+        return resp.text
+
+    resp = resp.json()
+    state_context = resp.get("state_context")
+    update_state_context_files(**state_context)
+    return resp.get("table")
 
 
 @router.put("/{table_id}/")

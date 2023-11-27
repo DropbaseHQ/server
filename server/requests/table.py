@@ -5,16 +5,8 @@ class TableRouter:
     def __init__(self, session: Session):
         self.session = session
 
-    def create_table(self, page_id: str, name: str, property: str, depends_on: str):
-        return self.session.post(
-            url="table/",
-            json={
-                "name": name,
-                "property": property,
-                "page_id": page_id,
-                "depends_on": depends_on,
-            },
-        )
+    def create_table(self, payload: dict):
+        return self.session.post(url="table/", json=payload)
 
     def update_table(self, table_id: str, update_data: dict):
         return self.session.put(url="table/", json=update_data)
