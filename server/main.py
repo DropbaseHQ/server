@@ -27,7 +27,13 @@ class NoCacheStaticFiles(StaticFiles):
 
 
 app = FastAPI()
-origins = ["*"]
+origins = ["http://localhost:3000",
+           "http://www.localhost:3000",
+           "https://dev.dropbase.io",
+           "https://www.dev.dropbase.io"
+           "https://app.dropbase.io",
+           "https://www.app.dropbase.io"
+           ]
 
 app.add_middleware(
     CORSMiddleware,
