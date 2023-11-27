@@ -10,8 +10,8 @@ from jinja2 import Environment, FileSystemLoader
 
 DROPBASE_PROXY_SERVER_URL = os.getenv("DROPBASE_PROXY_SERVER_URL") or "proxy.app.dropbase.io"
 DROPBASE_PROXY_SERVER_TOKEN = os.getenv("DROPBASE_PROXY_SERVER_TOKEN")
-DROPBASE_WORKER_PORT = os.getenv("DROPBASE_WORKER_PORT") or 9000
-DROPBASE_LSP_PORT = os.getenv("DROPBASE_LSP_PORT") or 9001
+DROPBASE_WORKER_PORT = os.getenv("DROPBASE_WORKER_PORT") or 9090
+DROPBASE_LSP_PORT = os.getenv("DROPBASE_LSP_PORT") or 9091
 
 FRPC_DIR = Path(__file__).parent.absolute()
 TEMPLATES_DIR = FRPC_DIR.joinpath("templates/")
