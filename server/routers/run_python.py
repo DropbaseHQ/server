@@ -1,6 +1,6 @@
 from fastapi import APIRouter
 
-from server.controllers.python import run_process_with_exec
+from server.controllers.python_from_string import run_process_with_exec
 from server.schemas.run_python import RunPythonStringRequest
 
 router = APIRouter(

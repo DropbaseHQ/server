@@ -13,6 +13,8 @@ def edit_cell(file: dict, edits: List[CellEdit]):
             update_res = update_value(user_db_engine, edit)
             result_dict["result"].append(update_res)
         user_db_engine.dispose()
+        status_code = 200
     except Exception as e:
         result_dict["errors"] = str(e)
-    return result_dict
+        status_code = 500
+    return result_dict, status_code

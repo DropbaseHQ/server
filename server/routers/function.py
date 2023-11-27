@@ -11,11 +11,13 @@ router = APIRouter(
 
 
 @router.post("/")
-async def run_function(req: RunFunction, resp: Response):
+async def run_function_req(req: RunFunction, resp: Response):
     args = {
         "app_name": req.app_name,
         "page_name": req.page_name,
         "function_name": req.function_name,
         "payload": req.payload.dict(),
     }
-    return run_process_task("run_python_ui", args)
+    resp, status_code = run_process_task("run_python_ui", args)
+    resp.status_code = status_code
+    return resp

@@ -1,6 +1,4 @@
 from fastapi import APIRouter, Response, Depends
-
-from server import requests as dropbase_router
 from server.controllers.utils import handle_state_context_updates
 from server.schemas.workspace import (
     ConvertTableRequest,
@@ -38,12 +36,13 @@ def update_table_req(
     router: DropbaseRouter = Depends(get_dropbase_router),
 ):
     # TODO: sync this flow with client
-    resp = update_table(table_id, req, router)
-    if resp.status_code != 200:
-        response.status_code = resp.status_code
-        return resp.text
+    resp, status_code = update_table(table_id, req, router)
+    if status_code != 200:
+        response.status_code = status_code
+        return resp
     if req.file.get("id") != req.table.get("file_id"):
-        resp = update_table_columns(table_id, req, router)
+        resp, status_code = update_table_columns(table_id, req, router)
+        response.status_code = status_code
         return resp
     return resp.json()
 
@@ -51,12 +50,14 @@ def update_table_req(
 @router.post("/convert/")
 def convert_table_req(
     req: ConvertTableRequest,
+    response: Response,
     access_cookies: AccessCookies = Depends(get_access_cookies),
 ):
-    # TODO: move to queue
     args = req.dict()
     args["access_cookies"] = access_cookies.dict()
-    return run_process_task("convert_table", args)
+    resp, status_code = run_process_task("convert_table", args)
+    response.status_code = status_code
+    return resp
 
 
 @router.delete("/{table_id}/")

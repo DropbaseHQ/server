@@ -1,4 +1,3 @@
-from .main_request import session
 from requests import Session
 
 
