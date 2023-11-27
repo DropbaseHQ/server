@@ -24,7 +24,7 @@ def update_table(table_id: str, req: UpdateTableRequest, router: DropbaseRouter)
         "table_id": req.table.get("id"),
         "file_id": req.file.get("id"),
         "page_id": req.page_id,
-        "property": req.table.get("property"),
+        "property": req.property,
     }
     try:
         # get depends on for sql files

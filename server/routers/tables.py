@@ -51,7 +51,7 @@ def update_table_req(
         resp, status_code = update_table_columns(table_id, req, router)
         response.status_code = status_code
         return resp
-    return resp.json()
+    return resp
 
 
 @router.post("/convert/")
