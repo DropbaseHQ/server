@@ -30,7 +30,7 @@ def run_process_task(function_name: str, args: dict):
     if status_code != 200:
         # for troubleshooting purposes
         print(stdout)
-    return {"result": result}, status_code
+    return {"result": result, "success": True}, status_code
 
 
 def run_task(child_conn, function_name, args):
