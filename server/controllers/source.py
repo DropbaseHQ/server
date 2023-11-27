@@ -1,6 +1,9 @@
+import functools
+
 from sqlalchemy import inspect
 
 
+@functools.lru_cache
 def get_db_schema(user_db_engine):
     # TODO: cache this, takes a while
     inspector = inspect(user_db_engine)
