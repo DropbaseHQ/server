@@ -58,8 +58,8 @@ def create_file_response(req: dict):
 def update_file_response(
     file_id: str,
     update_data: dict,
-    name: str = "mock file",
-    type: str = "python",
+    name: str = "test_sql",
+    type: str = "sql",
     page_id: str = "9f1dabeb-907b-4e59-8417-ba67a801ba0e",
     source: str = "replica",
 ):

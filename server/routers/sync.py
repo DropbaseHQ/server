@@ -40,6 +40,7 @@ async def get_table_columns_req(req: GetTableColumns, response: Response):
     return resp
 
 
+@router.post("/components/")
 async def sync_components_req(
     req: SyncComponents, router: DropbaseRouter = Depends(get_dropbase_router)
 ):

@@ -57,5 +57,4 @@ def get_db_schema(user_db_engine):
                     "edit_keys": primary_keys if not is_pk else [],
                 }
             gpt_schema["schema"][schema][table_name] = [column["name"] for column in columns]
-
     return db_schema, gpt_schema

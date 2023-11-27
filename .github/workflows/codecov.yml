@@ -5,6 +5,7 @@ on:
     branches:
       - main
       - dev
+      - unit-test
     paths:
       - server/**
   pull_request:
@@ -22,7 +23,6 @@ jobs:
         run: |
           pip install -r requirements.txt
           pip install -r requirements-dev.txt
-          python3 -m pytest server/tests
       - name: Run tests and collect coverage
         run: python3 -m pytest --cov=server --cov-config=server/.coveragerc server/tests
       - name: Upload coverage reports to Codecov

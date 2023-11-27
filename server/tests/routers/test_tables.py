@@ -11,9 +11,9 @@ from server.tests.verify_object_exists import workspace_object_exists
 from server.tests.constants import WORKSPACE_PATH
 
 
-def test_create_table_req(test_client, mocker):
+def test_create_table_req(test_client, dropbase_router_mocker):
     # Arrange
-    mocker.patch("server.requests.create_table", side_effect=create_table_response)
+    dropbase_router_mocker.patch("table", "create_table", side_effect=create_table_response)
 
     data = {
         "name": "test_table",
@@ -36,14 +36,14 @@ def test_create_table_req(test_client, mocker):
     assert workspace_object_exists("Context", "tables.test_table")
 
 
-def test_update_table_req_file_changed(test_client, mocker):
+def test_update_table_req_file_changed(test_client, dropbase_router_mocker, mocker):
     # Arrange
-    test_create_table_req(test_client, mocker)
+    test_create_table_req(test_client, dropbase_router_mocker)
     assert workspace_object_exists("State", "tables.test_table")
     assert workspace_object_exists("Context", "tables.test_table")
 
-    mocker.patch("server.requests.update_table", side_effect=update_table_response)
-    mocker.patch("server.requests.sync_columns", side_effect=sync_columns_response)
+    dropbase_router_mocker.patch("table", "update_table", side_effect=update_table_response)
+    dropbase_router_mocker.patch("sync", "sync_columns", side_effect=sync_columns_response)
     mocker.patch("server.controllers.query.query_db", side_effect=lambda *args: pd.DataFrame([[1]], columns=["?column?"]))
 
     scripts_path = WORKSPACE_PATH.joinpath("dropbase_test_app/page1/scripts/")
@@ -92,15 +92,15 @@ def test_update_table_req_file_changed(test_client, mocker):
     assert workspace_object_exists("Context", "tables.test_table_renamed")
 
 
-def test_update_table_req_file_unchanged(test_client, mocker):
+def test_update_table_req_file_unchanged(test_client, dropbase_router_mocker):
     # FIXME handle_state_context_updates is not called when file is unchanged
     return
     # Arrange
-    test_create_table_req(test_client, mocker)
+    test_create_table_req(test_client, dropbase_router_mocker)
     assert workspace_object_exists("State", "tables.test_table")
     assert workspace_object_exists("Context", "tables.test_table")
 
-    mocker.patch("server.requests.update_table", side_effect=update_table_response)
+    dropbase_router_mocker.patch("table", "update_table", side_effect=update_table_response)
 
     scripts_path = WORKSPACE_PATH.joinpath("dropbase_test_app/page1/scripts/")
     files = ["test3.sql", "test4.sql"]
@@ -148,13 +148,13 @@ def test_update_table_req_file_unchanged(test_client, mocker):
     assert workspace_object_exists("Context", "tables.test_table_renamed")
 
 
-def test_delete_table_req(test_client, mocker):
+def test_delete_table_req(test_client, dropbase_router_mocker):
     # Arrange
-    test_create_table_req(test_client, mocker)
+    test_create_table_req(test_client, dropbase_router_mocker)
     assert workspace_object_exists("State", "tables.test_table")
     assert workspace_object_exists("Context", "tables.test_table")
 
-    mocker.patch("server.requests.delete_table", side_effect=delete_table_response)
+    dropbase_router_mocker.patch("table", "delete_table", side_effect=delete_table_response)
 
     # Act
     res = test_client.delete("/tables/3f1dabeb-907b-4e59-8417-ba67a801ba0e")

@@ -17,6 +17,9 @@ def test_get_sources(test_client):
             "SOURCE_PG_SOURCE2_USERNAME": "user",
             "SOURCE_PG_SOURCE2_PASSWORD":"pass",
             "SOURCE_PG_SOURCE2_PORT": "5432",
+            "SOURCE_PG_SOURCEINVALID_HOST": "localhost",
+            "SOURCE_PG_SOURCEINVALID_DATABASE": "source2",
+            "SOURCE_PG_SOURCEINVALID_USERNAME": "user",
         }
         
         for key in os.environ.keys():

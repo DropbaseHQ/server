@@ -5,7 +5,9 @@ import pytest
 from fastapi.testclient import TestClient
 
 from server.main import app
+from server.requests.dropbase_router import get_dropbase_router
 from server.tests.constants import *
+from server.tests.mocks.dropbase_router_mocker import DropbaseRouterMocker
 
 
 @pytest.fixture(autouse=True)
@@ -22,21 +24,32 @@ def test_client():
     return TestClient(app)
 
 
+@pytest.fixture
+def dropbase_router_mocker():
+    mocker = DropbaseRouterMocker()
+    app.dependency_overrides[get_dropbase_router] = lambda: mocker.get_mock_dropbase_router()
+    yield mocker
+    del app.dependency_overrides[get_dropbase_router]
+
+
 def pytest_sessionstart():
-    from unittest.mock import patch
+    import unittest.mock
 
     from server.controllers.workspace import AppCreator, create_file
     from server.tests.mocks.dropbase.app import get_app_response, update_app_response
     from server.tests.mocks.dropbase.sync import sync_components_response_empty
 
-    with patch("server.requests.sync_components", side_effect=sync_components_response_empty):
-        with patch("server.requests.update_app", side_effect=update_app_response):
-            AppCreator(
-                get_app_response()("random-uuid").json(),
-                {"page": {"name": "page1"}},
-                WORKSPACE_PATH,
-                "",
-            ).create()
+    mock_dropbase_router = unittest.mock.MagicMock()
+    mock_dropbase_router.misc.sync_components.side_effect = sync_components_response_empty
+    mock_dropbase_router.app.update_app.side_effect = update_app_response
+
+    AppCreator(
+        get_app_response()("random-uuid").json(),
+        {"page": {"name": "page1"}},
+        WORKSPACE_PATH,
+        "mock url",
+        mock_dropbase_router,
+    ).create()
 
     scripts_path = WORKSPACE_PATH.joinpath("dropbase_test_app/page1/scripts")
     create_file(scripts_path, "", "function1.py")
@@ -44,6 +57,11 @@ def pytest_sessionstart():
         scripts_path,
         'from workspace.dropbase_test_app.page1 import State, Context\ndef test_function(state: State, context: Context) -> Context:\n    print("test")\n    return context',
         "test_function.py",
+    )
+    create_file(
+        scripts_path,
+        'import pandas as pd\nfrom workspace.dropbase_test_app.page1 import State, Context\ndef test_function_data_fetcher(state: State) -> pd.DataFrame:\n    return pd.DataFrame(data=[[1]], columns=["x"])\n    return context',
+        "test_function_data_fetcher.py",
     )
     create_file(scripts_path, "select 1;", "test_sql.sql")
 

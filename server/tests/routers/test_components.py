@@ -7,9 +7,9 @@ from server.tests.verify_folder_structure import is_valid_folder_structure
 from server.tests.verify_object_exists import workspace_object_exists
 
 
-def test_create_component_req(test_client, mocker):
+def test_create_component_req(test_client, dropbase_router_mocker):
     # Arrange
-    mocker.patch("server.requests.create_component", side_effect=create_component_response)
+    dropbase_router_mocker.patch("component", "create_component", side_effect=create_component_response)
 
     data = {
         "property": {"name": "test_text", "size": None, "text": None, "color": None},
@@ -27,10 +27,10 @@ def test_create_component_req(test_client, mocker):
     assert workspace_object_exists("Context", "widgets.widget1.components.test_text")
 
 
-def test_update_component_req(test_client, mocker):
+def test_update_component_req(test_client, dropbase_router_mocker):
     # Arrange
-    test_create_component_req(test_client, mocker)
-    mocker.patch("server.requests.update_component", side_effect=update_component_response)
+    test_create_component_req(test_client, dropbase_router_mocker)
+    dropbase_router_mocker.patch("component", "update_component", side_effect=update_component_response)
 
     data = {
         "property": {"name": "test_text_updated", "size": None, "text": None, "color": None},
@@ -49,10 +49,10 @@ def test_update_component_req(test_client, mocker):
     assert workspace_object_exists("Context", "widgets.widget1.components.test_text_updated")
 
 
-def test_delete_component_req(test_client, mocker):
+def test_delete_component_req(test_client, dropbase_router_mocker):
     # Arrange
-    test_create_component_req(test_client, mocker)
-    mocker.patch("server.requests.delete_component", side_effect=delete_component_response)
+    test_create_component_req(test_client, dropbase_router_mocker)
+    dropbase_router_mocker.patch("component", "delete_component", side_effect=delete_component_response)
 
     # Act
     res = test_client.delete("/components/0617281c-c8bf-478e-b532-cb033e40a5ab")
