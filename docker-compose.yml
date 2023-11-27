@@ -19,6 +19,6 @@ services:
     volumes:
       - ./workspace:/project/workspace
     ports:
-      - "9091:9091"
+      - "9095:9095"
     environment:
       - PYTHONUNBUFFERED=1

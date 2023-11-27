@@ -809,7 +809,7 @@ class PythonLSPServer(MethodDispatcher):
         self.lint(uri, is_saved=True)
         # self._hook("pylsp_document_did_open", textDocument["uri"])
         # self.lint(textDocument["uri"], is_saved=True)
-        print('overwriting lsp')
+        # print('overwriting lsp')
         with open("/Users/ayazhan/dropbase/worker/workspace/app/page1/lsp.py", "w") as file:
             file.write("""from pydantic import BaseModel
 from typing import Any, Optional, Literal, List

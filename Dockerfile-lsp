@@ -14,6 +14,6 @@ RUN pip3 install --no-cache-dir --upgrade -r requirements.txt
 RUN pip install lsp/.
 RUN pip install 'python-lsp-server[websockets]'
 
-EXPOSE 9091
+EXPOSE 9095
 
-CMD pylsp --ws --port 9091
+CMD pylsp --ws --port 9095
