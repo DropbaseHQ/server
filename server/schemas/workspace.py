@@ -18,12 +18,12 @@ class CreateTableRequest(BaseModel):
 
 
 class DeleteAppRequest(BaseModel):
-    app_name: str
+    app_name: str = Field(regex=FILE_NAME_REGEX)
 
 
 class UpdateTableRequest(BaseModel):
-    app_name: str
-    page_name: str
+    app_name: str = Field(regex=FILE_NAME_REGEX)
+    page_name: str = Field(regex=FILE_NAME_REGEX)
     name: str
     table: dict
     state: dict
@@ -34,13 +34,13 @@ class UpdateTableRequest(BaseModel):
 
 
 class ConvertTableRequest(BaseModel):
-    app_name: str
-    page_name: str
+    app_name: str = Field(regex=FILE_NAME_REGEX)
+    page_name: str = Field(regex=FILE_NAME_REGEX)
     table: dict
     file: dict
     state: dict
 
 
 class RenameAppRequest(BaseModel):
-    old_name: str
-    new_name: str
+    old_name: str = Field(regex=FILE_NAME_REGEX)
+    new_name: str = Field(regex=FILE_NAME_REGEX)

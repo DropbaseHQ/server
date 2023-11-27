@@ -1,4 +1,5 @@
 import os
+import re
 
 cwd = os.getcwd()
 
@@ -9,3 +10,6 @@ DROPBASE_API_URL = (
 
 
 DATA_PREVIEW_SIZE = 100
+
+
+FILE_NAME_REGEX = re.compile(r"^[A-Za-z0-9_]+$")
