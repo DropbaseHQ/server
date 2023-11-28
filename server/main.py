@@ -5,6 +5,7 @@ from fastapi.staticfiles import StaticFiles
 from server.routers import (
     app_router,
     component_router,
+    edit_cell_router,
     files_router,
     function_router,
     query_router,
@@ -14,7 +15,6 @@ from server.routers import (
     sync_router,
     tables_router,
     widgets_router,
-    edit_cell_router
 )
 
 
@@ -27,13 +27,12 @@ class NoCacheStaticFiles(StaticFiles):
 
 
 app = FastAPI()
-origins = ["http://localhost:3030",
-           "http://www.localhost:3030",
-           "https://dev.dropbase.io",
-           "https://www.dev.dropbase.io"
-           "https://app.dropbase.io",
-           "https://www.app.dropbase.io"
-           ]
+origins = [
+    "http://localhost:3030",
+    "http://www.localhost:3030",
+    "https://app.dropbase.io",
+    "https://www.app.dropbase.io",
+]
 
 app.add_middleware(
     CORSMiddleware,
