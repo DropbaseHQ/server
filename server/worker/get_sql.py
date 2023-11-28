@@ -6,6 +6,7 @@ from server.controllers.utils import get_state
 from server.schemas.table import FilterSort, TableFilter, TableSort, TablePagination
 
 
+# TREVOR TODO: look to clean these
 def get_sql_from_file(app_name: str, page_name: str, file_name: str, state: dict, filter_sort: FilterSort):
     try:
         sys.path.insert(0, cwd)

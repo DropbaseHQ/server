@@ -9,6 +9,7 @@ import re
 from typing import List
 import pandas as pd
 from datamodel_code_generator import generate
+from functools import lru_cache
 from sqlalchemy import create_engine
 
 from server.controllers.sources import db_type_to_class, get_sources
@@ -108,8 +109,7 @@ def update_state_context_files(app_name, page_name, state, context):
         raise Exception(f"Error updating state and context files: {e}")
 
 
-import functools
-@functools.lru_cache
+@lru_cache
 def connect_to_user_db(source_name: str):
     sources = get_sources()
     creds = sources.get(source_name)

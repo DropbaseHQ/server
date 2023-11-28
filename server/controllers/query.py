@@ -12,6 +12,7 @@ from server.schemas.table import FilterSort, TableFilter, TableSort, TablePagina
 cwd = os.getcwd()
 
 
+# TREVOR TODO look to remove run_df_query completely
 def run_df_query(user_sql: str, source: str, state, filter_sort: FilterSort) -> pd.DataFrame:
     filter_sql, filter_values = prepare_sql(user_sql, state, filter_sort)
     res = query_db(filter_sql, filter_values, source)
@@ -24,6 +25,7 @@ def process_query_result(res) -> pd.DataFrame:
     return df
 
 
+# TREVOR TODO once run_df_query is removed, this should go into worker instead of controller
 def prepare_sql(user_sql: str, state, filter_sort: FilterSort):
     sql = clean_sql(user_sql)
     sql = render_sql(sql, state)

@@ -7,6 +7,7 @@ from server.controllers.query import query_db, process_query_result
 router = APIRouter(prefix="/run_sql", tags=["run_sql"], responses={404: {"description": "Not found"}})
 
 
+# TREVOR TODO: clean me up
 @router.post("/run_sql_string/")
 async def run_sql_from_string_req(req: RunSQLRequest, response: Response):
     args = {
@@ -20,7 +21,7 @@ async def run_sql_from_string_req(req: RunSQLRequest, response: Response):
     if not resp["success"]:
         response.status_code = 500
         return resp
-    
+
     filter_sql = resp["result"]["filter_sql"]
     filter_values = resp["result"]["filter_values"]
     source = req.source

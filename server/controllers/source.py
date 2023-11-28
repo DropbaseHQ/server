@@ -3,6 +3,7 @@ import functools
 from sqlalchemy import inspect
 
 
+# TREVOR TODO: investigate recovery from cache staleness
 @functools.lru_cache
 def get_db_schema(user_db_engine):
     # TODO: cache this, takes a while

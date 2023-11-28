@@ -11,7 +11,6 @@ from server.constants import cwd
 from server.worker.edit_cell import edit_cell  # noqa
 from server.worker.run_python import run_python_query, run_python_ui  # noqa
 from server.worker.get_sql import get_sql_from_file, get_sql_from_file_content  # noqa
-from server.worker.run_sql import run_sql_query  # noqa
 from server.worker.sync import sync_components, sync_table_columns  # noqa
 from server.worker.tables import convert_table, update_table  # noqa
 

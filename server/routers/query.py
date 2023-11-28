@@ -6,6 +6,7 @@ from server.worker.python_subprocess import run_process_task
 
 router = APIRouter(prefix="/query", tags=["query"], responses={404: {"description": "Not found"}})
 
+
 @router.post("/")
 async def run_query(req: QueryPythonRequest, response: Response):
     args = {
@@ -22,7 +23,8 @@ async def run_query(req: QueryPythonRequest, response: Response):
         if status_code == 200:
             filter_sql = resp["result"]["filter_sql"]
             filter_values = resp["result"]["filter_values"]
-            df = process_query_result(query_db(filter_sql, filter_values, req.file.source))
+            res = query_db(filter_sql, filter_values, req.file.source)
+            df = process_query_result(res)
             resp["result"] = {"columns": df.columns.tolist(), "data": df.values.tolist()}
     response.status_code = status_code
     return resp
