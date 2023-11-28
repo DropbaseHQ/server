@@ -1,8 +1,9 @@
 from typing import Any, List, Optional
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 from server.schemas.table import TablesBaseProperty
+from server.constants import FILE_NAME_REGEX
 
 
 class CreateAppRequest(BaseModel):
