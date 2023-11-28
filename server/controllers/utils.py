@@ -55,10 +55,10 @@ def get_function_by_name(app_name: str, page_name: str, function_name: str):
     return function
 
 
-def get_data_function_by_file(app_name: str, page_name: str, file_name: str):
-    file_module = f"workspace.{app_name}.{page_name}.scripts.{file_name}"
+def get_data_function_by_file(app_name: str, page_name: str, file: DataFile):
+    file_module = f"workspace.{app_name}.{page_name}.scripts.{file.name}"
     scripts = importlib.import_module(file_module)
-    function = getattr(scripts, file_name)
+    function = getattr(scripts, file.name)
     return function
 
 

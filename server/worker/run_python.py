@@ -10,11 +10,11 @@ from server.schemas.files import DataFile
 from server.schemas.table import FilterSort
 
 
-def run_python_query(app_name, page_name, file_name: str, state: dict, filter_sort: FilterSort):
+def run_python_query(app_name, page_name, file: DataFile, state: dict, filter_sort: FilterSort):
     try:
         state = get_state(app_name, page_name, state)
         args = {"state": state, "filter_sort": filter_sort}
-        function_name = get_data_function_by_file(app_name, page_name, file_name)
+        function_name = get_data_function_by_file(app_name, page_name, file)
         df = call_function(function_name, **args)
         df = clean_df(df)
         return {"columns": df.columns.tolist(), "data": df.values.tolist()}, 200

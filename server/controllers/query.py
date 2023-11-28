@@ -6,14 +6,50 @@ from jinja2 import Environment, meta
 from sqlalchemy import text
 from sqlalchemy.engine import Engine
 
+from server.constants import DATA_PREVIEW_SIZE
 from server.controllers.utils import clean_df, connect_to_user_db
+from server.schemas.files import DataFile
 from server.schemas.table import FilterSort, TableFilter, TableSort, TablePagination
+from server.worker.python_subprocess import run_process_task
 
 cwd = os.getcwd()
 
 
-# TREVOR TODO look to remove run_df_query completely
-def run_df_query(user_sql: str, source: str, state, filter_sort: FilterSort) -> pd.DataFrame:
+def verify_state(app_name: str, page_name: str, state: dict):
+    args = {
+        "app_name": app_name,
+        "page_name": page_name,
+        "state": state,
+    }
+    return run_process_task("verify_state", args)
+
+
+def run_python_query(app_name: str, page_name: str, file: DataFile, state: dict, filter_sort: FilterSort):
+    args = {
+        "app_name": app_name,
+        "page_name": page_name,
+        "file": file.dict(),
+        "state": state,
+        "filter_sort": filter_sort.dict()
+    }
+    return run_process_task("run_python_query", args)
+
+
+def run_sql_query(app_name: str, page_name: str, file: DataFile, state: dict, filter_sort: FilterSort):
+    resp, status_code = verify_state(app_name, page_name, state)
+    if status_code == 200:
+        sql = get_table_sql(app_name, page_name, file.name)
+        df = run_df_query(sql, file.source, state, filter_sort)
+        resp["result"] = {"columns": df.columns.tolist(), "data": df.values.tolist()}
+    return resp, status_code
+
+
+def run_df_query(
+    user_sql: str,
+    source: str,
+    state: dict,
+    filter_sort: FilterSort=FilterSort(filters=[], sorts=[], pagination=TablePagination(page=0, page_size=DATA_PREVIEW_SIZE))
+) -> pd.DataFrame:
     filter_sql, filter_values = prepare_sql(user_sql, state, filter_sort)
     res = query_db(filter_sql, filter_values, source)
     return process_query_result(res)
@@ -25,17 +61,16 @@ def process_query_result(res) -> pd.DataFrame:
     return df
 
 
-# TREVOR TODO once run_df_query is removed, this should go into worker instead of controller
-def prepare_sql(user_sql: str, state, filter_sort: FilterSort):
+def prepare_sql(user_sql: str, state: dict, filter_sort: FilterSort):
     sql = clean_sql(user_sql)
     sql = render_sql(sql, state)
     return apply_filters(sql, filter_sort.filters, filter_sort.sorts, filter_sort.pagination)
 
 
-def render_sql(user_sql: str, state):
+def render_sql(user_sql: str, state: dict):
     env = Environment()
     template = env.from_string(user_sql)
-    return template.render(**state.tables.dict())
+    return template.render(**state["tables"])
 
 
 def get_sql_variables(user_sql: str):

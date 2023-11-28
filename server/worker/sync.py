@@ -1,6 +1,8 @@
 import os
 
-from server.controllers.sync import _get_table_columns
+# TREVOR TODO: unmock this and migrate sync
+import unittest.mock
+_get_table_columns = unittest.mock.MagicMock()#from server.controllers.sync import _get_table_columns
 from server.controllers.utils import handle_state_context_updates, validate_column_name
 from server.requests.dropbase_router import AccessCookies, DropbaseRouter
 from server.schemas.files import DataFile
