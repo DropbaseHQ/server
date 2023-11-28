@@ -6,10 +6,6 @@ from server.worker.python_subprocess import run_process_task
 
 router = APIRouter(prefix="/query", tags=["query"], responses={404: {"description": "Not found"}})
 
-import logging
-logging.basicConfig()
-logging.getLogger("sqlalchemy.pool").setLevel(logging.DEBUG)
-
 @router.post("/")
 async def run_query(req: QueryPythonRequest, response: Response):
     args = {
@@ -27,8 +23,6 @@ async def run_query(req: QueryPythonRequest, response: Response):
             filter_sql = resp["result"]["filter_sql"]
             filter_values = resp["result"]["filter_values"]
             df = process_query_result(query_db(filter_sql, filter_values, req.file.source))
-            from server.controllers.utils import connect_to_user_db
-            print("SQLALCHEMY SESSION CACHE INFO:", connect_to_user_db.cache_info())
             resp["result"] = {"columns": df.columns.tolist(), "data": df.values.tolist()}
     response.status_code = status_code
     return resp
