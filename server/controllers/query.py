@@ -12,14 +12,22 @@ from server.schemas.table import FilterSort, TableFilter, TableSort, TablePagina
 cwd = os.getcwd()
 
 
-def run_df_query(sql: str, source: str, state, filter_sort: FilterSort):
-    sql = clean_sql(sql)
-    sql = render_sql(sql, state)
-    filter_sql, filter_values = apply_filters(sql, filter_sort.filters, filter_sort.sorts, filter_sort.pagination)
+def run_df_query(user_sql: str, source: str, state, filter_sort: FilterSort) -> pd.DataFrame:
+    filter_sql, filter_values = prepare_sql(user_sql, state, filter_sort)
     res = query_db(filter_sql, filter_values, source)
+    return process_query_result(res)
+
+
+def process_query_result(res) -> pd.DataFrame:
     df = pd.DataFrame(res)
     df = clean_df(df)
     return df
+
+
+def prepare_sql(user_sql: str, state, filter_sort: FilterSort):
+    sql = clean_sql(user_sql)
+    sql = render_sql(sql, state)
+    return apply_filters(sql, filter_sort.filters, filter_sort.sorts, filter_sort.pagination)
 
 
 def render_sql(user_sql: str, state):
@@ -49,7 +57,6 @@ def query_db(sql, values, source_name):
     user_db_engine = connect_to_user_db(source_name)
     with user_db_engine.connect().execution_options(autocommit=True) as conn:
         res = conn.execute(text(sql), values).all()
-    user_db_engine.dispose()
     return res
 
 
