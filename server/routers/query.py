@@ -21,17 +21,14 @@ async def run_query(req: QueryPythonRequest, response: Response):
     }
     if req.file.type == "data_fetcher":
         resp, status_code = run_process_task("run_python_query", args)
-        response.status_code = status_code
-        return resp
     else:
         resp, status_code = run_process_task("get_sql_from_file", args)
-        response.status_code = status_code
         if status_code == 200:
             filter_sql = resp["result"]["filter_sql"]
             filter_values = resp["result"]["filter_values"]
             df = process_query_result(query_db(filter_sql, filter_values, req.file.source))
             from server.controllers.utils import connect_to_user_db
             print("SQLALCHEMY SESSION CACHE INFO:", connect_to_user_db.cache_info())
-            return {"columns": df.columns.tolist(), "data": df.values.tolist()}
-        else:
-            return resp
+            resp["result"] = {"columns": df.columns.tolist(), "data": df.values.tolist()}
+    response.status_code = status_code
+    return resp
