@@ -1,12 +1,12 @@
 import os
+
 from server.controllers.sync import _get_table_columns
 from server.controllers.utils import handle_state_context_updates, validate_column_name
+from server.requests.dropbase_router import AccessCookies, DropbaseRouter
 from server.schemas.files import DataFile
 from server.schemas.table import TableBase
-from server.requests.dropbase_router import DropbaseRouter, AccessCookies
 
-
-token = os.getenv("DROPBASE_PROXY_SERVER_TOKEN")
+token = os.getenv("DROPBASE_TOKEN")
 
 
 def sync_table_columns(

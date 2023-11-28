@@ -11,6 +11,10 @@ COPY requirements.txt requirements.txt
 
 RUN pip3 install --no-cache-dir --upgrade -r requirements.txt
 
+# install dropbase package
+ADD dropbase/. dropbase/.
+RUN pip install dropbase/.
+
 ADD server/. server/.
 
 EXPOSE 9090

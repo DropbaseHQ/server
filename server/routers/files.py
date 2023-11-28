@@ -1,10 +1,11 @@
 import glob
 import os
+import re
 from uuid import UUID
 
-from fastapi import APIRouter, Response, Depends
+from fastapi import APIRouter, Response, Depends, HTTPException
 
-from server.constants import cwd
+from server.constants import cwd, FILE_NAME_REGEX
 from server.controllers.files import create_file
 from server.controllers.utils import rename_function_in_file
 from server.schemas.files import CreateFile, DeleteFile, RenameFile, UpdateFile
@@ -13,16 +14,6 @@ from server.requests.dropbase_router import DropbaseRouter, get_dropbase_router
 router = APIRouter(
     prefix="/files", tags=["files"], responses={404: {"description": "Not found"}}
 )
-
-
-@router.get("/read/{path}/")
-async def read_file_req(path: str):
-    try:
-        with open(path, "r") as f:
-            content = f.read()
-        return {"content": content}
-    except Exception as e:
-        return {"status": "error", "message": str(e)}
 
 
 @router.post("/")
@@ -119,6 +110,8 @@ def delete_file_req(
 
 @router.get("/all/{app_name}/{page_name}/")
 async def get_all_files_req(app_name, page_name):
+    if not (re.match(FILE_NAME_REGEX, app_name) and re.match(FILE_NAME_REGEX, page_name)):
+        raise HTTPException(400, detail="app_name and file_name must be only use alphanumerics or underscores.")
     dir_path = cwd + f"/workspace/{app_name}/{page_name}/scripts"
     py_files = glob.glob(os.path.join(dir_path, "*.py"))
     py_files = [file for file in py_files if not file.endswith("__init__.py")]

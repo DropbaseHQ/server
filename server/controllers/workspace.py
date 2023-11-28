@@ -24,9 +24,7 @@ class AppCreator:
 
     def _create_default_workspace_files(self) -> str | None:
         try:
-            app_folder_path = os.path.join(
-                self.r_path_to_workspace, self.app_object.get("name")
-            )
+            app_folder_path = os.path.join(self.r_path_to_workspace, self.app_object.get("name"))
 
             # Create new app folder
             create_folder(path=app_folder_path)
@@ -71,14 +69,10 @@ class AppCreator:
             )
         except Exception as e:
             print("Unable to update app state and context", e)
-            raise HTTPException(
-                status_code=500, detail="Unable to update app state and context"
-            )
+            raise HTTPException(status_code=500, detail="Unable to update app state and context")
 
     def _update_app_draft_status(self):
-        new_app_path = os.path.join(
-            self.r_path_to_workspace, self.app_object.get("name")
-        )
+        new_app_path = os.path.join(self.r_path_to_workspace, self.app_object.get("name"))
         app_id = self.app_object.get("id")
         create_app_response = self.router.app.update_app(app_id, {"is_draft": False})
         if create_app_response.status_code != 200:
@@ -87,9 +81,7 @@ class AppCreator:
 
     def create(self):
         self._create_default_workspace_files()
-        self._get_initial_state_and_context(
-            token=os.getenv("DROPBASE_PROXY_SERVER_TOKEN")
-        )
+        self._get_initial_state_and_context(token=os.getenv("DROPBASE_TOKEN"))
         self._update_app_draft_status()
         return {"success": True, "app_id": self.app_object.get("id")}
 

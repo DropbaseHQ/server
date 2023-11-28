@@ -20,12 +20,12 @@ server
 
 ```
 set -o allexport; source .env; set +o allexport
-uvicorn server.main:app --reload --host 0.0.0.0 --port 9000
+uvicorn server.main:app --reload --host 0.0.0.0 --port 9090
 ```
 
 lsp
 
 ```
 set -o allexport; source .env; set +o allexport
-pylsp --ws --port 9001
+pylsp --ws --port 9095
 ```
