@@ -1,12 +1,13 @@
+import ast
 import importlib
 import inspect
 import json
 import os
-import sys
-import ast
-from pathlib import Path
 import re
+import sys
+from pathlib import Path
 from typing import List
+
 import pandas as pd
 from datamodel_code_generator import generate
 from sqlalchemy import create_engine
@@ -94,15 +95,17 @@ def handle_state_context_updates(response):
 
 def update_state_context_files(app_name, page_name, state, context):
     try:
+        output_state_path = Path(f"workspace/{app_name}/{page_name}/state.py")
         generate(
             input_=json.dumps(state),
             input_file_type="json",
-            output=Path(f"workspace/{app_name}/{page_name}/state.py"),
+            output=output_state_path,
         )
+        output_context_path = Path(f"workspace/{app_name}/{page_name}/context.py")
         generate(
             input_=json.dumps(context),
             input_file_type="json",
-            output=Path(f"workspace/{app_name}/{page_name}/context.py"),
+            output=output_context_path,
         )
     except Exception as e:
         raise Exception(f"Error updating state and context files: {e}")
@@ -113,12 +116,12 @@ def connect_to_user_db(source_name: str):
     creds = sources.get(source_name)
     CredsClass = db_type_to_class.get(creds.get("type"))
     creds = CredsClass(**creds)
-    SQLALCHEMY_DATABASE_URL = f"postgresql+psycopg2://{creds.username}:{creds.password}@{creds.host}:{creds.port}/{creds.database}"
+    SQLALCHEMY_DATABASE_URL = f"postgresql+psycopg2://{creds.username}:{creds.password}@{creds.host}:{creds.port}/{creds.database}"  # noqa
     return create_engine(SQLALCHEMY_DATABASE_URL, future=True)
 
 
 def validate_column_name(columns: List[str]):
-    pattern = re.compile(r'^[a-zA-Z_][a-zA-Z0-9_]*$')
+    pattern = re.compile(r"^[a-zA-Z_][a-zA-Z0-9_]*$")
     for column in columns:
         if pattern.fullmatch(column) is None:
             return False

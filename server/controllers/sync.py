@@ -1,6 +1,8 @@
 import importlib
 from typing import List
+
 from pydantic import BaseModel
+
 from server.controllers.python_from_string import run_df_function
 from server.controllers.query import get_table_sql, run_df_query
 from server.controllers.utils import get_state
@@ -11,6 +13,7 @@ from server.schemas.table import FilterSort
 def get_page_state_context(app_name: str, page_name: str):
     module_name = f"workspace.{app_name}.{page_name}"
     module = importlib.import_module(module_name)
+    module = importlib.reload(module)
     State = getattr(module, "State")
     Context = getattr(module, "Context")
     state = _dict_from_pydantic_model(State)
