@@ -60,8 +60,8 @@ def convert_table(
         db_schema, gpt_schema = get_db_schema(user_db_engine)
         # get columns
         user_sql = get_table_sql(app_name, page_name, file.name)
-        column_names = get_column_names(user_db_engine, user_sql)
         user_sql = render_sql(user_sql, state)
+        column_names = get_column_names(user_db_engine, user_sql)
         router = DropbaseRouter(cookies=access_cookies)
 
         # get columns from file
