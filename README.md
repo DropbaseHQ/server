@@ -3,8 +3,8 @@
 server
 
 ```
-docker build -t dropbase/server -f Dockerfile-server .
-docker push dropbase/server
+docker build -t dropbase/server:0.0.1 -f Dockerfile-server .
+docker push dropbase/server:0.0.1
 ```
 
 lsp

@@ -1,22 +1,17 @@
-from fastapi import APIRouter, Response, Depends
+from fastapi import APIRouter, Depends, Response
+
 from server.controllers.utils import handle_state_context_updates, update_state_context_files
-from server.schemas.workspace import (
-    ConvertTableRequest,
-    CreateTableRequest,
-    UpdateTableRequest,
-)
-from server.worker.python_subprocess import run_process_task
 from server.requests.dropbase_router import (
-    DropbaseRouter,
-    get_dropbase_router,
     AccessCookies,
+    DropbaseRouter,
     get_access_cookies,
+    get_dropbase_router,
 )
+from server.schemas.workspace import ConvertTableRequest, CreateTableRequest, UpdateTableRequest
+from server.worker.python_subprocess import run_process_task
 from server.worker.tables import update_table, update_table_columns
 
-router = APIRouter(
-    prefix="/tables", tags=["tables"], responses={404: {"description": "Not found"}}
-)
+router = APIRouter(prefix="/tables", tags=["tables"], responses={404: {"description": "Not found"}})
 
 
 @router.post("/")
@@ -48,10 +43,13 @@ def update_table_req(
         response.status_code = status_code
         return resp
     if req.file.get("id") != req.table.get("file_id"):
-        resp, status_code = update_table_columns(table_id, req, router)
-        response.status_code = status_code
-        return resp
-    return resp
+        result, status_code = update_table_columns(table_id, req, router)
+        if status_code != 200:
+            response.status_code = status_code
+            return result
+        resp = {"state_context": result}
+    update_state_context_files(**resp.get("state_context"))
+    return resp.get("table")
 
 
 @router.post("/convert/")
@@ -68,9 +66,7 @@ def convert_table_req(
 
 
 @router.delete("/{table_id}/")
-def delete_table_req(
-    table_id: str, router: DropbaseRouter = Depends(get_dropbase_router)
-):
+def delete_table_req(table_id: str, router: DropbaseRouter = Depends(get_dropbase_router)):
     resp = router.table.delete_table(table_id=table_id)
     handle_state_context_updates(resp)
     return resp.json()
