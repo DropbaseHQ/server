@@ -2,8 +2,8 @@ from typing import Any, List, Optional
 
 from pydantic import BaseModel, Field
 
-from server.schemas.table import TablesBaseProperty
 from server.constants import FILE_NAME_REGEX
+from server.schemas.table import TablesBaseProperty
 
 
 class CreateAppRequest(BaseModel):
@@ -22,16 +22,21 @@ class DeleteAppRequest(BaseModel):
     app_name: str = Field(regex=FILE_NAME_REGEX)
 
 
+class UpdateTables(BaseModel):
+    name: Optional[str]
+    property: TablesBaseProperty
+    file_id: str
+    depends_on: Optional[List[str]]
+
+
 class UpdateTableRequest(BaseModel):
     app_name: str = Field(regex=FILE_NAME_REGEX)
     page_name: str = Field(regex=FILE_NAME_REGEX)
-    name: str
-    table: dict
     state: dict
-    file: dict
+    table: dict
     page_id: str
-    property: dict
-    depends_on: Optional[List[str]]
+    file: dict
+    table_updates: UpdateTables
 
 
 class ConvertTableRequest(BaseModel):

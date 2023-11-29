@@ -15,11 +15,9 @@ from server.worker.sync import get_table_columns
 
 def update_table(table_id: str, req: UpdateTableRequest, router: DropbaseRouter):
     update_table_payload = {
-        "name": req.name,
-        "table_id": req.table.get("id"),
-        "file_id": req.file.get("id"),
+        "table_id": table_id,
         "page_id": req.page_id,
-        "property": req.property,
+        "table_updates": req.table_updates,
     }
     try:
         # get depends on for sql files
