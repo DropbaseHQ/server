@@ -79,7 +79,8 @@ def get_state(app_name: str, page_name: str, state: dict):
 
 
 def clean_df(df: pd.DataFrame) -> pd.DataFrame:
-    df = df.fillna("")
+    # TODO: implement cleaning
+    # df = df.fillna("")
     return df
 
 
