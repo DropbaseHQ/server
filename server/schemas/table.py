@@ -45,6 +45,7 @@ class TablesBaseProperty(BaseModel):
 
     # other
     appears_after: Optional[str]
+    height: Optional[str]
 
 
 class QueryTablePayload(BaseModel):

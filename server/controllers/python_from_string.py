@@ -1,5 +1,6 @@
 import ast
 import importlib
+import json
 import os
 import runpy
 import sys
@@ -7,9 +8,11 @@ import tempfile
 import traceback
 from io import StringIO
 from multiprocessing import Pipe, Process
+
 import astor
 import pandas as pd
-from server.constants import cwd, DATA_PREVIEW_SIZE
+
+from server.constants import DATA_PREVIEW_SIZE, cwd
 from server.controllers.utils import clean_df, get_data_function_by_file
 
 
@@ -65,10 +68,7 @@ def run_exec_task(child_conn, args):
         if type(last_var) is pd.DataFrame:
             last_var = clean_df(last_var)
             last_var = last_var[:DATA_PREVIEW_SIZE]
-            output = {
-                "columns": last_var.columns.tolist(),
-                "data": last_var.values.tolist(),
-            }
+            output = json.loads(last_var.to_json(orient="split"))
         elif last_var.__class__.__name__ == "Context":
             output = {"context": last_var.dict()}
         else:

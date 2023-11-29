@@ -23,11 +23,16 @@ def update_value(user_db_engine, edit: dict):
 
         sql = f"""UPDATE "{column.schema_name}"."{column.table_name}"
     SET {column.column_name} = :new_value
-    WHERE {prim_key_str} AND {column.column_name} = :old_value
-    """
+    WHERE {prim_key_str}"""
+
+        # TODO: add check for prev column value
+        # AND {column.column_name} = :old_value
+
         with user_db_engine.connect() as conn:
-            conn.execute(text(sql), values)
+            result = conn.execute(text(sql), values)
             conn.commit()
+            if result.rowcount == 0:
+                raise Exception("No rows were updated")
         return f"updated {edit.column_name} from {edit.old_value} to {edit.new_value}"
-    except Exception:
-        return f"failed to update {edit.column_name} from {edit.old_value} to {edit.new_value}"
+    except Exception as e:
+        return f"Failed to update {edit.column_name} from {edit.old_value} to {edit.new_value}. Error: {str(e)}"  # noqa

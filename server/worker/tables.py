@@ -10,22 +10,20 @@ from server.controllers.utils import (
     connect_to_user_db,
     get_state,
     handle_state_context_updates,
-    validate_column_name
+    validate_column_name,
 )
 from server.controllers.validation import validate_smart_cols
+from server.requests.dropbase_router import AccessCookies, DropbaseRouter
 from server.schemas.files import DataFile
 from server.schemas.workspace import UpdateTableRequest
 from server.worker.sync import get_table_columns
-from server.requests.dropbase_router import DropbaseRouter, AccessCookies
 
 
 def update_table(table_id: str, req: UpdateTableRequest, router: DropbaseRouter):
     update_table_payload = {
-        "name": req.name,
-        "table_id": req.table.get("id"),
-        "file_id": req.file.get("id"),
+        "table_id": table_id,
         "page_id": req.page_id,
-        "property": req.property,
+        "table_updates": req.table_updates.dict(),
     }
     try:
         # get depends on for sql files
@@ -34,26 +32,19 @@ def update_table(table_id: str, req: UpdateTableRequest, router: DropbaseRouter)
             depends_on = get_sql_variables(user_sql=sql)
             update_table_payload["depends_on"] = depends_on
 
-        resp = router.table.update_table(
-            table_id=table_id, update_data=update_table_payload
-        )
+        resp = router.table.update_table(table_id=table_id, update_data=update_table_payload)
         return resp.json(), resp.status_code
     except Exception as e:
         return str(e), 500
 
 
-def update_table_columns(
-    table_id: str, req: UpdateTableRequest, router: DropbaseRouter
-):
+def update_table_columns(table_id: str, req: UpdateTableRequest, router: DropbaseRouter):
     try:
-        columns = get_table_columns(
-            req.app_name, req.page_name, req.table, req.file, req.state
-        )
+        columns = get_table_columns(req.app_name, req.page_name, req.table, req.file, req.state)
         if not validate_column_name(columns):
             return {"message": "Invalid column names present in the table"}, 400
         payload = {"table_id": table_id, "columns": columns, "type": req.file.get("type")}
         resp = router.sync.sync_columns(payload)
-        handle_state_context_updates(resp)
         return resp.json(), 200
     except Exception as e:
         return {"message": str(e)}, 500
@@ -96,9 +87,7 @@ def convert_table(
 
         # validate columns
         validated = validate_smart_cols(user_db_engine, smart_cols, user_sql)
-        smart_columns = {
-            name: value for name, value in smart_cols.items() if name in validated
-        }
+        smart_columns = {name: value for name, value in smart_cols.items() if name in validated}
 
         # get columns from file
         update_smart_cols_payload = {"smart_columns": smart_columns, "table": table}
