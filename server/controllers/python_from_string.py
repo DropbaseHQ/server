@@ -13,7 +13,7 @@ import astor
 import pandas as pd
 
 from server.constants import DATA_PREVIEW_SIZE, cwd
-from server.controllers.utils import clean_df, get_data_function_by_file
+from server.controllers.utils import clean_df
 from server.schemas.files import DataFile
 from server.worker.python_subprocess import run_process_task
 

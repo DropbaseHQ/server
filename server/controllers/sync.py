@@ -56,12 +56,15 @@ def _dict_from_pydantic_model(model):
     return data
 
 
-def get_table_columns(app_name: str, page_name: str, file: DataFile, state: dict) -> List[str]:
+def get_table_columns(app_name: str, page_name: str, file: dict, state: dict) -> List[str]:
+    file = DataFile(**file)
     filter_sort = FilterSort(filters=[], sorts=[])
 
     if file.type == "data_fetcher":
         df = run_df_function(app_name, page_name, file, state)
+        columns = df.columns.tolist()
     else:
         sql = get_table_sql(app_name, page_name, file.name)
-        df = run_sql_query_from_string(sql, file.source, app_name, page_name, state, filter_sort)
-    return df.columns.tolist()
+        resp, _ = run_sql_query_from_string(sql, file.source, app_name, page_name, state, filter_sort)
+        columns = resp["result"]["columns"]
+    return columns
