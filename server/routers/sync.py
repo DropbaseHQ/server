@@ -1,14 +1,9 @@
 from fastapi import APIRouter, Depends, Response
-from server.schemas.sync import GetTableColumns, SyncComponents, SyncTableColumns
-from server.worker.python_subprocess import run_process_task
+from server.schemas.sync import SyncComponents, SyncTableColumns
 from server.worker.sync import sync_components, sync_page
-from server.controllers.sync import get_page_state_context
-from server.requests.dropbase_router import (
-    get_access_cookies,
-    AccessCookies,
-    DropbaseRouter,
-    get_dropbase_router,
-)
+from server.controllers.sync import sync_table_columns, get_page_state_context
+from server.requests.dropbase_router import DropbaseRouter, get_dropbase_router
+
 
 router = APIRouter(
     prefix="/sync", tags=["sync"], responses={404: {"description": "Not found"}}
@@ -24,11 +19,16 @@ async def get_state_context_req(app_name: str, page_name: str):
 async def sync_table_columns_req(
     req: SyncTableColumns,
     response: Response,
-    access_cookies: AccessCookies = Depends(get_access_cookies)
+    router: DropbaseRouter = Depends(get_dropbase_router)
 ):
-    args = req.dict()
-    args["access_cookies"] = access_cookies.dict()
-    resp, status_code = run_process_task("sync_table_columns", args)
+    resp, status_code = sync_table_columns(
+        req.app_name,
+        req.page_name,
+        req.table,
+        req.file,
+        req.state,
+        router
+    )
     response.status_code = status_code
     return resp
 

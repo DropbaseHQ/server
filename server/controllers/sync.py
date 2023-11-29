@@ -5,9 +5,34 @@ from pydantic import BaseModel
 
 from server.controllers.python_from_string import run_df_function
 from server.controllers.query import get_table_sql, run_sql_query_from_string
-from server.controllers.utils import get_state
+from server.controllers.utils import validate_column_name, handle_state_context_updates
+from server.requests.dropbase_router import DropbaseRouter
 from server.schemas.files import DataFile
-from server.schemas.table import FilterSort
+from server.schemas.table import TableBase, FilterSort
+
+
+def sync_table_columns(
+    app_name: str,
+    page_name: str,
+    table: dict,
+    file: dict,
+    state,
+    router: DropbaseRouter
+):
+    try:
+        table = TableBase(**table)
+        file = DataFile(**file)
+        columns = _get_table_columns(app_name, page_name, file, state=state)
+        if not validate_column_name(columns):
+            return "Invalid column names present in the table", 400
+
+        # call dropbase server
+        payload = {"table_id": table.id, "columns": columns, "type": file.type}
+        resp = router.misc.sync_table_columns(payload)
+        handle_state_context_updates(resp)
+        return resp.json(), resp.status_code
+    except Exception as e:
+        return str(e), 500
 
 
 def get_page_state_context(app_name: str, page_name: str):

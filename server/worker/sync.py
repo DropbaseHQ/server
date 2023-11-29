@@ -1,41 +1,15 @@
 import os
 
-# TREVOR TODO: unmock this and migrate sync
-import unittest.mock
-_get_table_columns = unittest.mock.MagicMock()#from server.controllers.sync import _get_table_columns
-from server.controllers.utils import handle_state_context_updates, validate_column_name
-from server.requests.dropbase_router import AccessCookies, DropbaseRouter
+from server.controllers.sync import _get_table_columns
+from server.controllers.utils import handle_state_context_updates
+from server.requests.dropbase_router import DropbaseRouter
 from server.schemas.files import DataFile
 from server.schemas.table import TableBase
 
 token = os.getenv("DROPBASE_TOKEN")
 
 
-def sync_table_columns(
-    app_name: str,
-    page_name: str,
-    table: dict,
-    file: dict,
-    state,
-    access_cookies: AccessCookies,
-):
-    try:
-        table = TableBase(**table)
-        file = DataFile(**file)
-        columns = _get_table_columns(app_name, page_name, file, state=state)
-        if not validate_column_name(columns):
-            return "Invalid column names present in the table", 400
-
-        # call dropbase server
-        payload = {"table_id": table.id, "columns": columns, "type": file.type}
-        router = DropbaseRouter(cookies=access_cookies)
-        resp = router.misc.sync_table_columns(payload)
-        handle_state_context_updates(resp)
-        return resp.json(), resp.status_code
-    except Exception as e:
-        return str(e), 500
-
-
+# TREVOR TODO move this out of worker
 def get_table_columns(app_name: str, page_name: str, table: dict, file: dict, state):
     table = TableBase(**table)
     file = DataFile(**file)
