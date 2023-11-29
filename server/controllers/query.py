@@ -16,7 +16,6 @@ from server.worker.python_subprocess import run_process_task
 cwd = os.getcwd()
 
 
-# TREVOR TODO move this to validate.py
 def verify_state(app_name: str, page_name: str, state: dict):
     args = {
         "app_name": app_name,
