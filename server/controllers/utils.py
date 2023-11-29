@@ -120,7 +120,7 @@ def connect_to_user_db(source_name: str):
     CredsClass = db_type_to_class.get(creds.get("type"))
     creds = CredsClass(**creds)
     SQLALCHEMY_DATABASE_URL = f"postgresql+psycopg2://{creds.username}:{creds.password}@{creds.host}:{creds.port}/{creds.database}"  # noqa
-    return create_engine(SQLALCHEMY_DATABASE_URL, future=True)
+    return create_engine(SQLALCHEMY_DATABASE_URL, future=True, pool_recycle=3600)
 
 
 def validate_column_name(columns: List[str]):
