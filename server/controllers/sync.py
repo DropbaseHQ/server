@@ -21,13 +21,12 @@ def sync_table_columns(
 ):
     try:
         table = TableBase(**table)
-        file = DataFile(**file)
         columns = get_table_columns(app_name, page_name, file, state=state)
         if not validate_column_name(columns):
             return "Invalid column names present in the table", 400
 
         # call dropbase server
-        payload = {"table_id": table.id, "columns": columns, "type": file.type}
+        payload = {"table_id": table.id, "columns": columns, "type": file.get("type")}
         resp = router.misc.sync_table_columns(payload)
         handle_state_context_updates(resp)
         return resp.json(), resp.status_code

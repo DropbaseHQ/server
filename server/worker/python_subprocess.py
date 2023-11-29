@@ -12,7 +12,6 @@ from server.worker.edit_cell import edit_cell  # noqa
 from server.worker.run_python import run_python_query, run_python_ui, run_df_function  # noqa
 from server.worker.state import verify_state  # noqa
 from server.worker.sync import sync_components  # noqa
-from server.worker.tables import convert_table  # noqa
 
 
 def run_process_task(function_name: str, args: dict):

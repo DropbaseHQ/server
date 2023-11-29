@@ -15,6 +15,7 @@ from server.worker.python_subprocess import run_process_task
 cwd = os.getcwd()
 
 
+# TREVOR TODO move this to validate.py
 def verify_state(app_name: str, page_name: str, state: dict):
     args = {
         "app_name": app_name,
@@ -35,7 +36,8 @@ def run_python_query(app_name: str, page_name: str, file: DataFile, state: dict,
     return run_process_task("run_python_query", args)
 
 
-# TODO use updated df output
+# TREVOR TODO use updated df output
+# TREVOR TODO make verify state return bool
 def run_sql_query(app_name: str, page_name: str, file: DataFile, state: dict, filter_sort: FilterSort):
     resp, status_code = verify_state(app_name, page_name, state)
     if status_code == 200:
