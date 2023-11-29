@@ -35,11 +35,20 @@ def run_python_query(app_name: str, page_name: str, file: DataFile, state: dict,
     return run_process_task("run_python_query", args)
 
 
+# TODO use updated df output
 def run_sql_query(app_name: str, page_name: str, file: DataFile, state: dict, filter_sort: FilterSort):
     resp, status_code = verify_state(app_name, page_name, state)
     if status_code == 200:
         sql = get_table_sql(app_name, page_name, file.name)
         df = run_df_query(sql, file.source, state, filter_sort)
+        resp["result"] = {"columns": df.columns.tolist(), "data": df.values.tolist()}
+    return resp, status_code
+
+
+def run_sql_query_from_string(sql: str, source: str, app_name: str, page_name: str, state: dict, filter_sort: FilterSort):
+    resp, status_code = verify_state(app_name, page_name, state)
+    if status_code == 200:
+        df = run_df_query(sql, source, state, filter_sort)
         resp["result"] = {"columns": df.columns.tolist(), "data": df.values.tolist()}
     return resp, status_code
 

@@ -4,7 +4,7 @@ from typing import List
 from pydantic import BaseModel
 
 from server.controllers.python_from_string import run_df_function
-from server.controllers.query import get_table_sql, run_df_query
+from server.controllers.query import get_table_sql, run_sql_query_from_string
 from server.controllers.utils import get_state
 from server.schemas.files import DataFile
 from server.schemas.table import FilterSort
@@ -31,13 +31,12 @@ def _dict_from_pydantic_model(model):
     return data
 
 
-def _get_table_columns(app_name: str, page_name: str, file: DataFile, state) -> List[str]:
+def _get_table_columns(app_name: str, page_name: str, file: DataFile, state: dict) -> List[str]:
     filter_sort = FilterSort(filters=[], sorts=[])
-    state = get_state(app_name, page_name, state)
 
     if file.type == "data_fetcher":
         df = run_df_function(app_name, page_name, file, state)
     else:
         sql = get_table_sql(app_name, page_name, file.name)
-        df = run_df_query(sql, file.source, state, filter_sort)
+        df = run_sql_query_from_string(sql, file.source, app_name, page_name, state, filter_sort)
     return df.columns.tolist()

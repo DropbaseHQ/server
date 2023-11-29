@@ -14,6 +14,8 @@ import pandas as pd
 
 from server.constants import DATA_PREVIEW_SIZE, cwd
 from server.controllers.utils import clean_df, get_data_function_by_file
+from server.schemas.files import DataFile
+from server.worker.python_subprocess import run_process_task
 
 
 def run_process_with_exec(args: dict):
@@ -111,8 +113,15 @@ state = State(**payload.get('state'))\n\n
     return compose_run_python_str, last_expr
 
 
-def run_df_function(app_name, page_name, file, state):
-    function_name = get_data_function_by_file(app_name, page_name, file)
-    df = function_name(state)
-    df = clean_df(df)
-    return df
+def run_df_function(app_name: str, page_name: str, file: DataFile, state: dict):
+    args = {
+        "app_name": app_name,
+        "page_name": page_name,
+        "file": file.dict(),
+        "state": state,
+    }
+    resp, status_code = run_process_task("run_df_function", args)
+    if status_code == 200:
+        return resp["result"]
+    else:
+        raise Exception(resp["result"])
