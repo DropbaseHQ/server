@@ -1,3 +1,5 @@
+import json
+
 from fastapi import APIRouter, Response
 
 from server.schemas.query import RunSQLRequest
@@ -15,7 +17,7 @@ async def run_sql_from_string_req(req: RunSQLRequest, response: Response):
             return resp
 
         df = run_df_query(req.file_content, req.source, req.state)
-        result = {"columns": df.columns.tolist(), "data": df.values.tolist()}
+        result = json.loads(df.to_json(orient="split"))
         return {"success": True, "result": result, "stdout": ""}
     except Exception as e:
         return {"success": False, "result": str(e), "stdout": ""}

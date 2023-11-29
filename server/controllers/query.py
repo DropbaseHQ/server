@@ -1,4 +1,5 @@
 import os
+import json
 from typing import List
 
 import pandas as pd
@@ -36,14 +37,12 @@ def run_python_query(app_name: str, page_name: str, file: DataFile, state: dict,
     return run_process_task("run_python_query", args)
 
 
-# TREVOR TODO use updated df output
-# TREVOR TODO make verify state return bool
 def run_sql_query(app_name: str, page_name: str, file: DataFile, state: dict, filter_sort: FilterSort):
     resp, status_code = verify_state(app_name, page_name, state)
     if status_code == 200:
         sql = get_table_sql(app_name, page_name, file.name)
         df = run_df_query(sql, file.source, state, filter_sort)
-        resp["result"] = {"columns": df.columns.tolist(), "data": df.values.tolist()}
+        resp["result"] = json.loads(df.to_json(orient="split"))
     return resp, status_code
 
 
@@ -51,7 +50,7 @@ def run_sql_query_from_string(sql: str, source: str, app_name: str, page_name: s
     resp, status_code = verify_state(app_name, page_name, state)
     if status_code == 200:
         df = run_df_query(sql, source, state, filter_sort)
-        resp["result"] = {"columns": df.columns.tolist(), "data": df.values.tolist()}
+        resp["result"] = json.loads(df.to_json(orient="split"))
     return resp, status_code
 
 
