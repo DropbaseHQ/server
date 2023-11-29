@@ -17,7 +17,7 @@ def update_table(table_id: str, req: UpdateTableRequest, router: DropbaseRouter)
     update_table_payload = {
         "table_id": table_id,
         "page_id": req.page_id,
-        "table_updates": req.table_updates,
+        "table_updates": req.table_updates.dict(),
     }
     try:
         # get depends on for sql files
