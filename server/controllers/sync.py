@@ -22,7 +22,7 @@ def sync_table_columns(
     try:
         table = TableBase(**table)
         file = DataFile(**file)
-        columns = _get_table_columns(app_name, page_name, file, state=state)
+        columns = get_table_columns(app_name, page_name, file, state=state)
         if not validate_column_name(columns):
             return "Invalid column names present in the table", 400
 
@@ -56,7 +56,7 @@ def _dict_from_pydantic_model(model):
     return data
 
 
-def _get_table_columns(app_name: str, page_name: str, file: DataFile, state: dict) -> List[str]:
+def get_table_columns(app_name: str, page_name: str, file: DataFile, state: dict) -> List[str]:
     filter_sort = FilterSort(filters=[], sorts=[])
 
     if file.type == "data_fetcher":
