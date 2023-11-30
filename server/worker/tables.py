@@ -42,7 +42,7 @@ def update_table_columns(table_id: str, req: UpdateTableRequest, router: Dropbas
         resp = router.sync.sync_columns(payload)
         return resp.json(), 200
     except Exception as e:
-        return {"message": str(e)}, 500
+        return {"message": f"Failed to update columns. Error: {str(e)}"}, 500
 
 
 def convert_table(

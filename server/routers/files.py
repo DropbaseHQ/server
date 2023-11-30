@@ -3,21 +3,19 @@ import os
 import re
 from uuid import UUID
 
-from fastapi import APIRouter, Response, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Response
 
-from server.constants import cwd, FILE_NAME_REGEX
+from server.constants import FILE_NAME_REGEX, cwd
 from server.controllers.files import create_file
 from server.controllers.utils import rename_function_in_file
-from server.schemas.files import CreateFile, DeleteFile, RenameFile, UpdateFile
 from server.requests.dropbase_router import DropbaseRouter, get_dropbase_router
+from server.schemas.files import CreateFile, DeleteFile, RenameFile, UpdateFile
 
-router = APIRouter(
-    prefix="/files", tags=["files"], responses={404: {"description": "Not found"}}
-)
+router = APIRouter(prefix="/files", tags=["files"], responses={404: {"description": "Not found"}})
 
 
 @router.post("/")
-async def create_file_req(
+def create_file_req(
     req: CreateFile,
     resp: Response,
     router: DropbaseRouter = Depends(get_dropbase_router),
@@ -28,9 +26,7 @@ async def create_file_req(
 
 
 @router.put("/rename")
-async def rename_file_req(
-    req: RenameFile, router: DropbaseRouter = Depends(get_dropbase_router)
-):
+def rename_file_req(req: RenameFile, router: DropbaseRouter = Depends(get_dropbase_router)):
     try:
         resp = router.file.update_file_name(
             update_data={
@@ -42,14 +38,9 @@ async def rename_file_req(
         if resp.status_code == 200:
             file_ext = ".sql" if req.type == "sql" else ".py"
             file_name = req.old_name + file_ext
-            file_path = (
-                cwd + f"/workspace/{req.app_name}/{req.page_name}/scripts/{file_name}"
-            )
+            file_path = cwd + f"/workspace/{req.app_name}/{req.page_name}/scripts/{file_name}"
             new_file_name = req.new_name + file_ext
-            new_path = (
-                cwd
-                + f"/workspace/{req.app_name}/{req.page_name}/scripts/{new_file_name}"
-            )
+            new_path = cwd + f"/workspace/{req.app_name}/{req.page_name}/scripts/{new_file_name}"
             if os.path.exists(file_path):
                 os.rename(file_path, new_path)
             rename_function_in_file(
@@ -65,16 +56,14 @@ async def rename_file_req(
 
 
 @router.put("/{file_id}")
-async def update_file_req(
+def update_file_req(
     file_id: UUID,
     req: UpdateFile,
     router: DropbaseRouter = Depends(get_dropbase_router),
 ):
     try:
         file_name = req.name + ".sql" if req.type == "sql" else req.name + ".py"
-        file_path = (
-            cwd + f"/workspace/{req.app_name}/{req.page_name}/scripts/{file_name}"
-        )
+        file_path = cwd + f"/workspace/{req.app_name}/{req.page_name}/scripts/{file_name}"
         with open(file_path, "w") as f:
             f.write(req.sql)
 
@@ -94,9 +83,7 @@ def delete_file_req(
 ):
     resp = router.file.delete_file(file_id=file_id)
     if resp.status_code == 200:
-        path = (
-            cwd + f"/workspace/{req.app_name}/{req.page_name}/scripts/{req.file_name}"
-        )
+        path = cwd + f"/workspace/{req.app_name}/{req.page_name}/scripts/{req.file_name}"
         if os.path.exists(path):
             os.remove(path)
         else:
@@ -109,9 +96,11 @@ def delete_file_req(
 
 
 @router.get("/all/{app_name}/{page_name}/")
-async def get_all_files_req(app_name, page_name):
+def get_all_files_req(app_name, page_name):
     if not (re.match(FILE_NAME_REGEX, app_name) and re.match(FILE_NAME_REGEX, page_name)):
-        raise HTTPException(400, detail="app_name and file_name must be only use alphanumerics or underscores.")
+        raise HTTPException(
+            400, detail="app_name and file_name must be only use alphanumerics or underscores."
+        )
     dir_path = cwd + f"/workspace/{app_name}/{page_name}/scripts"
     py_files = glob.glob(os.path.join(dir_path, "*.py"))
     py_files = [file for file in py_files if not file.endswith("__init__.py")]
