@@ -4,7 +4,6 @@ from server.controllers.tables import update_table, update_table_columns, conver
 from server.controllers.utils import handle_state_context_updates, update_state_context_files
 from server.requests.dropbase_router import DropbaseRouter, get_dropbase_router
 from server.schemas.workspace import ConvertTableRequest, CreateTableRequest, UpdateTableRequest
-from server.worker.python_subprocess import run_process_task
 
 router = APIRouter(prefix="/tables", tags=["tables"], responses={404: {"description": "Not found"}})
 
