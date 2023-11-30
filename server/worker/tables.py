@@ -25,7 +25,7 @@ def update_table(table_id: str, req: UpdateTableRequest, router: DropbaseRouter)
             if req.file.get("type") == "sql":
                 sql = get_table_sql(req.app_name, req.page_name, req.file.get("name"))
                 depends_on = get_sql_variables(user_sql=sql)
-                update_table_payload["depends_on"] = depends_on
+                update_table_payload["table_updates"]["depends_on"] = depends_on
 
         resp = router.table.update_table(table_id=table_id, update_data=update_table_payload)
         return resp.json(), resp.status_code
