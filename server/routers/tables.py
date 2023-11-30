@@ -42,12 +42,13 @@ def update_table_req(
     if status_code != 200:
         response.status_code = status_code
         return resp
-    if req.file.get("id") != req.table.get("file_id"):
-        result, status_code = update_table_columns(table_id, req, router)
-        if status_code != 200:
-            response.status_code = status_code
-            return result
-        resp = {"state_context": result}
+    if req.file:
+        if req.file.get("id") != req.table.get("file_id"):
+            result, status_code = update_table_columns(table_id, req, router)
+            if status_code != 200:
+                response.status_code = status_code
+                return result
+            resp = {"state_context": result}
     update_state_context_files(**resp.get("state_context"))
     return resp.get("table")
 
