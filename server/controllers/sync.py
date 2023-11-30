@@ -11,11 +11,14 @@ from server.schemas.table import FilterSort
 
 
 def get_page_state_context(app_name: str, page_name: str):
-    module_name = f"workspace.{app_name}.{page_name}"
-    module = importlib.import_module(module_name)
-    module = importlib.reload(module)
-    State = getattr(module, "State")
-    Context = getattr(module, "Context")
+    state_module_name = f"workspace.{app_name}.{page_name}.state"
+    context_module_name = f"workspace.{app_name}.{page_name}.context"
+    state_module = importlib.import_module(state_module_name)
+    context_module = importlib.import_module(context_module_name)
+    state_module = importlib.reload(state_module)
+    context_module = importlib.reload(context_module)
+    State = getattr(state_module, "State")
+    Context = getattr(context_module, "Context")
     state = _dict_from_pydantic_model(State)
     context = _dict_from_pydantic_model(Context)
     return {"state": state, "context": context}
