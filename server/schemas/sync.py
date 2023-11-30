@@ -12,7 +12,6 @@ class SyncTableColumns(BaseModel):
 class GetTableColumns(BaseModel):
     app_name: str
     page_name: str
-    table: dict
     file: dict
     state: dict
 

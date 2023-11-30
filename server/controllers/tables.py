@@ -15,8 +15,13 @@ def update_table(table_id: str, req: UpdateTableRequest, router: DropbaseRouter)
         "table_updates": req.table_updates.dict(),
     }
     try:
+<<<<<<< HEAD:server/controllers/tables.py
         if req.file:
             # get depends on for sql files
+=======
+        # get depends on for sql files
+        if req.file:
+>>>>>>> dev:server/worker/tables.py
             if req.file.get("type") == "sql":
                 sql = get_table_sql(req.app_name, req.page_name, req.file.get("name"))
                 depends_on = get_sql_variables(user_sql=sql)

@@ -32,18 +32,19 @@ def update_table_req(
     router: DropbaseRouter = Depends(get_dropbase_router),
 ):
     # TODO: sync this flow with client
-    resp, status_code = update_table(table_id, req, router)
+    update_resp, status_code = update_table(table_id, req, router)
     if status_code != 200:
         response.status_code = status_code
-        return resp
-    if req.file.get("id") != req.table.get("file_id"):
-        result, status_code = update_table_columns(table_id, req, router)
-        if status_code != 200:
-            response.status_code = status_code
-            return result
-        resp = {"state_context": result}
-    update_state_context_files(**resp.get("state_context"))
-    return resp.get("table")
+        return update_resp
+    if req.file:
+        if req.file.get("id") != req.table.get("file_id"):
+            update_cols_result, status_code = update_table_columns(table_id, req, router)
+            if status_code != 200:
+                # response.status_code = status_code
+                return update_resp
+            update_resp = {"state_context": update_cols_result}
+    update_state_context_files(**update_resp.get("state_context"))
+    return update_resp.get("table")
 
 
 @router.post("/convert/")

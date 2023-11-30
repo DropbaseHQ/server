@@ -25,7 +25,7 @@ class DeleteAppRequest(BaseModel):
 class UpdateTables(BaseModel):
     name: Optional[str]
     property: TablesBaseProperty
-    file_id: str
+    file_id: Optional[str]
     depends_on: Optional[List[str]]
 
 
@@ -35,7 +35,8 @@ class UpdateTableRequest(BaseModel):
     state: dict
     table: dict
     page_id: str
-    file: dict
+    file: Optional[dict]
+
     table_updates: UpdateTables
 
 

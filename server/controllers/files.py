@@ -37,5 +37,11 @@ def {req.name}(state: State) -> pd.DataFrame:
     df = pd.DataFrame()
     return df
 """
+    elif req.type == "python":
+        return f"""
+def function():
+  print("This is a generic Python function")
+
+"""
     else:
         return ""
