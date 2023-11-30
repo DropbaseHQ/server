@@ -8,8 +8,7 @@ from multiprocessing import Pipe, Process
 from server.constants import cwd
 
 # NOTE: do not delete these, referenecd by run_task
-from server.worker.get_sql import get_sql_from_file_content  # noqa
-
+# NOTE: nothing implemented yet
 
 def run_process_function(function_name: str, args: dict):
     """
