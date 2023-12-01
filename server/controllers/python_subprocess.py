@@ -17,6 +17,12 @@ from server.controllers.tables import convert_table, update_table  # noqa
 
 
 def run_process_task_unwrap(*args, **kwargs):
+    """
+    for functions that are called internally by the controller,
+    where we don't need the status_code output.
+
+    throws exception instead.
+    """
     resp, status_code = run_process_task(*args, **kwargs)
     if status_code == 200:
         return format_process_result(resp["result"])
