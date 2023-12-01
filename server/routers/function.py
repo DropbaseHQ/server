@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Response
 
+from server.controllers.python_subprocess import run_process_task
 from server.schemas.function import RunFunction
-from server.worker.python_subprocess import run_process_task
 
 router = APIRouter(
     prefix="/function",

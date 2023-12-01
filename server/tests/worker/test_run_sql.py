@@ -1,12 +1,13 @@
-import pandas as pd
 import unittest.mock
+
+import pandas as pd
 
 
 def test_run_sql_query(test_client, mocker):
     # Arrange
     mock_df = pd.DataFrame(data=[[1]], columns=["?column?"])
     mocker.patch("server.worker.run_sql.run_df_query", return_value=mock_df)
-    from server.worker.run_sql import run_sql_query
+    from server.controllers.run_sql import run_sql_query
 
     # Act
     output = run_sql_query(
@@ -26,7 +27,7 @@ def test_run_sql_from_string(test_client, mocker):
     # Arrange
     mock_df = pd.DataFrame(data=[[1]], columns=["?column?"])
     mocker.patch("server.worker.run_sql.run_df_query", return_value=mock_df)
-    from server.worker.run_sql import run_sql_from_string
+    from server.controllers.run_sql import run_sql_from_string
 
     # Act
     output = run_sql_from_string(

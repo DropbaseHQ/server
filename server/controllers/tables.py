@@ -1,5 +1,6 @@
 from server.controllers.query import get_column_names, get_sql_variables, get_table_sql, render_sql
 from server.controllers.source import get_db_schema
+from server.controllers.sync import get_table_columns
 from server.controllers.utils import (
     connect_to_user_db,
     get_state,
@@ -10,7 +11,6 @@ from server.controllers.validation import validate_smart_cols
 from server.requests.dropbase_router import AccessCookies, DropbaseRouter
 from server.schemas.files import DataFile
 from server.schemas.workspace import UpdateTableRequest
-from server.worker.sync import get_table_columns
 
 
 def update_table(table_id: str, req: UpdateTableRequest, router: DropbaseRouter):
