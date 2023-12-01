@@ -8,7 +8,7 @@ from sqlalchemy import text
 from sqlalchemy.engine import Engine
 
 from server.constants import DATA_PREVIEW_SIZE
-from server.controllers.python_subprocess import run_process_task_unwrap
+from server.controllers.python_subprocess import run_process_task_unwrap, format_process_result
 from server.controllers.utils import clean_df, connect_to_user_db
 from server.schemas.files import DataFile
 from server.schemas.table import FilterSort, TableFilter, TableSort, TablePagination
@@ -41,14 +41,14 @@ def run_sql_query(app_name: str, page_name: str, file: DataFile, state: dict, fi
     sql = get_table_sql(app_name, page_name, file.name)
     df = run_df_query(sql, file.source, state, filter_sort)
     df = json.loads(df.to_json(orient="split"))
-    return df
+    return format_process_result(df)
 
 
-def run_sql_query_from_string(sql: str, source: str, app_name: str, page_name: str, state: dict, filter_sort: FilterSort):
+def run_sql_query_from_string(sql: str, source: str, app_name: str, page_name: str, state: dict):
     verify_state(app_name, page_name, state)
-    df = run_df_query(sql, source, state, filter_sort)
+    df = run_df_query(sql, source, state)
     df = json.loads(df.to_json(orient="split"))
-    return df
+    return format_process_result(df)
 
 
 def run_df_query(

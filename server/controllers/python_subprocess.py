@@ -19,7 +19,7 @@ from server.controllers.tables import convert_table, update_table  # noqa
 def run_process_task_unwrap(*args, **kwargs):
     resp, status_code = run_process_task(*args, **kwargs)
     if status_code == 200:
-        return resp["result"]
+        return format_process_result(resp["result"])
     else:
         raise Exception(resp["result"])
 
@@ -39,7 +39,7 @@ def run_process_task(function_name: str, args: dict):
     if status_code != 200:
         # for troubleshooting purposes
         print(stdout)
-    return {"result": result, "success": True}, status_code
+    return format_process_result(result), status_code
 
 
 def run_task(child_conn, function_name, args):
@@ -64,3 +64,7 @@ def run_task(child_conn, function_name, args):
     finally:
         child_conn.close()
         sys.stdout = old_stdout
+
+
+def format_process_result(result: any, success: bool = True):
+    return {"result": result, "success": success}
