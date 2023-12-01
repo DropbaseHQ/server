@@ -2,7 +2,7 @@ import json
 import sys
 
 from server.constants import DATA_PREVIEW_SIZE, cwd
-from server.controllers.query import get_table_sql, run_df_query
+from server.controllers.query_old import get_table_sql, run_df_query
 from server.controllers.utils import get_state
 from server.schemas.files import DataFile
 from server.schemas.table import FilterSort, TablePagination

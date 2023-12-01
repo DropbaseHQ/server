@@ -9,7 +9,7 @@ def test_query_db(mocker):
     mocker.patch("server.controllers.query.connect_to_user_db", return_value=mock_db)
 
     from sqlalchemy import text
-    from server.controllers.query import query_db
+    from server.controllers.query_old import query_db
 
     # Act
     output = query_db("select 1;", {}, "mock source")
@@ -23,7 +23,7 @@ def test_query_db(mocker):
 
 def test_apply_filters(mocker):
     # Arrange
-    from server.controllers.query import apply_filters
+    from server.controllers.query_old import apply_filters
 
     table_sql = "select id, name, age from users where name='johncena'"
     filters = [TableFilter(column_name="age", condition=">", value=67)]
@@ -40,7 +40,7 @@ def test_apply_filters(mocker):
 
 def test_apply_sorts(mocker):
     # Arrange
-    from server.controllers.query import apply_filters
+    from server.controllers.query_old import apply_filters
 
     table_sql = "select * from users where name='johncena'"
     filters = []
