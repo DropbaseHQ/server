@@ -7,6 +7,7 @@ from fastapi import APIRouter, Depends, HTTPException, Response
 
 from server.constants import FILE_NAME_REGEX, cwd
 from server.controllers.files import create_file
+from server.controllers.query import get_sql_variables
 from server.controllers.utils import rename_function_in_file
 from server.requests.dropbase_router import DropbaseRouter, get_dropbase_router
 from server.schemas.files import CreateFile, DeleteFile, RenameFile, UpdateFile
@@ -59,6 +60,7 @@ def rename_file_req(req: RenameFile, router: DropbaseRouter = Depends(get_dropba
 def update_file_req(
     file_id: UUID,
     req: UpdateFile,
+    response: Response,
     router: DropbaseRouter = Depends(get_dropbase_router),
 ):
     try:
@@ -67,11 +69,16 @@ def update_file_req(
         with open(file_path, "w") as f:
             f.write(req.sql)
 
-        payload = {"name": req.name, "source": req.source}
+        payload = {"file_id": str(file_id), "name": req.name, "source": req.source, "depends_on": []}
+        if req.type == "sql":
+            depends_on = get_sql_variables(user_sql=req.sql)
+            payload["depends_on"] = depends_on
+
         resp = router.file.update_file(file_id=file_id, update_data=payload)
         return resp.json()
     except Exception as e:
-        return {"status": "error", "message": str(e)}
+        response.status_code = 500
+        return {"message": str(e)}
 
 
 @router.delete("/{file_id}/")
