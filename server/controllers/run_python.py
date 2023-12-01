@@ -36,3 +36,12 @@ def run_python_ui(app_name: str, page_name: str, function_name: str, payload: di
         return {"context": context.dict()}, 200
     except Exception as e:
         return {"error": str(e)}, 500
+
+
+def run_df_function(app_name: str, page_name: str, file: dict, state: dict):
+    file = DataFile(**file)
+    state = get_state(app_name, page_name, state)
+    function_name = get_data_function_by_file(app_name, page_name, file)
+    df = function_name(state)
+    df = clean_df(df)
+    return df

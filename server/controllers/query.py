@@ -51,6 +51,16 @@ def run_sql_query_from_string(sql: str, source: str, app_name: str, page_name: s
     return format_process_result(df)
 
 
+def run_df_function(app_name: str, page_name: str, file: dict, state: dict):
+    args = {
+        "app_name": app_name,
+        "page_name": page_name,
+        "file": file,
+        "state": state,
+    }
+    return run_process_task_unwrap("run_df_function", args)
+
+
 def run_df_query(
     user_sql: str,
     source: str,
@@ -152,3 +162,13 @@ def get_column_names(user_db_engine: Engine, user_sql: str) -> list[str]:
     with user_db_engine.connect().execution_options(autocommit=True) as conn:
         col_names = list(conn.execute(text(user_sql)).keys())
     return col_names
+
+
+def get_table_columns(app_name: str, page_name: str, file: dict, state: dict) -> List[str]:
+    if file.get("type") == "data_fetcher":
+        df = run_df_function(app_name, page_name, file, state)
+    else:
+        verify_state(app_name, page_name, state)
+        sql = get_table_sql(app_name, page_name, file.get("name"))
+        df = run_df_query(sql, file.get("source"), state, FilterSort(filters=[], sorts=[]))
+    return df.columns.tolist()

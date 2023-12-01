@@ -1,15 +1,11 @@
 import importlib
 import os
-from typing import List
 
 from pydantic import BaseModel
 
-from server.controllers.python_from_string import run_df_function
-from server.controllers.query_old import get_table_sql, run_df_query
-from server.controllers.utils import get_state, handle_state_context_updates, validate_column_name
-from server.requests.dropbase_router import AccessCookies, DropbaseRouter
-from server.schemas.files import DataFile
-from server.schemas.table import FilterSort, TableBase
+from server.controllers.query import get_table_columns
+from server.controllers.utils import handle_state_context_updates, validate_column_name
+from server.requests.dropbase_router import DropbaseRouter
 
 token = os.getenv("DROPBASE_TOKEN")
 
@@ -19,30 +15,21 @@ def sync_table_columns(
     page_name: str,
     table: dict,
     file: dict,
-    state,
-    access_cookies: AccessCookies,
+    state: dict,
+    router: DropbaseRouter,
 ):
     try:
-        table = TableBase(**table)
-        file = DataFile(**file)
-        columns = _get_table_columns(app_name, page_name, file, state=state)
+        columns = get_table_columns(app_name, page_name, file, state)
         if not validate_column_name(columns):
             return "Invalid column names present in the table", 400
 
         # call dropbase server
-        payload = {"table_id": table.id, "columns": columns, "type": file.type}
-        router = DropbaseRouter(cookies=access_cookies)
+        payload = {"table_id": table.get("id"), "columns": columns, "type": file.get("type")}
         resp = router.misc.sync_table_columns(payload)
         handle_state_context_updates(resp)
         return resp.json(), resp.status_code
     except Exception as e:
         return str(e), 500
-
-
-def get_table_columns(app_name: str, page_name: str, table: dict, file: dict, state):
-    table = TableBase(**table)
-    file = DataFile(**file)
-    return _get_table_columns(app_name, page_name, file, state=state)
 
 
 def sync_components(app_name: str, page_name: str, router: DropbaseRouter):
@@ -82,15 +69,3 @@ def _dict_from_pydantic_model(model):
         else:
             data[name] = field.default
     return data
-
-
-def _get_table_columns(app_name: str, page_name: str, file: DataFile, state) -> List[str]:
-    filter_sort = FilterSort(filters=[], sorts=[])
-    state = get_state(app_name, page_name, state)
-
-    if file.type == "data_fetcher":
-        df = run_df_function(app_name, page_name, file, state)
-    else:
-        sql = get_table_sql(app_name, page_name, file.name)
-        df = run_df_query(sql, file.source, state, filter_sort)
-    return df.columns.tolist()
