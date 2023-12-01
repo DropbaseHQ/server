@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends, Response
 
-from server.controllers.sync import get_page_state_context
+from server.controllers.python_subprocess import run_process_task
+from server.controllers.sync import get_page_state_context, sync_components, sync_page
 from server.requests.dropbase_router import (
     AccessCookies,
     DropbaseRouter,
@@ -8,8 +9,6 @@ from server.requests.dropbase_router import (
     get_dropbase_router,
 )
 from server.schemas.sync import GetTableColumns, SyncComponents, SyncTableColumns
-from server.worker.python_subprocess import run_process_task
-from server.worker.sync import sync_components, sync_page
 
 router = APIRouter(prefix="/sync", tags=["sync"], responses={404: {"description": "Not found"}})
 

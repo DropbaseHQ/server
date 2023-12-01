@@ -8,7 +8,7 @@ from multiprocessing import Pipe, Process
 from server.constants import cwd
 
 # NOTE: do not delete these, referenecd by run_task
-from server.worker.run_sql import run_sql_from_string  # noqa
+from server.controllers.run_sql import run_sql_from_string  # noqa
 
 
 def run_process_function(function_name: str, args: dict):

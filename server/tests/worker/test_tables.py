@@ -43,14 +43,14 @@ def test_convert_table(test_client, mocker):
             "default": None,
             "autoincrement": False,
             "comment": None,
-        }
+        },
     ]
     mock_inspector.get_pk_constraint.return_value = {"constrained_columns": ["id"]}
     mock_inspector.get_foreign_keys.return_value = []
     mock_inspector.get_unique_constraints.return_value = []
     mocker.patch("server.controllers.source.inspect", return_value=mock_inspector)
 
-    from server.worker.tables import convert_table
+    from server.controllers.tables import convert_table
 
     # Act
     output = convert_table(
@@ -68,7 +68,7 @@ def test_convert_table(test_client, mocker):
         },
         file={"name": "test_sql", "type": "sql", "source": "replica"},
         state={"widgets": {"widget1": {}}, "tables": {"table1": {}}},
-        access_cookies=None
+        access_cookies=None,
     )
 
     # Assert

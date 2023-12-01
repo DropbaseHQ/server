@@ -1,10 +1,11 @@
-import pandas as pd
 import unittest.mock
+
+import pandas as pd
 
 
 def test_run_python_query(test_client, mocker):
     # Arrange
-    from server.worker.run_python import run_python_query
+    from server.controllers.run_python import run_python_query
 
     # Act
     output = run_python_query(

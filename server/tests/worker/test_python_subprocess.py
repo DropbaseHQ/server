@@ -1,9 +1,10 @@
 import unittest.mock
 
+
 def test_run_task_function_not_found():
     # Arrange
     mock_child_conn = unittest.mock.MagicMock()
-    from server.worker.python_subprocess import run_task
+    from server.controllers.python_subprocess import run_task
 
     # Act
     run_task(mock_child_conn, "random nonexistent function", [])

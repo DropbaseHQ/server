@@ -10,9 +10,12 @@ def test_sync_table_columns(test_client, mocker):
     mock_router = unittest.mock.MagicMock()
     mock_router.misc.sync_table_columns.side_effect = sync_table_columns_response
     mocker.patch("server.worker.sync.DropbaseRouter", return_value=mock_router)
-    mocker.patch("server.controllers.query.query_db", side_effect=lambda *args: pd.DataFrame([[1]], columns=["?column?"]))
+    mocker.patch(
+        "server.controllers.query.query_db",
+        side_effect=lambda *args: pd.DataFrame([[1]], columns=["?column?"]),
+    )
 
-    from server.worker.sync import sync_table_columns
+    from server.controllers.sync import sync_table_columns
 
     # Act
     output = sync_table_columns(
