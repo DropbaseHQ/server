@@ -8,11 +8,11 @@ from multiprocessing import Pipe, Process
 from server.constants import cwd
 
 # NOTE: do not delete these, referenecd by run_task
-from server.worker.edit_cell import edit_cell  # noqa
-from server.worker.run_python import run_python_query, run_python_ui  # noqa
-from server.worker.run_sql import run_sql_query  # noqa
-from server.worker.sync import sync_components, sync_table_columns  # noqa
-from server.worker.tables import convert_table, update_table  # noqa
+from server.controllers.edit_cell import edit_cell  # noqa
+from server.controllers.run_python import run_python_query, run_python_ui  # noqa
+from server.controllers.run_sql import run_sql_query  # noqa
+from server.controllers.sync import sync_components, sync_table_columns  # noqa
+from server.controllers.tables import convert_table, update_table  # noqa
 
 
 def run_process_task(function_name: str, args: dict):
