@@ -1,8 +1,8 @@
-from fastapi import APIRouter
+import sqlalchemy.exc
+from fastapi import APIRouter, HTTPException
 
 from server.schemas.run_python import QueryPythonRequest
 from server.controllers.query import run_sql_query, run_python_query
-from server.controllers.python_subprocess import format_process_result
 
 router = APIRouter(prefix="/query", tags=["query"], responses={404: {"description": "Not found"}})
 
@@ -15,5 +15,7 @@ async def run_query(req: QueryPythonRequest):
         else:
             resp = run_sql_query(req.app_name, req.page_name, req.file, req.state, req.filter_sort)
         return resp
+    except sqlalchemy.exc.ProgrammingError as e:
+        raise HTTPException(400, str(e))
     except Exception as e:
-        return format_process_result(str(e))
+        raise HTTPException(500, str(e))
