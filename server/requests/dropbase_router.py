@@ -1,16 +1,18 @@
 from typing import Optional
-from .main_request import DropbaseSession
+
+from fastapi import Request
+from pydantic import BaseModel
+
+from server.constants import DROPBASE_API_URL
+
 from .app import AppRouter
 from .components import ComponentRouter
 from .file import FileRouter
+from .main_request import DropbaseSession
 from .misc import MiscRouter
+from .sync import SyncRouter
 from .table import TableRouter
 from .widget import WidgetRouter
-from .sync import SyncRouter
-
-from server.constants import DROPBASE_API_URL
-from fastapi import Request
-from pydantic import BaseModel
 
 base_url = DROPBASE_API_URL + "/worker/"
 
@@ -18,17 +20,16 @@ base_url = DROPBASE_API_URL + "/worker/"
 class DropbaseRouter:
     def __init__(self, cookies):
         self.session = DropbaseSession(base_url=base_url)
-        if type(cookies) == dict:
+
+        if type(cookies) is dict:
             self.cookies = cookies
-        elif type(cookies) == AccessCookies:
+
+        elif type(cookies) is AccessCookies:
             self.cookies = cookies.dict()
-        self.session.cookies["access_token_cookie"] = self.cookies[
-            "access_token_cookie"
-        ]
+
+        self.session.cookies["access_token_cookie"] = self.cookies["access_token_cookie"]
         if "refresh_token_cookie" in self.cookies:
-            self.session.cookies["refresh_token_cookie"] = self.cookies[
-                "refresh_token_cookie"
-            ]
+            self.session.cookies["refresh_token_cookie"] = self.cookies["refresh_token_cookie"]
         self._assign_sub_routers()
 
     def _assign_sub_routers(self):
