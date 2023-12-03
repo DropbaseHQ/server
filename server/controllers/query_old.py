@@ -1,5 +1,12 @@
+# DEPRECATED: In the process of refactoring DB queries out of worker
+#             processes. Please use server/controllers/query.py instead
+# TODO: Migrate sync columns
+# TODO: Migrate update table
+# TODO: Migrate convert table
+# TODO: Migrate edit cell
+# TODO: Delete this file
+
 import os
-import json
 from typing import List
 
 import pandas as pd
@@ -7,81 +14,32 @@ from jinja2 import Environment, meta
 from sqlalchemy import text
 from sqlalchemy.engine import Engine
 
-from server.constants import DATA_PREVIEW_SIZE
-from server.controllers.python_subprocess import run_process_task_unwrap, format_process_result
 from server.controllers.utils import clean_df, connect_to_user_db
-from server.schemas.files import DataFile
 from server.schemas.table import FilterSort, TableFilter, TableSort, TablePagination
 
 cwd = os.getcwd()
 
 
-def verify_state(app_name: str, page_name: str, state: dict):
-    args = {
-        "app_name": app_name,
-        "page_name": page_name,
-        "state": state,
-    }
-    return run_process_task_unwrap("verify_state", args)
-
-
-def run_python_query(app_name: str, page_name: str, file: DataFile, state: dict, filter_sort: FilterSort):
-    args = {
-        "app_name": app_name,
-        "page_name": page_name,
-        "file": file.dict(),
-        "state": state,
-        "filter_sort": filter_sort.dict()
-    }
-    return run_process_task_unwrap("run_python_query", args)
-
-
-def run_sql_query(app_name: str, page_name: str, file: DataFile, state: dict, filter_sort: FilterSort):
-    verify_state(app_name, page_name, state)
-    sql = get_table_sql(app_name, page_name, file.name)
-    df = run_df_query(sql, file.source, state, filter_sort)
-    df = json.loads(df.to_json(orient="split"))
-    return format_process_result(df)
-
-
-def run_sql_query_from_string(sql: str, source: str, app_name: str, page_name: str, state: dict):
-    verify_state(app_name, page_name, state)
-    df = run_df_query(sql, source, state)
-    df = json.loads(df.to_json(orient="split"))
-    return format_process_result(df)
-
-
-def run_df_query(
-    user_sql: str,
-    source: str,
-    state: dict,
-    filter_sort: FilterSort=FilterSort(filters=[], sorts=[], pagination=TablePagination(page=0, page_size=DATA_PREVIEW_SIZE))
-) -> pd.DataFrame:
-    filter_sql, filter_values = prepare_sql(user_sql, state, filter_sort)
+def run_df_query(sql: str, source: str, state, filter_sort: FilterSort):
+    sql = clean_sql(sql)
+    sql = render_sql(sql, state)
+    filter_sql, filter_values = apply_filters(sql, filter_sort.filters, filter_sort.sorts, filter_sort.pagination)
     res = query_db(filter_sql, filter_values, source)
-    return process_query_result(res)
-
-
-def process_query_result(res) -> pd.DataFrame:
     df = pd.DataFrame(res)
     df = clean_df(df)
     return df
 
 
-def prepare_sql(user_sql: str, state: dict, filter_sort: FilterSort):
-    sql = clean_sql(user_sql)
-    sql = render_sql(sql, state)
-    return apply_filters(sql, filter_sort.filters, filter_sort.sorts, filter_sort.pagination)
-
-
-def clean_sql(sql):
-    return sql.strip("\n ;")
-
-
-def render_sql(user_sql: str, state: dict):
+def render_sql(user_sql: str, state):
     env = Environment()
     template = env.from_string(user_sql)
-    return template.render(**state["tables"])
+    return template.render(**state.tables.dict())
+
+
+def get_sql_variables(user_sql: str):
+    env = Environment()
+    parsed_content = env.parse(user_sql)
+    return list(meta.find_undeclared_variables(parsed_content))
 
 
 def get_table_sql(app_name: str, page_name: str, file_name: str) -> str:
@@ -91,16 +49,15 @@ def get_table_sql(app_name: str, page_name: str, file_name: str) -> str:
     return sql
 
 
-def get_sql_variables(user_sql: str):
-    env = Environment()
-    parsed_content = env.parse(user_sql)
-    return list(meta.find_undeclared_variables(parsed_content))
+def clean_sql(sql):
+    return sql.strip("\n ;")
 
 
 def query_db(sql, values, source_name):
     user_db_engine = connect_to_user_db(source_name)
     with user_db_engine.connect().execution_options(autocommit=True) as conn:
         res = conn.execute(text(sql), values).all()
+    user_db_engine.dispose()
     return res
 
 

@@ -1,4 +1,4 @@
-from server.controllers.query import get_column_names, get_sql_variables, get_table_sql, render_sql
+from server.controllers.query_old import get_column_names, get_sql_variables, get_table_sql, render_sql
 from server.controllers.source import get_db_schema
 from server.controllers.sync import get_table_columns
 from server.controllers.utils import (
