@@ -1,4 +1,5 @@
 import ast
+import functools
 import importlib
 import inspect
 import json
@@ -112,6 +113,7 @@ def update_state_context_files(app_name, page_name, state, context):
         raise Exception(f"Error updating state and context files: {e}")
 
 
+@functools.lru_cache
 def connect_to_user_db(source_name: str):
     sources = get_sources()
     creds = sources.get(source_name)

@@ -14,10 +14,6 @@ services:
     extends:
       file: docker-compose.yml
       service: dropbase-lsp
-  proxy:
-    extends:
-      file: docker-compose.yml
-      service: proxy
   demo-db:
     build:
       context: demo

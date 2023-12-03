@@ -1,11 +1,15 @@
 from fastapi import APIRouter
 
 from server.schemas.query import RunSQLRequest
-from server.controllers.sql_from_srting import run_process_function
+from server.controllers.query import run_sql_query_from_string
+from server.controllers.python_subprocess import format_process_result
 
 router = APIRouter(prefix="/run_sql", tags=["run_sql"], responses={404: {"description": "Not found"}})
 
 
 @router.post("/run_sql_string/")
 async def run_sql_from_string_req(req: RunSQLRequest):
-    return run_process_function("run_sql_from_string", req.dict())
+    try:
+        return run_sql_query_from_string(req.file_content, req.source, req.app_name, req.page_name, req.state)
+    except Exception as e:
+        return format_process_result(str(e))

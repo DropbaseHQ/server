@@ -11,8 +11,23 @@ from server.constants import cwd
 from server.controllers.edit_cell import edit_cell  # noqa
 from server.controllers.run_python import run_python_query, run_python_ui  # noqa
 from server.controllers.run_sql import run_sql_query  # noqa
+from server.controllers.state import verify_state  # noqa
 from server.controllers.sync import sync_components, sync_table_columns  # noqa
 from server.controllers.tables import convert_table, update_table  # noqa
+
+
+def run_process_task_unwrap(*args, **kwargs):
+    """
+    for functions that are called internally by the controller,
+    where we don't need the status_code output.
+
+    throws exception instead.
+    """
+    resp, status_code = run_process_task(*args, **kwargs)
+    if status_code == 200:
+        return format_process_result(resp["result"])
+    else:
+        raise Exception(resp["result"])
 
 
 def run_process_task(function_name: str, args: dict):
@@ -30,7 +45,7 @@ def run_process_task(function_name: str, args: dict):
     if status_code != 200:
         # for troubleshooting purposes
         print(stdout)
-    return {"result": result, "success": True}, status_code
+    return format_process_result(result), status_code
 
 
 def run_task(child_conn, function_name, args):
@@ -55,3 +70,7 @@ def run_task(child_conn, function_name, args):
     finally:
         child_conn.close()
         sys.stdout = old_stdout
+
+
+def format_process_result(result: any, success: bool = True):
+    return {"result": result, "success": success}

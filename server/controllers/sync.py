@@ -5,7 +5,7 @@ from typing import List
 from pydantic import BaseModel
 
 from server.controllers.python_from_string import run_df_function
-from server.controllers.query import get_table_sql, run_df_query
+from server.controllers.query_old import get_table_sql, run_df_query
 from server.controllers.utils import get_state, handle_state_context_updates, validate_column_name
 from server.requests.dropbase_router import AccessCookies, DropbaseRouter
 from server.schemas.files import DataFile
