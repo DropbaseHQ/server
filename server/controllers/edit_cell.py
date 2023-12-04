@@ -13,7 +13,6 @@ def edit_cell(file: dict, edits: List[CellEdit]):
         for edit in edits:
             update_res = update_value(user_db_engine, edit)
             result_dict["result"].append(update_res)
-        user_db_engine.dispose()
         status_code = 200
     except Exception as e:
         result_dict["errors"] = str(e)
@@ -21,8 +20,7 @@ def edit_cell(file: dict, edits: List[CellEdit]):
     return result_dict, status_code
 
 
-def update_value(user_db_engine, edit: dict):
-    edit = CellEdit(**edit)
+def update_value(user_db_engine, edit: CellEdit):
     try:
         columns_name = edit.column_name
         column = edit.columns[columns_name]
