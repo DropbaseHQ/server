@@ -3,6 +3,7 @@ import shutil
 
 from fastapi import HTTPException
 
+from server.constants import DROPBASE_TOKEN
 from server.controllers.utils import update_state_context_files
 from server.requests.dropbase_router import DropbaseRouter
 
@@ -81,7 +82,7 @@ class AppCreator:
 
     def create(self):
         self._create_default_workspace_files()
-        self._get_initial_state_and_context(token=os.getenv("DROPBASE_TOKEN"))
+        self._get_initial_state_and_context(token=DROPBASE_TOKEN)
         self._update_app_draft_status()
         return {"success": True, "app_id": self.app_object.get("id")}
 

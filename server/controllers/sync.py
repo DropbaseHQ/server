@@ -1,17 +1,15 @@
 import importlib
-import os
 from typing import List
 
 from pydantic import BaseModel
 
+from server.constants import DROPBASE_TOKEN
 from server.controllers.python_from_string import run_df_function
 from server.controllers.query_old import get_table_sql, run_df_query
 from server.controllers.utils import get_state, handle_state_context_updates, validate_column_name
 from server.requests.dropbase_router import AccessCookies, DropbaseRouter
 from server.schemas.files import DataFile
 from server.schemas.table import FilterSort, TableBase
-
-token = os.getenv("DROPBASE_TOKEN")
 
 
 def sync_table_columns(
@@ -47,7 +45,7 @@ def get_table_columns(app_name: str, page_name: str, table: dict, file: dict, st
 
 def sync_components(app_name: str, page_name: str, router: DropbaseRouter):
     try:
-        payload = {"app_name": app_name, "page_name": page_name, "token": token}
+        payload = {"app_name": app_name, "page_name": page_name, "token": DROPBASE_TOKEN}
         resp = router.misc.sync_table_columns(**payload)
         handle_state_context_updates(resp)
         return resp.json(), 200
