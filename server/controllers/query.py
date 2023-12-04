@@ -166,7 +166,7 @@ def get_column_names(user_db_engine: Engine, user_sql: str) -> list[str]:
 
 def get_table_columns(app_name: str, page_name: str, file: dict, state: dict) -> List[str]:
     if file.get("type") == "data_fetcher":
-        df = run_df_function(app_name, page_name, file, state)
+        df = run_df_function(app_name, page_name, file, state)["result"]
     else:
         verify_state(app_name, page_name, state)
         sql = get_table_sql(app_name, page_name, file.get("name"))
