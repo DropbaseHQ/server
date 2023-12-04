@@ -3,11 +3,10 @@ import os
 
 from pydantic import BaseModel
 
+from server.constants import DROPBASE_TOKEN
 from server.controllers.query import get_table_columns
 from server.controllers.utils import handle_state_context_updates, validate_column_name
 from server.requests.dropbase_router import DropbaseRouter
-
-token = os.getenv("DROPBASE_TOKEN")
 
 
 def sync_table_columns(
@@ -34,7 +33,7 @@ def sync_table_columns(
 
 def sync_components(app_name: str, page_name: str, router: DropbaseRouter):
     try:
-        payload = {"app_name": app_name, "page_name": page_name, "token": token}
+        payload = {"app_name": app_name, "page_name": page_name, "token": DROPBASE_TOKEN}
         resp = router.misc.sync_table_columns(**payload)
         handle_state_context_updates(resp)
         return resp.json(), 200
