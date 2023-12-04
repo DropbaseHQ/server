@@ -26,7 +26,7 @@ class UpdateTables(BaseModel):
     name: Optional[str]
     property: TablesBaseProperty
     file_id: Optional[str]
-    depends_on: Optional[List[str]]
+    depends_on: Optional[List[str]] = []
 
 
 class UpdateTableRequest(BaseModel):
