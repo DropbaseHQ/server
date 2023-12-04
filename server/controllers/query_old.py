@@ -1,7 +1,5 @@
 # DEPRECATED: In the process of refactoring DB queries out of worker
 #             processes. Please use server/controllers/query.py instead
-# TODO: Migrate update table
-# TODO: Migrate convert table
 # TODO: Migrate edit cell
 # TODO: Delete this file
 
