@@ -413,6 +413,8 @@ class Document:
         # Check for an edit occuring at the very end of the file
         if start_line == len(self.lines):
             self._source = self.source + text
+            # custom: write to file
+            self.write_file(text)
             return
 
         new = io.StringIO()
@@ -436,15 +438,20 @@ class Document:
             if i == end_line:
                 new.write(line[end_col:])
 
-        # NOTE: custom part
+        self._source = new.getvalue()
+
+        # custom: write to file
+        self.write_file(new.getvalue())
+
+    # NOTE: custom part
+    def write_file(self, content):
         try:
             with open(self.path, "w") as f:
                 f.seek(0)
                 f.truncate()
-                f.write(new.getvalue())
+                f.write(content)
         except Exception as e:
             return {"status": "error", "message": str(e)}
-        self._source = new.getvalue()
 
     def offset_at_position(self, position):
         """Return the byte-offset pointed at by the given position."""
