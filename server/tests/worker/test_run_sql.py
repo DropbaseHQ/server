@@ -5,8 +5,8 @@ import pandas as pd
 
 def test_run_sql_query(test_client, mocker):
     # Arrange
-    mock_df = pd.DataFrame(data=[[1]], columns=["?column?"])
-    mocker.patch("server.worker.run_sql.run_df_query", return_value=mock_df)
+    mock_df = pd.DataFrame(data=[[1]], columns=["test_column"])
+    mocker.patch("server.controllers.run_sql.run_df_query", return_value=mock_df)
     from server.controllers.run_sql import run_sql_query
 
     # Act
@@ -19,14 +19,14 @@ def test_run_sql_query(test_client, mocker):
     )
 
     # Assert
-    assert output["columns"] == ["?column?"]
+    assert output["columns"] == ["test_column"]
     assert output["data"] == [[1]]
 
 
 def test_run_sql_from_string(test_client, mocker):
     # Arrange
-    mock_df = pd.DataFrame(data=[[1]], columns=["?column?"])
-    mocker.patch("server.worker.run_sql.run_df_query", return_value=mock_df)
+    mock_df = pd.DataFrame(data=[[1]], columns=["test_column"])
+    mocker.patch("server.controllers.run_sql.run_df_query", return_value=mock_df)
     from server.controllers.run_sql import run_sql_from_string
 
     # Act
@@ -39,5 +39,5 @@ def test_run_sql_from_string(test_client, mocker):
     )
 
     # Assert
-    assert output["columns"] == ["?column?"]
+    assert output["columns"] == ["test_column"]
     assert output["data"] == [[1]]

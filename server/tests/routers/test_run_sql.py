@@ -1,9 +1,9 @@
-from server.tests.mocks.worker.python_subprocess import mock_run_process_task
+from server.tests.mocks.controllers.python_subprocess import mock_run_process_task
 
 
 def test_run_sql_string(test_client, mocker):
     # Arrange
-    run_process_task = mock_run_process_task(True, {"columns": ["?column?"], "data": [[1]]}, "")
+    run_process_task = mock_run_process_task(True, {"columns": ["test_column"], "data": [[1]]}, "")
     mocker.patch("server.routers.run_sql.run_process_task", side_effect=run_process_task)
 
     data = {

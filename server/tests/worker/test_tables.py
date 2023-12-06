@@ -10,10 +10,10 @@ def test_convert_table(test_client, mocker):
     mock_router = unittest.mock.MagicMock()
     mock_router.misc.get_smart_columns.side_effect = get_smart_columns_response
     mock_router.misc.update_smart_columns.side_effect = update_smart_columns_response
-    mocker.patch("server.worker.tables.DropbaseRouter", return_value=mock_router)
+    mocker.patch("server.controllers.tables.DropbaseRouter", return_value=mock_router)
 
     mock_db = unittest.mock.MagicMock()
-    mocker.patch("server.worker.tables.connect_to_user_db", return_value=mock_db)
+    mocker.patch("server.controllers.tables.connect_to_user_db", return_value=mock_db)
 
     mock_inspector = unittest.mock.MagicMock()
     mock_inspector.default_schema_name = "public"

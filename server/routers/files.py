@@ -109,7 +109,7 @@ def update_file_req(
 def delete_file_req(
     file_id: str,
     req: DeleteFile,
-    resp: Response,
+    response: Response,
     router: DropbaseRouter = Depends(get_dropbase_router),
 ):
     resp = router.file.delete_file(file_id=file_id)
@@ -120,10 +120,10 @@ def delete_file_req(
         if os.path.exists(path):
             os.remove(path)
         else:
-            resp.status_code = 400
+            response.status_code = 400
             return {"status": "error", "message": "The file does not exist"}
     else:
-        resp.status_code = 400
+        response.status_code = 400
 
     return resp.json()
 

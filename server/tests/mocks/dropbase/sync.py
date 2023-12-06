@@ -38,7 +38,7 @@ def sync_columns_response(payload: dict):
                         "title": "Test_table_renamedState",
                         "type": "object",
                         "properties": {
-                            "?column?": {"title": "?column?", "default": "str", "type": "string"},
+                            "test_column": {"title": "test_column", "default": "str", "type": "string"},
                         },
                     },
                     "TablesState": {
@@ -113,9 +113,9 @@ def sync_columns_response(payload: dict):
                         "title": "Test_table_renamedColumnsContext",
                         "type": "object",
                         "properties": {
-                            "?column?": {"$ref": "#/definitions/PgColumnContextProperty"},
+                            "test_column": {"$ref": "#/definitions/PgColumnContextProperty"},
                         },
-                        "required": ["?column?"],
+                        "required": ["test_column"],
                     },
                     "Test_table_renamedContext": {
                         "title": "Test_table_renamedContext",

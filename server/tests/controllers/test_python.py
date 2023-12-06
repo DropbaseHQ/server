@@ -88,7 +88,7 @@ def test_run_exec_task_last_var_is_df():
     args = {
         "app_name": "dropbase_test_app",
         "page_name": "page1",
-        "python_string": "import pandas as pd\npd.DataFrame([[1]], columns=['?column?'])",
+        "python_string": "import pandas as pd\npd.DataFrame([[1]], columns=['test_column'])",
         "payload": {
             "state": {"widgets": {"widget1": {}}, "tables": {"table1": {}}},
             "context": {
@@ -107,7 +107,7 @@ def test_run_exec_task_last_var_is_df():
     assert success
     assert stdout == ""
     assert output == {
-        "columns": ["?column?"],
+        "columns": ["test_column"],
         "data": [[1]],
     }
 
