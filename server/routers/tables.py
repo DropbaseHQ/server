@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, Response
 
-from server.controllers.tables import update_table, update_table_columns, convert_table
+from server.controllers.tables import convert_sql_table, update_table, update_table_columns
 from server.controllers.utils import handle_state_context_updates, update_state_context_files
 from server.requests.dropbase_router import DropbaseRouter, get_dropbase_router
 from server.schemas.workspace import ConvertTableRequest, CreateTableRequest, UpdateTableRequest
@@ -48,12 +48,14 @@ def update_table_req(
 
 
 @router.post("/convert/")
-def convert_table_req(
+def convert_sql_table_req(
     req: ConvertTableRequest,
     response: Response,
     router: DropbaseRouter = Depends(get_dropbase_router),
 ):
-    resp, status_code = convert_table(req.app_name, req.page_name, req.table, req.file, req.state, router)
+    resp, status_code = convert_sql_table(
+        req.app_name, req.page_name, req.table, req.file, req.state, router
+    )
     response.status_code = status_code
     return resp
 

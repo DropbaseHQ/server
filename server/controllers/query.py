@@ -1,5 +1,5 @@
-import os
 import json
+import os
 from typing import List
 
 import pandas as pd
@@ -8,10 +8,10 @@ from sqlalchemy import text
 from sqlalchemy.engine import Engine
 
 from server.constants import DATA_PREVIEW_SIZE
-from server.controllers.python_subprocess import run_process_task_unwrap, format_process_result
+from server.controllers.python_subprocess import format_process_result, run_process_task_unwrap
 from server.controllers.utils import clean_df, connect_to_user_db
 from server.schemas.files import DataFile
-from server.schemas.table import FilterSort, TableFilter, TableSort, TablePagination
+from server.schemas.table import FilterSort, TableFilter, TablePagination, TableSort
 
 cwd = os.getcwd()
 
@@ -25,13 +25,15 @@ def verify_state(app_name: str, page_name: str, state: dict):
     return run_process_task_unwrap("verify_state", args)
 
 
-def run_python_query(app_name: str, page_name: str, file: DataFile, state: dict, filter_sort: FilterSort):
+def run_python_query(
+    app_name: str, page_name: str, file: DataFile, state: dict, filter_sort: FilterSort
+):
     args = {
         "app_name": app_name,
         "page_name": page_name,
         "file": file.dict(),
         "state": state,
-        "filter_sort": filter_sort.dict()
+        "filter_sort": filter_sort.dict(),
     }
     return run_process_task_unwrap("run_python_query", args)
 
@@ -65,7 +67,9 @@ def run_df_query(
     user_sql: str,
     source: str,
     state: dict,
-    filter_sort: FilterSort=FilterSort(filters=[], sorts=[], pagination=TablePagination(page=0, page_size=DATA_PREVIEW_SIZE))
+    filter_sort: FilterSort = FilterSort(
+        filters=[], sorts=[], pagination=TablePagination(page=0, page_size=DATA_PREVIEW_SIZE)
+    ),
 ) -> pd.DataFrame:
     filter_sql, filter_values = prepare_sql(user_sql, state, filter_sort)
     res = query_db(filter_sql, filter_values, source)
@@ -114,7 +118,9 @@ def query_db(sql, values, source_name):
     return res
 
 
-def apply_filters(table_sql: str, filters: List[TableFilter], sorts: List[TableSort], pagination: TablePagination = {}):
+def apply_filters(
+    table_sql: str, filters: List[TableFilter], sorts: List[TableSort], pagination: TablePagination = {}
+):
     # clean sql
     table_sql = table_sql.strip("\n ;")
     filter_sql = f"""WITH user_query as ({table_sql}) SELECT * FROM user_query\n"""

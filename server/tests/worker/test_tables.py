@@ -5,7 +5,7 @@ from sqlalchemy import INTEGER, VARCHAR
 from server.tests.mocks.dropbase.misc import get_smart_columns_response, update_smart_columns_response
 
 
-def test_convert_table(test_client, mocker):
+def test_convert_sql_table(test_client, mocker):
     # Arrange
     mock_router = unittest.mock.MagicMock()
     mock_router.misc.get_smart_columns.side_effect = get_smart_columns_response
@@ -50,10 +50,10 @@ def test_convert_table(test_client, mocker):
     mock_inspector.get_unique_constraints.return_value = []
     mocker.patch("server.controllers.source.inspect", return_value=mock_inspector)
 
-    from server.controllers.tables import convert_table
+    from server.controllers.tables import convert_sql_table
 
     # Act
-    output = convert_table(
+    output = convert_sql_table(
         app_name="dropbase_test_app",
         page_name="page1",
         table={

@@ -1,14 +1,14 @@
 import pandas as pd
 
+from server.tests.constants import WORKSPACE_PATH
+from server.tests.mocks.dropbase.sync import sync_columns_response
 from server.tests.mocks.dropbase.table import (
     create_table_response,
+    delete_table_response,
     update_table_response,
-    delete_table_response
 )
-from server.tests.mocks.dropbase.sync import sync_columns_response
 from server.tests.verify_folder_structure import is_valid_folder_structure
 from server.tests.verify_object_exists import workspace_object_exists
-from server.tests.constants import WORKSPACE_PATH
 
 
 def test_create_table_req(test_client, dropbase_router_mocker):
@@ -44,7 +44,10 @@ def test_update_table_req_file_changed(test_client, dropbase_router_mocker, mock
 
     dropbase_router_mocker.patch("table", "update_table", side_effect=update_table_response)
     dropbase_router_mocker.patch("sync", "sync_columns", side_effect=sync_columns_response)
-    mocker.patch("server.controllers.query.query_db", side_effect=lambda *args: pd.DataFrame([[1]], columns=["?column?"]))
+    mocker.patch(
+        "server.controllers.query.query_db",
+        side_effect=lambda *args: pd.DataFrame([[1]], columns=["?column?"]),
+    )
 
     scripts_path = WORKSPACE_PATH.joinpath("dropbase_test_app/page1/scripts/")
     files = ["test3.sql", "test4.sql"]
@@ -166,7 +169,7 @@ def test_delete_table_req(test_client, dropbase_router_mocker):
     assert not workspace_object_exists("Context", "tables.test_table")
 
 
-def test_convert_table_req(test_client):
+def test_convert_sql_table_req(test_client):
     # FIXME
     return
     raise NotImplementedError

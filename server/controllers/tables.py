@@ -1,16 +1,12 @@
 from server.controllers.query import (
     get_column_names,
     get_sql_variables,
+    get_table_columns,
     get_table_sql,
     render_sql,
-    get_table_columns,
 )
 from server.controllers.source import get_db_schema
-from server.controllers.utils import (
-    connect_to_user_db,
-    update_state_context_files,
-    validate_column_name,
-)
+from server.controllers.utils import connect_to_user_db, update_state_context_files, validate_column_name
 from server.controllers.validation import validate_smart_cols
 from server.requests.dropbase_router import DropbaseRouter
 from server.schemas.workspace import UpdateTableRequest
@@ -49,13 +45,8 @@ def update_table_columns(table_id: str, req: UpdateTableRequest, router: Dropbas
         return {"message": f"Failed to update columns. Error: {str(e)}"}, 500
 
 
-def convert_table(
-    app_name: str,
-    page_name: str,
-    table: dict,
-    file: dict,
-    state: dict,
-    router: DropbaseRouter
+def convert_sql_table(
+    app_name: str, page_name: str, table: dict, file: dict, state: dict, router: DropbaseRouter
 ):
     try:
         # get db schema
