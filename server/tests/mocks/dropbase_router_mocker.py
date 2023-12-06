@@ -1,5 +1,6 @@
 import unittest.mock
 
+
 class DropbaseRouterMocker:
     def __init__(self):
         self.patches: list[tuple[str, str, callable]] = []
@@ -11,5 +12,6 @@ class DropbaseRouterMocker:
         mock_router = unittest.mock.MagicMock()
         for sub_router_name, method_name, side_effect in self.patches:
             method = getattr(getattr(mock_router, sub_router_name), method_name)
+            # ^ equivalent to method.sub_router_name.method_name
             method.side_effect = side_effect
         return mock_router

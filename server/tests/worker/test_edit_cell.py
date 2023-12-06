@@ -4,7 +4,7 @@ import unittest.mock
 def test_edit_cell(test_client, mocker):
     # Arrange
     mock_db = unittest.mock.MagicMock()
-    mocker.patch("server.worker.edit_cell.connect_to_user_db", return_value=mock_db)
+    mocker.patch("server.controllers.edit_cell.connect_to_user_db", return_value=mock_db)
     from server.controllers.edit_cell import edit_cell
 
     # Act
@@ -48,7 +48,7 @@ def test_edit_cell_db_execute_fail(test_client, mocker):
     # Arrange
     mock_db = unittest.mock.MagicMock()
     mock_db.connect().__enter__().execute.side_effect = Exception()
-    mocker.patch("server.worker.edit_cell.connect_to_user_db", return_value=mock_db)
+    mocker.patch("server.controllers.edit_cell.connect_to_user_db", return_value=mock_db)
     from server.controllers.edit_cell import edit_cell
 
     # Act

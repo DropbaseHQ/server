@@ -1,5 +1,3 @@
-import pandas as pd
-
 from server.tests.constants import WORKSPACE_PATH
 from server.tests.mocks.dropbase.sync import sync_columns_response
 from server.tests.mocks.dropbase.table import (
@@ -45,8 +43,7 @@ def test_update_table_req_file_changed(test_client, dropbase_router_mocker, mock
     dropbase_router_mocker.patch("table", "update_table", side_effect=update_table_response)
     dropbase_router_mocker.patch("sync", "sync_columns", side_effect=sync_columns_response)
     mocker.patch(
-        "server.controllers.query.query_db",
-        side_effect=lambda *args: pd.DataFrame([[1]], columns=["?column?"]),
+        "server.controllers.tables.get_table_columns", side_effect=lambda *args: ["test_column"]
     )
 
     scripts_path = WORKSPACE_PATH.joinpath("dropbase_test_app/page1/scripts/")
@@ -57,12 +54,15 @@ def test_update_table_req_file_changed(test_client, dropbase_router_mocker, mock
             wf.write("select 1;")
 
     data = {
-        "name": "test_table_renamed",
-        "property": {
-            "filters": [],
-            "appears_after": None,
-            "on_row_change": None,
-            "on_row_selection": None,
+        "table_updates": {
+            "name": "test_table_renamed",
+            "property": {
+                "filters": [],
+                "appears_after": None,
+                "on_row_change": None,
+                "on_row_selection": None,
+            },
+            "file_id": "1235",
         },
         "page_id": "8f1dabeb-907b-4e59-8417-ba67a801ba0e",
         "app_name": "dropbase_test_app",

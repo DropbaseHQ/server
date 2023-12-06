@@ -36,3 +36,15 @@ lsp
 set -o allexport; source .env; set +o allexport
 pylsp --ws --port 9095
 ```
+
+## run tests
+
+```
+python3 -m pytest --cov=server --cov-config=server/.coveragerc  --cov-report=html server/tests -k test_create_table_req
+```
+
+add break point
+
+```
+import pdb; pdb.set_trace()
+```

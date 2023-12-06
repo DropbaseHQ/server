@@ -1,4 +1,4 @@
-from server.tests.mocks.worker.python_subprocess import mock_run_process_task
+from server.tests.mocks.controllers.python_subprocess import mock_run_process_task
 
 
 def test_edit_sql_table_req(test_client, mocker):

@@ -5,15 +5,22 @@ import pandas as pd
 from server.tests.mocks.dropbase.misc import sync_table_columns_response
 
 
-def test_sync_table_columns(test_client, mocker):
+# todo: move this to mocks
+def sync_table_columns_resp():
+    pass
+
+
+def test_sync_table_columns(test_client, mocker, dropbase_router_mocker):
     # Arrange
-    mock_router = unittest.mock.MagicMock()
-    mock_router.misc.sync_table_columns.side_effect = sync_table_columns_response
-    mocker.patch("server.worker.sync.DropbaseRouter", return_value=mock_router)
-    mocker.patch(
-        "server.controllers.query.query_db",
-        side_effect=lambda *args: pd.DataFrame([[1]], columns=["?column?"]),
-    )
+    dropbase_router_mocker.patch("misc", "sync_table_columns", side_effect=sync_table_columns_resp)
+
+    # mock_router = unittest.mock.MagicMock()
+    # mock_router.misc.sync_table_columns.side_effect = sync_table_columns_response
+    # mocker.patch("server.controllers.sync.DropbaseRouter", return_value=mock_router)
+    # mocker.patch(
+    #     "server.controllers.query.query_db",
+    #     side_effect=lambda *args: pd.DataFrame([[1]], columns=["test_column"]),
+    # )
 
     from server.controllers.sync import sync_table_columns
 
