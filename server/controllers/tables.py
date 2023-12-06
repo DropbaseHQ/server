@@ -1,14 +1,18 @@
-from server.controllers.query_old import get_column_names, get_sql_variables, get_table_sql, render_sql, get_table_columns
+from server.controllers.query import (
+    get_column_names,
+    get_sql_variables,
+    get_table_sql,
+    render_sql,
+    get_table_columns,
+)
 from server.controllers.source import get_db_schema
 from server.controllers.utils import (
     connect_to_user_db,
-    get_state,
     update_state_context_files,
     validate_column_name,
 )
 from server.controllers.validation import validate_smart_cols
-from server.requests.dropbase_router import AccessCookies, DropbaseRouter
-from server.schemas.files import DataFile
+from server.requests.dropbase_router import DropbaseRouter
 from server.schemas.workspace import UpdateTableRequest
 
 
@@ -34,13 +38,14 @@ def update_table(table_id: str, req: UpdateTableRequest, router: DropbaseRouter)
 
 def update_table_columns(table_id: str, req: UpdateTableRequest, router: DropbaseRouter):
     try:
-        columns = get_table_columns(req.app_name, req.page_name, req.table, req.file, req.state)
+        columns = get_table_columns(req.app_name, req.page_name, req.file, req.state)
         if not validate_column_name(columns):
             return {"message": "Invalid column names present in the table"}, 400
         payload = {"table_id": table_id, "columns": columns, "type": req.file.get("type")}
         resp = router.sync.sync_columns(payload)
         return resp.json(), 200
     except Exception as e:
+        print(str(e))
         return {"message": f"Failed to update columns. Error: {str(e)}"}, 500
 
 
@@ -50,19 +55,16 @@ def convert_table(
     table: dict,
     file: dict,
     state: dict,
-    access_cookies: AccessCookies,
+    router: DropbaseRouter
 ):
     try:
-        state = get_state(app_name, page_name, state)
-        file = DataFile(**file)
         # get db schema
-        user_db_engine = connect_to_user_db(file.source)
+        user_db_engine = connect_to_user_db(file.get("source"))
         db_schema, gpt_schema = get_db_schema(user_db_engine)
         # get columns
-        user_sql = get_table_sql(app_name, page_name, file.name)
+        user_sql = get_table_sql(app_name, page_name, file.get("name"))
         user_sql = render_sql(user_sql, state)
         column_names = get_column_names(user_db_engine, user_sql)
-        router = DropbaseRouter(cookies=access_cookies)
 
         # get columns from file
         get_smart_table_payload = {
