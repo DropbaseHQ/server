@@ -3,7 +3,7 @@ from server.controllers.source import get_db_schema
 from server.controllers.utils import (
     connect_to_user_db,
     get_state,
-    handle_state_context_updates,
+    update_state_context_files,
     validate_column_name,
 )
 from server.controllers.validation import validate_smart_cols
@@ -85,9 +85,10 @@ def convert_table(
 
         # get columns from file
         update_smart_cols_payload = {"smart_columns": smart_columns, "table": table}
-        # print(update_smart_cols_payload)
         resp = router.misc.update_smart_columns(update_smart_cols_payload)
-        handle_state_context_updates(resp)
-        return resp.json(), 200
+        resp = resp.json()
+        state_context = resp.get("state_context")
+        update_state_context_files(**state_context)
+        return resp.get("table"), 200
     except Exception as e:
         return str(e), 500
