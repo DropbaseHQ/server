@@ -1,6 +1,5 @@
 # DEPRECATED: In the process of refactoring DB queries out of worker
 #             processes. Please use server/controllers/query.py instead
-# TODO: Migrate sync columns
 # TODO: Migrate update table
 # TODO: Migrate convert table
 # TODO: Migrate edit cell
@@ -14,7 +13,8 @@ from jinja2 import Environment, meta
 from sqlalchemy import text
 from sqlalchemy.engine import Engine
 
-from server.controllers.utils import clean_df, connect_to_user_db
+from server.controllers.run_python import run_df_function
+from server.controllers.utils import clean_df, connect_to_user_db, get_state
 from server.schemas.table import FilterSort, TableFilter, TableSort, TablePagination
 
 cwd = os.getcwd()
@@ -109,3 +109,13 @@ def get_column_names(user_db_engine: Engine, user_sql: str) -> list[str]:
     with user_db_engine.connect().execution_options(autocommit=True) as conn:
         col_names = list(conn.execute(text(user_sql)).keys())
     return col_names
+
+
+def get_table_columns(app_name: str, page_name: str, file: dict, state: dict) -> List[str]:
+    state = get_state(app_name, page_name, state)
+    if file.get("type") == "data_fetcher":
+        df = run_df_function(app_name, page_name, file, state)
+    else:
+        sql = get_table_sql(app_name, page_name, file.get("name"))
+        df = run_df_query(sql, file.get("source"), state, FilterSort(filters=[], sorts=[]))
+    return df.columns.tolist()
