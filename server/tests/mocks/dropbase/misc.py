@@ -4,10 +4,7 @@ from server.tests.mocks.util import mock_response
 session = 1
 
 
-def sync_table_columns_response(payload: dict):
-    table_id = payload["table_id"]
-    columns = payload["columns"]
-    type = payload["type"]
+def sync_table_columns_response():
     return mock_response(
         json={
             "app_name": "dropbase_test_app",
@@ -117,7 +114,7 @@ def sync_table_columns_response(payload: dict):
                         "required": ["table1"],
                     },
                 },
-            }
+            },
         }
     )
 
@@ -155,7 +152,7 @@ def get_smart_columns_response(*args, **kwargs):
                     "edit_keys": ["id"],
                     "editable": False,
                     "visible": True,
-                }
+                },
             }
         }
     )
@@ -273,6 +270,6 @@ def update_smart_columns_response(*args, **kwargs):
                         "required": ["table1"],
                     },
                 },
-            }
+            },
         }
     )

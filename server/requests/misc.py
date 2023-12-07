@@ -2,10 +2,7 @@ class MiscRouter:
     def __init__(self, session):
         self.session = session
 
-    def sync_table_columns(
-        self,
-        payload: dict,
-    ):
+    def sync_table_columns(self, payload: dict):
         return self.session.post(url="sync/columns/", json=payload)
 
     def sync_components(self, app_name: str, page_name: str, token: str):

@@ -43,6 +43,12 @@ pylsp --ws --port 9095
 python3 -m pytest --cov=server --cov-config=server/.coveragerc  --cov-report=html server/tests -k test_create_table_req
 ```
 
+test individual file
+
+```
+python3 -m pytest --cov=server --cov-config=server/.coveragerc --cov-report=html server/tests/worker/test_sync.py
+```
+
 add break point
 
 ```
