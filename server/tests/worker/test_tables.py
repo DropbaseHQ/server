@@ -2,6 +2,7 @@ import unittest.mock
 
 from sqlalchemy import INTEGER, VARCHAR
 
+from server.tests.constants import PAGE_ID
 from server.tests.mocks.dropbase.misc import get_smart_columns_response, update_smart_columns_response
 
 
@@ -64,7 +65,7 @@ def test_convert_sql_table(test_client, mocker):
                 "on_row_change": None,
                 "on_row_selection": None,
             },
-            "page_id": "8f1dabeb-907b-4e59-8417-ba67a801ba0e",
+            "page_id": PAGE_ID,
         },
         file={"name": "test_sql", "type": "sql", "source": "replica"},
         state={"widgets": {"widget1": {}}, "tables": {"table1": {}}},

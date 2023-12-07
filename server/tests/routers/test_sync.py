@@ -1,5 +1,6 @@
-from server.tests.mocks.dropbase.sync import sync_components_response, sync_page_response
+from server.tests.constants import PAGE_ID
 from server.tests.mocks.controllers.python_subprocess import mock_run_process_task
+from server.tests.mocks.dropbase.sync import sync_components_response, sync_page_response
 from server.tests.verify_folder_structure import is_valid_folder_structure
 from server.tests.verify_object_exists import workspace_object_exists
 
@@ -35,7 +36,7 @@ def test_sync_table_columns_req(test_client, mocker):
                 "on_row_change": None,
                 "on_row_selection": None,
             },
-            "page_id": "8f1dabeb-907b-4e59-8417-ba67a801ba0e",
+            "page_id": PAGE_ID,
         },
         "file": {
             "name": "test_sql",
@@ -46,7 +47,9 @@ def test_sync_table_columns_req(test_client, mocker):
     }
 
     # Act
-    res = test_client.post("/sync/columns/", json=data, cookies={"access_token_cookie": "mock access cookie"})
+    res = test_client.post(
+        "/sync/columns/", json=data, cookies={"access_token_cookie": "mock access cookie"}
+    )
 
     # Assert
     assert res.status_code == 200
@@ -82,4 +85,3 @@ def test_sync_page_state_req(test_client, dropbase_router_mocker):
     assert res.status_code == 200
     assert not workspace_object_exists("Context", "widgets.widget1")
     assert workspace_object_exists("Context", "widgets.widget2")
-

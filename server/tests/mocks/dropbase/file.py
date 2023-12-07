@@ -1,5 +1,3 @@
-from typing import Optional
-
 from server.tests.mocks.util import mock_response
 
 

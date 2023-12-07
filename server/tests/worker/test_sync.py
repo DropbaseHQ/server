@@ -1,8 +1,7 @@
+from server.tests.constants import PAGE_ID
 from server.tests.mocks.dropbase.misc import sync_table_columns_response
 from server.tests.verify_folder_structure import is_valid_folder_structure
 from server.tests.verify_object_exists import workspace_object_exists
-
-# python3 -m pytest --cov=server --cov-config=server/.coveragerc --cov-report=html server/tests/worker/test_sync.py
 
 
 def test_sync_table_columns(test_client, mocker, dropbase_router_mocker):
@@ -22,7 +21,7 @@ def test_sync_table_columns(test_client, mocker, dropbase_router_mocker):
                 "on_row_change": None,
                 "on_row_selection": None,
             },
-            "page_id": "8f1dabeb-907b-4e59-8417-ba67a801ba0e",
+            "page_id": PAGE_ID,
         },
         "file": {
             "name": "test_function_data_fetcher",

@@ -1,4 +1,4 @@
-from server.tests.constants import WORKSPACE_PATH
+from server.tests.constants import PAGE_ID, WORKSPACE_PATH
 from server.tests.mocks.dropbase.sync import sync_columns_response
 from server.tests.mocks.dropbase.table import (
     create_table_response,
@@ -21,7 +21,7 @@ def test_create_table_req(test_client, dropbase_router_mocker):
             "on_row_change": None,
             "on_row_selection": None,
         },
-        "page_id": "8f1dabeb-907b-4e59-8417-ba67a801ba0e",
+        "page_id": PAGE_ID,
     }
 
     # Act
@@ -64,7 +64,7 @@ def test_update_table_req_file_changed(test_client, dropbase_router_mocker, mock
             },
             "file_id": "1235",
         },
-        "page_id": "8f1dabeb-907b-4e59-8417-ba67a801ba0e",
+        "page_id": PAGE_ID,
         "app_name": "dropbase_test_app",
         "page_name": "page1",
         "table": {
@@ -77,7 +77,7 @@ def test_update_table_req_file_changed(test_client, dropbase_router_mocker, mock
                 "on_row_selection": None,
             },
             "name": "test_table",
-            "page_id": "8f1dabeb-907b-4e59-8417-ba67a801ba0e",
+            "page_id": PAGE_ID,
         },
         "state": {"widgets": {"widget1": {}}, "tables": {"table1": {}, "test_table": {}}},
         "file": {"id": "1235", "name": "test4", "type": "sql"},
@@ -120,7 +120,7 @@ def test_update_table_req_file_unchanged(test_client, dropbase_router_mocker):
             "on_row_change": None,
             "on_row_selection": None,
         },
-        "page_id": "8f1dabeb-907b-4e59-8417-ba67a801ba0e",
+        "page_id": PAGE_ID,
         "app_name": "dropbase_test_app",
         "page_name": "page1",
         "table": {
@@ -133,7 +133,7 @@ def test_update_table_req_file_unchanged(test_client, dropbase_router_mocker):
                 "on_row_selection": None,
             },
             "name": "test_table",
-            "page_id": "8f1dabeb-907b-4e59-8417-ba67a801ba0e",
+            "page_id": PAGE_ID,
         },
         "state": {"widgets": {"widget1": {}}, "tables": {"table1": {}, "test_table": {}}},
         "file": {"id": "1234", "name": "test3", "type": "sql"},
