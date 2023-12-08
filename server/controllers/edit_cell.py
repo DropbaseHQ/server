@@ -8,12 +8,14 @@ from server.schemas.edit_cell import CellEdit
 
 def edit_cell(file: dict, edits: List[CellEdit]):
     result_dict = {"result": [], "errors": None}
+    status_code = 200
     try:
         user_db_engine = connect_to_user_db(file.get("source"))
         for edit in edits:
-            update_res = update_value(user_db_engine, edit)
+            update_res, success = update_value(user_db_engine, edit)
             result_dict["result"].append(update_res)
-        status_code = 200
+            if not success:
+                status_code = 400
     except Exception as e:
         result_dict["errors"] = str(e)
         status_code = 500
@@ -49,6 +51,9 @@ def update_value(user_db_engine, edit: CellEdit):
             conn.commit()
             if result.rowcount == 0:
                 raise Exception("No rows were updated")
-        return f"updated {edit.column_name} from {edit.old_value} to {edit.new_value}"
+        return f"Updated {edit.column_name} from {edit.old_value} to {edit.new_value}", True
     except Exception as e:
-        return f"Failed to update {edit.column_name} from {edit.old_value} to {edit.new_value}. Error: {str(e)}"  # noqa
+        return (
+            f"Failed to update {edit.column_name} from {edit.old_value} to {edit.new_value}. Error: {str(e)}",
+            False,
+        )  # noqa
