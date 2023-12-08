@@ -1,6 +1,6 @@
 from server.constants import cwd
-from server.schemas.files import CreateFile
 from server.requests.dropbase_router import DropbaseRouter
+from server.schemas.files import CreateFile
 
 
 def create_file(req: CreateFile, router: DropbaseRouter):
@@ -8,9 +8,7 @@ def create_file(req: CreateFile, router: DropbaseRouter):
         resp = router.file.create_file(req.dict())
         if resp.status_code == 200:
             file_name = req.name + ".sql" if req.type == "sql" else req.name + ".py"
-            path = (
-                cwd + f"/workspace/{req.app_name}/{req.page_name}/scripts/{file_name}"
-            )
+            path = cwd + f"/workspace/{req.app_name}/{req.page_name}/scripts/{file_name}"
             boilerplate_code = compose_boilerplate_code(req)
 
             with open(path, "a") as f:
@@ -38,7 +36,7 @@ def {req.name}(state: State) -> pd.DataFrame:
     return df
 """
     elif req.type == "python":
-        return f"""
+        return """
 def function():
   print("This is a generic Python function")
 
