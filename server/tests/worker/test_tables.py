@@ -6,14 +6,12 @@ from server.tests.constants import PAGE_ID
 from server.tests.mocks.dropbase.misc import get_smart_columns_response, update_smart_columns_response
 
 
-def test_convert_sql_table(test_client, mocker):
+def test_convert_sql_table(mocker, mock_db):
     # Arrange
     mock_router = unittest.mock.MagicMock()
     mock_router.misc.get_smart_columns.side_effect = get_smart_columns_response
     mock_router.misc.update_smart_columns.side_effect = update_smart_columns_response
     mocker.patch("server.controllers.tables.DropbaseRouter", return_value=mock_router)
-
-    mock_db = unittest.mock.MagicMock()
     mocker.patch("server.controllers.tables.connect_to_user_db", return_value=mock_db)
 
     mock_inspector = unittest.mock.MagicMock()

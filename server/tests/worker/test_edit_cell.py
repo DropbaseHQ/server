@@ -1,9 +1,8 @@
 import unittest.mock
 
 
-def test_edit_cell(test_client, mocker):
+def test_edit_cell(mocker, mock_db):
     # Arrange
-    mock_db = unittest.mock.MagicMock()
     mocker.patch("server.controllers.edit_cell.connect_to_user_db", return_value=mock_db)
     from server.controllers.edit_cell import edit_cell
 
@@ -37,14 +36,14 @@ def test_edit_cell(test_client, mocker):
     )
 
     # Assert
-    sql_text, values = mock_db.connect().__enter__().execute.call_args.args
+    raise NotImplementedError
     assert 'UPDATE "public"."users"' in str(sql_text)
     assert "SET name = :new_value" in str(sql_text)
     assert "WHERE id = :id AND name = :old_value" in str(sql_text)
     assert values == {"new_value": "rovert", "old_value": "trevor", "id": "trevors_id"}
 
 
-def test_edit_cell_db_execute_fail(test_client, mocker):
+def test_edit_cell_db_execute_fail(mocker, mock_db):
     # Arrange
     mock_db = unittest.mock.MagicMock()
     mock_db.connect().__enter__().execute.side_effect = Exception()
