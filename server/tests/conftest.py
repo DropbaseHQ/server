@@ -3,6 +3,8 @@ import tempfile
 
 import pytest
 from fastapi.testclient import TestClient
+from sqlalchemy import create_engine
+from sqlalchemy.pool import NullPool
 
 from server.main import app
 from server.requests.dropbase_router import get_dropbase_router
@@ -36,6 +38,12 @@ def dropbase_router_mocker():
     yield mocker
     # delete get_dropbase_router from dependency overwrite once test is done
     del app.dependency_overrides[get_dropbase_router]
+
+
+@pytest.fixture
+def mock_db(postgresql):
+    connection = f'postgresql+psycopg2://{postgresql.info.user}:@{postgresql.info.host}:{postgresql.info.port}/{postgresql.info.dbname}'
+    return create_engine(connection, echo=False, poolclass=NullPool)
 
 
 def pytest_sessionstart():
