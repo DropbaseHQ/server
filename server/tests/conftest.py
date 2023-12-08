@@ -1,12 +1,12 @@
 import shutil
 import tempfile
 
+import psycopg2
 import pytest
 import pytest_postgresql.factories
-import psycopg2
+from fastapi.testclient import TestClient
 from sqlalchemy import create_engine
 from sqlalchemy.pool import NullPool
-from fastapi.testclient import TestClient
 
 from server.main import app
 from server.requests.dropbase_router import get_dropbase_router
@@ -22,6 +22,8 @@ def load_test_db(**kwargs):
     with conn.cursor() as cur:
         cur.execute(init_sql)
         conn.commit()
+
+
 postgresql_proc = pytest_postgresql.factories.postgresql_proc(load=[load_test_db])
 postgresql = pytest_postgresql.factories.postgresql("postgresql_proc")
 
@@ -56,7 +58,7 @@ def dropbase_router_mocker():
 
 @pytest.fixture
 def mock_db(postgresql):
-    connection = f'postgresql+psycopg2://{postgresql.info.user}:@{postgresql.info.host}:{postgresql.info.port}/{postgresql.info.dbname}'
+    connection = f"postgresql+psycopg2://{postgresql.info.user}:@{postgresql.info.host}:{postgresql.info.port}/{postgresql.info.dbname}"
     return create_engine(connection, echo=False, poolclass=NullPool)
 
 
