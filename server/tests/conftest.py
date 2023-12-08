@@ -2,14 +2,28 @@ import shutil
 import tempfile
 
 import pytest
-from fastapi.testclient import TestClient
+import pytest_postgresql.factories
+import psycopg2
 from sqlalchemy import create_engine
 from sqlalchemy.pool import NullPool
+from fastapi.testclient import TestClient
 
 from server.main import app
 from server.requests.dropbase_router import get_dropbase_router
-from server.tests.constants import WORKSPACE_PATH
+from server.tests.constants import DEMO_INIT_SQL_PATH, WORKSPACE_PATH
 from server.tests.mocks.dropbase_router_mocker import DropbaseRouterMocker
+
+
+# Setup pytest-postgresql db with test data
+def load_test_db(**kwargs):
+    conn = psycopg2.connect(**kwargs)
+    with open(DEMO_INIT_SQL_PATH, "r") as rf:
+        init_sql = rf.read()
+    with conn.cursor() as cur:
+        cur.execute(init_sql)
+        conn.commit()
+postgresql_proc = pytest_postgresql.factories.postgresql_proc(load=[load_test_db])
+postgresql = pytest_postgresql.factories.postgresql("postgresql_proc")
 
 
 @pytest.fixture(autouse=True)
