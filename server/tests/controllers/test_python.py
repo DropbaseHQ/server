@@ -108,6 +108,7 @@ def test_run_exec_task_last_var_is_df():
     assert stdout == ""
     assert output == {
         "columns": ["test_column"],
+        'index': [0],
         "data": [[1]],
     }
 
@@ -138,5 +139,20 @@ def test_run_exec_task_last_var_is_context():
     assert success
     assert stdout == ""
     assert output == {
-        "context": {'widgets': {'widget1': {'components': {}, 'message': None, 'message_type': None}}, 'tables': {'table1': {'columns': {}, 'message': None, 'message_type': None}}}
+        "context": {
+            "widgets": {
+                "widget1": {
+                    "message": None,
+                    "message_type": None,
+                    "components": {},
+                }
+            },
+            "tables": {
+                "table1": {
+                    "message": None,
+                    "message_type": None,
+                    "columns": {},
+                }
+            }
+        }
     }
