@@ -93,7 +93,7 @@ def pytest_sessionstart():
         'import pandas as pd\nfrom workspace.dropbase_test_app.page1 import State, Context\ndef test_function_data_fetcher(state: State) -> pd.DataFrame:\n\n    return pd.DataFrame(data=[[1]], columns=["x"])\n',
         "test_function_data_fetcher.py",
     )
-    create_file(scripts_path, "select 1;", "test_sql.sql")
+    create_file(scripts_path, "select * from users;", "test_sql.sql")
 
 
 def pytest_sessionfinish():
