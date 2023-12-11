@@ -49,6 +49,7 @@ def convert_sql_table(
     app_name: str, page_name: str, table: dict, file: dict, state: dict, router: DropbaseRouter
 ):
     try:
+        import pdb;pdb.set_trace()
         # get db schema
         user_db_engine = connect_to_user_db(file.get("source"))
         db_schema, gpt_schema = get_db_schema(user_db_engine)

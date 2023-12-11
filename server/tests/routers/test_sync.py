@@ -1,6 +1,6 @@
 from server.tests.constants import PAGE_ID
-from server.tests.mocks.controllers.python_subprocess import mock_run_process_task
 from server.tests.mocks.dropbase.sync import sync_components_response, sync_page_response
+from server.tests.mocks.dropbase.misc import sync_table_columns_response
 from server.tests.verify_folder_structure import is_valid_folder_structure
 from server.tests.verify_object_exists import workspace_object_exists
 
@@ -20,11 +20,12 @@ def test_get_state_context(test_client):
     assert context["tables"].get("table1")
 
 
-def test_sync_table_columns_req(test_client, mocker):
+def test_sync_table_columns_req(test_client, mocker, dropbase_router_mocker):
     # Arrange
-    run_process_task = mock_run_process_task(True, {"message": "success"}, "")
-    mocker.patch("server.routers.query.run_process_task", side_effect=run_process_task)
+    mocker.patch("server.controllers.sync.get_table_columns", return_value=["col1", "col2"])
+    dropbase_router_mocker.patch("misc", "sync_table_columns", side_effect=sync_table_columns_response)
 
+    # Act
     data = {
         "app_name": "dropbase_test_app",
         "page_name": "page1",
@@ -39,20 +40,19 @@ def test_sync_table_columns_req(test_client, mocker):
             "page_id": PAGE_ID,
         },
         "file": {
-            "name": "test_sql",
-            "type": "sql",
+            "name": "test_function_data_fetcher",
+            "type": "data_fetcher",
             "source": "replica",
         },
         "state": {"widgets": {"widget1": {}}, "tables": {"table1": {}}},
     }
-
-    # Act
-    res = test_client.post(
-        "/sync/columns/", json=data, cookies={"access_token_cookie": "mock access cookie"}
-    )
+    res = test_client.post("/sync/columns/", json=data)
 
     # Assert
     assert res.status_code == 200
+    assert is_valid_folder_structure()
+    assert workspace_object_exists("State", "tables.table1")
+    assert workspace_object_exists("Context", "tables.table1")
 
 
 def test_sync_components_req(test_client, dropbase_router_mocker):
