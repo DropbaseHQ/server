@@ -21,7 +21,7 @@ def test_create_file_req(test_client, dropbase_router_mocker):
         "app_name": "dropbase_test_app",
         "page_name": "page1",
         "name": "test_file",
-        "type": "random gibberish type",
+        "type": "sql",
         "page_id": PAGE_ID,
     }
 
@@ -31,7 +31,7 @@ def test_create_file_req(test_client, dropbase_router_mocker):
     # Assert
     assert res.status_code == 200
     assert is_valid_folder_structure()
-    assert workspace_file_exists("scripts/test_file.py")
+    assert workspace_file_exists("scripts/test_file.sql")
 
 
 def test_create_file_req_ui(test_client, dropbase_router_mocker):
@@ -122,13 +122,13 @@ def test_create_file_req_block_path_traversal_vulnerability(test_client, dropbas
     assert not workspace_file_exists("test_file.py")
 
 
-def test_get_all_files(test_client, dropbase_router_mocker):
+def test_get_all_files(test_client):
     # Arrange
     scripts_path = WORKSPACE_PATH.joinpath("dropbase_test_app/page1/scripts/")
     shutil.rmtree(scripts_path)
     os.mkdir(scripts_path)
 
-    files = ["test1.py", "test2.py", "test3.sql", "test4.sql"]
+    files = ["test1.py", "test2.py", "test3.sql", "test4.sql", "test5.sql"]
     for i in range(len(files)):
         path = scripts_path.joinpath(files[i]).absolute()
         with open(path, "w") as _:
@@ -176,7 +176,7 @@ def test_rename_file_req(test_client, dropbase_router_mocker):
 def test_rename_file_req_dropbase_call_failed(test_client, dropbase_router_mocker):
     # Arrange
     update_file_name_response_failure = lambda *args, **kwargs: mock_response(  # noqa
-        json={}, status_code=500, text="fail"
+        json={"message": "No record present"}, status_code=400, text="fail"
     )
     dropbase_router_mocker.patch(
         "file", "update_file_name", side_effect=update_file_name_response_failure
@@ -201,7 +201,7 @@ def test_rename_file_req_dropbase_call_failed(test_client, dropbase_router_mocke
     res = test_client.put("/files/rename", json=data)
 
     # Assert
-    assert res.status_code == 200
+    assert res.status_code == 400
     assert res.json()["status"] == "error"
     assert is_valid_folder_structure()
     assert workspace_file_exists("scripts/test_rename.sql")
@@ -227,7 +227,7 @@ def test_rename_file_req_file_not_exists(test_client, dropbase_router_mocker):
     res = test_client.put("/files/rename", json=data)
 
     # Assert
-    assert res.status_code == 200
+    assert res.status_code == 400
     assert res.json()["status"] == "error"
     assert is_valid_folder_structure()
 
@@ -309,7 +309,6 @@ def test_delete_file_req_not_exists(test_client, dropbase_router_mocker):
 def test_update_file_req(test_client, dropbase_router_mocker):
     # Arrange
     dropbase_router_mocker.patch("file", "update_file", side_effect=update_file_response)
-
     data = {
         "app_name": "dropbase_test_app",
         "page_name": "page1",

@@ -1,8 +1,16 @@
+from enum import Enum
 from typing import Optional
 from uuid import UUID
 
 from pydantic import BaseModel, Field
+
 from server.constants import FILE_NAME_REGEX
+
+
+class TypeEnum(str, Enum):
+    ui = "ui"
+    bananadata_fetcher = "data_fetcher"
+    sql = "sql"
 
 
 class ReadRequest(BaseModel):
@@ -13,7 +21,7 @@ class CreateFile(BaseModel):
     app_name: str = Field(regex=FILE_NAME_REGEX)
     page_name: str = Field(regex=FILE_NAME_REGEX)
     name: str = Field(regex=FILE_NAME_REGEX)
-    type: str
+    type: TypeEnum
     page_id: str
     source: Optional[str]
 
@@ -28,7 +36,7 @@ class SaveSql(BaseModel):
 # data files
 class DataFile(BaseModel):
     name: str = Field(regex=FILE_NAME_REGEX)
-    type: str
+    type: TypeEnum
     source: Optional[str]
 
 
@@ -39,7 +47,7 @@ class UpdateFile(BaseModel):
     sql: str
     source: Optional[str]
     file_id: UUID
-    type: str
+    type: TypeEnum
     # file: dict
 
 
@@ -49,11 +57,11 @@ class RenameFile(BaseModel):
     new_name: str = Field(regex=FILE_NAME_REGEX)
     app_name: str = Field(regex=FILE_NAME_REGEX)
     page_name: str = Field(regex=FILE_NAME_REGEX)
-    type: str
+    type: TypeEnum
 
 
 class DeleteFile(BaseModel):
     app_name: str = Field(regex=FILE_NAME_REGEX)
     page_name: str = Field(regex=FILE_NAME_REGEX)
     file_name: str = Field(regex=FILE_NAME_REGEX)
-    type: str
+    type: TypeEnum
