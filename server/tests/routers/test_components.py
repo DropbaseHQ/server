@@ -70,7 +70,7 @@ def test_delete_component_req_not_found(test_client, dropbase_router_mocker):
     dropbase_router_mocker.patch(
         "component",
         "delete_component",
-        side_effect = lambda *args, **kwargs: mock_response(json={}, status_code=500)
+        side_effect = lambda *args, **kwargs: mock_response(json={}, text="error", status_code=500)
     )
 
     # Act
