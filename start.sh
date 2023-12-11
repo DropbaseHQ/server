@@ -1,8 +1,8 @@
 #!/bin/sh
 
 # Install additional packages
-if [ -f /project/requirements/requirements.txt ]; then
-    pip install -r /project/requirements/requirements.txt
+if [ -f /project/requirements-custom.txt ]; then
+    pip install -r /project/requirements-custom.txt
 fi
 
 
