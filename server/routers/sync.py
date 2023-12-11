@@ -20,7 +20,7 @@ def get_state_context_req(app_name: str, page_name: str):
 
 @router.post("/columns/")
 def sync_table_columns_req(req: SyncTableColumns, router: DropbaseRouter = Depends(get_dropbase_router)):
-    return sync_table_columns(req.app_name, req.page_name, req.table, req.file, req.state, router)
+    return sync_table_columns(req, router)
 
 
 # TODO: check with client, remove this endpoint

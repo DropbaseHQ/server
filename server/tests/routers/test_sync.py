@@ -1,6 +1,9 @@
 from server.tests.constants import PAGE_ID
-from server.tests.mocks.controllers.python_subprocess import mock_run_process_task
-from server.tests.mocks.dropbase.sync import sync_components_response, sync_page_response
+from server.tests.mocks.dropbase.sync import (
+    sync_components_response,
+    sync_page_response,
+    sync_table_columns_response,
+)
 from server.tests.verify_folder_structure import is_valid_folder_structure
 from server.tests.verify_object_exists import workspace_object_exists
 
@@ -20,39 +23,52 @@ def test_get_state_context(test_client):
     assert context["tables"].get("table1")
 
 
-def test_sync_table_columns_req(test_client, mocker):
+def test_sync_table_columns_req(test_client, mocker, dropbase_router_mocker, mock_db):
     # Arrange
-    run_process_task = mock_run_process_task(True, {"message": "success"}, "")
-    mocker.patch("server.routers.query.run_process_task", side_effect=run_process_task)
+    mocker.patch("server.controllers.query.connect_to_user_db", return_value=mock_db)
+    dropbase_router_mocker.patch("misc", "sync_table_columns", side_effect=sync_table_columns_response)
 
+    # Act
     data = {
         "app_name": "dropbase_test_app",
         "page_name": "page1",
         "table": {
             "name": "table1",
             "property": {
+                "height": "",
                 "filters": [],
                 "appears_after": None,
                 "on_row_change": None,
                 "on_row_selection": None,
             },
-            "page_id": PAGE_ID,
+            "page_id": "b3a1c199-3181-4683-85b7-a5a0060755d7",
+            "date": "2023-12-01T23:20:29.134008",
+            "file_id": "b21b973c-b83a-4ade-9e34-815e912bb7f0",
+            "id": "2b331280-9f57-4b48-8b89-e83261e4b4fc",
+            "depends_on": [],
         },
         "file": {
+            "source": "local",
+            "id": "b21b973c-b83a-4ade-9e34-815e912bb7f0",
+            "date": "2023-12-11T20:50:14.248251",
+            "page_id": "b3a1c199-3181-4683-85b7-a5a0060755d7",
             "name": "test_sql",
             "type": "sql",
-            "source": "replica",
         },
-        "state": {"widgets": {"widget1": {}}, "tables": {"table1": {}}},
+        "state": {
+            "tables": {"table1": {"user_id": 1, "username": "John Doe"}},
+            "widgets": {"widget1": {}},
+        },
     }
-
-    # Act
     res = test_client.post(
         "/sync/columns/", json=data, cookies={"access_token_cookie": "mock access cookie"}
     )
 
     # Assert
     assert res.status_code == 200
+    assert workspace_object_exists("State", "tables.table1.user_id")
+    assert workspace_object_exists("State", "tables.table1.username")
+    assert workspace_object_exists("State", "tables.table1.email")
 
 
 def test_sync_components_req(test_client, dropbase_router_mocker):
