@@ -41,7 +41,7 @@ def run_process_task(function_name: str, args: dict):
     if status_code != 200:
         # for troubleshooting purposes
         print(stdout)
-    return format_process_result(result), status_code
+    return format_process_result(result, stdout), status_code
 
 
 def run_task(child_conn, function_name, args):
@@ -68,5 +68,5 @@ def run_task(child_conn, function_name, args):
         sys.stdout = old_stdout
 
 
-def format_process_result(result: any, success: bool = True):
-    return {"result": result, "success": success}
+def format_process_result(result: any, stdout: str = "", success: bool = True):
+    return {"result": result, "stdout": stdout, "success": success}
