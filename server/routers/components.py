@@ -45,8 +45,12 @@ def update_component_req(
 
 @router.delete("/{component_id}/")
 def delete_component_req(
-    component_id, router: DropbaseRouter = Depends(get_dropbase_router)
+    component_id, response: Response, router: DropbaseRouter = Depends(get_dropbase_router)
 ):
     resp = router.component.delete_component(component_id=component_id)
-    handle_state_context_updates(resp)
-    return resp.json()
+    if resp.status_code == 200:
+        handle_state_context_updates(resp)
+        return resp.json()
+    else:
+        response.status_code = resp.status_code
+        return resp.json()

@@ -1,3 +1,4 @@
+from server.tests.mocks.util import mock_response
 from server.tests.mocks.dropbase.components import (
     create_component_response,
     update_component_response,
@@ -59,6 +60,24 @@ def test_delete_component_req(test_client, dropbase_router_mocker):
 
     # Assert
     assert res.status_code == 200
+    assert is_valid_folder_structure()
+    assert not workspace_object_exists("State", "widgets.widget1.test_text")
+    assert not workspace_object_exists("Context", "widgets.widget1.components.test_text")
+
+
+def test_delete_component_req_not_found(test_client, dropbase_router_mocker):
+    # Arrange
+    dropbase_router_mocker.patch(
+        "component",
+        "delete_component",
+        side_effect = lambda *args, **kwargs: mock_response(json={}, status_code=500)
+    )
+
+    # Act
+    res = test_client.delete("/components/0617281c-c8bf-478e-b532-cb033e40a5ab")
+
+    # Assert
+    assert res.status_code != 200
     assert is_valid_folder_structure()
     assert not workspace_object_exists("State", "widgets.widget1.test_text")
     assert not workspace_object_exists("Context", "widgets.widget1.components.test_text")
