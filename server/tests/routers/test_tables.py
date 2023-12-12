@@ -172,7 +172,7 @@ def test_delete_table_req(test_client, dropbase_router_mocker):
     assert not workspace_object_exists("Context", "tables.test_table")
 
 
-def test_convert_sql_table(test_client, mocker, mock_db, dropbase_router_mocker):
+def test_convert_sql_table_req(test_client, mocker, mock_db, dropbase_router_mocker):
     # Arrange
     mocker.patch("server.controllers.tables.connect_to_user_db", return_value=mock_db)
     dropbase_router_mocker.patch("misc", "get_smart_columns", side_effect=get_smart_columns_response)
