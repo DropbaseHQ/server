@@ -10,7 +10,7 @@ def test_run_task_function_not_found():
     run_task(mock_child_conn, "random nonexistent function", [])
 
     # Assert
-    success, stdout, output = mock_child_conn.send.call_args.args[0]
-    assert not success
+    status_code, stdout, output = mock_child_conn.send.call_args.args[0]
+    assert status_code != 200
     assert stdout == ""
     assert "KeyError" in output
