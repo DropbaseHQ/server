@@ -1,8 +1,6 @@
 import unittest.mock
 
-from sqlalchemy import INTEGER, VARCHAR
-
-from server.tests.constants import PAGE_ID, WORKSPACE_PATH
+from server.tests.constants import PAGE_ID, FILE_ID, TABLE_ID, WORKSPACE_PATH
 from server.tests.mocks.dropbase.misc import get_smart_columns_response, update_smart_columns_response
 from server.tests.mocks.dropbase.sync import sync_columns_response
 from server.tests.mocks.dropbase.table import (
@@ -174,21 +172,17 @@ def test_delete_table_req(test_client, dropbase_router_mocker):
     assert not workspace_object_exists("Context", "tables.test_table")
 
 
-def test_convert_sql_table(mocker, mock_db):
+def test_convert_sql_table(test_client, mocker, mock_db, dropbase_router_mocker):
     # Arrange
-    mock_router = unittest.mock.MagicMock()
-    mock_router.misc.get_smart_columns.side_effect = get_smart_columns_response
-    mock_router.misc.update_smart_columns.side_effect = update_smart_columns_response
     mocker.patch("server.controllers.tables.connect_to_user_db", return_value=mock_db)
-
-    # TODO switch this to a test client call
-    from server.controllers.tables import convert_sql_table
+    dropbase_router_mocker.patch("misc", "get_smart_columns", side_effect=get_smart_columns_response)
+    dropbase_router_mocker.patch("misc", "update_smart_columns", side_effect=update_smart_columns_response)
 
     # Act
-    output = convert_sql_table(
-        app_name="dropbase_test_app",
-        page_name="page1",
-        table={
+    res = test_client.post("/tables/convert/", json={
+        "app_name": "dropbase_test_app",
+        "page_name": "page1",
+        "table": {
             "name": "table1",
             "property": {
                 "filters": [],
@@ -198,10 +192,12 @@ def test_convert_sql_table(mocker, mock_db):
             },
             "page_id": PAGE_ID,
         },
-        file={"name": "test_sql", "type": "sql", "source": "replica"},
-        state={"widgets": {"widget1": {}}, "tables": {"table1": {}}},
-        router=mock_router,
-    )
+        "file": {"name": "test_sql", "type": "sql", "source": "replica"},
+        "state": {"widgets": {"widget1": {}}, "tables": {"table1": {}}},
+    })
 
     # Assert
-    assert output["message"] == "success"
+    assert res.status_code == 200
+    assert res.json()["id"] == TABLE_ID
+    assert res.json()["file_id"] == FILE_ID
+    assert res.json()["page_id"] == PAGE_ID
