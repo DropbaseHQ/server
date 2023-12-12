@@ -33,7 +33,7 @@ def sync_table_columns(
 def sync_components(app_name: str, page_name: str, router: DropbaseRouter):
     try:
         payload = {"app_name": app_name, "page_name": page_name, "token": DROPBASE_TOKEN}
-        resp = router.misc.sync_table_columns(**payload)
+        resp = router.misc.sync_components(**payload)
         handle_state_context_updates(resp)
         return resp.json(), 200
     except Exception as e:
