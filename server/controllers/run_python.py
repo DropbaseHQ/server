@@ -3,6 +3,7 @@ import json
 from server.controllers.utils import (
     call_function,
     clean_df,
+    convert_df_to_resp_obj,
     get_data_function_by_file,
     get_function_by_name,
     get_state,
@@ -20,7 +21,7 @@ def run_python_query(app_name, page_name, file: dict, state: dict, filter_sort: 
         function_name = get_data_function_by_file(app_name, page_name, file)
         df = call_function(function_name, **args)
         df = clean_df(df)
-        return json.loads(df.to_json(orient="split")), 200
+        return convert_df_to_resp_obj(df), 200
     except Exception as e:
         return {"error": str(e)}, 500
 

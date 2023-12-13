@@ -1,6 +1,3 @@
-from typing import Optional
-from uuid import UUID
-
 from server.tests.mocks.util import mock_response
 
 

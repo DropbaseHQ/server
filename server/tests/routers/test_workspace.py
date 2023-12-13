@@ -1,5 +1,7 @@
 import os
 import shutil
+import tempfile
+from pathlib import Path
 
 from server.tests.constants import WORKSPACE_PATH
 from server.tests.mocks.util import mock_response
@@ -7,6 +9,7 @@ from server.tests.mocks.dropbase.app import (
     get_app_response,
     update_app_response,
     delete_app_response,
+    delete_app_response_path_traversal,
     rename_app_response,
 )
 from server.tests.mocks.dropbase.sync import sync_components_response_empty
@@ -143,3 +146,28 @@ def test_delete_app_req(test_client, dropbase_router_mocker):
     # Assert
     assert res.status_code == 200
     assert not os.path.exists(WORKSPACE_PATH.joinpath("dropbase_test_app"))
+
+
+def test_delete_app_req_block_path_traversal_attack(test_client, dropbase_router_mocker):
+    # Arrange
+    try:
+        test_target_path = WORKSPACE_PATH.parent.joinpath("test_delete_app_req_block_path_traversal_attack_folder")
+        test_target_rel_path = "../test_delete_app_req_block_path_traversal_attack_folder"
+        os.mkdir(test_target_path)
+
+        dropbase_router_mocker.patch(
+            "app",
+            "delete_app",
+            side_effect=delete_app_response_path_traversal(test_target_rel_path)
+        )
+
+        data = {"app_name": str(test_target_rel_path)}
+
+        # Act
+        res = test_client.request("DELETE", "/app/bf5a519f-b9df-4f09-9f10-ce2f18d9a5ca", json=data)
+
+        # Assert
+        assert res.status_code != 200
+        assert os.path.exists(test_target_path)
+    finally:
+        shutil.rmtree(test_target_path)

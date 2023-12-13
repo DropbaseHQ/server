@@ -5,7 +5,7 @@ import traceback
 from io import StringIO
 from multiprocessing import Pipe, Process
 
-from server.constants import cwd
+from server.constants import TASK_TIMEOUT, cwd
 
 # NOTE: do not delete these, referenecd by run_task
 from server.controllers.run_python import run_df_function, run_python_query, run_python_ui  # noqa
@@ -36,12 +36,23 @@ def run_process_task(function_name: str, args: dict):
         args=(child_conn, function_name, args),
     )
     task.start()
-    task.join()
+    task.join(timeout=int(TASK_TIMEOUT))
+
+    if task.is_alive():
+        task.terminate()
+        task.join()  # Join again after terminating to cleanup resources
+        return {
+            "success": False,
+            "result": None,
+            "stdout": "Task did not complete within the timeout period, so it was terminated.",
+        }, 500
+
     status_code, stdout, result = parent_conn.recv()
+    # task.terminate()
     if status_code != 200:
         # for troubleshooting purposes
         print(stdout)
-    return format_process_result(result), status_code
+    return format_process_result(result, stdout), status_code
 
 
 def run_task(child_conn, function_name, args):
@@ -68,5 +79,5 @@ def run_task(child_conn, function_name, args):
         sys.stdout = old_stdout
 
 
-def format_process_result(result: any, success: bool = True):
-    return {"result": result, "success": success}
+def format_process_result(result: any, stdout: str = "", success: bool = True):
+    return {"result": result, "stdout": stdout, "success": success}

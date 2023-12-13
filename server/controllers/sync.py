@@ -6,24 +6,22 @@ from server.constants import DROPBASE_TOKEN
 from server.controllers.query import get_table_columns
 from server.controllers.utils import handle_state_context_updates, validate_column_name
 from server.requests.dropbase_router import DropbaseRouter
+from server.schemas.sync import SyncTableColumns
 
 
-def sync_table_columns(
-    app_name: str,
-    page_name: str,
-    table: dict,
-    file: dict,
-    state: dict,
-    router: DropbaseRouter,
-):
+def sync_table_columns(req: SyncTableColumns, router: DropbaseRouter):
     try:
-        columns = get_table_columns(app_name, page_name, file, state)
+        # import pdb
+        # pdb.set_trace()
+        columns = get_table_columns(req.app_name, req.page_name, req.file, req.state)
         if not validate_column_name(columns):
             return "Invalid column names present in the table", 400
 
         # call dropbase server
-        payload = {"table_id": table.get("id"), "columns": columns, "type": file.get("type")}
+        payload = {"table_id": req.table.get("id"), "columns": columns, "type": req.file.get("type")}
         resp = router.misc.sync_table_columns(payload)
+        # print(resp.json())
+        # import pdb; pdb.set_trace()
         handle_state_context_updates(resp)
         return resp.json(), resp.status_code
     except Exception as e:
