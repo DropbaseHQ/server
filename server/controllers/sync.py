@@ -11,9 +11,8 @@ from server.schemas.sync import SyncTableColumns
 
 def sync_table_columns(req: SyncTableColumns, router: DropbaseRouter):
     try:
-        import pdb
-
-        pdb.set_trace()
+        # import pdb
+        # pdb.set_trace()
         columns = get_table_columns(req.app_name, req.page_name, req.file, req.state)
         if not validate_column_name(columns):
             return "Invalid column names present in the table", 400
