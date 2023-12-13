@@ -60,6 +60,7 @@ def test_sync_table_columns_req(test_client, mocker, dropbase_router_mocker, moc
             "widgets": {"widget1": {}},
         },
     }
+
     res = test_client.post(
         "/sync/columns/", json=data, cookies={"access_token_cookie": "mock access cookie"}
     )

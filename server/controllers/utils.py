@@ -85,6 +85,25 @@ def clean_df(df: pd.DataFrame) -> pd.DataFrame:
     return df
 
 
+def convert_df_to_resp_obj(df: pd.DataFrame) -> dict:
+    values = json.loads(df.to_json(orient="split"))
+    values["data"] = flatten_json(values["data"])
+    return values
+
+
+def flatten_json(json_data):
+    data = []
+    for row in json_data:
+        new_row = []
+        for value in row:
+            if isinstance(value, dict) or isinstance(value, list):
+                new_row.append(json.dumps(value, default=str))
+            else:
+                new_row.append(value)
+        data.append(new_row)
+    return data
+
+
 def handle_state_context_updates(response):
     sys.path.insert(0, cwd)
     if response.status_code == 200:
