@@ -26,12 +26,7 @@ def test_run_query_sql(test_client, mocker, mock_db):
     assert res.json()["success"]
 
 
-# TBI
-def test_run_query_python(test_client, mocker):
-    # Arrange
-    # run_process_task = mock_run_process_task(True, {"columns": ["x"], "data": [[1]]}, "")
-    # mocker.patch("server.routers.query.run_process_task", side_effect=run_process_task)
-
+def test_run_query_python(test_client):
     data = {
         "app_name": "dropbase_test_app",
         "page_name": "page1",
@@ -48,4 +43,5 @@ def test_run_query_python(test_client, mocker):
 
     # Assert
     assert res.status_code == 200
-    assert res.json()["success"]
+    assert res.json()["result"]["columns"] == ["x"]
+    assert res.json()["result"]["data"] == [[1]]
