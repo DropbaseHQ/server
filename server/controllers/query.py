@@ -9,7 +9,7 @@ from sqlalchemy.engine import Engine
 
 from server.constants import DATA_PREVIEW_SIZE
 from server.controllers.python_subprocess import format_process_result, run_process_task_unwrap
-from server.controllers.utils import clean_df, connect_to_user_db
+from server.controllers.utils import clean_df, connect_to_user_db, convert_df_to_resp_obj
 from server.schemas.files import DataFile
 from server.schemas.table import FilterSort, TableFilter, TablePagination, TableSort
 
@@ -42,15 +42,17 @@ def run_sql_query(app_name: str, page_name: str, file: DataFile, state: dict, fi
     verify_state(app_name, page_name, state)
     sql = get_table_sql(app_name, page_name, file.name)
     df = run_df_query(sql, file.source, state, filter_sort)
-    df = json.loads(df.to_json(orient="split"))
-    return format_process_result(df)
+    # df = json.loads(df.to_json(orient="split"))
+    res = convert_df_to_resp_obj(df)
+    return format_process_result(res)
 
 
 def run_sql_query_from_string(sql: str, source: str, app_name: str, page_name: str, state: dict):
     verify_state(app_name, page_name, state)
     df = run_df_query(sql, source, state)
-    df = json.loads(df.to_json(orient="split"))
-    return format_process_result(df)
+    # df = json.loads(df.to_json(orient="split"))
+    res = convert_df_to_resp_obj(df)
+    return format_process_result(res)
 
 
 def run_df_function(app_name: str, page_name: str, file: dict, state: dict):
