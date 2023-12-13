@@ -8,9 +8,10 @@ from server.constants import FILE_NAME_REGEX
 
 
 class TypeEnum(str, Enum):
-    ui = "ui"
-    bananadata_fetcher = "data_fetcher"
     sql = "sql"
+    data_fetcher = "data_fetcher"
+    ui = "ui"
+    python = "python"
 
 
 class ReadRequest(BaseModel):
