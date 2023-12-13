@@ -1,7 +1,9 @@
 import importlib
 import os
+import pickle
 import sys
 import traceback
+import uuid
 from io import StringIO
 from multiprocessing import Pipe, Process
 
@@ -47,8 +49,16 @@ def run_process_task(function_name: str, args: dict):
             "stdout": "Task did not complete within the timeout period, so it was terminated.",
         }, 500
 
-    status_code, stdout, result = parent_conn.recv()
-    # task.terminate()
+    status_code, stdout, file_path = parent_conn.recv()
+    result = None
+    try:
+        # read results from file
+        with open(file_path, "rb") as f:
+            result = pickle.load(f)
+    finally:
+        # remove file
+        os.remove(file_path)
+
     if status_code != 200:
         # for troubleshooting purposes
         print(stdout)
@@ -66,14 +76,26 @@ def run_task(child_conn, function_name, args):
     redirected_output = StringIO()
     sys.stdout = redirected_output
 
+    # random file name
+    random_file_name = uuid.uuid4().hex
+    file_path = cwd + f"/.temp/{random_file_name}.pkl"
+
     try:
         output, status_code = globals()[function_name](**args)
+        # save output to file
+        with open(file_path, "wb") as f:
+            pickle.dump(output, f)
+
         child_logs = redirected_output.getvalue()
-        child_conn.send((status_code, child_logs, output))
+        child_conn.send((status_code, child_logs, file_path))
     except Exception:
-        child_logs = redirected_output.getvalue()  # get print statements before exception
+        # save exception to file
         exception = traceback.format_exc()  # get full exception traceback string
-        child_conn.send((500, child_logs, exception))
+        with open(file_path, "wb") as f:
+            pickle.dump(exception, f)
+
+        child_logs = redirected_output.getvalue()  # get print statements before exception
+        child_conn.send((500, child_logs, file_path))
     finally:
         child_conn.close()
         sys.stdout = old_stdout

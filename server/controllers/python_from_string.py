@@ -1,11 +1,12 @@
 import ast
 import importlib
-import json
 import os
+import pickle
 import runpy
 import sys
 import tempfile
 import traceback
+import uuid
 from io import StringIO
 from multiprocessing import Pipe, Process
 
@@ -34,8 +35,16 @@ def run_process_with_exec(args: dict):
             "stdout": "Task did not complete within the timeout period, so it was terminated.",
         }
 
-    success, stdout, result = parent_conn.recv()
-    # task.terminate()
+    success, stdout, file_path = parent_conn.recv()
+    result = None
+    try:
+        # read results from file
+        with open(file_path, "rb") as f:
+            result = pickle.load(f)
+    finally:
+        # remove file
+        os.remove(file_path)
+
     return {"success": success, "result": result, "stdout": stdout}
 
 
@@ -50,6 +59,10 @@ def run_exec_task(child_conn, args):
     old_stdout = sys.stdout
     redirected_output = StringIO()
     sys.stdout = redirected_output
+
+    # random file name
+    random_file_name = uuid.uuid4().hex
+    file_path = cwd + f"/.temp/{random_file_name}.pkl"
 
     try:
         code_block, last_expr = compose_string_to_exec(
@@ -86,12 +99,21 @@ def run_exec_task(child_conn, args):
         else:
             output = last_var
 
+        # save output to file
+        with open(file_path, "wb") as f:
+            pickle.dump(output, f)
+
         child_logs = redirected_output.getvalue()
-        child_conn.send((True, child_logs, output))
+        child_conn.send((True, child_logs, file_path))
+
     except Exception:
-        child_logs = redirected_output.getvalue()  # get print statements before exception
+        # save exception to file
         exception = traceback.format_exc()  # get full exception traceback string
-        child_conn.send((False, child_logs, exception))
+        with open(file_path, "wb") as f:
+            pickle.dump(exception, f)
+
+        child_logs = redirected_output.getvalue()  # get print statements before exception
+        child_conn.send((False, child_logs, file_path))
     finally:
         child_conn.close()
         sys.stdout = old_stdout
