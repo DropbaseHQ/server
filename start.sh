@@ -8,4 +8,4 @@ fi
 
 # Start the server
 cd /project
-uvicorn server.main:app --reload --host 0.0.0.0 --port 9090
+uvicorn server.main:app --reload --reload-dir server/ --host 0.0.0.0 --port 9090
