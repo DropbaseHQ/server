@@ -10,7 +10,6 @@ def get_temp_output():
         for f in os.listdir(temp_file_folder_location)
         if os.path.isfile(os.path.join(temp_file_folder_location, f))
     ]
-    print("files", files)
 
     if not files:
         return None
