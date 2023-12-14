@@ -40,19 +40,22 @@ class Database:
             where_claw = f"WHERE ({', '.join(key_keys)}) = (:{', :'.join(key_keys)})"
         else:
             where_claw = f"WHERE {key_keys[0]} = :{key_keys[0]}"
-        sql = f"""UPDATE {self.schema}.{table}\n{set_claw}\n{where_claw};"""
+        sql = f"""UPDATE {self.schema}.{table}\n{set_claw}\n{where_claw} RETURNING *;"""
         values.update(keys)
-        self.session.execute(text(sql), values)
+        result = self.session.execute(text(sql), values)
         if auto_commit:
             self.commit()
+        return [dict(x) for x in result.fetchall()]
 
     def insert(self, table: str, values: dict, auto_commit: bool = False):
         keys = list(values.keys())
         sql = f"""INSERT INTO {self.schema}.{table} ({', '.join(keys)})
-        VALUES (:{', :'.join(keys)});"""
-        self.session.execute(text(sql), values)
+        VALUES (:{', :'.join(keys)})
+        RETURNING *;"""
+        row = self.session.execute(text(sql), values)
         if auto_commit:
             self.commit()
+        return dict(row.fetchone())
 
     def delete(self, table: str, keys: dict, auto_commit: bool = False):
         key_keys = list(keys.keys())
@@ -61,6 +64,7 @@ class Database:
         else:
             where_claw = f"WHERE {key_keys[0]} = :{key_keys[0]}"
         sql = f"""DELETE FROM {self.schema}.{table}\n{where_claw};"""
-        self.session.execute(text(sql), keys)
+        res = self.session.execute(text(sql), keys)
         if auto_commit:
             self.commit()
+        return res.rowcount

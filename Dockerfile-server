@@ -18,6 +18,9 @@ ADD server/. server/.
 
 EXPOSE 9090
 
+# Make our startup script executable
+RUN mkdir .temp
+
 # Copy the startup script into known file location in container
 COPY start.sh /start.sh
 

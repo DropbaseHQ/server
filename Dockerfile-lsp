@@ -8,6 +8,12 @@ WORKDIR /project
 
 # Install python libraries
 COPY requirements.txt requirements.txt
+
+# Install dropbase package
+ADD dropbase/. dropbase/.
+RUN pip install dropbase/.
+
+
 ADD lsp/. lsp/.
 
 RUN pip3 install --no-cache-dir --upgrade -r requirements.txt
