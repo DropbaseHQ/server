@@ -4,7 +4,7 @@ from sqlalchemy import text
 
 from server.controllers.utils import connect_to_user_db
 from server.schemas.edit_cell import CellEdit
-
+ 
 
 def edit_cell(file: dict, edits: List[CellEdit]):
     result_dict = {"result": [], "errors": None}
