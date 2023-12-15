@@ -10,7 +10,7 @@ from sqlalchemy.pool import NullPool
 
 from server.main import app
 from server.requests.dropbase_router import get_dropbase_router
-from server.tests.constants import DEMO_INIT_SQL_PATH, WORKSPACE_PATH
+from server.tests.constants import DEMO_INIT_SQL_PATH, WORKSPACE_PATH, TEMPDIR_PATH
 from server.tests.mocks.dropbase_router_mocker import DropbaseRouterMocker
 
 
@@ -65,7 +65,7 @@ def mock_db(postgresql):
 def pytest_sessionstart():
     import unittest.mock
 
-    from server.controllers.workspace import AppCreator, create_file
+    from server.controllers.workspace import AppCreator, create_file, create_folder
     from server.tests.mocks.dropbase.app import get_app_response, update_app_response
     from server.tests.mocks.dropbase.sync import sync_components_response_empty
 
@@ -94,6 +94,7 @@ def pytest_sessionstart():
         "test_function_data_fetcher.py",
     )
     create_file(scripts_path, "select * from users;", "test_sql.sql")
+    create_folder(TEMPDIR_PATH)
 
 
 def pytest_sessionfinish():
