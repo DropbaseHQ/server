@@ -1,6 +1,7 @@
 import unittest.mock
 
 from server.controllers.python_from_string import run_exec_task
+from server.tests.get_temp_output import get_temp_output
 
 
 def test_run_exec_task():
@@ -22,9 +23,10 @@ def test_run_exec_task():
 
     # Act
     run_exec_task(mock_child_conn, args)
-
     # Assert
-    success, stdout, output = mock_child_conn.send.call_args.args[0]
+    success, stdout, _ = mock_child_conn.send.call_args.args[0]
+    output = get_temp_output()
+
     assert success
     assert stdout == "test output"
     assert output == None
@@ -76,7 +78,9 @@ def test_run_exec_task_last_var():
     run_exec_task(mock_child_conn, args)
 
     # Assert
-    success, stdout, output = mock_child_conn.send.call_args.args[0]
+    success, stdout, _ = mock_child_conn.send.call_args.args[0]
+    output = get_temp_output()
+
     assert success
     assert stdout == ""
     assert output == 12
@@ -103,12 +107,14 @@ def test_run_exec_task_last_var_is_df():
     run_exec_task(mock_child_conn, args)
 
     # Assert
-    success, stdout, output = mock_child_conn.send.call_args.args[0]
+    success, stdout, _ = mock_child_conn.send.call_args.args[0]
+    output = get_temp_output()
+
     assert success
     assert stdout == ""
     assert output == {
         "columns": ["test_column"],
-        'index': [0],
+        "index": [0],
         "data": [[1]],
     }
 
@@ -134,7 +140,9 @@ def test_run_exec_task_last_var_is_context():
     run_exec_task(mock_child_conn, args)
 
     # Assert
-    success, stdout, output = mock_child_conn.send.call_args.args[0]
+    success, stdout, _ = mock_child_conn.send.call_args.args[0]
+    output = get_temp_output()
+
     print(success, stdout, output)
     assert success
     assert stdout == ""
@@ -153,6 +161,6 @@ def test_run_exec_task_last_var_is_context():
                     "message_type": None,
                     "columns": {},
                 }
-            }
+            },
         }
     }
