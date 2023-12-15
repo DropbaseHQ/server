@@ -5,7 +5,7 @@ from pydantic import BaseModel
 
 class TableFilter(BaseModel):
     column_name: str
-    condition: Literal["=", ">", "<", ">=", "<=", "like", "in"]
+    condition: Literal["=", "!=", ">", "<", ">=", "<=", "like", "in", "is null", "is not null"]
     value: Any
 
 

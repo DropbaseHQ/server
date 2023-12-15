@@ -135,8 +135,15 @@ def apply_filters(
         filters_list = []
         for filter in filters:
             filter_value_name = f"{filter.column_name}_filter"
-            if filter.condition == "like":
-                filter.value = f"%{filter.value}%"
+            match filter.condition:
+                case "like":
+                    filter.value = f"%{filter.value}%"
+                case "is null" | "is not null":
+                    # handle unary operators
+                    filters_list.append(
+                        f'user_query."{filter.column_name}" {filter.condition}'
+                    )
+                    continue
 
             filter_values[filter_value_name] = filter.value
             filters_list.append(
