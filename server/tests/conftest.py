@@ -69,6 +69,8 @@ def pytest_sessionstart():
     from server.tests.mocks.dropbase.app import get_app_response, update_app_response
     from server.tests.mocks.dropbase.sync import sync_components_response_empty
 
+    create_folder(TEMPDIR_PATH)
+
     mock_dropbase_router = unittest.mock.MagicMock()
     mock_dropbase_router.misc.sync_components.side_effect = sync_components_response_empty
     mock_dropbase_router.app.update_app.side_effect = update_app_response
@@ -94,7 +96,6 @@ def pytest_sessionstart():
         "test_function_data_fetcher.py",
     )
     create_file(scripts_path, "select * from users;", "test_sql.sql")
-    create_folder(TEMPDIR_PATH)
 
 
 def pytest_sessionfinish():
