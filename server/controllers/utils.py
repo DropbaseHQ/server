@@ -86,7 +86,7 @@ def clean_df(df: pd.DataFrame) -> pd.DataFrame:
 
 
 def convert_df_to_resp_obj(df: pd.DataFrame) -> dict:
-    values = json.loads(df.to_json(orient="split"))
+    values = json.loads(df.to_json(orient="split", default_handler=str))
     values["data"] = flatten_json(values["data"])
     return values
 

@@ -3,7 +3,7 @@
 server
 
 ```
-docker buildx build --platform linux/amd64,linux/arm64 --push -t dropbase/server:0.0.5 -f Dockerfile-server .
+docker buildx build --platform linux/amd64,linux/arm64 --push -t dropbase/server:0.0.7 -f Dockerfile-server .
 
 docker build -t dropbase/server:0.0.2 -f Dockerfile-server .
 docker push dropbase/server:0.0.2
@@ -19,7 +19,7 @@ docker push dropbase/server:latest
 lsp
 
 ```
-docker buildx build --platform linux/amd64,linux/arm64 --push -t dropbase/lsp:0.0.3 -f Dockerfile-lsp .
+docker buildx build --platform linux/amd64,linux/arm64 --push -t dropbase/lsp:0.0.4 -f Dockerfile-lsp .
 
 docker build -t dropbase/lsp -f Dockerfile-lsp .
 docker push dropbase/lsp
