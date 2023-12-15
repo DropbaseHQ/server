@@ -114,13 +114,9 @@ def get_sql_variables(user_sql: str):
 
 
 def query_db(sql, values, source_name):
-    print(1)
     user_db_engine = connect_to_user_db(source_name)
-    print(2)
     with user_db_engine.connect().execution_options(autocommit=True) as conn:
-        print(3)
         res = conn.execute(text(sql), values).all()
-        print(4)
     return res
 
 

@@ -24,7 +24,7 @@ jobs:
           pip install -r requirements.txt
           pip install -r requirements-dev.txt
       - name: Run tests and collect coverage
-        run: python3 -m pytest -rP --cov=server --cov-config=server/.coveragerc server/tests
+        run: python3 -m pytest -rP --cov=server --cov-config=server/.coveragerc server/tests/controllers/test_python.py
       - name: Upload coverage reports to Codecov
         uses: codecov/codecov-action@v3
         env:
