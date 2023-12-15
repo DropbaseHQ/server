@@ -143,7 +143,6 @@ def test_run_exec_task_last_var_is_context():
     success, stdout, _ = mock_child_conn.send.call_args.args[0]
     output = get_temp_output()
 
-    print(success, stdout, output)
     assert success
     assert stdout == ""
     assert output == {
