@@ -1,6 +1,7 @@
 version: "3.8"
 services:
   dropbase-server:
+    tty: true
     build:
       context: .
       dockerfile: Dockerfile-server
@@ -13,6 +14,7 @@ services:
     environment:
       - PYTHONUNBUFFERED=1
   dropbase-lsp:
+    tty: true
     build:
       context: .
       dockerfile: Dockerfile-lsp
