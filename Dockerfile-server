@@ -1,7 +1,7 @@
 FROM python:3.11-slim-buster
 
 # Install basic packages
-RUN apt-get update -y && apt-get install libffi-dev libmagic1 git libpq-dev -y \
+RUN apt-get update -y && apt-get install libffi-dev libmagic1 git libpq-dev curl -y \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /project
