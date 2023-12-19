@@ -150,8 +150,7 @@ def start_ws_lang_server(port, check_parent_process, handler_class):
         async def run_server():
             async with websockets.serve(pylsp_ws, port=port):
                 # runs forever
-                import time
-                time.sleep(1000)
+                print(f"\033[92mServing {handler_class.__name__} on port {port}\033[0m")
                 await asyncio.Future()
 
         asyncio.run(run_server())
