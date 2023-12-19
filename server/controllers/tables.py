@@ -35,7 +35,7 @@ def update_table(table_id: str, req: UpdateTableRequest, router: DropbaseRouter)
 def update_table_columns(table_id: str, req: UpdateTableRequest, router: DropbaseRouter):
     try:
         columns = get_table_columns(req.app_name, req.page_name, req.file, req.state)
-        if not validate_column_name(columns):
+        if not validate_column_name([col["name"] for col in columns]):
             return {"message": "Invalid column names present in the table"}, 400
         payload = {"table_id": table_id, "columns": columns, "type": req.file.get("type")}
         resp = router.sync.sync_columns(payload)

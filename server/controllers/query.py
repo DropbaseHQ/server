@@ -16,6 +16,20 @@ from server.schemas.table import FilterSort, TableFilter, TablePagination, Table
 cwd = os.getcwd()
 
 
+pdtype_to_pytype = {
+    "int64": "int",
+    "float64": "float",
+    "object": "str",
+    "bool": "bool",
+    "int32": "int",
+    "float32": "float",
+    "int16": "int",
+    "uint16": "int",
+    "uint32": "int",
+    "uint64": "int",
+}
+
+
 def verify_state(app_name: str, page_name: str, state: dict):
     args = {
         "app_name": app_name,
@@ -181,9 +195,11 @@ def get_column_names(user_db_engine: Engine, user_sql: str) -> list[str]:
 
 def get_table_columns(app_name: str, page_name: str, file: dict, state: dict) -> List[str]:
     if file.get("type") == "data_fetcher":
+        import pdb;pdb.set_trace()
         df = run_df_function(app_name, page_name, file, state)["result"]
+        return [{"name": column_name, "type": pdtype_to_pytype.get(str(column_type), "str")} for column_name, column_type in zip(df.columns, df.dtypes)]
     else:
         verify_state(app_name, page_name, state)
         sql = get_table_sql(app_name, page_name, file.get("name"))
         df = run_df_query(sql, file.get("source"), state, FilterSort(filters=[], sorts=[]))
-    return df.columns.tolist()
+        return [{"name": column_name} for column_name in df.columns]
