@@ -195,7 +195,6 @@ def get_column_names(user_db_engine: Engine, user_sql: str) -> list[str]:
 
 def get_table_columns(app_name: str, page_name: str, file: dict, state: dict) -> List[str]:
     if file.get("type") == "data_fetcher":
-        import pdb;pdb.set_trace()
         df = run_df_function(app_name, page_name, file, state)["result"]
         return [{"name": column_name, "type": pdtype_to_pytype.get(str(column_type), "str")} for column_name, column_type in zip(df.columns, df.dtypes)]
     else:
