@@ -46,7 +46,7 @@ def test_update_table_req_file_changed(test_client, dropbase_router_mocker, mock
     dropbase_router_mocker.patch("table", "update_table", side_effect=update_table_response)
     dropbase_router_mocker.patch("sync", "sync_columns", side_effect=sync_columns_response)
     mocker.patch(
-        "server.controllers.tables.get_table_columns", side_effect=lambda *args: ["test_column"]
+        "server.controllers.tables.get_table_columns", side_effect=lambda *args: [{"name": "test_column"}]
     )
 
     scripts_path = WORKSPACE_PATH.joinpath("dropbase_test_app/page1/scripts/")

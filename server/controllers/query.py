@@ -193,7 +193,7 @@ def get_column_names(user_db_engine: Engine, user_sql: str) -> list[str]:
     return col_names
 
 
-def get_table_columns(app_name: str, page_name: str, file: dict, state: dict) -> List[str]:
+def get_table_columns(app_name: str, page_name: str, file: dict, state: dict) -> List[dict]:
     if file.get("type") == "data_fetcher":
         df = run_df_function(app_name, page_name, file, state)["result"]
         return [{"name": column_name, "type": pdtype_to_pytype.get(str(column_type), "str")} for column_name, column_type in zip(df.columns, df.dtypes)]
@@ -202,3 +202,7 @@ def get_table_columns(app_name: str, page_name: str, file: dict, state: dict) ->
         sql = get_table_sql(app_name, page_name, file.get("name"))
         df = run_df_query(sql, file.get("source"), state, FilterSort(filters=[], sorts=[]))
         return [{"name": column_name} for column_name in df.columns]
+
+
+def get_table_column_names(app_name: str, page_name: str, file: dict, state: dict) -> List[str]:
+    return [col.get("name") for col in get_table_columns(app_name, page_name, file, state)]

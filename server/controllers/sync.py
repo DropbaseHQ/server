@@ -3,7 +3,7 @@ import importlib
 from pydantic import BaseModel
 
 from server.constants import DROPBASE_TOKEN
-from server.controllers.query import get_table_columns
+from server.controllers.query import get_table_column_names
 from server.controllers.utils import handle_state_context_updates, validate_column_name
 from server.requests.dropbase_router import DropbaseRouter
 from server.schemas.sync import SyncTableColumns
@@ -13,7 +13,7 @@ def sync_table_columns(req: SyncTableColumns, router: DropbaseRouter):
     try:
         # import pdb
         # pdb.set_trace()
-        columns = get_table_columns(req.app_name, req.page_name, req.file, req.state)
+        columns = get_table_column_names(req.app_name, req.page_name, req.file, req.state)
         if not validate_column_name(columns):
             return "Invalid column names present in the table", 400
 

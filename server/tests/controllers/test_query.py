@@ -56,14 +56,14 @@ def test_apply_sorts():
     )
 
 
-def test_get_table_columns_sql(mocker, mock_db):
+def test_get_table_column_names_sql(mocker, mock_db):
     # Arrange
     mocker.patch("server.controllers.query.connect_to_user_db", return_value=mock_db)
 
-    from server.controllers.query import get_table_columns
+    from server.controllers.query import get_table_column_names
 
     # Act
-    cols = get_table_columns(
+    cols = get_table_column_names(
         "dropbase_test_app",
         "page1",
         {"name": "test_sql", "type": "sql", "source": "mock_source"},
@@ -74,12 +74,12 @@ def test_get_table_columns_sql(mocker, mock_db):
     assert set(cols) == {"user_id", "username", "email"}
 
 
-def test_get_table_columns_python():
+def test_get_table_column_names_python():
     # Arrange
-    from server.controllers.query import get_table_columns
+    from server.controllers.query import get_table_column_names
 
     # Act
-    cols = get_table_columns(
+    cols = get_table_column_names(
         "dropbase_test_app",
         "page1",
         {"name": "test_function_data_fetcher", "type": "data_fetcher"},
