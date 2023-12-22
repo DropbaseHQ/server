@@ -19,9 +19,8 @@ def create_widget_req(
     resp = router.widget.create_widget(req.dict())
     resp = resp.json()
     widget = resp.get("widget")
-    if "state_context" in resp:
-        resp = resp.get("state_context")
-    update_state_context_files(**resp)
+    state_context = resp.get("state_context")
+    update_state_context_files(**state_context)
     return {"widget": widget}
 
 
