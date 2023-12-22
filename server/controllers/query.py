@@ -1,4 +1,4 @@
-import ast
+import json
 import os
 from typing import List
 
@@ -17,14 +17,12 @@ cwd = os.getcwd()
 
 
 def infer_column_type(column: pd.Series) -> str:
-    strcolumn = column.astype(str)
+    parsed_column = json.loads(column.to_json(orient="records"))
     inferred_types = set()
-    for item in strcolumn:
-        try:
-            inferred_type = type(ast.literal_eval(item))
-        except (ValueError, SyntaxError):
-            inferred_type = str
-        inferred_types.add(inferred_type)
+    for item in parsed_column:
+        if item is None:
+            continue
+        inferred_types.add(type(item))
 
     if len(inferred_types) == 1:
         return inferred_types.pop().__name__
@@ -198,9 +196,13 @@ def get_column_names(user_db_engine: Engine, user_sql: str) -> list[str]:
 def get_table_columns(app_name: str, page_name: str, file: dict, state: dict) -> List[dict]:
     if file.get("type") == "data_fetcher":
         df = run_df_function(app_name, page_name, file, state)["result"]
-        return [{"name": column, "type": infer_column_type(df[column])} for column in df.columns]
+        return get_df_columns(df)
     else:
         verify_state(app_name, page_name, state)
         sql = get_table_sql(app_name, page_name, file.get("name"))
         df = run_df_query(sql, file.get("source"), state, FilterSort(filters=[], sorts=[]))
-        return [{"name": column_name} for column_name in df.columns]
+        return get_df_columns(df)
+
+
+def get_df_columns(df: pd.DataFrame) -> List[dict]:
+    return [{"name": column, "type": infer_column_type(df[column])} for column in df.columns]
