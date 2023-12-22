@@ -41,7 +41,7 @@ services:
     labels:
       - "autoheal=true"
   autoheal:
-    image: willfarrell/autoheal:latest
+    image: willfarrell/autoheal:latest  # https://github.com/willfarrell/docker-autoheal
     tty: true
     restart: always
     environment:
