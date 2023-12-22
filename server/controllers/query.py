@@ -1,4 +1,4 @@
-import json
+import ast
 import os
 from typing import List
 
@@ -16,18 +16,20 @@ from server.schemas.table import FilterSort, TableFilter, TablePagination, Table
 cwd = os.getcwd()
 
 
-pdtype_to_pytype = {
-    "int64": "int",
-    "float64": "float",
-    "object": "str",
-    "bool": "bool",
-    "int32": "int",
-    "float32": "float",
-    "int16": "int",
-    "uint16": "int",
-    "uint32": "int",
-    "uint64": "int",
-}
+def infer_column_type(column: pd.Series) -> str:
+    strcolumn = column.astype(str)
+    inferred_types = set()
+    for item in strcolumn:
+        try:
+            inferred_type = type(ast.literal_eval(item))
+        except (ValueError, SyntaxError):
+            inferred_type = str
+        inferred_types.add(inferred_type)
+
+    if len(inferred_types) == 1:
+        return inferred_types.pop().__name__
+    else:
+        return str.__name__
 
 
 def verify_state(app_name: str, page_name: str, state: dict):
@@ -196,7 +198,7 @@ def get_column_names(user_db_engine: Engine, user_sql: str) -> list[str]:
 def get_table_columns(app_name: str, page_name: str, file: dict, state: dict) -> List[dict]:
     if file.get("type") == "data_fetcher":
         df = run_df_function(app_name, page_name, file, state)["result"]
-        return [{"name": column_name, "type": pdtype_to_pytype.get(str(column_type), "str")} for column_name, column_type in zip(df.columns, df.dtypes)]
+        return [{"name": column, "type": infer_column_type(df[column])} for column in df.columns]
     else:
         verify_state(app_name, page_name, state)
         sql = get_table_sql(app_name, page_name, file.get("name"))

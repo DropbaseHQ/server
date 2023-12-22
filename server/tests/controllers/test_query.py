@@ -60,7 +60,7 @@ def test_get_table_columns_sql(mocker, mock_db):
     # Arrange
     mocker.patch("server.controllers.query.connect_to_user_db", return_value=mock_db)
 
-    from server.controllers.query import get_table_colums
+    from server.controllers.query import get_table_columns
 
     # Act
     cols = get_table_columns(
