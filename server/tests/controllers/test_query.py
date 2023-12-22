@@ -56,14 +56,14 @@ def test_apply_sorts():
     )
 
 
-def test_get_table_column_names_sql(mocker, mock_db):
+def test_get_table_columns_sql(mocker, mock_db):
     # Arrange
     mocker.patch("server.controllers.query.connect_to_user_db", return_value=mock_db)
 
-    from server.controllers.query import get_table_column_names
+    from server.controllers.query import get_table_colums
 
     # Act
-    cols = get_table_column_names(
+    cols = get_table_columns(
         "dropbase_test_app",
         "page1",
         {"name": "test_sql", "type": "sql", "source": "mock_source"},
@@ -71,15 +71,19 @@ def test_get_table_column_names_sql(mocker, mock_db):
     )
 
     # Assert
-    assert set(cols) == {"user_id", "username", "email"}
+    assert set(cols) == {
+        {"name": "user_id"},
+        {"name": "username"},
+        {"name": "email"}
+    }
 
 
-def test_get_table_column_names_python():
+def test_get_table_columns_python():
     # Arrange
-    from server.controllers.query import get_table_column_names
+    from server.controllers.query import get_table_columns
 
     # Act
-    cols = get_table_column_names(
+    cols = get_table_columns(
         "dropbase_test_app",
         "page1",
         {"name": "test_function_data_fetcher", "type": "data_fetcher"},
@@ -87,4 +91,4 @@ def test_get_table_column_names_python():
     )
 
     # Assert
-    assert set(cols) == {"x"}
+    assert set(cols) == {{"name": "x", "type": "int"}}
