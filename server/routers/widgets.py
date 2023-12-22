@@ -1,17 +1,27 @@
 from fastapi import APIRouter, Depends
 
-from server.controllers.utils import handle_state_context_updates
+from server.controllers.utils import (
+    handle_state_context_updates,
+    update_state_context_files,
+)
 from server.requests.dropbase_router import DropbaseRouter, get_dropbase_router
 from server.schemas.widgets import CreateWidget, UpdateWidget
 
-router = APIRouter(prefix="/widgets", tags=["widgets"], responses={404: {"description": "Not found"}})
+router = APIRouter(
+    prefix="/widgets", tags=["widgets"], responses={404: {"description": "Not found"}}
+)
 
 
 @router.post("/")
-def create_widget_req(req: CreateWidget, router: DropbaseRouter = Depends(get_dropbase_router)):
+def create_widget_req(
+    req: CreateWidget, router: DropbaseRouter = Depends(get_dropbase_router)
+):
     resp = router.widget.create_widget(req.dict())
-    handle_state_context_updates(resp)
-    return resp.json()
+    resp = resp.json()
+    widget = resp.get("widget")
+    state_context = resp.get("state_context")
+    update_state_context_files(**state_context)
+    return {"widget": widget}
 
 
 @router.put("/{widget_id}/")
