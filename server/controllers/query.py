@@ -201,7 +201,7 @@ def get_table_columns(app_name: str, page_name: str, file: dict, state: dict) ->
         verify_state(app_name, page_name, state)
         sql = get_table_sql(app_name, page_name, file.get("name"))
         df = run_df_query(sql, file.get("source"), state, FilterSort(filters=[], sorts=[]))
-        return get_df_columns(df)
+        return [{"name": column} for column in df.columns]
 
 
 def get_df_columns(df: pd.DataFrame) -> List[dict]:
