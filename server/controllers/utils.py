@@ -108,6 +108,8 @@ def handle_state_context_updates(response):
     sys.path.insert(0, cwd)
     if response.status_code == 200:
         resp = response.json()
+        if "state_context" in resp:
+            resp = resp.get("state_context")
         update_state_context_files(**resp)
         return {"message": "success"}
     else:

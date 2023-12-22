@@ -4,14 +4,22 @@ from server.controllers.utils import handle_state_context_updates
 from server.requests.dropbase_router import DropbaseRouter, get_dropbase_router
 from server.schemas.widgets import CreateWidget, UpdateWidget
 
-router = APIRouter(prefix="/widgets", tags=["widgets"], responses={404: {"description": "Not found"}})
+router = APIRouter(
+    prefix="/widgets", tags=["widgets"], responses={404: {"description": "Not found"}}
+)
 
 
 @router.post("/")
-def create_widget_req(req: CreateWidget, router: DropbaseRouter = Depends(get_dropbase_router)):
+def create_widget_req(
+    req: CreateWidget, router: DropbaseRouter = Depends(get_dropbase_router)
+):
     resp = router.widget.create_widget(req.dict())
+    state_context = resp.json().get("state_context")
     handle_state_context_updates(resp)
-    return resp.json()
+    return {
+        "widget": resp.json().get("widget"),
+        "state_context": state_context,
+    }
 
 
 @router.put("/{widget_id}/")
