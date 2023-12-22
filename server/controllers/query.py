@@ -24,7 +24,9 @@ def infer_column_type(column: pd.Series) -> str:
             continue
         inferred_types.add(type(item))
 
-    if len(inferred_types) == 1:
+    if inferred_types == {int, float}:
+        return float.__name__
+    elif len(inferred_types) == 1:
         return inferred_types.pop().__name__
     else:
         return str.__name__
