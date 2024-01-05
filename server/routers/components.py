@@ -1,10 +1,9 @@
-from fastapi import APIRouter, Response, Depends
-from server.controllers.utils import (
-    handle_state_context_updates,
-    update_state_context_files,
-)
-from server.schemas.components import CreateComponent, UpdateComponent
+from fastapi import APIRouter, Depends, Response
+
+from server.controllers.components import get_component_properties
+from server.controllers.utils import handle_state_context_updates, update_state_context_files
 from server.requests.dropbase_router import DropbaseRouter, get_dropbase_router
+from server.schemas.components import CreateComponent, UpdateComponent
 
 router = APIRouter(
     prefix="/components",
@@ -36,9 +35,7 @@ def update_component_req(
     req: UpdateComponent,
     router: DropbaseRouter = Depends(get_dropbase_router),
 ):
-    resp = router.component.update_component(
-        component_id=component_id, update_data=req.dict()
-    )
+    resp = router.component.update_component(component_id=component_id, update_data=req.dict())
     handle_state_context_updates(resp)
     return resp.json()
 
@@ -53,3 +50,8 @@ def delete_component_req(
         return resp.text
     handle_state_context_updates(resp)
     return resp.json()
+
+
+@router.get("/properties/{component_type}")
+def get_state_context_req(component_type: str):
+    return get_component_properties(component_type)

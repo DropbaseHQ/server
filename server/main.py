@@ -1,7 +1,7 @@
 import asyncio
 
 import requests
-from fastapi import FastAPI
+from fastapi import FastAPI, WebSocket
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 
@@ -72,3 +72,11 @@ async def send_report_continuously():
 @app.on_event("startup")
 async def startup_event():
     asyncio.create_task(send_report_continuously())
+
+
+@app.websocket("/ws")
+async def websocket_endpoint(websocket: WebSocket):
+    await websocket.accept()
+    while True:
+        data = await websocket.receive_json()
+        await websocket.send_json({"message": f"You sent: {data['message']}"})

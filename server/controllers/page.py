@@ -6,10 +6,16 @@ from pydantic import BaseModel
 from server.constants import cwd
 
 
-def update_comp_props(app_name: str, page_name: str, properties: dict):
+def update_page_props(app_name: str, page_name: str, properties: dict):
     path = cwd + f"/workspace/{app_name}/{page_name}/properties.json"
     with open(path, "w") as f:
         f.write(json.dumps(properties))
+
+
+def get_page_props(app_name: str, page_name: str):
+    path = cwd + f"/workspace/{app_name}/{page_name}/properties.json"
+    with open(path, "r") as f:
+        return json.loads(f.read())
 
 
 def get_page_state_context(app_name: str, page_name: str):
@@ -17,6 +23,7 @@ def get_page_state_context(app_name: str, page_name: str):
     context_module_name = f"workspace.{app_name}.{page_name}.context"
     state_module = importlib.import_module(state_module_name)
     context_module = importlib.import_module(context_module_name)
+    # TODO: confirm we need to reload modules
     state_module = importlib.reload(state_module)
     context_module = importlib.reload(context_module)
     State = getattr(state_module, "State")
