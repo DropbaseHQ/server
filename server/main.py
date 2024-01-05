@@ -6,6 +6,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 
 from server.constants import DROPBASE_API_URL, DROPBASE_TOKEN, WORKER_VERSION
+from server.controllers.websocket import handle_websocket_requests
 from server.routers import (
     app_router,
     component_router,
@@ -76,7 +77,4 @@ async def startup_event():
 
 @app.websocket("/ws")
 async def websocket_endpoint(websocket: WebSocket):
-    await websocket.accept()
-    while True:
-        data = await websocket.receive_json()
-        await websocket.send_json({"message": f"You sent: {data['message']}"})
+    handle_websocket_requests(websocket)

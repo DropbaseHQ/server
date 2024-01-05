@@ -169,3 +169,16 @@ def get_class_properties(pydantic_model):
         obj_props.append(prop)
 
     return obj_props
+
+
+def get_state_context_model(app_name: str, page_name: str, model_type: str):
+    module_name = f"workspace.{app_name}.{page_name}.{model_type}"
+    module = importlib.import_module(module_name)
+    module = importlib.reload(module)
+    return getattr(module, model_type.capitalize())
+
+
+def read_page_properties(app_name: str, page_name: str):
+    path = cwd + f"/workspace/{app_name}/{page_name}/properties.json"
+    with open(path, "r") as f:
+        return json.loads(f.read())

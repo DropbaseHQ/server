@@ -1,9 +1,9 @@
-import importlib
 import json
 
 from pydantic import BaseModel
 
 from server.constants import cwd
+from server.controllers.utils import get_state_context_model, read_page_properties
 
 
 def update_page_props(app_name: str, page_name: str, properties: dict):
@@ -13,21 +13,12 @@ def update_page_props(app_name: str, page_name: str, properties: dict):
 
 
 def get_page_props(app_name: str, page_name: str):
-    path = cwd + f"/workspace/{app_name}/{page_name}/properties.json"
-    with open(path, "r") as f:
-        return json.loads(f.read())
+    return read_page_properties(app_name, page_name)
 
 
 def get_page_state_context(app_name: str, page_name: str):
-    state_module_name = f"workspace.{app_name}.{page_name}.state"
-    context_module_name = f"workspace.{app_name}.{page_name}.context"
-    state_module = importlib.import_module(state_module_name)
-    context_module = importlib.import_module(context_module_name)
-    # TODO: confirm we need to reload modules
-    state_module = importlib.reload(state_module)
-    context_module = importlib.reload(context_module)
-    State = getattr(state_module, "State")
-    Context = getattr(context_module, "Context")
+    State = get_state_context_model(app_name, page_name, "state")
+    Context = get_state_context_model(app_name, page_name, "context")
     state = _dict_from_pydantic_model(State)
     context = _dict_from_pydantic_model(Context)
     return {"state": state, "context": context}
