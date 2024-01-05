@@ -1,0 +1,47 @@
+from typing import Annotated, List, Literal, Optional
+
+from pydantic import BaseModel
+
+from server.models.common import ComponentDisplayProperties
+from server.models.properties import PropertyCategory
+
+
+# button
+class ButtonSharedProperties(BaseModel):
+    pass
+
+
+class ButtonContextProperty(ComponentDisplayProperties, ButtonSharedProperties):
+    pass
+
+
+class ButtonBaseProperties(BaseModel):
+    name: Annotated[str, PropertyCategory.default]
+    label: Annotated[Optional[str], PropertyCategory.default]
+    color: Annotated[
+        Optional[
+            Literal[
+                "red",
+                "blue",
+                "green",
+                "yellow",
+                "black",
+                "white",
+                "grey",
+                "orange",
+                "purple",
+                "pink",
+            ]
+        ],
+        PropertyCategory.default,
+    ]
+
+    # events
+    on_click: Annotated[Optional[str], PropertyCategory.events]
+
+    # display rules
+    display_rules: Annotated[Optional[List[str]], PropertyCategory.display_rules]
+
+
+class ButtonDefinedProperty(ButtonBaseProperties, ButtonSharedProperties):
+    pass
