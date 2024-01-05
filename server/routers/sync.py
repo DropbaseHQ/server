@@ -1,12 +1,8 @@
 from fastapi import APIRouter, Depends, Response
 
+from server.controllers.page import get_page_state_context
 from server.controllers.query import get_table_columns
-from server.controllers.sync import (
-    get_page_state_context,
-    sync_components,
-    sync_page,
-    sync_table_columns,
-)
+from server.controllers.sync import sync_components, sync_page, sync_table_columns
 from server.requests.dropbase_router import DropbaseRouter, get_dropbase_router
 from server.schemas.sync import GetTableColumns, SyncComponents, SyncTableColumns
 
