@@ -34,7 +34,6 @@ class TableContextProperty(TableDisplayProperty, TableSharedProperty):
 
 class TableBaseProperty(BaseModel):
     name: str
-    code: str
     filters: Optional[List[PinnedFilter]]
     type: Literal["python", "sql"]
 
