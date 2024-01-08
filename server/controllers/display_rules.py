@@ -33,11 +33,11 @@ def compare_values(value_a: Any, operator: str, value_b: Any):
 def display_rule(state, context, rules: DisplayRules):
 
     # iterate through rules based on the display rules for a component
-    for component_display_rules in rules.component_display_rules:
+    for component_display_rules in rules.display_rules:
 
         component_visible = False
 
-        for rule in component_display_rules.display_rules:
+        for rule in component_display_rules.rules:
 
             # get the relevant value from the state based on the target
             target_value = get_by_path(state, rule.target)
@@ -56,7 +56,7 @@ def display_rule(state, context, rules: DisplayRules):
         # the resulting state of the component is defined by the final rule resulting condition
         set_by_path(context, f"{component_display_rules.component}.visible", component_visible)
 
-    return context
+    return context.dict()
 
 
 def get_display_rules_from_comp_props(component_props):

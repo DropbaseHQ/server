@@ -11,6 +11,7 @@ from server.routers.run_sql import router as run_sql_router
 from server.routers.sources import router as sources_router
 from server.routers.sync import router as sync_router
 from server.routers.tables import router as tables_router
+from server.routers.websocket import router as websocket_router
 from server.routers.widgets import router as widgets_router
 
 __all__ = [
@@ -28,4 +29,5 @@ __all__ = [
     "edit_cell_router",
     "health_router",
     "page_router",
+    "websocket_router",
 ]

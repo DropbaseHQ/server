@@ -1,12 +1,11 @@
 import asyncio
 
 import requests
-from fastapi import FastAPI, WebSocket
+from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 
 from server.constants import DROPBASE_API_URL, DROPBASE_TOKEN, WORKER_VERSION
-from server.controllers.websocket import handle_websocket_requests
 from server.routers import (
     app_router,
     component_router,
@@ -21,6 +20,7 @@ from server.routers import (
     sources_router,
     sync_router,
     tables_router,
+    websocket_router,
     widgets_router,
 )
 
@@ -61,6 +61,7 @@ app.include_router(app_router)
 app.include_router(edit_cell_router)
 app.include_router(health_router)
 app.include_router(page_router)
+app.include_router(websocket_router)
 
 
 # send health report to dropbase server
@@ -73,8 +74,3 @@ async def send_report_continuously():
 @app.on_event("startup")
 async def startup_event():
     asyncio.create_task(send_report_continuously())
-
-
-@app.websocket("/ws")
-async def websocket_endpoint(websocket: WebSocket):
-    handle_websocket_requests(websocket)

@@ -4,6 +4,7 @@ import sys
 
 from fastapi import APIRouter, Depends
 
+from server.controllers.app import get_workspace_apps
 from server.controllers.workspace import AppCreator
 from server.requests.dropbase_router import DropbaseRouter, get_dropbase_router
 from server.schemas.workspace import CreateAppRequest, DeleteAppRequest, RenameAppRequest
@@ -11,6 +12,11 @@ from server.schemas.workspace import CreateAppRequest, DeleteAppRequest, RenameA
 cwd = os.getcwd()
 
 router = APIRouter(prefix="/app", tags=["app"], responses={404: {"description": "Not found"}})
+
+
+@router.get("/list/")
+def get_user_apps():
+    return get_workspace_apps()
 
 
 @router.post("/")

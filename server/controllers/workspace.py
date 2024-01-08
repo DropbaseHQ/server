@@ -16,7 +16,10 @@ class AppCreator:
         self.app_name = app_name
         self.page_name = "page1"
         self.r_path_to_workspace = r_path_to_workspace
-        self.properties = {"tables": [{"name": "table1", "type": "postgres"}], "widgets": []}
+        self.properties = {
+            "tables": [{"name": "table1", "type": "postgres", "columns": []}],
+            "widgets": [],
+        }
 
     def _create_default_workspace_files(self) -> str | None:
         try:
