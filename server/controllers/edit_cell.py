@@ -54,6 +54,6 @@ def update_value(user_db_engine, edit: CellEdit):
         return f"Updated {edit.column_name} from {edit.old_value} to {edit.new_value}", True
     except Exception as e:
         return (
-            f"Failed to update {edit.column_name} from {edit.old_value} to {edit.new_value}. Error: {str(e)}",
+            f"Failed to update {edit.column_name} from {edit.old_value} to {edit.new_value}. Error: {str(e)}",  # noqa
             False,
-        )  # noqa
+        )

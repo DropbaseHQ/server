@@ -11,6 +11,8 @@ from server.models import (
     InputDefinedProperty,
     PgColumnContextProperty,
     PyColumnContextProperty,
+    TableContextProperty,
+    WidgetContextProperty,
 )
 
 component_name_to_models = {"button": ButtonDefinedProperty, "input": InputDefinedProperty}
@@ -135,7 +137,9 @@ def get_widget_context(widgets_props):
 
         # create widget context class
         locals()[widget_class_name] = create_model(
-            widget_class_name, **{"components": (widget_components_class, ...)}, __base__=BaseProperty
+            widget_class_name,
+            **{"components": (widget_components_class, ...)},
+            __base__=WidgetContextProperty,
         )
 
         # add each widget context class into main context class
@@ -166,7 +170,7 @@ def get_table_context(tables_props):
 
         # create table context class
         locals()[table_class_name] = create_model(
-            table_class_name, **{"columns": (table_columns_class, ...)}, __base__=BaseProperty
+            table_class_name, **{"columns": (table_columns_class, ...)}, __base__=TableContextProperty
         )
 
         # add each table context class into main context class

@@ -1,44 +1,42 @@
+import json
 import os
 import shutil
 
 from fastapi import HTTPException
 
-from server.constants import DROPBASE_TOKEN
-from server.controllers.utils import update_state_context_files
-from server.requests.dropbase_router import DropbaseRouter
+from server.controllers.generate_models import create_state_context_files
 
 
 class AppCreator:
     def __init__(
         self,
-        app_object: dict,
-        app_template: dict,
+        app_name: str,
         r_path_to_workspace: str,
-        dropbase_api_url: str,
-        router: DropbaseRouter,
     ):
-        self.app_object = app_object
-        self.app_template = app_template
+        self.app_name = app_name
+        self.page_name = "page1"
         self.r_path_to_workspace = r_path_to_workspace
-        self.dropbase_api_url = dropbase_api_url
-        self.router = router
+        self.properties = {"tables": [{"name": "table1", "type": "postgres"}], "widgets": []}
 
     def _create_default_workspace_files(self) -> str | None:
         try:
-            app_folder_path = os.path.join(self.r_path_to_workspace, self.app_object.get("name"))
+            app_folder_path = os.path.join(self.r_path_to_workspace, self.app_name)
 
             # Create new app folder
             create_folder(path=app_folder_path)
             create_init_file(path=app_folder_path)
 
             # Create new page folder with __init__.py
-            page_name = self.app_template.get("page").get("name")
-            page_folder_path = os.path.join(app_folder_path, page_name)
+            page_folder_path = os.path.join(app_folder_path, self.page_name)
             create_folder(path=page_folder_path)
             create_init_file(path=page_folder_path, init_code=PAGE_INIT_CODE)
 
             create_file(path=page_folder_path, content="", file_name="state.py")
             create_file(path=page_folder_path, content="", file_name="context.py")
+            # create properties.json
+            create_file(
+                path=page_folder_path, content=json.dumps(self.properties), file_name="properties.json"
+            )
 
             # Create new scripts folder with __init__.py
             scripts_folder_name = "scripts"
@@ -50,41 +48,10 @@ class AppCreator:
             print("Unable to create app folder", e)
             raise HTTPException(status_code=500, detail="Unable to create app folder")
 
-    def _get_initial_state_and_context(self, token: str):
-        try:
-            page_name = self.app_template.get("page").get("name")
-            resp = self.router.misc.sync_components(
-                app_name=self.app_object.get("name"),
-                page_name=page_name,
-                token=token,
-            )
-            response_data = resp.json()
-            if resp.status_code != 200:
-                raise HTTPException(status_code=500, detail="Unable to sync components")
-
-            update_state_context_files(
-                self.app_object.get("name"),
-                page_name,
-                response_data.get("state"),
-                response_data.get("context"),
-            )
-        except Exception as e:
-            print("Unable to update app state and context", e)
-            raise HTTPException(status_code=500, detail="Unable to update app state and context")
-
-    def _update_app_draft_status(self):
-        new_app_path = os.path.join(self.r_path_to_workspace, self.app_object.get("name"))
-        app_id = self.app_object.get("id")
-        create_app_response = self.router.app.update_app(app_id, {"is_draft": False})
-        if create_app_response.status_code != 200:
-            shutil.rmtree(new_app_path)
-            raise HTTPException(status_code=500, detail="Unable to create app")
-
     def create(self):
         self._create_default_workspace_files()
-        self._get_initial_state_and_context(token=DROPBASE_TOKEN)
-        self._update_app_draft_status()
-        return {"success": True, "app_id": self.app_object.get("id")}
+        create_state_context_files(self.app_name, self.page_name, self.properties)
+        return {"success": True}
 
 
 INIT_CODE = """

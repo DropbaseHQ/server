@@ -35,7 +35,7 @@ class TableContextProperty(TableDisplayProperty, TableSharedProperty):
 class TableBaseProperty(BaseModel):
     name: str
     filters: Optional[List[PinnedFilter]]
-    type: Literal["python", "sql"]
+    type: Literal["python", "postgres"]
     height: Optional[str]
     on_row_change: Optional[str]
     on_row_selection: Optional[str]

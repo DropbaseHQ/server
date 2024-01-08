@@ -1,4 +1,4 @@
-from typing import Any, List, Optional
+from typing import List, Optional
 
 from pydantic import BaseModel, Field
 
@@ -7,8 +7,7 @@ from server.schemas.table import TablesBaseProperty
 
 
 class CreateAppRequest(BaseModel):
-    app_id: str
-    app_template: Any
+    app_name: str
 
 
 class CreateTableRequest(BaseModel):
