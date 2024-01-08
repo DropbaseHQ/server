@@ -1,4 +1,4 @@
-from typing import List, Union
+from typing import List, Optional, Union
 
 from pydantic import BaseModel
 
@@ -22,9 +22,16 @@ class TableProperties(TableDefinedProperty):
     columns: List[Union[PgColumnDefinedProperty, PyColumnDefinedProperty]]
 
 
+class FileProperties(BaseModel):
+    name: str
+    type: str
+    source: Optional[str]
+
+
 class Properties(BaseModel):
     tables: List[TableProperties]
     widgets: List[WidgetProperties]
+    files: List[FileProperties]
 
 
 class PageProperties(BaseModel):

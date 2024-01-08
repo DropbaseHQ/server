@@ -19,6 +19,7 @@ class AppCreator:
         self.properties = {
             "tables": [{"name": "table1", "type": "postgres", "columns": []}],
             "widgets": [],
+            "files": [],
         }
 
     def _create_default_workspace_files(self) -> str | None:
