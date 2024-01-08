@@ -36,6 +36,9 @@ class TableBaseProperty(BaseModel):
     name: str
     filters: Optional[List[PinnedFilter]]
     type: Literal["python", "sql"]
+    height: Optional[str]
+    on_row_change: Optional[str]
+    on_row_selection: Optional[str]
 
     # on row change
     on_change: Optional[str]
