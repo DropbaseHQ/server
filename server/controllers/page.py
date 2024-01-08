@@ -9,7 +9,7 @@ from server.controllers.utils import get_state_context_model, read_page_properti
 def update_page_props(app_name: str, page_name: str, properties: dict):
     path = cwd + f"/workspace/{app_name}/{page_name}/properties.json"
     with open(path, "w") as f:
-        f.write(json.dumps(properties))
+        f.write(json.dumps(properties, indent=2))
 
 
 def get_page_props(app_name: str, page_name: str):

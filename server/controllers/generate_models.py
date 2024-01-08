@@ -10,12 +10,25 @@ from server.models import (
     InputContextProperty,
     InputDefinedProperty,
     PgColumnContextProperty,
+    PgColumnDefinedProperty,
     PyColumnContextProperty,
+    PyColumnDefinedProperty,
+    SelectContextProperty,
+    SelectDefinedProperty,
     TableContextProperty,
+    TextContextProperty,
+    TextDefinedProperty,
     WidgetContextProperty,
 )
 
-component_name_to_models = {"button": ButtonDefinedProperty, "input": InputDefinedProperty}
+component_name_to_models = {
+    "button": ButtonDefinedProperty,
+    "input": InputDefinedProperty,
+    "select": SelectDefinedProperty,
+    "text": TextDefinedProperty,
+    "py": PyColumnDefinedProperty,
+    "pg": PgColumnDefinedProperty,
+}
 
 
 def state_type_mapper(state_type: str):
@@ -109,6 +122,8 @@ def create_state(component_props):
 context_model_mapper = {
     "button": ButtonContextProperty,
     "input": InputContextProperty,
+    "select": SelectContextProperty,
+    "text": TextContextProperty,
     "pg": PgColumnContextProperty,
     "py": PyColumnContextProperty,
 }
@@ -179,8 +194,8 @@ def get_table_context(tables_props):
 
 
 def create_context(component_props):
-    TablesState = get_table_context(component_props.get("tables"))
     WidgetState = get_widget_context(component_props.get("widgets"))
+    TablesState = get_table_context(component_props.get("tables"))
 
     class Context(BaseModel):
         widgets: WidgetState
