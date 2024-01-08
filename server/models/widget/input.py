@@ -7,6 +7,7 @@ from server.models.properties import PropertyCategory
 
 
 class InputBaseProperties(BaseModel):
+    component_type: Literal["input"]
     name: Annotated[str, PropertyCategory.default]
     label: Annotated[Optional[str], PropertyCategory.default]
     type: Annotated[Optional[Literal["text", "number", "date"]], PropertyCategory.default] = "text"

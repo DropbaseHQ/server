@@ -15,6 +15,7 @@ class TextContextProperty(TextSharedProperties):
 
 
 class TextBaseProperties(BaseModel):
+    component_type: Literal["text"]
     name: Annotated[str, PropertyCategory.default]
     text: Annotated[Optional[str], PropertyCategory.default]
     size: Annotated[Optional[Literal["small", "medium", "large"]], PropertyCategory.default]

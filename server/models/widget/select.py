@@ -1,4 +1,4 @@
-from typing import Annotated, Any, Dict, List, Optional
+from typing import Annotated, Any, Dict, List, Literal, Optional
 
 from pydantic import BaseModel
 
@@ -17,6 +17,7 @@ class SelectContextProperty(ComponentDisplayProperties, SelectSharedProperties):
 
 
 class SelectBaseProperties(BaseModel):
+    component_type: Literal["select"]
     name: Annotated[str, PropertyCategory.default]
     label: Annotated[Optional[str], PropertyCategory.default]
 
