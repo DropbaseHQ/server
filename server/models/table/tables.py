@@ -34,7 +34,7 @@ class TableContextProperty(TableDisplayProperty, TableSharedProperty):
 
 class TableBaseProperty(BaseModel):
     name: str
-    type: Literal["python", "postgres"]
+    type: Literal["python", "sql"]
 
     # settings
     height: Optional[str]

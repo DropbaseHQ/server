@@ -9,9 +9,9 @@ from sqlalchemy.engine import Engine
 from server.constants import DATA_PREVIEW_SIZE
 from server.controllers.dataframe import convert_df_to_resp_obj
 from server.controllers.python_subprocess import format_process_result, run_process_task_unwrap
-from server.controllers.utils import clean_df, connect_to_user_db
+from server.controllers.utils import clean_df, connect_to_user_db, read_page_properties
 from server.schemas.files import DataFile
-from server.schemas.table import FilterSort, TableFilter, TablePagination, TableSort
+from server.schemas.table import FilterSort, TableBase, TableFilter, TablePagination, TableSort
 
 cwd = os.getcwd()
 
@@ -26,12 +26,22 @@ def verify_state(app_name: str, page_name: str, state: dict):
 
 
 def run_python_query(
-    app_name: str, page_name: str, file: DataFile, state: dict, filter_sort: FilterSort
+    app_name: str, page_name: str, table: TableBase, state: dict, filter_sort: FilterSort
 ):
+    # read page properties
+    properties = read_page_properties(app_name, page_name)
+
+    # find table file
+    file_data = None
+    for file in properties["files"]:
+        if file["name"] == table.fetcher:
+            file_data = file
+            break
+
     args = {
         "app_name": app_name,
         "page_name": page_name,
-        "file": file.dict(),
+        "file": file_data,
         "state": state,
         "filter_sort": filter_sort.dict(),
     }

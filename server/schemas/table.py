@@ -26,15 +26,17 @@ class FilterSort(BaseModel):
 
 
 class TableBase(BaseModel):
-    id: Optional[str]
+    # id: Optional[str]
     name: str
-    property: dict
-    file_id: Optional[str]
-    page_id: str
-    depends_on: Optional[List[str]]
+    type: str
+    fetcher: Optional[str]
+    # property: dict
+    # file_id: Optional[str]
+    # page_id: str
+    # depends_on: Optional[List[str]]
     # type: str
-    filters: Optional[List[TableFilter]]
-    sorts: Optional[List[TableSort]]
+    # filters: Optional[List[TableFilter]]
+    # sorts: Optional[List[TableSort]]
 
 
 # TODO: maybe merge with TableBase

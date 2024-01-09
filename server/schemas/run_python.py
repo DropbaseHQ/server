@@ -1,7 +1,6 @@
 from pydantic import BaseModel
 
-from server.schemas.files import DataFile
-from server.schemas.table import FilterSort, QueryTablePayload
+from server.schemas.table import FilterSort, QueryTablePayload, TableBase
 
 
 class RunPythonStringRequest(BaseModel):
@@ -29,6 +28,6 @@ class RunDataFetcherStringRequest(BaseModel):
 class QueryPythonRequest(BaseModel):
     app_name: str
     page_name: str
+    table: TableBase
     filter_sort: FilterSort
-    file: DataFile
     state: dict

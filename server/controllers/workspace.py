@@ -17,7 +17,7 @@ class AppCreator:
         self.page_name = "page1"
         self.r_path_to_workspace = r_path_to_workspace
         self.properties = {
-            "tables": [{"name": "table1", "type": "postgres", "columns": []}],
+            "tables": [{"name": "table1", "type": "sql", "columns": []}],
             "widgets": [],
             "files": [],
         }
