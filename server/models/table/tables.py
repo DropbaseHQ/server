@@ -34,14 +34,21 @@ class TableContextProperty(TableDisplayProperty, TableSharedProperty):
 
 class TableBaseProperty(BaseModel):
     name: str
-    filters: Optional[List[PinnedFilter]]
     type: Literal["python", "postgres"]
+
+    # settings
     height: Optional[str]
+    size: Optional[int] = 10
+
+    # actions
     on_row_change: Optional[str]
     on_row_selection: Optional[str]
 
-    # on row change
-    on_change: Optional[str]
+    # table filters
+    filters: Optional[List[PinnedFilter]]
+
+    # data fetcher
+    fetcher: Optional[str]
 
 
 class TableDefinedProperty(TableBaseProperty, TableSharedProperty):

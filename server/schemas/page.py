@@ -1,4 +1,4 @@
-from typing import List, Optional, Union
+from typing import List, Union
 
 from pydantic import BaseModel
 
@@ -10,6 +10,7 @@ from server.models.widget import (
     TextDefinedProperty,
     WidgetDefinedProperty,
 )
+from server.schemas.files import DataFile
 
 
 class WidgetProperties(WidgetDefinedProperty):
@@ -22,16 +23,10 @@ class TableProperties(TableDefinedProperty):
     columns: List[Union[PgColumnDefinedProperty, PyColumnDefinedProperty]]
 
 
-class FileProperties(BaseModel):
-    name: str
-    type: str
-    source: Optional[str]
-
-
 class Properties(BaseModel):
     tables: List[TableProperties]
     widgets: List[WidgetProperties]
-    files: List[FileProperties]
+    files: List[DataFile]
 
 
 class PageProperties(BaseModel):
