@@ -14,7 +14,8 @@ import astor
 import pandas as pd
 
 from server.constants import DATA_PREVIEW_SIZE, TASK_TIMEOUT, cwd
-from server.controllers.utils import clean_df, convert_df_to_resp_obj
+from server.controllers.dataframe import convert_df_to_resp_obj
+from server.controllers.utils import clean_df
 
 
 def run_process_with_exec(args: dict):

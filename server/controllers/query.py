@@ -1,4 +1,3 @@
-import json
 import os
 from typing import List
 
@@ -8,8 +7,9 @@ from sqlalchemy import text
 from sqlalchemy.engine import Engine
 
 from server.constants import DATA_PREVIEW_SIZE
+from server.controllers.dataframe import convert_df_to_resp_obj
 from server.controllers.python_subprocess import format_process_result, run_process_task_unwrap
-from server.controllers.utils import clean_df, connect_to_user_db, convert_df_to_resp_obj
+from server.controllers.utils import clean_df, connect_to_user_db
 from server.schemas.files import DataFile
 from server.schemas.table import FilterSort, TableFilter, TablePagination, TableSort
 
@@ -140,9 +140,7 @@ def apply_filters(
                     filter.value = f"%{filter.value}%"
                 case "is null" | "is not null":
                     # handle unary operators
-                    filters_list.append(
-                        f'user_query."{filter.column_name}" {filter.condition}'
-                    )
+                    filters_list.append(f'user_query."{filter.column_name}" {filter.condition}')
                     continue
 
             filter_values[filter_value_name] = filter.value
