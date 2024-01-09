@@ -9,10 +9,8 @@ from server.routers.query import router as query_router
 from server.routers.run_python import router as run_python_router
 from server.routers.run_sql import router as run_sql_router
 from server.routers.sources import router as sources_router
-from server.routers.sync import router as sync_router
 from server.routers.tables import router as tables_router
 from server.routers.websocket import router as websocket_router
-from server.routers.widgets import router as widgets_router
 
 __all__ = [
     "files_router",
@@ -21,9 +19,7 @@ __all__ = [
     "run_python_router",
     "run_sql_router",
     "sources_router",
-    "sync_router",
     "tables_router",
-    "widgets_router",
     "app_router",
     "component_router",
     "edit_cell_router",

@@ -1,1 +1,1 @@
-from server.requests.misc import *
+from server.requests.misc import *  # noqa

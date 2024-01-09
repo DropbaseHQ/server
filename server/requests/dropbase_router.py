@@ -12,6 +12,7 @@ base_url = DROPBASE_API_URL + "/worker/"
 
 
 class DropbaseRouter:
+    # TODO: review this. might not need a router class for just one call
     def __init__(self, cookies):
         self.session = DropbaseSession(base_url=base_url)
 

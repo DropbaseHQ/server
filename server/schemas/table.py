@@ -1,4 +1,4 @@
-from typing import Any, Dict, List, Literal, Optional
+from typing import Any, List, Literal, Optional
 
 from pydantic import BaseModel
 
@@ -29,8 +29,3 @@ class TableBase(BaseModel):
     name: str
     type: str
     fetcher: Optional[str]
-
-
-class QueryTablePayload(BaseModel):
-    context: Dict[str, Any]
-    state: Dict[str, Any]

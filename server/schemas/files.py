@@ -25,13 +25,6 @@ class CreateFile(BaseModel):
     source: Optional[str]
 
 
-class SaveSql(BaseModel):
-    app_name: str = Field(regex=FILE_NAME_REGEX)
-    page_name: str = Field(regex=FILE_NAME_REGEX)
-    file_name: str = Field(regex=FILE_NAME_REGEX)
-    sql: str
-
-
 # data files
 class DataFile(BaseModel):
     name: str = Field(regex=FILE_NAME_REGEX)
@@ -49,7 +42,6 @@ class UpdateFile(BaseModel):
 
 
 class RenameFile(BaseModel):
-    # page_id: str
     old_name: str = Field(regex=FILE_NAME_REGEX)
     new_name: str = Field(regex=FILE_NAME_REGEX)
     app_name: str = Field(regex=FILE_NAME_REGEX)

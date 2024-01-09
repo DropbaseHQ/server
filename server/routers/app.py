@@ -2,12 +2,11 @@ import os
 import shutil
 import sys
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter
 
 from server.controllers.app import get_workspace_apps
 from server.controllers.workspace import AppCreator
-from server.requests.dropbase_router import DropbaseRouter, get_dropbase_router
-from server.schemas.workspace import CreateAppRequest, DeleteAppRequest, RenameAppRequest
+from server.schemas.workspace import CreateAppRequest, RenameAppRequest
 
 cwd = os.getcwd()
 
@@ -32,8 +31,8 @@ def create_app_req(req: CreateAppRequest):
     return app_creator.create()
 
 
-@router.put("/{app_id}")
-def rename_app_req(app_id, req: RenameAppRequest, router: DropbaseRouter = Depends(get_dropbase_router)):
+@router.put("/")
+def rename_app_req(req: RenameAppRequest):
     workspace_folder_path = os.path.join(os.path.dirname(__file__), "../../workspace")
     app_path = os.path.join(workspace_folder_path, req.old_name)
     new_path = os.path.join(workspace_folder_path, req.new_name)
@@ -42,9 +41,9 @@ def rename_app_req(app_id, req: RenameAppRequest, router: DropbaseRouter = Depen
     return {"success": True}
 
 
-@router.delete("/{app_id}")
-def delete_app_req(app_id, req: DeleteAppRequest, router: DropbaseRouter = Depends(get_dropbase_router)):
-    app_path = os.path.join(os.path.dirname(__file__), "../../workspace", req.app_name)
+@router.delete("/{app_name}")
+def delete_app_req(app_name: str):
+    app_path = os.path.join(os.path.dirname(__file__), "../../workspace", app_name)
     if os.path.exists(app_path):
         shutil.rmtree(app_path)
     return {"success": True}

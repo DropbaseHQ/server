@@ -1,29 +1,8 @@
-from server.controllers.query import get_column_names, get_sql_variables, get_table_sql, render_sql
+from server.controllers.query import get_column_names, get_table_sql, render_sql
 from server.controllers.source import get_db_schema
 from server.controllers.utils import connect_to_user_db, update_state_context_files
 from server.controllers.validation import validate_smart_cols
 from server.requests.dropbase_router import DropbaseRouter
-from server.schemas.workspace import UpdateTableRequest
-
-
-def update_table(table_id: str, req: UpdateTableRequest, router: DropbaseRouter):
-    update_table_payload = {
-        "table_id": table_id,
-        "page_id": req.page_id,
-        "table_updates": req.table_updates.dict(),
-    }
-    try:
-        # get depends on for sql files
-        if req.file:
-            if req.file.get("type") == "sql":
-                sql = get_table_sql(req.app_name, req.page_name, req.file.get("name"))
-                depends_on = get_sql_variables(user_sql=sql)
-                update_table_payload["table_updates"]["depends_on"] = depends_on
-
-        resp = router.table.update_table(table_id=table_id, update_data=update_table_payload)
-        return resp.json(), resp.status_code
-    except Exception as e:
-        return str(e), 500
 
 
 def convert_sql_table(
