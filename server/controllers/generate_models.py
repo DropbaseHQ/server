@@ -127,7 +127,7 @@ context_model_mapper = {
     "input": InputContextProperty,
     "select": SelectContextProperty,
     "text": TextContextProperty,
-    "postgres": PgColumnContextProperty,
+    "sql": PgColumnContextProperty,
     "python": PyColumnContextProperty,
 }
 
