@@ -2,8 +2,8 @@ from typing import Annotated, List, Literal, Optional
 
 from pydantic import BaseModel
 
+from server.models.category import PropertyCategory
 from server.models.common import ComponentDisplayProperties
-from server.models.properties import PropertyCategory
 
 
 # button

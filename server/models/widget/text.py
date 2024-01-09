@@ -2,7 +2,7 @@ from typing import Annotated, Dict, List, Literal, Optional
 
 from pydantic import BaseModel
 
-from server.models.properties import PropertyCategory
+from server.models.category import PropertyCategory
 
 
 # text
