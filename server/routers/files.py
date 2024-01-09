@@ -58,13 +58,11 @@ def rename_file_req(req: RenameFile, response: Response):
         return {"status": "error", "message": str(e)}
 
 
-@router.put("/{file_id}")
-def update_file_req(req: UpdateFile, response: Response):
+@router.put("/{function_name}")
+def update_file_req(req: UpdateFile, function_name: str, response: Response):
     try:
         file_extension = ".sql" if req.type == "sql" else ".py"
-        file_name = req.name
-        if not req.name.endswith(file_extension):
-            file_name = req.name + file_extension
+        file_name = function_name + file_extension
 
         # update file content
         file_path = cwd + f"/workspace/{req.app_name}/{req.page_name}/scripts/{file_name}"
@@ -80,9 +78,9 @@ def update_file_req(req: UpdateFile, response: Response):
             # update depends on flags in properties.json
             depends_on = get_sql_variables(user_sql=req.sql)
 
-            for file in properties["tables"]:
-                if file["data_fetcher"] == file_name:
-                    file["depends_on"] = depends_on
+            for table in properties["tables"]:
+                if table["fetcher"] == function_name:
+                    table["depends_on"] = depends_on
 
         # update file property in properties.json
         for file in properties["files"]:

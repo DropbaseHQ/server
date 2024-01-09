@@ -26,28 +26,9 @@ class FilterSort(BaseModel):
 
 
 class TableBase(BaseModel):
-    # id: Optional[str]
     name: str
     type: str
     fetcher: Optional[str]
-    # property: dict
-    # file_id: Optional[str]
-    # page_id: str
-    # depends_on: Optional[List[str]]
-    # type: str
-    # filters: Optional[List[TableFilter]]
-    # sorts: Optional[List[TableSort]]
-
-
-# TODO: maybe merge with TableBase
-class TablesBaseProperty(BaseModel):
-    # events
-    on_row_change: Optional[str]
-    on_row_selection: Optional[str]
-
-    # other
-    appears_after: Optional[str]
-    height: Optional[str]
 
 
 class QueryTablePayload(BaseModel):

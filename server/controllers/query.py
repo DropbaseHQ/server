@@ -11,7 +11,8 @@ from server.controllers.dataframe import convert_df_to_resp_obj
 from server.controllers.python_subprocess import format_process_result, run_process_task_unwrap
 from server.controllers.utils import clean_df, connect_to_user_db, read_page_properties
 from server.schemas.files import DataFile
-from server.schemas.table import FilterSort, TableBase, TableFilter, TablePagination, TableSort
+from server.schemas.run_python import QueryPythonRequest
+from server.schemas.table import FilterSort, TableFilter, TablePagination, TableSort
 
 cwd = os.getcwd()
 
@@ -25,23 +26,35 @@ def verify_state(app_name: str, page_name: str, state: dict):
     return run_process_task_unwrap("verify_state", args)
 
 
-def run_python_query(
-    app_name: str, page_name: str, table: TableBase, state: dict, filter_sort: FilterSort
-):
+def run_query(req: QueryPythonRequest):
     # read page properties
-    properties = read_page_properties(app_name, page_name)
+    properties = read_page_properties(req.app_name, req.page_name)
+    file = get_talbe_data_fetcher(properties["files"], req.table.fetcher)
+    file = DataFile(**file)
 
-    # find table file
+    if file.type == "data_fetcher":
+        resp = run_python_query(req.app_name, req.page_name, file, req.state, req.filter_sort)
+    else:
+        resp = run_sql_query(req.app_name, req.page_name, file, req.state, req.filter_sort)
+    return resp
+
+
+def get_talbe_data_fetcher(files: list, fetcher_name: str):
     file_data = None
-    for file in properties["files"]:
-        if file["name"] == table.fetcher:
+    for file in files:
+        if file["name"] == fetcher_name:
             file_data = file
             break
+    return file_data
 
+
+def run_python_query(
+    app_name: str, page_name: str, file: DataFile, state: dict, filter_sort: FilterSort
+):
     args = {
         "app_name": app_name,
         "page_name": page_name,
-        "file": file_data,
+        "file": file.dict(),
         "state": state,
         "filter_sort": filter_sort.dict(),
     }
@@ -50,9 +63,10 @@ def run_python_query(
 
 def run_sql_query(app_name: str, page_name: str, file: DataFile, state: dict, filter_sort: FilterSort):
     verify_state(app_name, page_name, state)
+
     sql = get_table_sql(app_name, page_name, file.name)
     df = run_df_query(sql, file.source, state, filter_sort)
-    # df = json.loads(df.to_json(orient="split"))
+
     res = convert_df_to_resp_obj(df)
     return format_process_result(res)
 
@@ -60,7 +74,6 @@ def run_sql_query(app_name: str, page_name: str, file: DataFile, state: dict, fi
 def run_sql_query_from_string(sql: str, source: str, app_name: str, page_name: str, state: dict):
     verify_state(app_name, page_name, state)
     df = run_df_query(sql, source, state)
-    # df = json.loads(df.to_json(orient="split"))
     res = convert_df_to_resp_obj(df)
     return format_process_result(res)
 

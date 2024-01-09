@@ -3,18 +3,11 @@ from typing import List, Optional
 from pydantic import BaseModel, Field
 
 from server.constants import FILE_NAME_REGEX
-from server.schemas.table import TablesBaseProperty
+from server.schemas.table import TableBase
 
 
 class CreateAppRequest(BaseModel):
     app_name: str
-
-
-class CreateTableRequest(BaseModel):
-    name: Optional[str]
-    property: TablesBaseProperty
-    page_id: str
-    depends_on: Optional[List[str]]
 
 
 class DeleteAppRequest(BaseModel):
@@ -23,7 +16,7 @@ class DeleteAppRequest(BaseModel):
 
 class UpdateTables(BaseModel):
     name: Optional[str]
-    property: TablesBaseProperty
+    property: TableBase
     file_id: Optional[str]
     depends_on: Optional[List[str]] = []
 

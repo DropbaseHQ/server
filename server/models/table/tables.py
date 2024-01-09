@@ -40,6 +40,8 @@ class TableBaseProperty(BaseModel):
     height: Optional[str]
     size: Optional[int] = 10
 
+    depends_on: Optional[List[str]]
+
     # actions
     on_row_change: Optional[str]
     on_row_selection: Optional[str]

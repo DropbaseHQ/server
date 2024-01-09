@@ -33,7 +33,10 @@ component_name_to_models = {
 
 def state_type_mapper(state_type: str):
     match state_type:
+        # TODO: only keep one integer type
         case "int":
+            return int
+        case "integer":
             return int
         case "float":
             return float
@@ -124,8 +127,8 @@ context_model_mapper = {
     "input": InputContextProperty,
     "select": SelectContextProperty,
     "text": TextContextProperty,
-    "pg": PgColumnContextProperty,
-    "py": PyColumnContextProperty,
+    "postgres": PgColumnContextProperty,
+    "python": PyColumnContextProperty,
 }
 
 
@@ -173,7 +176,9 @@ def get_table_context(tables_props):
         columns_props = {}
         for column in table_columns:
 
-            column_type = column.get("column_type")
+            column_type = table_data.get("type")
+            # column.get("column_type")
+
             BaseProperty = context_model_mapper.get(column_type)
             # create column context class
             columns_props[column["name"]] = (BaseProperty, ...)
