@@ -5,14 +5,8 @@ from pydantic import BaseModel
 
 from server.constants import DROPBASE_API_URL
 
-from .app import AppRouter
-from .components import ComponentRouter
-from .file import FileRouter
 from .main_request import DropbaseSession
 from .misc import MiscRouter
-from .sync import SyncRouter
-from .table import TableRouter
-from .widget import WidgetRouter
 
 base_url = DROPBASE_API_URL + "/worker/"
 
@@ -33,13 +27,7 @@ class DropbaseRouter:
         self._assign_sub_routers()
 
     def _assign_sub_routers(self):
-        self.app = AppRouter(session=self.session)
-        self.file = FileRouter(session=self.session)
-        self.table = TableRouter(session=self.session)
-        self.widget = WidgetRouter(session=self.session)
-        self.component = ComponentRouter(session=self.session)
         self.misc = MiscRouter(session=self.session)
-        self.sync = SyncRouter(session=self.session)
 
 
 class AccessCookies(BaseModel):

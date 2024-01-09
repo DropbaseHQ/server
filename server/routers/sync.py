@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, Response
 
 from server.controllers.page import get_page_state_context
 from server.controllers.query import get_table_columns
-from server.controllers.sync import sync_components, sync_page, sync_table_columns
+from server.controllers.sync import sync_components, sync_table_columns
 from server.requests.dropbase_router import DropbaseRouter, get_dropbase_router
 from server.schemas.sync import GetTableColumns, SyncComponents, SyncTableColumns
 
@@ -28,8 +28,3 @@ def get_table_columns_req(req: GetTableColumns, response: Response):
 @router.post("/components/")
 def sync_components_req(req: SyncComponents, router: DropbaseRouter = Depends(get_dropbase_router)):
     return sync_components(req.app_name, req.page_name, router)
-
-
-@router.put("/page/{page_id}")
-def sync_page_state_req(page_id: str, router: DropbaseRouter = Depends(get_dropbase_router)):
-    return sync_page(page_id, router)

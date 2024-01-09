@@ -32,8 +32,3 @@ def sync_components(app_name: str, page_name: str, router: DropbaseRouter):
         return resp.json(), 200
     except Exception as e:
         return {"error": str(e)}, 500
-
-
-def sync_page(page_id: str, router: DropbaseRouter):
-    resp = router.sync.sync_page(page_id=page_id)
-    return handle_state_context_updates(resp)
