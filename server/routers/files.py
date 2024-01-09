@@ -1,5 +1,4 @@
 import glob
-import json
 import os
 import re
 
@@ -8,7 +7,7 @@ from fastapi import APIRouter, HTTPException, Response
 from server.constants import FILE_NAME_REGEX, cwd
 from server.controllers.files import create_file
 from server.controllers.query import get_sql_variables
-from server.controllers.utils import rename_function_in_file
+from server.controllers.utils import read_page_properties, rename_function_in_file, write_page_properties
 from server.schemas.files import CreateFile, DeleteFile, RenameFile, UpdateFile
 
 router = APIRouter(prefix="/files", tags=["files"], responses={404: {"description": "Not found"}})
@@ -40,17 +39,14 @@ def rename_file_req(req: RenameFile, response: Response):
         rename_function_in_file(file_path=new_path, old_name=req.old_name, new_name=req.new_name)
 
         # update properties.json
-        properties_path = cwd + f"/workspace/{req.app_name}/{req.page_name}/properties.json"
-        with open(properties_path, "r") as f:
-            properties = json.load(f)
+        properties = read_page_properties(req.app_name, req.page_name)
 
         for file in properties["files"]:
             if file["name"] == req.old_name:
                 file["name"] = req.new_name
                 break
 
-        with open(properties_path, "w") as f:
-            json.dump(properties, f, indent=2)
+        write_page_properties(req.app_name, req.page_name, properties)
 
         return {"status": "success"}
 
@@ -70,9 +66,7 @@ def update_file_req(req: UpdateFile, function_name: str, response: Response):
             f.write(req.sql)
 
         # update properties.json
-        properties_path = cwd + f"/workspace/{req.app_name}/{req.page_name}/properties.json"
-        with open(properties_path, "r") as f:
-            properties = json.load(f)
+        properties = read_page_properties(req.app_name, req.page_name)
 
         if req.type == "sql":
             # update depends on flags in properties.json
@@ -89,8 +83,7 @@ def update_file_req(req: UpdateFile, function_name: str, response: Response):
                 file["type"] = req.type
                 break
 
-        with open(properties_path, "w") as f:
-            json.dump(properties, f, indent=2)
+        write_page_properties(req.app_name, req.page_name, properties)
 
         return {"status": "success"}
     except Exception as e:
@@ -98,8 +91,9 @@ def update_file_req(req: UpdateFile, function_name: str, response: Response):
         return {"message": str(e)}
 
 
-@router.delete("/{file_id}/")
-def delete_file_req(file_id: str, req: DeleteFile, response: Response):
+@router.delete("/")
+def delete_file_req(req: DeleteFile, response: Response):
+    function_name = req.file_name[:-4] if req.type == "sql" else req.file_name[:-3]
     try:
         path = cwd + f"/workspace/{req.app_name}/{req.page_name}/scripts/{req.file_name}"
         if not os.path.exists(path):
@@ -108,18 +102,14 @@ def delete_file_req(file_id: str, req: DeleteFile, response: Response):
 
         os.remove(path)
 
-        # update properties.json
-        properties_path = cwd + f"/workspace/{req.app_name}/{req.page_name}/properties.json"
-        with open(properties_path, "r") as f:
-            properties = json.load(f)
+        properties = read_page_properties(req.app_name, req.page_name)
 
         for file in properties["files"]:
-            if file["name"] == req.file_name:
+            if file["name"] == function_name:
                 properties["files"].remove(file)
                 break
 
-        with open(properties_path, "w") as f:
-            json.dump(properties, f, indent=2)
+        write_page_properties(req.app_name, req.page_name, properties)
 
         return {"status": "success"}
     except Exception as e:
