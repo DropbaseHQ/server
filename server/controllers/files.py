@@ -1,6 +1,5 @@
-import json
-
 from server.constants import cwd
+from server.controllers.utils import read_page_properties, write_page_properties
 from server.schemas.files import CreateFile
 
 
@@ -15,14 +14,9 @@ def create_file(req: CreateFile):
             f.write(boilerplate_code)
 
         # update properties.json
-        properties_path = cwd + f"/workspace/{req.app_name}/{req.page_name}/properties.json"
-        with open(properties_path, "r") as f:
-            properties = json.load(f)
-
+        properties = read_page_properties(req.app_name, req.page_name)
         properties["files"].append({"name": req.name, "type": req.type, "source": req.source})
-
-        with open(properties_path, "w") as f:
-            json.dump(properties, f, indent=2)
+        write_page_properties(req.app_name, req.page_name, properties)
 
         return 200, {"status": "success"}
     except Exception as e:

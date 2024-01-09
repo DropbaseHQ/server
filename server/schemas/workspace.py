@@ -40,6 +40,13 @@ class ConvertTableRequest(BaseModel):
     state: dict
 
 
+class CommitTableColumnsRequest(BaseModel):
+    app_name: str = Field(regex=FILE_NAME_REGEX)
+    page_name: str = Field(regex=FILE_NAME_REGEX)
+    table: TableBase
+    columns: List[dict]
+
+
 class RenameAppRequest(BaseModel):
     old_name: str = Field(regex=FILE_NAME_REGEX)
     new_name: str = Field(regex=FILE_NAME_REGEX)
