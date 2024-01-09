@@ -40,17 +40,11 @@ def rename_app_req(app_id, req: RenameAppRequest, router: DropbaseRouter = Depen
     if os.path.exists(app_path):
         os.rename(app_path, new_path)
     return {"success": True}
-    # resp = router.app.rename_app(rename_data={"app_id": app_id, **req.dict()})
-    # if resp.status_code != 200:
-    #     raise HTTPException(status_code=500, detail="Unable to rename app")
 
 
 @router.delete("/{app_id}")
 def delete_app_req(app_id, req: DeleteAppRequest, router: DropbaseRouter = Depends(get_dropbase_router)):
     app_path = os.path.join(os.path.dirname(__file__), "../../workspace", req.app_name)
-    # del_resp = router.app.delete_app(app_id=app_id)
-    # if del_resp.status_code != 200:
-    #     raise HTTPException(status_code=500, detail="Unable to delete app")
     if os.path.exists(app_path):
         shutil.rmtree(app_path)
     return {"success": True}
