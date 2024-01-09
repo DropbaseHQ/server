@@ -10,11 +10,13 @@ class InputBaseProperties(BaseModel):
     component_type: Literal["input"]
     name: Annotated[str, PropertyCategory.default]
     label: Annotated[Optional[str], PropertyCategory.default]
-    type: Annotated[Optional[Literal["text", "number", "date"]], PropertyCategory.default] = "text"
+    type: Annotated[
+        Optional[Literal["text", "number", "date"]], PropertyCategory.default
+    ] = "text"
     placeholder: Annotated[Optional[str], PropertyCategory.default]
 
     # display rules
-    display_rules: Annotated[Optional[List[str]], PropertyCategory.display_rules]
+    display_rules: Annotated[Optional[List[dict]], PropertyCategory.display_rules]
 
     # other
     required: Annotated[Optional[bool], PropertyCategory.other]

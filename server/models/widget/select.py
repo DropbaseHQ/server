@@ -25,7 +25,7 @@ class SelectBaseProperties(BaseModel):
     on_change: Annotated[Optional[str], PropertyCategory.events]
 
     # display_rules
-    display_rules: Annotated[Optional[List[str]], PropertyCategory.display_rules]
+    display_rules: Annotated[Optional[List[dict]], PropertyCategory.display_rules]
 
     # other
     required: Annotated[Optional[bool], PropertyCategory.other]
