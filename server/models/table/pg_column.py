@@ -17,6 +17,8 @@ class PgColumnBaseProperty(BaseModel):
     name: str
     type: Optional[str]
 
+    original_type: Optional[str]
+
     schema_name: str = None
     table_name: str = None
     column_name: str = None

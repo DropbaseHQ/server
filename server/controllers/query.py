@@ -9,7 +9,12 @@ from sqlalchemy.engine import Engine
 from server.constants import DATA_PREVIEW_SIZE
 from server.controllers.dataframe import convert_df_to_resp_obj
 from server.controllers.python_subprocess import format_process_result, run_process_task_unwrap
-from server.controllers.utils import clean_df, connect_to_user_db, read_page_properties
+from server.controllers.utils import (
+    clean_df,
+    connect_to_user_db,
+    get_table_data_fetcher,
+    read_page_properties,
+)
 from server.schemas.files import DataFile
 from server.schemas.run_python import QueryPythonRequest
 from server.schemas.table import FilterSort, TableFilter, TablePagination, TableSort
@@ -29,7 +34,7 @@ def verify_state(app_name: str, page_name: str, state: dict):
 def run_query(req: QueryPythonRequest):
     # read page properties
     properties = read_page_properties(req.app_name, req.page_name)
-    file = get_talbe_data_fetcher(properties["files"], req.table.fetcher)
+    file = get_table_data_fetcher(properties["files"], req.table.fetcher)
     file = DataFile(**file)
 
     if file.type == "data_fetcher":
@@ -37,15 +42,6 @@ def run_query(req: QueryPythonRequest):
     else:
         resp = run_sql_query(req.app_name, req.page_name, file, req.state, req.filter_sort)
     return resp
-
-
-def get_talbe_data_fetcher(files: list, fetcher_name: str):
-    file_data = None
-    for file in files:
-        if file["name"] == fetcher_name:
-            file_data = file
-            break
-    return file_data
 
 
 def run_python_query(

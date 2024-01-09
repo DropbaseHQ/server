@@ -5,7 +5,6 @@ import inspect
 import json
 import os
 import re
-import sys
 from pathlib import Path
 from typing import List
 
@@ -85,16 +84,6 @@ def clean_df(df: pd.DataFrame) -> pd.DataFrame:
     return df
 
 
-def handle_state_context_updates(response):
-    sys.path.insert(0, cwd)
-    if response.status_code == 200:
-        resp = response.json()
-        update_state_context_files(**resp)
-        return {"message": "success"}
-    else:
-        return {"message": "error"}
-
-
 def update_state_context_files(app_name, page_name, state, context):
     try:
         output_state_path = Path(f"workspace/{app_name}/{page_name}/state.py")
@@ -169,3 +158,12 @@ def write_page_properties(app_name: str, page_name: str, properties: dict):
     path = cwd + f"/workspace/{app_name}/{page_name}/properties.json"
     with open(path, "w") as f:
         json.dump(properties, f, indent=2)
+
+
+def get_table_data_fetcher(files: list, fetcher_name: str):
+    file_data = None
+    for file in files:
+        if file["name"] == fetcher_name:
+            file_data = file
+            break
+    return file_data

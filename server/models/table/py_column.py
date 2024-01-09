@@ -15,7 +15,8 @@ class PyColumnContextProperty(ComponentDisplayProperties, PyColumnSharedProperty
 
 class PyColumnBaseProperty(BaseModel):
     name: str
-    type: Optional[Literal["text", "integer", "float", "boolean"]] = "str"
+    type: Optional[Literal["text", "integer", "float", "boolean"]] = "text"
+    original_type: Optional[str]
 
 
 class PyColumnDefinedProperty(PyColumnBaseProperty, PyColumnSharedProperty):

@@ -1,6 +1,8 @@
 from typing import Any, List, Literal, Optional
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
+
+from server.constants import FILE_NAME_REGEX
 
 
 class TableFilter(BaseModel):
@@ -27,5 +29,19 @@ class FilterSort(BaseModel):
 
 class TableBase(BaseModel):
     name: str
-    type: str
+    type: Optional[str]
     fetcher: Optional[str]
+
+
+class ConvertTableRequest(BaseModel):
+    app_name: str = Field(regex=FILE_NAME_REGEX)
+    page_name: str = Field(regex=FILE_NAME_REGEX)
+    table: TableBase
+    state: dict
+
+
+class CommitTableColumnsRequest(BaseModel):
+    app_name: str = Field(regex=FILE_NAME_REGEX)
+    page_name: str = Field(regex=FILE_NAME_REGEX)
+    table: TableBase
+    columns: List[dict]

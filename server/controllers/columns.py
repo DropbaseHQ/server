@@ -1,7 +1,7 @@
 from server.controllers.generate_models import create_state_context_files
 from server.controllers.page import get_page_state_context
 from server.controllers.utils import read_page_properties, validate_column_name, write_page_properties
-from server.schemas.workspace import CommitTableColumnsRequest
+from server.schemas.table import CommitTableColumnsRequest
 
 
 def commit_table_columns(req: CommitTableColumnsRequest):
