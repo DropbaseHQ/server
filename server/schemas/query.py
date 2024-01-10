@@ -1,12 +1,6 @@
-from typing import Optional
 from uuid import UUID
 
 from pydantic import BaseModel
-
-
-class PayloadState(BaseModel):
-    context: Optional[dict]
-    state: Optional[dict]
 
 
 class RunSQLRequest(BaseModel):

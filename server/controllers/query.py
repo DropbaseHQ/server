@@ -1,4 +1,3 @@
-import json
 import os
 from typing import List
 
@@ -8,9 +7,16 @@ from sqlalchemy import text
 from sqlalchemy.engine import Engine
 
 from server.constants import DATA_PREVIEW_SIZE
+from server.controllers.dataframe import convert_df_to_resp_obj
 from server.controllers.python_subprocess import format_process_result, run_process_task_unwrap
-from server.controllers.utils import clean_df, connect_to_user_db, convert_df_to_resp_obj
+from server.controllers.utils import (
+    clean_df,
+    connect_to_user_db,
+    get_table_data_fetcher,
+    read_page_properties,
+)
 from server.schemas.files import DataFile
+from server.schemas.run_python import QueryPythonRequest
 from server.schemas.table import FilterSort, TableFilter, TablePagination, TableSort
 
 cwd = os.getcwd()
@@ -23,6 +29,19 @@ def verify_state(app_name: str, page_name: str, state: dict):
         "state": state,
     }
     return run_process_task_unwrap("verify_state", args)
+
+
+def run_query(req: QueryPythonRequest):
+    # read page properties
+    properties = read_page_properties(req.app_name, req.page_name)
+    file = get_table_data_fetcher(properties["files"], req.table.fetcher)
+    file = DataFile(**file)
+
+    if file.type == "data_fetcher":
+        resp = run_python_query(req.app_name, req.page_name, file, req.state, req.filter_sort)
+    else:
+        resp = run_sql_query(req.app_name, req.page_name, file, req.state, req.filter_sort)
+    return resp
 
 
 def run_python_query(
@@ -40,9 +59,10 @@ def run_python_query(
 
 def run_sql_query(app_name: str, page_name: str, file: DataFile, state: dict, filter_sort: FilterSort):
     verify_state(app_name, page_name, state)
+
     sql = get_table_sql(app_name, page_name, file.name)
     df = run_df_query(sql, file.source, state, filter_sort)
-    # df = json.loads(df.to_json(orient="split"))
+
     res = convert_df_to_resp_obj(df)
     return format_process_result(res)
 
@@ -50,7 +70,6 @@ def run_sql_query(app_name: str, page_name: str, file: DataFile, state: dict, fi
 def run_sql_query_from_string(sql: str, source: str, app_name: str, page_name: str, state: dict):
     verify_state(app_name, page_name, state)
     df = run_df_query(sql, source, state)
-    # df = json.loads(df.to_json(orient="split"))
     res = convert_df_to_resp_obj(df)
     return format_process_result(res)
 
@@ -140,9 +159,7 @@ def apply_filters(
                     filter.value = f"%{filter.value}%"
                 case "is null" | "is not null":
                     # handle unary operators
-                    filters_list.append(
-                        f'user_query."{filter.column_name}" {filter.condition}'
-                    )
+                    filters_list.append(f'user_query."{filter.column_name}" {filter.condition}')
                     continue
 
             filter_values[filter_value_name] = filter.value

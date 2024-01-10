@@ -316,10 +316,6 @@ def sync_table_columns_response(payload: dict):
     )
 
 
-def handle_state_context_updates_response(res: dict):
-    return {"message": "success"}
-
-
 def sync_components_response_empty(app_name: str, page_name: str, token: str):
     # no components
     return mock_response(

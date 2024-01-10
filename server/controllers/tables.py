@@ -1,60 +1,32 @@
-from server.controllers.query import (
-    get_column_names,
-    get_sql_variables,
-    get_table_columns,
-    get_table_sql,
-    render_sql,
-)
+from server.controllers.generate_models import create_state_context_files
+from server.controllers.page import get_page_state_context
+from server.controllers.query import get_column_names, get_table_sql, render_sql
 from server.controllers.source import get_db_schema
-from server.controllers.utils import connect_to_user_db, update_state_context_files, validate_column_name
+from server.controllers.utils import (
+    connect_to_user_db,
+    get_table_data_fetcher,
+    read_page_properties,
+    write_page_properties,
+)
 from server.controllers.validation import validate_smart_cols
 from server.requests.dropbase_router import DropbaseRouter
-from server.schemas.workspace import UpdateTableRequest
+from server.schemas.files import DataFile
+from server.schemas.table import ConvertTableRequest
 
 
-def update_table(table_id: str, req: UpdateTableRequest, router: DropbaseRouter):
-    update_table_payload = {
-        "table_id": table_id,
-        "page_id": req.page_id,
-        "table_updates": req.table_updates.dict(),
-    }
-    try:
-        # get depends on for sql files
-        if req.file:
-            if req.file.get("type") == "sql":
-                sql = get_table_sql(req.app_name, req.page_name, req.file.get("name"))
-                depends_on = get_sql_variables(user_sql=sql)
-                update_table_payload["table_updates"]["depends_on"] = depends_on
-
-        resp = router.table.update_table(table_id=table_id, update_data=update_table_payload)
-        return resp.json(), resp.status_code
-    except Exception as e:
-        return str(e), 500
-
-
-def update_table_columns(table_id: str, req: UpdateTableRequest, router: DropbaseRouter):
-    try:
-        columns = get_table_columns(req.app_name, req.page_name, req.file, req.state)
-        if not validate_column_name(columns):
-            return {"message": "Invalid column names present in the table"}, 400
-        payload = {"table_id": table_id, "columns": columns, "type": req.file.get("type")}
-        resp = router.sync.sync_columns(payload)
-        return resp.json(), 200
-    except Exception as e:
-        print(str(e))
-        return {"message": f"Failed to update columns. Error: {str(e)}"}, 500
-
-
-def convert_sql_table(
-    app_name: str, page_name: str, table: dict, file: dict, state: dict, router: DropbaseRouter
-):
+def convert_sql_table(req: ConvertTableRequest, router: DropbaseRouter):
     try:
         # get db schema
-        user_db_engine = connect_to_user_db(file.get("source"))
+        properties = read_page_properties(req.app_name, req.page_name)
+        file = get_table_data_fetcher(properties["files"], req.table.fetcher)
+        file = DataFile(**file)
+
+        user_db_engine = connect_to_user_db(file.source)
         db_schema, gpt_schema = get_db_schema(user_db_engine)
+
         # get columns
-        user_sql = get_table_sql(app_name, page_name, file.get("name"))
-        user_sql = render_sql(user_sql, state)
+        user_sql = get_table_sql(req.app_name, req.page_name, file.name)
+        user_sql = render_sql(user_sql, req.state)
         column_names = get_column_names(user_db_engine, user_sql)
 
         # get columns from file
@@ -68,20 +40,60 @@ def convert_sql_table(
         resp = router.misc.get_smart_columns(get_smart_table_payload)
         if resp.status_code != 200:
             return resp.text
-
-        resp = resp.json()
-        smart_cols = resp.get("columns")
+        smart_cols = resp.json().get("columns")
 
         # validate columns
         validated = validate_smart_cols(user_db_engine, smart_cols, user_sql)
-        smart_columns = {name: value for name, value in smart_cols.items() if name in validated}
+        column_props = [value for name, value in smart_cols.items() if name in validated]
+        for column in column_props:
+            column["display_type"] = pg_base_type_mapper(column["column_type"])
 
-        # get columns from file
-        update_smart_cols_payload = {"smart_columns": smart_columns, "table": table}
-        resp = router.misc.update_smart_columns(update_smart_cols_payload)
-        resp = resp.json()
-        state_context = resp.get("state_context")
-        update_state_context_files(**state_context)
-        return resp.get("table"), 200
+        for table in properties["tables"]:
+            if table["name"] == req.table.name:
+                table["columns"] = column_props
+        write_page_properties(req.app_name, req.page_name, properties)
+
+        # update state context
+        create_state_context_files(req.app_name, req.page_name, properties)
+
+        # get new steate and context
+        return get_page_state_context(req.app_name, req.page_name), 200
+
     except Exception as e:
         return str(e), 500
+
+
+pg_base_type_mapper = {
+    "TEXT": "text",
+    "VARCHAR": "text",
+    "CHAR": "text",
+    "CHARACTER": "text",
+    "STRING": "text",
+    "BINARY": "text",
+    "VARBINARY": "text",
+    "INTEGER": "integer",
+    "INT": "integer",
+    "BIGINT": "integer",
+    "SMALLINT": "integer",
+    "TINYINT": "integer",
+    "BYTEINT": "integer",
+    "REAL": "float",
+    "FLOAT": "float",
+    "FLOAT4": "float",
+    "FLOAT8": "float",
+    "DOUBLE": "float",
+    "DOUBLE PRECISION": "float",
+    "DECIMAL": "float",
+    "NUMERIC": "float",
+    "BOOLEAN": "boolean",
+    "DATE": "date",
+    "TIME": "time",
+    "DATETIME": "datetime",
+    "TIMESTAMP": "datetime",
+    "TIMESTAMP_LTZ": "datetime",
+    "TIMESTAMP_NTZ": "datetime",
+    "TIMESTAMP_TZ": "datetime",
+    "VARIANT": "text",
+    "OBJECT": "text",
+    "ARRAY": "text",
+}

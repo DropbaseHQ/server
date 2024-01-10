@@ -5,7 +5,6 @@ import inspect
 import json
 import os
 import re
-import sys
 from pathlib import Path
 from typing import List
 
@@ -85,35 +84,6 @@ def clean_df(df: pd.DataFrame) -> pd.DataFrame:
     return df
 
 
-def convert_df_to_resp_obj(df: pd.DataFrame) -> dict:
-    values = json.loads(df.to_json(orient="split", default_handler=str))
-    values["data"] = flatten_json(values["data"])
-    return values
-
-
-def flatten_json(json_data):
-    data = []
-    for row in json_data:
-        new_row = []
-        for value in row:
-            if isinstance(value, dict) or isinstance(value, list):
-                new_row.append(json.dumps(value, default=str))
-            else:
-                new_row.append(value)
-        data.append(new_row)
-    return data
-
-
-def handle_state_context_updates(response):
-    sys.path.insert(0, cwd)
-    if response.status_code == 200:
-        resp = response.json()
-        update_state_context_files(**resp)
-        return {"message": "success"}
-    else:
-        return {"message": "error"}
-
-
 def update_state_context_files(app_name, page_name, state, context):
     try:
         output_state_path = Path(f"workspace/{app_name}/{page_name}/state.py")
@@ -148,3 +118,52 @@ def validate_column_name(columns: List[str]):
         if pattern.fullmatch(column) is None:
             return False
     return True
+
+
+def get_class_properties(pydantic_model):
+    model_schema = pydantic_model.schema()
+    model_props = model_schema.get("properties")
+
+    obj_props = []
+    for key in model_props.keys():
+        prop = model_props[key]
+        prop["name"] = key
+        if key in model_schema.get("required", []):
+            prop["required"] = True
+
+        if "description" in prop:
+            prop["type"] = prop["description"]
+            prop.pop("description")
+        if "enum" in prop:
+            prop["type"] = "select"
+        obj_props.append(prop)
+
+    return obj_props
+
+
+def get_state_context_model(app_name: str, page_name: str, model_type: str):
+    module_name = f"workspace.{app_name}.{page_name}.{model_type}"
+    module = importlib.import_module(module_name)
+    module = importlib.reload(module)
+    return getattr(module, model_type.capitalize())
+
+
+def read_page_properties(app_name: str, page_name: str):
+    path = cwd + f"/workspace/{app_name}/{page_name}/properties.json"
+    with open(path, "r") as f:
+        return json.loads(f.read())
+
+
+def write_page_properties(app_name: str, page_name: str, properties: dict):
+    path = cwd + f"/workspace/{app_name}/{page_name}/properties.json"
+    with open(path, "w") as f:
+        json.dump(properties, f, indent=2)
+
+
+def get_table_data_fetcher(files: list, fetcher_name: str):
+    file_data = None
+    for file in files:
+        if file["name"] == fetcher_name:
+            file_data = file
+            break
+    return file_data

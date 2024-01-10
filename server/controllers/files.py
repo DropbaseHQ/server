@@ -1,22 +1,24 @@
 from server.constants import cwd
-from server.requests.dropbase_router import DropbaseRouter
+from server.controllers.utils import read_page_properties, write_page_properties
 from server.schemas.files import CreateFile
 
 
-def create_file(req: CreateFile, router: DropbaseRouter):
+def create_file(req: CreateFile):
     try:
-        resp = router.file.create_file(req.dict())
-        if resp.status_code == 200:
-            file_name = req.name + ".sql" if req.type == "sql" else req.name + ".py"
-            path = cwd + f"/workspace/{req.app_name}/{req.page_name}/scripts/{file_name}"
-            boilerplate_code = compose_boilerplate_code(req)
+        # create file in a local workspace
+        file_name = req.name + ".sql" if req.type == "sql" else req.name + ".py"
+        path = cwd + f"/workspace/{req.app_name}/{req.page_name}/scripts/{file_name}"
+        boilerplate_code = compose_boilerplate_code(req)
 
-            with open(path, "a") as f:
-                f.write(boilerplate_code)
+        with open(path, "a") as f:
+            f.write(boilerplate_code)
 
-            return 200, resp.json()
-        else:
-            return 400, resp.json()
+        # update properties.json
+        properties = read_page_properties(req.app_name, req.page_name)
+        properties["files"].append({"name": req.name, "type": req.type, "source": req.source})
+        write_page_properties(req.app_name, req.page_name, properties)
+
+        return 200, {"status": "success"}
     except Exception as e:
         return 500, str(e)
 

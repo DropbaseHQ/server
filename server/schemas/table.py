@@ -1,6 +1,8 @@
-from typing import Any, Dict, List, Literal, Optional
+from typing import Any, List, Literal, Optional
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
+
+from server.constants import FILE_NAME_REGEX
 
 
 class TableFilter(BaseModel):
@@ -26,28 +28,20 @@ class FilterSort(BaseModel):
 
 
 class TableBase(BaseModel):
-    id: Optional[str]
     name: str
-    property: dict
-    file_id: Optional[str]
-    page_id: str
-    depends_on: Optional[List[str]]
-    # type: str
-    filters: Optional[List[TableFilter]]
-    sorts: Optional[List[TableSort]]
+    type: Optional[str]
+    fetcher: Optional[str]
 
 
-# TODO: maybe merge with TableBase
-class TablesBaseProperty(BaseModel):
-    # events
-    on_row_change: Optional[str]
-    on_row_selection: Optional[str]
-
-    # other
-    appears_after: Optional[str]
-    height: Optional[str]
+class ConvertTableRequest(BaseModel):
+    app_name: str = Field(regex=FILE_NAME_REGEX)
+    page_name: str = Field(regex=FILE_NAME_REGEX)
+    table: TableBase
+    state: dict
 
 
-class QueryTablePayload(BaseModel):
-    context: Dict[str, Any]
-    state: Dict[str, Any]
+class CommitTableColumnsRequest(BaseModel):
+    app_name: str = Field(regex=FILE_NAME_REGEX)
+    page_name: str = Field(regex=FILE_NAME_REGEX)
+    table: TableBase
+    columns: List[dict]

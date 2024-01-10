@@ -1,6 +1,5 @@
 from enum import Enum
 from typing import Optional
-from uuid import UUID
 
 from pydantic import BaseModel, Field
 
@@ -23,15 +22,7 @@ class CreateFile(BaseModel):
     page_name: str = Field(regex=FILE_NAME_REGEX)
     name: str = Field(regex=FILE_NAME_REGEX)
     type: TypeEnum
-    page_id: str
     source: Optional[str]
-
-
-class SaveSql(BaseModel):
-    app_name: str = Field(regex=FILE_NAME_REGEX)
-    page_name: str = Field(regex=FILE_NAME_REGEX)
-    file_name: str = Field(regex=FILE_NAME_REGEX)
-    sql: str
 
 
 # data files
@@ -47,13 +38,10 @@ class UpdateFile(BaseModel):
     name: str = Field(regex=FILE_NAME_REGEX)
     sql: str
     source: Optional[str]
-    file_id: UUID
     type: TypeEnum
-    # file: dict
 
 
 class RenameFile(BaseModel):
-    page_id: str
     old_name: str = Field(regex=FILE_NAME_REGEX)
     new_name: str = Field(regex=FILE_NAME_REGEX)
     app_name: str = Field(regex=FILE_NAME_REGEX)
