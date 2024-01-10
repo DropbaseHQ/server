@@ -7,7 +7,60 @@ import pandas as pd
 from server.constants import INFER_TYPE_SAMPLE_SIZE
 
 
+def convert_df_to_resp_obj(df: pd.DataFrame) -> dict:
+    values = json.loads(df.to_json(orient="split", default_handler=str))
+    values["data"] = flatten_json(values["data"])
+
+    # TODO: return column types only for columns that are not present in table data
+    if len(df) > INFER_TYPE_SAMPLE_SIZE:
+        df = df.sample(INFER_TYPE_SAMPLE_SIZE).copy()
+
+    columns = get_column_types(df)
+    values["columns"] = columns
+    return values
+
+
+def flatten_json(json_data):
+    data = []
+    for row in json_data:
+        new_row = []
+        for value in row:
+            if isinstance(value, dict) or isinstance(value, list):
+                new_row.append(json.dumps(value, default=str))
+            else:
+                new_row.append(value)
+        data.append(new_row)
+    return data
+
+
+def get_column_types(df):
+    # get origianl types:
+    column_types = {col: str(dtype) for col, dtype in df.dtypes.to_dict().items()}
+    df = convert_df_types(df)
+    display_type = {col: column_type_mapper[str(dtype)] for col, dtype in df.dtypes.to_dict().items()}
+    columns = []
+    for column_name in df.columns:
+        columns.append(
+            {
+                "name": column_name,
+                "column_types": column_types[column_name],
+                "display_type": display_type[column_name],
+            }
+        )
+    return columns
+
+
+# def get_column_types(df):
+#     # get origianl types:
+#     column_types = {col: str(dtype) for col, dtype in df.dtypes.to_dict().items()}
+#     df = convert_df_types(df)
+#     display_type = {col: column_type_mapper[str(dtype)] for col, dtype in df.dtypes.to_dict().items()}
+#     return {**column_types, **display_type}
+
+
 def convert_df_types(df):
+    # TODO: this is an expensive operation. should only be called when types need to be inferred
+    # not on every query
     for col in df.columns:
         # Check if column is of object type
         if df[col].dtype == "object":
@@ -44,32 +97,3 @@ column_type_mapper = {
     "date": "date",  # TODO: to implement
     "time": "time",  # TODO: to implement
 }
-
-
-def get_column_types(df):
-    df = convert_df_types(df)
-    return {col: column_type_mapper[str(dtype)] for col, dtype in df.dtypes.to_dict().items()}
-
-
-def convert_df_to_resp_obj(df: pd.DataFrame) -> dict:
-    values = json.loads(df.to_json(orient="split", default_handler=str))
-    values["data"] = flatten_json(values["data"])
-    # TODO: return column types only for columns that are not present in table data
-    if len(df) > INFER_TYPE_SAMPLE_SIZE:
-        df = df.sample(INFER_TYPE_SAMPLE_SIZE).copy()
-    column_types = get_column_types(df)
-    values["types"] = column_types
-    return values
-
-
-def flatten_json(json_data):
-    data = []
-    for row in json_data:
-        new_row = []
-        for value in row:
-            if isinstance(value, dict) or isinstance(value, list):
-                new_row.append(json.dumps(value, default=str))
-            else:
-                new_row.append(value)
-        data.append(new_row)
-    return data

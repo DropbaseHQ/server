@@ -46,8 +46,7 @@ def convert_sql_table(req: ConvertTableRequest, router: DropbaseRouter):
         validated = validate_smart_cols(user_db_engine, smart_cols, user_sql)
         column_props = [value for name, value in smart_cols.items() if name in validated]
         for column in column_props:
-            column["original_type"] = column["type"]
-            column["type"] = pg_base_type_mapper.get(column["type"], "text")
+            column["display_type"] = pg_base_type_mapper(column["column_type"])
 
         for table in properties["tables"]:
             if table["name"] == req.table.name:

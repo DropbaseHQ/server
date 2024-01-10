@@ -6,7 +6,8 @@ from server.models.common import ComponentDisplayProperties
 
 
 class PgColumnSharedProperty(BaseModel):
-    pass
+    visible: bool = True
+    editable: bool = False
 
 
 class PgColumnContextProperty(ComponentDisplayProperties, PgColumnSharedProperty):
@@ -15,9 +16,8 @@ class PgColumnContextProperty(ComponentDisplayProperties, PgColumnSharedProperty
 
 class PgColumnBaseProperty(BaseModel):
     name: str
-    type: Optional[str]
-
-    original_type: Optional[str]
+    column_type: Optional[str]
+    display_type: Optional[str]
 
     schema_name: str = None
     table_name: str = None
