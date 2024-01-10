@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Literal, Optional
 
 from pydantic import BaseModel
 
@@ -17,7 +17,7 @@ class PgColumnContextProperty(ComponentDisplayProperties, PgColumnSharedProperty
 class PgColumnBaseProperty(BaseModel):
     name: str
     column_type: Optional[str]
-    display_type: Optional[str]
+    display_type: Optional[Literal["text", "integer", "float", "boolean"]]
 
     schema_name: str = None
     table_name: str = None
