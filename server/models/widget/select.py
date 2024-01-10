@@ -17,9 +17,10 @@ class SelectContextProperty(ComponentDisplayProperties, SelectSharedProperties):
 
 
 class SelectBaseProperties(BaseModel):
-    component_type: Literal["select"]
     name: Annotated[str, PropertyCategory.default]
     label: Annotated[Optional[str], PropertyCategory.default]
+
+    component_type: Literal["select"]
 
     # events
     on_change: Annotated[Optional[str], PropertyCategory.events]

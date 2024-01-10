@@ -31,11 +31,20 @@ component_name_to_models = {
 }
 
 
-def state_type_mapper(state_type: str):
+def column_state_type_mapper(state_type: str):
     match state_type:
-        # TODO: only keep one integer type
-        case "int":
+        case "integer":
             return int
+        case "float":
+            return float
+        case "boolean":
+            return bool
+        case _:
+            return str
+
+
+def component_state_type_mapper(input_type: str):
+    match input_type:
         case "integer":
             return int
         case "float":
@@ -44,8 +53,6 @@ def state_type_mapper(state_type: str):
             return bool
         case "text":
             return str
-        case "number":
-            return float
         case "date":
             return str
         case _:
@@ -65,8 +72,10 @@ def get_widget_state_class(widgets_props):
             if component["component_type"] in non_editable:
                 continue
 
+            # get the type that will be used in state. this is what client will send back to server
             component_name = component["name"]
-            component_type = state_type_mapper(component.get("type"))
+            # NOTE: only input has data type as of now. the rest are defaulted to string
+            component_type = component_state_type_mapper(component.get("data_type"))
 
             # state is pulled from ComponentDefined class
             components_props[component_name] = (
@@ -94,7 +103,7 @@ def get_tables_state_class(tables_props):
         for column in table_columns:
 
             column_name = column["name"]
-            column_type = state_type_mapper(column.get("type"))
+            column_type = column_state_type_mapper(column.get("display_type"))
 
             # state is pulled from ComponentDefined class
             columns_props[column_name] = (
@@ -112,8 +121,8 @@ def get_tables_state_class(tables_props):
 
 
 def create_state(component_props):
-    TablesState = get_tables_state_class(component_props.get("tables"))
     WidgetState = get_widget_state_class(component_props.get("widgets"))
+    TablesState = get_tables_state_class(component_props.get("tables"))
 
     class State(BaseModel):
         widgets: WidgetState
@@ -176,9 +185,8 @@ def get_table_context(tables_props):
         columns_props = {}
         for column in table_columns:
 
+            # NOTE: column type is inferred from table type. we might need to change this later
             column_type = table_data.get("type")
-            # column.get("column_type")
-
             BaseProperty = context_model_mapper.get(column_type)
             # create column context class
             columns_props[column["name"]] = (BaseProperty, ...)

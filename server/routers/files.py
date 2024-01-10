@@ -73,7 +73,7 @@ def update_file_req(req: UpdateFile, function_name: str, response: Response):
             depends_on = get_sql_variables(user_sql=req.sql)
 
             for table in properties["tables"]:
-                if table["fetcher"] == function_name:
+                if table.get("fetcher") == function_name:
                     table["depends_on"] = depends_on
 
         # update file property in properties.json
