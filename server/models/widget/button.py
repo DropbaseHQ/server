@@ -41,7 +41,7 @@ class ButtonBaseProperties(BaseModel):
     on_click: Annotated[Optional[str], PropertyCategory.events]
 
     # display rules
-    display_rules: Annotated[Optional[List[str]], PropertyCategory.display_rules]
+    display_rules: Annotated[Optional[List[dict]], PropertyCategory.display_rules]
 
 
 class ButtonDefinedProperty(ButtonBaseProperties, ButtonSharedProperties):

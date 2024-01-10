@@ -18,27 +18,24 @@ def set_by_path(root, items, value):
 
 # helper function to compare values with operators
 def compare_values(value_a: Any, operator: str, value_b: Any):
-    if operator == "eq":
+    if operator == "equals":
         return value_a == value_b
     elif operator == "gt":
         return value_a > value_b
     elif operator == "lt":
         return value_a < value_b
-    elif operator == "neq":
+    elif operator == "not_equals":
         return value_a != value_b
     else:
         return False
 
 
 def display_rule(state, context, rules: DisplayRules):
-
     # iterate through rules based on the display rules for a component
     for component_display_rules in rules.display_rules:
-
         component_visible = False
 
         for rule in component_display_rules.rules:
-
             # get the relevant value from the state based on the target
             target_value = get_by_path(state, rule.target)
 
@@ -54,7 +51,9 @@ def display_rule(state, context, rules: DisplayRules):
                 component_visible = rule_applies
 
         # the resulting state of the component is defined by the final rule resulting condition
-        set_by_path(context, f"{component_display_rules.component}.visible", component_visible)
+        set_by_path(
+            context, f"{component_display_rules.component}.visible", component_visible
+        )
 
     return context.dict()
 
@@ -67,7 +66,10 @@ def get_display_rules_from_comp_props(component_props):
             component_name = component.get("name")
             if component.get("display_rules"):
                 comp_name = f"widgets.{widget_name}.components.{component_name}"
-                comp_rule = {"component": comp_name, "rules": component.get("display_rules")}
+                comp_rule = {
+                    "component": comp_name,
+                    "rules": component.get("display_rules"),
+                }
                 component_display_rules.append(comp_rule)
     return component_display_rules
 
