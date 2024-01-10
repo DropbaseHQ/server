@@ -21,9 +21,6 @@ class SelectBaseProperties(BaseModel):
     label: Annotated[Optional[str], PropertyCategory.default]
 
     component_type: Literal["select"]
-    data_type: Annotated[
-        Optional[Literal["text", "integer", "float"]], PropertyCategory.default
-    ] = "text"
 
     # events
     on_change: Annotated[Optional[str], PropertyCategory.events]
