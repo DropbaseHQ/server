@@ -39,7 +39,9 @@ class AppCreator:
             create_file(path=page_folder_path, content="", file_name="context.py")
             # create properties.json
             create_file(
-                path=page_folder_path, content=json.dumps(self.properties), file_name="properties.json"
+                path=page_folder_path,
+                content=json.dumps(self.properties, indent=2),
+                file_name="properties.json",
             )
 
             # Create new scripts folder with __init__.py

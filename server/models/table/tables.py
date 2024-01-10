@@ -1,6 +1,8 @@
-from typing import Any, List, Literal, Optional
+from typing import Annotated, Any, List, Literal, Optional
 
 from pydantic import BaseModel
+
+from server.models.category import PropertyCategory
 
 
 class Filter(BaseModel):
@@ -33,24 +35,24 @@ class TableContextProperty(TableDisplayProperty, TableSharedProperty):
 
 
 class TableBaseProperty(BaseModel):
-    name: str
-    type: Literal["python", "sql"]
+    name: Annotated[str, PropertyCategory.default]
+    label: Annotated[str, PropertyCategory.default]
+    type: Annotated[Literal["python", "sql"], PropertyCategory.default] = "sql"
 
     # settings
-    height: Optional[str]
-    size: Optional[int] = 10
-
-    depends_on: Optional[List[str]]
-
-    # actions
-    on_row_change: Optional[str]
-    on_row_selection: Optional[str]
-
-    # table filters
-    filters: Optional[List[PinnedFilter]]
+    height: Annotated[Optional[str], PropertyCategory.default]
+    size: Annotated[Optional[int], PropertyCategory.default] = 10
 
     # data fetcher
-    fetcher: Optional[str]
+    fetcher: Annotated[Optional[str], PropertyCategory.default]
+    depends_on: Annotated[Optional[List[str]], PropertyCategory.default]
+
+    # actions
+    on_row_change: Annotated[Optional[str], PropertyCategory.events]
+    on_row_selection: Annotated[Optional[str], PropertyCategory.events]
+
+    # table filters
+    filters: Annotated[Optional[List[PinnedFilter]], PropertyCategory.other]
 
 
 class TableDefinedProperty(TableBaseProperty, TableSharedProperty):
