@@ -6,7 +6,6 @@ import json
 import os
 import re
 from pathlib import Path
-from typing import List
 
 import pandas as pd
 from datamodel_code_generator import generate
@@ -112,12 +111,9 @@ def connect_to_user_db(source_name: str):
     return create_engine(SQLALCHEMY_DATABASE_URL, future=True)
 
 
-def validate_column_name(columns: List[str]):
+def validate_column_name(column: str):
     pattern = re.compile(r"^[a-zA-Z_][a-zA-Z0-9_]*$")
-    for column in columns:
-        if pattern.fullmatch(column) is None:
-            return False
-    return True
+    return False if pattern.fullmatch(column) is None else True
 
 
 def get_class_properties(pydantic_model):

@@ -9,7 +9,6 @@ def convert_df_to_resp_obj(df: pd.DataFrame) -> dict:
     values = json.loads(df.to_json(orient="split", default_handler=str))
     values["data"] = flatten_json(values["data"])
 
-    # TODO: return column types only for columns that are not present in table data
     if len(df) > INFER_TYPE_SAMPLE_SIZE:
         df = df.sample(INFER_TYPE_SAMPLE_SIZE).copy()
 
