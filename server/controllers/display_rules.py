@@ -54,10 +54,7 @@ def display_rule(state, context, rules: DisplayRules):
                 component_visible = rule_applies
 
         # the resulting state of the component is defined by the final rule resulting condition
-        print("component_visible", component_visible)
-        set_by_path(
-            context, f"{component_display_rules.component}.visible", component_visible
-        )
+        set_by_path(context, f"{component_display_rules.component}.visible", component_visible)
 
     return context.dict()
 
