@@ -18,6 +18,9 @@ def set_by_path(root, items, value):
 
 # helper function to compare values with operators
 def compare_values(value_a: Any, operator: str, value_b: Any):
+    # Values entered in the UI are always strings for now
+    # For proper comparison, we need to convert value_a to string
+    value_a = str(value_a)
     if operator == "equals":
         return value_a == value_b
     elif operator == "gt":
@@ -51,6 +54,7 @@ def display_rule(state, context, rules: DisplayRules):
                 component_visible = rule_applies
 
         # the resulting state of the component is defined by the final rule resulting condition
+        print("component_visible", component_visible)
         set_by_path(
             context, f"{component_display_rules.component}.visible", component_visible
         )
