@@ -74,6 +74,7 @@ def get_widget_state_class(widgets_props):
 
             # get the type that will be used in state. this is what client will send back to server
             component_name = component["name"]
+            # NOTE: only input has data type as of now. the rest are defaulted to string
             component_type = component_state_type_mapper(component.get("data_type"))
 
             # state is pulled from ComponentDefined class
@@ -184,9 +185,8 @@ def get_table_context(tables_props):
         columns_props = {}
         for column in table_columns:
 
+            # NOTE: column type is inferred from table type. we might need to change this later
             column_type = table_data.get("type")
-            # column.get("column_type")
-
             BaseProperty = context_model_mapper.get(column_type)
             # create column context class
             columns_props[column["name"]] = (BaseProperty, ...)
