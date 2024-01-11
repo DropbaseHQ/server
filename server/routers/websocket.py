@@ -2,7 +2,6 @@ from fastapi import APIRouter, WebSocket
 from server.controllers.display_rules import run_display_rule
 from server.constants import DROPBASE_API_URL
 import requests
-import websockets
 
 router = APIRouter()
 
