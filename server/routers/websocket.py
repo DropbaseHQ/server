@@ -1,12 +1,19 @@
 from fastapi import APIRouter, WebSocket
-
 from server.controllers.display_rules import run_display_rule
+from server.constants import DROPBASE_API_URL
+import requests
 
 router = APIRouter()
 
 
 @router.websocket("/ws")
 async def websocket_endpoint(websocket: WebSocket):
+    response = requests.post(
+        DROPBASE_API_URL + "/worker/verify_token", cookies=websocket.cookies
+    )
+    if response.status_code != 200:
+        await websocket.close()
+        return
     await websocket.accept()
     while True:
         data = await websocket.receive_json()
