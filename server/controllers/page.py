@@ -9,7 +9,7 @@ from server.schemas.page import PageProperties
 def update_page_properties(req: PageProperties):
     # TODO: revert to prev version if failed
     # validate properties
-    validate_property(req.properties.dict())
+    validate_property_names(req.properties.dict())
     # write properties
     write_page_properties(**req.dict())
     # update state context
@@ -18,7 +18,7 @@ def update_page_properties(req: PageProperties):
     return get_page_state_context(req.app_name, req.page_name)
 
 
-def validate_property(properties: dict):
+def validate_property_names(properties: dict):
     # validate column names
     for table in properties["tables"]:
         if not validate_column_name(table["name"]):

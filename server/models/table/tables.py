@@ -48,7 +48,6 @@ class TableBaseProperty(BaseModel):
 
     # data fetcher
     fetcher: Annotated[Optional[str], PropertyCategory.default]
-    depends_on: Annotated[Optional[List[str]], PropertyCategory.default]
 
     # actions
     on_row_change: Annotated[Optional[str], PropertyCategory.events]
