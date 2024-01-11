@@ -24,6 +24,7 @@ class PinnedFilter(BaseModel):
 class TableDisplayProperty(BaseModel):
     message: Optional[str]
     message_type: Optional[str]
+    should_reload: Annotated[Optional[bool], PropertyCategory.other] = False
 
 
 class TableSharedProperty(BaseModel):
