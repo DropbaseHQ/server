@@ -1,6 +1,8 @@
-from typing import Optional
+from typing import Annotated, Optional
 
 from pydantic import BaseModel
+
+from server.models.category import PropertyCategory
 
 
 # widget
@@ -18,8 +20,9 @@ class WidgetContextProperty(WidgetDisplayProperty, WidgetSharedProperty):
 
 
 class WidgetBaseProperty(BaseModel):
-    name: Optional[str]
-    description: Optional[str]
+    name: Annotated[str, PropertyCategory.default]
+    label: Annotated[Optional[str], PropertyCategory.default]
+    description: Annotated[Optional[str], PropertyCategory.default]
 
 
 class WidgetDefinedProperty(WidgetBaseProperty, WidgetSharedProperty):
