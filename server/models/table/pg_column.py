@@ -17,7 +17,7 @@ class PgColumnContextProperty(ComponentDisplayProperties, PgColumnSharedProperty
 class PgColumnBaseProperty(BaseModel):
     name: str
     column_type: Optional[str]
-    display_type: Optional[Literal["text", "integer", "float", "boolean", "datetime"]]
+    display_type: Optional[Literal["text", "integer", "float", "boolean", "datetime", "date", "time"]]
 
     schema_name: str = None
     table_name: str = None
