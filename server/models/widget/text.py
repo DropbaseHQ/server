@@ -3,6 +3,7 @@ from typing import Annotated, Dict, List, Literal, Optional
 from pydantic import BaseModel
 
 from server.models.category import PropertyCategory
+from server.models.common import ComponentDisplayProperties
 
 
 # text
@@ -10,7 +11,7 @@ class TextSharedProperties(BaseModel):
     pass
 
 
-class TextContextProperty(TextSharedProperties):
+class TextContextProperty(ComponentDisplayProperties, TextSharedProperties):
     pass
 
 
