@@ -1,5 +1,5 @@
 from enum import Enum
-from typing import Optional
+from typing import List, Optional
 
 from pydantic import BaseModel, Field
 
@@ -30,6 +30,7 @@ class DataFile(BaseModel):
     name: str = Field(regex=FILE_NAME_REGEX)
     type: TypeEnum
     source: Optional[str]
+    depends_on: Optional[List[str]]
 
 
 class UpdateFile(BaseModel):
