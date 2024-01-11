@@ -41,12 +41,19 @@ def convert_sql_table(req: ConvertTableRequest, router: DropbaseRouter):
         if resp.status_code != 200:
             return resp.text
         smart_cols = resp.json().get("columns")
+        # NOTE: columns type in smart_cols dict (from chatgpt) is called type.
+        # do not confuse it with column_type, which we use internally
+
+        # rename type to column_type
+        for column in smart_cols.values():
+            column["column_type"] = column.pop("type")
 
         # validate columns
         validated = validate_smart_cols(user_db_engine, smart_cols, user_sql)
         column_props = [value for name, value in smart_cols.items() if name in validated]
+
         for column in column_props:
-            column["display_type"] = pg_base_type_mapper(column["column_type"])
+            column["display_type"] = pg_base_type_mapper.get(column["column_type"])
 
         for table in properties["tables"]:
             if table["name"] == req.table.name:
