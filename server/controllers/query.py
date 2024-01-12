@@ -1,8 +1,9 @@
 import os
+import re
 from typing import List
 
 import pandas as pd
-from jinja2 import Environment, meta
+from jinja2 import Environment
 from sqlalchemy import text
 from sqlalchemy.engine import Engine
 
@@ -60,7 +61,7 @@ def run_python_query(
 def run_sql_query(app_name: str, page_name: str, file: DataFile, state: dict, filter_sort: FilterSort):
     verify_state(app_name, page_name, state)
 
-    sql = get_table_sql(app_name, page_name, file.name)
+    sql = get_sql_from_file(app_name, page_name, file.name)
     df = run_df_query(sql, file.source, state, filter_sort)
 
     res = convert_df_to_resp_obj(df)
@@ -116,20 +117,20 @@ def clean_sql(sql):
 def render_sql(user_sql: str, state: dict):
     env = Environment()
     template = env.from_string(user_sql)
-    return template.render(**state["tables"])
+    return template.render(state=state)
 
 
-def get_table_sql(app_name: str, page_name: str, file_name: str) -> str:
+def get_sql_from_file(app_name: str, page_name: str, file_name: str) -> str:
     path = cwd + f"/workspace/{app_name}/{page_name}/scripts/{file_name}.sql"
     with open(path, "r") as sql_file:
         sql = sql_file.read()
     return sql
 
 
-def get_sql_variables(user_sql: str):
-    env = Environment()
-    parsed_content = env.parse(user_sql)
-    return list(meta.find_undeclared_variables(parsed_content))
+def get_depend_table_names(user_sql: str):
+    pattern = re.compile(r"\{\{state\.tables\.(\w+)\.\w+\}\}")
+    matches = pattern.findall(user_sql)
+    return list(set(matches))
 
 
 def query_db(sql, values, source_name):
@@ -201,6 +202,6 @@ def get_table_columns(app_name: str, page_name: str, file: dict, state: dict) ->
         df = run_df_function(app_name, page_name, file, state)["result"]
     else:
         verify_state(app_name, page_name, state)
-        sql = get_table_sql(app_name, page_name, file.get("name"))
+        sql = get_sql_from_file(app_name, page_name, file.get("name"))
         df = run_df_query(sql, file.get("source"), state, FilterSort(filters=[], sorts=[]))
     return df.columns.tolist()

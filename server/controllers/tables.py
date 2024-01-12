@@ -1,6 +1,6 @@
 from server.controllers.generate_models import create_state_context_files
 from server.controllers.page import get_page_state_context
-from server.controllers.query import get_column_names, get_table_sql, render_sql
+from server.controllers.query import get_column_names, get_sql_from_file, render_sql
 from server.controllers.source import get_db_schema
 from server.controllers.utils import (
     connect_to_user_db,
@@ -25,7 +25,7 @@ def convert_sql_table(req: ConvertTableRequest, router: DropbaseRouter):
         db_schema, gpt_schema = get_db_schema(user_db_engine)
 
         # get columns
-        user_sql = get_table_sql(req.app_name, req.page_name, file.name)
+        user_sql = get_sql_from_file(req.app_name, req.page_name, file.name)
         user_sql = render_sql(user_sql, req.state)
         column_names = get_column_names(user_db_engine, user_sql)
 

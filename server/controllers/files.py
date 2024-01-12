@@ -3,7 +3,7 @@ import os
 import re
 
 from server.constants import FILE_NAME_REGEX, cwd
-from server.controllers.query import get_sql_variables
+from server.controllers.query import get_depend_table_names
 from server.controllers.utils import read_page_properties, rename_function_in_file, write_page_properties
 from server.schemas.files import CreateFile, DeleteFile, RenameFile, UpdateFile
 
@@ -92,7 +92,7 @@ def update_file(function_name: str, req: UpdateFile):
     depends_on = []
     if req.type == "sql":
         # update depends on flags in properties.json
-        depends_on = get_sql_variables(user_sql=req.sql)
+        depends_on = get_depend_table_names(user_sql=req.sql)
 
     # update file property in properties.json
     for file in properties["files"]:

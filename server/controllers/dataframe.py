@@ -10,7 +10,7 @@ def convert_df_to_resp_obj(df: pd.DataFrame) -> dict:
     values["data"] = flatten_json(values["data"])
 
     if len(df) > INFER_TYPE_SAMPLE_SIZE:
-        df = df.sample(INFER_TYPE_SAMPLE_SIZE).copy()
+        df = df.sample(INFER_TYPE_SAMPLE_SIZE)
 
     columns = get_column_types(df)
     values["columns"] = columns
