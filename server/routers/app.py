@@ -2,7 +2,7 @@ import os
 import shutil
 import sys
 
-from fastapi import APIRouter
+from fastapi import APIRouter, Response
 
 from server.controllers.app import get_workspace_apps
 from server.controllers.workspace import AppCreator
@@ -42,8 +42,11 @@ def rename_app_req(req: RenameAppRequest):
 
 
 @router.delete("/{app_name}")
-def delete_app_req(app_name: str):
+def delete_app_req(app_name: str, response: Response):
     app_path = os.path.join(os.path.dirname(__file__), "../../workspace", app_name)
     if os.path.exists(app_path):
         shutil.rmtree(app_path)
-    return {"success": True}
+        return {"message": "App deleted"}
+    else:
+        response.status_code = 400
+        return {"message": "App does not exist"}
