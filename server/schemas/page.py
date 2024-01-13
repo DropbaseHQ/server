@@ -2,7 +2,11 @@ from typing import List, Union
 
 from pydantic import BaseModel
 
-from server.models.table import PgColumnDefinedProperty, PyColumnDefinedProperty, TableDefinedProperty
+from server.models.table import (
+    PgColumnDefinedProperty,
+    PyColumnDefinedProperty,
+    TableDefinedProperty,
+)
 from server.models.widget import (
     ButtonDefinedProperty,
     InputDefinedProperty,
@@ -15,7 +19,12 @@ from server.schemas.files import DataFile
 
 class WidgetProperties(WidgetDefinedProperty):
     components: List[
-        Union[InputDefinedProperty, SelectDefinedProperty, TextDefinedProperty, ButtonDefinedProperty]
+        Union[
+            InputDefinedProperty,
+            SelectDefinedProperty,
+            TextDefinedProperty,
+            ButtonDefinedProperty,
+        ]
     ]
 
 
@@ -33,3 +42,11 @@ class PageProperties(BaseModel):
     app_name: str
     page_name: str
     properties: Properties
+
+
+class CreatePageRequest(BaseModel):
+    page_name: str
+
+
+class RenamePageRequest(BaseModel):
+    new_page_name: str

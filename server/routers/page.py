@@ -1,10 +1,17 @@
 from fastapi import APIRouter, Response
 
-from server.controllers.page import get_page_state_context, update_page_properties
+from server.controllers.page import (
+    get_page_state_context,
+    update_page_properties,
+    create_page,
+    rename_page,
+)
 from server.controllers.utils import read_page_properties
-from server.schemas.page import PageProperties
+from server.schemas.page import PageProperties, CreatePageRequest, RenamePageRequest
 
-router = APIRouter(prefix="/page", tags=["page"], responses={404: {"description": "Not found"}})
+router = APIRouter(
+    prefix="/page", tags=["page"], responses={404: {"description": "Not found"}}
+)
 
 
 @router.get("/{app_name}/{page_name}")
@@ -12,6 +19,33 @@ def get_state_context_req(app_name: str, page_name: str):
     state_context = get_page_state_context(app_name, page_name)
     state_context["properties"] = read_page_properties(app_name, page_name)
     return state_context
+
+
+@router.post("/{app_name}")
+def create_page_req(
+    app_name: str,
+    request: CreatePageRequest,
+    response: Response,
+):
+    try:
+        return create_page(app_name, request.page_name)
+    except Exception as e:
+        response.status_code = 500
+        return {"error": str(e)}
+
+
+@router.put("/{app_name}/{page_name}")
+def rename_page_req(
+    app_name: str,
+    page_name: str,
+    request: RenamePageRequest,
+    response: Response,
+):
+    try:
+        return rename_page(app_name, page_name, request.new_page_name)
+    except Exception as e:
+        response.status_code = 500
+        return {"error": str(e)}
 
 
 @router.post("/")
