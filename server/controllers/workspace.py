@@ -1,10 +1,15 @@
 import json
 import os
 import shutil
-
 from fastapi import HTTPException
 
 from server.controllers.generate_models import create_state_context_files
+
+PROPERTIES_TEMPLATE = {
+    "tables": [{"name": "table1", "label": "Table 1", "type": "sql", "columns": []}],
+    "widgets": [],
+    "files": [],
+}
 
 
 class AppCreator:
@@ -16,39 +21,50 @@ class AppCreator:
         self.app_name = app_name
         self.page_name = "page1"
         self.r_path_to_workspace = r_path_to_workspace
-        self.properties = {
-            "tables": [{"name": "table1", "label": "Table 1", "type": "sql", "columns": []}],
-            "widgets": [],
-            "files": [],
-        }
+        self.app_folder_path = os.path.join(self.r_path_to_workspace, self.app_name)
+        self.properties = PROPERTIES_TEMPLATE
+
+    def create_page(self, app_folder_path: str = None, page_name: str = None):
+        app_folder_path = app_folder_path or self.app_folder_path
+        page_name = page_name or self.page_name
+
+        # Create new page folder with __init__.py
+        page_folder_path = os.path.join(app_folder_path, page_name)
+
+        create_folder(path=page_folder_path)
+        create_init_file(path=page_folder_path, init_code=PAGE_INIT_CODE)
+
+        create_file(path=page_folder_path, content="", file_name="state.py")
+        create_file(path=page_folder_path, content="", file_name="context.py")
+        # create properties.json
+        create_file(
+            path=page_folder_path,
+            content=json.dumps(self.properties, indent=2),
+            file_name="properties.json",
+        )
+
+        # Create new scripts folder with __init__.py
+        scripts_folder_name = "scripts"
+        scripts_folder_path = os.path.join(page_folder_path, scripts_folder_name)
+        create_folder(path=scripts_folder_path)
+        create_init_file(path=scripts_folder_path, init_code="")
+
+        create_state_context_files(self.app_name, page_name, self.properties)
+
+    def rename_page(self, old_page_name: str, new_page_name: str):
+        # rename page folder
+        old_page_folder_path = os.path.join(self.app_folder_path, old_page_name)
+        new_page_folder_path = os.path.join(self.app_folder_path, new_page_name)
+        os.rename(old_page_folder_path, new_page_folder_path)
 
     def _create_default_workspace_files(self) -> str | None:
         try:
-            app_folder_path = os.path.join(self.r_path_to_workspace, self.app_name)
-
             # Create new app folder
-            create_folder(path=app_folder_path)
-            create_init_file(path=app_folder_path)
+            create_folder(path=self.app_folder_path)
+            create_init_file(path=self.app_folder_path)
 
             # Create new page folder with __init__.py
-            page_folder_path = os.path.join(app_folder_path, self.page_name)
-            create_folder(path=page_folder_path)
-            create_init_file(path=page_folder_path, init_code=PAGE_INIT_CODE)
-
-            create_file(path=page_folder_path, content="", file_name="state.py")
-            create_file(path=page_folder_path, content="", file_name="context.py")
-            # create properties.json
-            create_file(
-                path=page_folder_path,
-                content=json.dumps(self.properties, indent=2),
-                file_name="properties.json",
-            )
-
-            # Create new scripts folder with __init__.py
-            scripts_folder_name = "scripts"
-            scripts_folder_path = os.path.join(page_folder_path, scripts_folder_name)
-            create_folder(path=scripts_folder_path)
-            create_init_file(path=scripts_folder_path, init_code="")
+            self.create_page()
 
         except Exception as e:
             print("Unable to create app folder", e)
@@ -56,7 +72,6 @@ class AppCreator:
 
     def create(self):
         self._create_default_workspace_files()
-        create_state_context_files(self.app_name, self.page_name, self.properties)
         return {"success": True}
 
 
