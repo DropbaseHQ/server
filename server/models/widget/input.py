@@ -7,24 +7,21 @@ from server.models.common import ComponentDisplayProperties
 
 
 class InputBaseProperties(BaseModel):
+    label: Annotated[str, PropertyCategory.default]
     name: Annotated[str, PropertyCategory.default]
-    label: Annotated[Optional[str], PropertyCategory.default]
-    component_type: Literal["input"]
-    data_type: Annotated[
-        Optional[Literal["text", "integer", "float", "date"]], PropertyCategory.default
-    ] = "text"
+    data_type: Annotated[Literal["text", "integer", "float", "date"], PropertyCategory.default] = "text"
     placeholder: Annotated[Optional[str], PropertyCategory.default]
+    default: Annotated[Optional[Any], PropertyCategory.default]
 
     # display rules
     display_rules: Annotated[Optional[List[dict]], PropertyCategory.display_rules]
 
-    # other
-    required: Annotated[Optional[bool], PropertyCategory.other]
-    default: Annotated[Optional[Any], PropertyCategory.other]
+    # internal
+    component_type: Literal["input"]
 
 
 class InputSharedProperties(BaseModel):
-    value: Optional[str]
+    pass
 
 
 class InputDefinedProperty(InputBaseProperties, InputSharedProperties):

@@ -16,9 +16,8 @@ class ButtonContextProperty(ComponentDisplayProperties, ButtonSharedProperties):
 
 
 class ButtonBaseProperties(BaseModel):
-    component_type: Literal["button"]
+    label: Annotated[str, PropertyCategory.default]
     name: Annotated[str, PropertyCategory.default]
-    label: Annotated[Optional[str], PropertyCategory.default]
     color: Annotated[
         Optional[
             Literal[
@@ -42,6 +41,9 @@ class ButtonBaseProperties(BaseModel):
 
     # display rules
     display_rules: Annotated[Optional[List[dict]], PropertyCategory.display_rules]
+
+    # internal
+    component_type: Literal["button"]
 
 
 class ButtonDefinedProperty(ButtonBaseProperties, ButtonSharedProperties):
