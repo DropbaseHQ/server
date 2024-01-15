@@ -2,13 +2,12 @@ import os
 import shutil
 import sys
 
+from constants import cwd
 from fastapi import APIRouter, Response
 
 from server.controllers.app import get_workspace_apps
 from server.controllers.workspace import AppCreator
 from server.schemas.workspace import CreateAppRequest, RenameAppRequest
-
-cwd = os.getcwd()
 
 router = APIRouter(prefix="/app", tags=["app"], responses={404: {"description": "Not found"}})
 

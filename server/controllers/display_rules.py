@@ -1,7 +1,8 @@
 from functools import reduce
 from typing import Any
 
-from server.controllers.utils import get_state_context_model, read_page_properties
+from server.controllers.properties import read_page_properties
+from server.controllers.utils import get_state_context_model
 from server.schemas.display_rules import DisplayRules
 
 

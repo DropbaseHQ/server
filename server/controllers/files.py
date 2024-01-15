@@ -3,8 +3,9 @@ import os
 import re
 
 from server.constants import FILE_NAME_REGEX, cwd
+from server.controllers.properties import read_page_properties, update_properties
 from server.controllers.query import get_depend_table_names
-from server.controllers.utils import read_page_properties, rename_function_in_file, write_page_properties
+from server.controllers.utils import rename_function_in_file
 from server.schemas.files import CreateFile, DeleteFile, RenameFile, UpdateFile
 
 
@@ -20,7 +21,9 @@ def create_file(req: CreateFile):
     # update properties.json
     properties = read_page_properties(req.app_name, req.page_name)
     properties["files"].append({"name": req.name, "type": req.type, "source": req.source})
-    write_page_properties(req.app_name, req.page_name, properties)
+
+    # update properties file
+    update_properties(req.app_name, req.page_name, properties, update_modes=False)
 
     return {"status": "success"}
 
@@ -72,7 +75,8 @@ def rename_file(req: RenameFile):
             file["name"] = req.new_name
             break
 
-    write_page_properties(req.app_name, req.page_name, properties)
+    # update properties file
+    update_properties(req.app_name, req.page_name, properties, update_modes=False)
 
     return {"status": "success"}
 
@@ -102,7 +106,9 @@ def update_file(function_name: str, req: UpdateFile):
             file["depends_on"] = depends_on
             break
 
-    write_page_properties(req.app_name, req.page_name, properties)
+    # update properties file
+    update_properties(req.app_name, req.page_name, properties, update_modes=False)
+
     return {"status": "success"}
 
 
@@ -121,7 +127,8 @@ def delete_file(req: DeleteFile):
             properties["files"].remove(file)
             break
 
-    write_page_properties(req.app_name, req.page_name, properties)
+    # update properties file
+    update_properties(req.app_name, req.page_name, properties, update_modes=False)
 
     return {"status": "success"}
 

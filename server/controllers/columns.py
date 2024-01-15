@@ -1,6 +1,6 @@
-from server.controllers.generate_models import create_state_context_files
 from server.controllers.page import get_page_state_context
-from server.controllers.utils import read_page_properties, validate_column_name, write_page_properties
+from server.controllers.properties import read_page_properties, update_properties
+from server.controllers.utils import validate_column_name
 from server.schemas.table import CommitTableColumnsRequest
 
 
@@ -17,11 +17,8 @@ def commit_table_columns(req: CommitTableColumnsRequest):
         if table["name"] == req.table.name:
             table["columns"] = req.columns
             break
-    # write properties
-    write_page_properties(req.app_name, req.page_name, properties)
 
-    # update state context
-    create_state_context_files(properties)
+    update_properties(req.app_name, req.page_name, properties)
 
     # get new steate and context
     return get_page_state_context(req.app_name, req.page_name)

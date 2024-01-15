@@ -1,26 +1,20 @@
-import os
 import re
 from typing import List
 
 import pandas as pd
+from constants import cwd
 from jinja2 import Environment
 from sqlalchemy import text
 from sqlalchemy.engine import Engine
 
 from server.constants import DATA_PREVIEW_SIZE
 from server.controllers.dataframe import convert_df_to_resp_obj
+from server.controllers.properties import read_page_properties
 from server.controllers.python_subprocess import format_process_result, run_process_task_unwrap
-from server.controllers.utils import (
-    clean_df,
-    connect_to_user_db,
-    get_table_data_fetcher,
-    read_page_properties,
-)
+from server.controllers.utils import clean_df, connect_to_user_db, get_table_data_fetcher
 from server.schemas.files import DataFile
 from server.schemas.run_python import QueryPythonRequest
 from server.schemas.table import FilterSort, TableFilter, TablePagination, TableSort
-
-cwd = os.getcwd()
 
 
 def verify_state(app_name: str, page_name: str, state: dict):
