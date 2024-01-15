@@ -121,12 +121,14 @@ def get_class_properties(pydantic_model):
     for key in model_props.keys():
         prop = model_props[key]
         prop["name"] = key
+
         if key in model_schema.get("required", []):
             prop["required"] = True
 
         if "description" in prop:
             prop["type"] = prop["description"]
             prop.pop("description")
+
         if "enum" in prop:
             prop["type"] = "select"
         obj_props.append(prop)

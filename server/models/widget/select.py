@@ -17,10 +17,9 @@ class SelectContextProperty(ComponentDisplayProperties, SelectSharedProperties):
 
 
 class SelectBaseProperties(BaseModel):
+    label: Annotated[str, PropertyCategory.default]
     name: Annotated[str, PropertyCategory.default]
-    label: Annotated[Optional[str], PropertyCategory.default]
-
-    component_type: Literal["select"]
+    default: Annotated[Optional[Any], PropertyCategory.other]
 
     # events
     on_change: Annotated[Optional[str], PropertyCategory.events]
@@ -28,9 +27,8 @@ class SelectBaseProperties(BaseModel):
     # display_rules
     display_rules: Annotated[Optional[List[dict]], PropertyCategory.display_rules]
 
-    # other
-    required: Annotated[Optional[bool], PropertyCategory.other]
-    default: Annotated[Optional[Any], PropertyCategory.other]
+    # internal
+    component_type: Literal["select"]
 
 
 class SelectDefinedProperty(SelectBaseProperties, SelectSharedProperties):
