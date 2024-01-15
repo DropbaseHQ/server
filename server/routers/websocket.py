@@ -26,7 +26,13 @@ async def websocket_endpoint(websocket: WebSocket):
                 else:
                     await websocket.send_json({"authenticated": False})
             else:
-                await websocket.send_json({"message": "You are not authenticated"})
+                await websocket.send_json(
+                    {
+                        "message": "You are not authenticated",
+                        "type": "auth_error",
+                        "failed_data": data,
+                    }
+                )
             continue
         if data["type"] == "display_rule":
             state_context = data["state_context"]

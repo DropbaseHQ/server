@@ -11,6 +11,7 @@ from server.controllers.workspace import AppCreator
 from server.schemas.page import PageProperties
 from fastapi import HTTPException
 import os
+import shutil
 
 
 def update_page_properties(req: PageProperties):
@@ -81,3 +82,13 @@ def rename_page(app_name: str, page_name: str, new_page_name: str):
         return {"success": True}
     except Exception as e:
         raise HTTPException(status_code=500, detail="Unable to create rename page")
+
+
+def delete_page(app_name: str, page_name: str):
+    r_path_to_workspace = os.path.join(os.path.dirname(__file__), "../../workspace")
+    try:
+        shutil.rmtree(os.path.join(r_path_to_workspace, app_name, page_name))
+
+        return {"success": True}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail="Unable to delete page")

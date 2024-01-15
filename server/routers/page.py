@@ -5,6 +5,7 @@ from server.controllers.page import (
     update_page_properties,
     create_page,
     rename_page,
+    delete_page,
 )
 from server.controllers.utils import read_page_properties
 from server.schemas.page import PageProperties, CreatePageRequest, RenamePageRequest
@@ -43,6 +44,19 @@ def rename_page_req(
 ):
     try:
         return rename_page(app_name, page_name, request.new_page_name)
+    except Exception as e:
+        response.status_code = 500
+        return {"error": str(e)}
+
+
+@router.delete("/{app_name}/{page_name}")
+def delete_page_req(
+    app_name: str,
+    page_name: str,
+    response: Response,
+):
+    try:
+        return delete_page(app_name, page_name)
     except Exception as e:
         response.status_code = 500
         return {"error": str(e)}
