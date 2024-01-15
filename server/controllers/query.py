@@ -2,12 +2,11 @@ import re
 from typing import List
 
 import pandas as pd
-from constants import cwd
 from jinja2 import Environment
 from sqlalchemy import text
 from sqlalchemy.engine import Engine
 
-from server.constants import DATA_PREVIEW_SIZE
+from server.constants import DATA_PREVIEW_SIZE, cwd
 from server.controllers.dataframe import convert_df_to_resp_obj
 from server.controllers.properties import read_page_properties
 from server.controllers.python_subprocess import format_process_result, run_process_task_unwrap

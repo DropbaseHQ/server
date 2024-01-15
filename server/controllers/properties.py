@@ -2,8 +2,7 @@ import json
 import os
 import shutil
 
-from constants import cwd
-
+from server.constants import cwd
 from server.controllers.generate_models import create_state_context_files
 from server.schemas.page import Properties
 
