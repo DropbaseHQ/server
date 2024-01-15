@@ -25,7 +25,9 @@ def edit_cell(file: dict, edits: List[CellEdit]):
 def update_value(user_db_engine, edit: CellEdit):
     try:
         columns_name = edit.column_name
-        column = edit.columns[columns_name]
+        # NOTE: client sends columns as a list of column objects. we need to convert it to a dict
+        columns_dict = {col.column_name: col for col in edit.columns}
+        column = columns_dict[columns_name]
 
         values = {
             "new_value": edit.new_value,
@@ -34,7 +36,7 @@ def update_value(user_db_engine, edit: CellEdit):
         prim_key_list = []
         edit_keys = column.edit_keys
         for key in edit_keys:
-            pk_col = edit.columns[key]
+            pk_col = columns_dict[key]
             prim_key_list.append(f"{pk_col.column_name} = :{pk_col.column_name}")
             values[pk_col.column_name] = edit.row[pk_col.name]
         prim_key_str = " AND ".join(prim_key_list)

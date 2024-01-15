@@ -3,7 +3,6 @@ import functools
 import importlib
 import inspect
 import json
-import os
 import re
 from pathlib import Path
 
@@ -13,8 +12,6 @@ from sqlalchemy import create_engine
 
 from server.controllers.sources import db_type_to_class, get_sources
 from server.schemas.files import DataFile
-
-cwd = os.getcwd()
 
 
 def call_function(fn, **kwargs):
@@ -142,18 +139,6 @@ def get_state_context_model(app_name: str, page_name: str, model_type: str):
     module = importlib.import_module(module_name)
     module = importlib.reload(module)
     return getattr(module, model_type.capitalize())
-
-
-def read_page_properties(app_name: str, page_name: str):
-    path = cwd + f"/workspace/{app_name}/{page_name}/properties.json"
-    with open(path, "r") as f:
-        return json.loads(f.read())
-
-
-def write_page_properties(app_name: str, page_name: str, properties: dict):
-    path = cwd + f"/workspace/{app_name}/{page_name}/properties.json"
-    with open(path, "w") as f:
-        json.dump(properties, f, indent=2)
 
 
 def get_table_data_fetcher(files: list, fetcher_name: str):
