@@ -42,10 +42,17 @@ def run_process_with_exec(args: dict):
         # read results from file
         with open(file_path, "rb") as f:
             result = pickle.load(f)
+            if isinstance(result, tuple):
+                # If the result is a tuple, we can assume it is a dataframe and context returned
+                # This happens in a data_fetcher file
+                result_df = pd.DataFrame(result[0]).to_dict(orient="split")
+                result = {
+                    "dataframe": result_df,
+                    "context": result[1],
+                }
     finally:
         # remove file
         os.remove(file_path)
-
     return {"success": success, "result": result, "stdout": stdout}
 
 
@@ -88,7 +95,9 @@ def run_exec_task(child_conn, args):
 
         # Return the result of the last node
         last_var = eval(
-            compile(last_expr, filename="<ast>", mode="eval"), globals_for_exec, locals_for_exec
+            compile(last_expr, filename="<ast>", mode="eval"),
+            globals_for_exec,
+            locals_for_exec,
         )
         if type(last_var) is pd.DataFrame:
             last_var = clean_df(last_var)
@@ -113,15 +122,23 @@ def run_exec_task(child_conn, args):
         with open(file_path, "wb") as f:
             pickle.dump(exception, f)
 
-        child_logs = redirected_output.getvalue()  # get print statements before exception
+        child_logs = (
+            redirected_output.getvalue()
+        )  # get print statements before exception
         child_conn.send((False, child_logs, file_path))
     finally:
         child_conn.close()
         sys.stdout = old_stdout
 
 
-def compose_string_to_exec(app_name: str, page_name: str, payload: dict, python_string: str, file: dict):
-    file_name = file.get("name") + ".sql" if file.get("type") == "sql" else file.get("name") + ".py"
+def compose_string_to_exec(
+    app_name: str, page_name: str, payload: dict, python_string: str, file: dict
+):
+    file_name = (
+        file.get("name") + ".sql"
+        if file.get("type") == "sql"
+        else file.get("name") + ".py"
+    )
     file_path = f"/workspace/{app_name}/{page_name}/scripts/{file_name}"
     file_content = ""
     with open(cwd + file_path, "r") as f:

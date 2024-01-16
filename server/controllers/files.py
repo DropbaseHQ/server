@@ -20,7 +20,9 @@ def create_file(req: CreateFile):
 
     # update properties.json
     properties = read_page_properties(req.app_name, req.page_name)
-    properties["files"].append({"name": req.name, "type": req.type, "source": req.source})
+    properties["files"].append(
+        {"name": req.name, "type": req.type, "source": req.source}
+    )
 
     # update properties file
     update_properties(req.app_name, req.page_name, properties, update_modes=False)
@@ -38,9 +40,9 @@ def {req.name}(state: State, context: Context) -> Context:
     elif req.type == "data_fetcher":
         return f"""from workspace.{req.app_name}.{req.page_name} import State
 import pandas as pd\n\n
-def {req.name}(state: State) -> pd.DataFrame:
+def {req.name}(state: State, context: Context) -> pd.DataFrame:
     df = pd.DataFrame()
-    return df
+    return df, context
 """
     elif req.type == "python":
         return """
@@ -62,10 +64,14 @@ def rename_file(req: RenameFile):
         raise Exception("The file does not exist")
 
     new_file_name = req.new_name + file_ext
-    new_path = cwd + f"/workspace/{req.app_name}/{req.page_name}/scripts/{new_file_name}"
+    new_path = (
+        cwd + f"/workspace/{req.app_name}/{req.page_name}/scripts/{new_file_name}"
+    )
     if os.path.exists(file_path):
         os.rename(file_path, new_path)
-    rename_function_in_file(file_path=new_path, old_name=req.old_name, new_name=req.new_name)
+    rename_function_in_file(
+        file_path=new_path, old_name=req.old_name, new_name=req.new_name
+    )
 
     # update properties.json
     properties = read_page_properties(req.app_name, req.page_name)
@@ -134,8 +140,12 @@ def delete_file(req: DeleteFile):
 
 
 def get_all_files(app_name: str, page_name: str):
-    if not (re.match(FILE_NAME_REGEX, app_name) and re.match(FILE_NAME_REGEX, page_name)):
-        raise Exception("No files found. Please check if the app name and page name are valid.")
+    if not (
+        re.match(FILE_NAME_REGEX, app_name) and re.match(FILE_NAME_REGEX, page_name)
+    ):
+        raise Exception(
+            "No files found. Please check if the app name and page name are valid."
+        )
     dir_path = cwd + f"/workspace/{app_name}/{page_name}/scripts"
     py_files = glob.glob(os.path.join(dir_path, "*.py"))
     py_files = [file for file in py_files if not file.endswith("__init__.py")]
