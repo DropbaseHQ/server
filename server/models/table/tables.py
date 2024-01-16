@@ -40,14 +40,12 @@ class TableBaseProperty(BaseModel):
     name: Annotated[str, PropertyCategory.default]
     description: Annotated[Optional[str], PropertyCategory.default]
 
-    type: Annotated[Literal["python", "sql"], PropertyCategory.default] = "sql"
+    # data fetcher
+    fetcher: Annotated[Optional[str], PropertyCategory.default]
 
     # settings
     height: Annotated[Optional[str], PropertyCategory.default]
     size: Annotated[Optional[int], PropertyCategory.default] = 10
-
-    # data fetcher
-    fetcher: Annotated[Optional[str], PropertyCategory.default]
 
     # actions
     on_row_change: Annotated[Optional[str], PropertyCategory.events]
@@ -55,6 +53,9 @@ class TableBaseProperty(BaseModel):
 
     # table filters
     filters: Annotated[Optional[List[PinnedFilter]], PropertyCategory.other]
+
+    # internal
+    type: Annotated[Literal["python", "sql"], PropertyCategory.default] = "sql"
 
 
 class TableDefinedProperty(TableBaseProperty, TableSharedProperty):
