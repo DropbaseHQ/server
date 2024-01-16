@@ -21,7 +21,8 @@ def set_by_path(root, items, value):
 def compare_values(value_a: Any, operator: str, value_b: Any):
     # Values entered in the UI are always strings for now
     # For proper comparison, we need to convert value_a to string
-    value_a = str(value_a)
+    if value_a != None:
+        value_a = str(value_a)
     if operator == "equals":
         return value_a == value_b
     elif operator == "gt":
@@ -30,6 +31,8 @@ def compare_values(value_a: Any, operator: str, value_b: Any):
         return value_a < value_b
     elif operator == "not_equals":
         return value_a != value_b
+    elif operator == "exists":
+        return bool(value_a)
     else:
         return False
 
@@ -42,7 +45,6 @@ def display_rule(state, context, rules: DisplayRules):
         for rule in component_display_rules.rules:
             # get the relevant value from the state based on the target
             target_value = get_by_path(state, rule.target)
-
             # compare the target value from the state with the rule value
             rule_applies = compare_values(target_value, rule.operator, rule.value)
 
@@ -55,7 +57,9 @@ def display_rule(state, context, rules: DisplayRules):
                 component_visible = rule_applies
 
         # the resulting state of the component is defined by the final rule resulting condition
-        set_by_path(context, f"{component_display_rules.component}.visible", component_visible)
+        set_by_path(
+            context, f"{component_display_rules.component}.visible", component_visible
+        )
 
     return context.dict()
 
@@ -87,5 +91,4 @@ def run_display_rule(app_name: str, page_name: str, state: dict, context: dict):
     display_rules = get_display_rules_from_comp_props(properties)
 
     rules = DisplayRules(display_rules=display_rules)
-
     return display_rule(state, context, rules)
