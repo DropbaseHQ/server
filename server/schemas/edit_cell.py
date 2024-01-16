@@ -1,4 +1,4 @@
-from typing import Any, Dict, List
+from typing import Any, List
 
 from pydantic import BaseModel
 
@@ -16,7 +16,7 @@ class CellEdit(BaseModel):
     old_value: Any
     new_value: Any
     row: dict
-    columns: Dict[str, CellProps]
+    columns: List[CellProps]
 
 
 class EditCellRequest(BaseModel):

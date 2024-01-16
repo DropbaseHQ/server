@@ -7,7 +7,7 @@ from server.controllers.page import (
     rename_page,
     delete_page,
 )
-from server.controllers.utils import read_page_properties
+from server.controllers.properties import read_page_properties
 from server.schemas.page import PageProperties, CreatePageRequest, RenamePageRequest
 
 router = APIRouter(
@@ -16,10 +16,14 @@ router = APIRouter(
 
 
 @router.get("/{app_name}/{page_name}")
-def get_state_context_req(app_name: str, page_name: str):
-    state_context = get_page_state_context(app_name, page_name)
-    state_context["properties"] = read_page_properties(app_name, page_name)
-    return state_context
+def get_state_context_req(app_name: str, page_name: str, response: Response):
+    try:
+        state_context = get_page_state_context(app_name, page_name)
+        state_context["properties"] = read_page_properties(app_name, page_name)
+        return state_context
+    except Exception as e:
+        response.status_code = 400
+        return {"message": str(e)}
 
 
 @router.post("/{app_name}")
@@ -73,4 +77,4 @@ def cud_page_props(
     except Exception as e:
         # TODO: delete files if error
         response.status_code = 500
-        return {"error": str(e)}
+        return {"message": str(e)}

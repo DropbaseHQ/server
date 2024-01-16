@@ -1,12 +1,8 @@
 from pydantic import BaseModel
 
 from server.controllers.display_rules import run_display_rule
-from server.controllers.generate_models import create_state_context_files
-from server.controllers.utils import (
-    get_state_context_model,
-    validate_column_name,
-    write_page_properties,
-)
+from server.controllers.properties import update_properties
+from server.controllers.utils import get_state_context_model, validate_column_name
 from server.controllers.workspace import AppCreator
 from server.schemas.page import PageProperties
 from fastapi import HTTPException
@@ -15,13 +11,10 @@ import shutil
 
 
 def update_page_properties(req: PageProperties):
-    # TODO: revert to prev version if failed
     # validate properties
     validate_property_names(req.properties.dict())
-    # write properties
-    write_page_properties(**req.dict())
-    # update state context
-    create_state_context_files(**req.dict())
+    # update properties
+    update_properties(req.app_name, req.page_name, req.properties.dict())
     # get new steate and context
     return get_page_state_context(req.app_name, req.page_name)
 

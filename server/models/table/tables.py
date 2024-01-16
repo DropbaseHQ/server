@@ -36,8 +36,8 @@ class TableContextProperty(TableDisplayProperty, TableSharedProperty):
 
 
 class TableBaseProperty(BaseModel):
-    name: Annotated[str, PropertyCategory.default]
     label: Annotated[str, PropertyCategory.default]
+    name: Annotated[str, PropertyCategory.default]
     description: Annotated[Optional[str], PropertyCategory.default]
 
     type: Annotated[Literal["python", "sql"], PropertyCategory.default] = "sql"

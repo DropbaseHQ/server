@@ -16,9 +16,8 @@ class TextContextProperty(ComponentDisplayProperties, TextSharedProperties):
 
 
 class TextBaseProperties(BaseModel):
-    component_type: Literal["text"]
     name: Annotated[str, PropertyCategory.default]
-    text: Annotated[Optional[str], PropertyCategory.default]
+    text: Annotated[str, PropertyCategory.default]
     size: Annotated[Optional[Literal["small", "medium", "large"]], PropertyCategory.default]
     color: Annotated[
         Optional[
@@ -40,6 +39,9 @@ class TextBaseProperties(BaseModel):
 
     # display_rules
     display_rules: Annotated[Optional[List[Dict]], PropertyCategory.display_rules]
+
+    # internal
+    component_type: Literal["text"]
 
 
 class TextDefinedProperty(TextBaseProperties, TextSharedProperties):

@@ -20,8 +20,8 @@ class WidgetContextProperty(WidgetDisplayProperty, WidgetSharedProperty):
 
 
 class WidgetBaseProperty(BaseModel):
+    label: Annotated[str, PropertyCategory.default]
     name: Annotated[str, PropertyCategory.default]
-    label: Annotated[Optional[str], PropertyCategory.default]
     description: Annotated[Optional[str], PropertyCategory.default]
 
 
