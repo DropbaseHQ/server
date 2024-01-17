@@ -42,8 +42,10 @@ def run_process_with_exec(args: dict):
         # read results from file
         with open(file_path, "rb") as f:
             result = pickle.load(f)
+
             if isinstance(result, tuple) and (
-                isinstance(result[0], pd.DataFrame) and isinstance(result[1], dict)
+                isinstance(result[0], pd.DataFrame)
+                and result[1].__class__.__name__ == "Context"
             ):
                 # If the result is a tuple, with the first element being a dataframe
                 # and the second element being a dict, we can assume the second element
@@ -109,6 +111,17 @@ def run_exec_task(child_conn, args):
             output = convert_df_to_resp_obj(last_var)
         elif last_var.__class__.__name__ == "Context":
             output = {"context": last_var.dict()}
+
+        elif isinstance(last_var, tuple) and (
+            isinstance(last_var[0], pd.DataFrame)
+            and last_var[1].__class__.__name__ == "Context"
+        ):
+            new_df = clean_df(last_var[0])
+            new_df = new_df[:DATA_PREVIEW_SIZE]
+            output = {
+                "dataframe": convert_df_to_resp_obj(new_df),
+                "context": last_var[1].dict(),
+            }
         else:
             output = last_var
 

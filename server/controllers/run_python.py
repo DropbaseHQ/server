@@ -34,7 +34,7 @@ def run_python_query(
         elif (
             isinstance(function_result, tuple)
             and (isinstance(function_result[0], pd.DataFrame))
-            and (isinstance(function_result[1], dict))
+            and function_result[1].__class__.__name__ == "Context"
         ):
             df, context = function_result
 
