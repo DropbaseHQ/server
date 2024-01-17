@@ -10,7 +10,7 @@ from sqlalchemy.pool import NullPool
 
 from server.main import app
 from server.requests.dropbase_router import get_dropbase_router
-from server.tests.constants import DEMO_INIT_SQL_PATH, WORKSPACE_PATH, TEMPDIR_PATH
+from server.tests.constants import DEMO_INIT_SQL_PATH, TEMPDIR_PATH, WORKSPACE_PATH
 from server.tests.mocks.dropbase_router_mocker import DropbaseRouterMocker
 
 
@@ -76,11 +76,8 @@ def pytest_sessionstart():
     mock_dropbase_router.app.update_app.side_effect = update_app_response
 
     AppCreator(
-        get_app_response()("random-uuid").json(),
-        {"page": {"name": "page1"}},
+        "dropbase_test_app",
         WORKSPACE_PATH,
-        "mock url",
-        mock_dropbase_router,
     ).create()
 
     scripts_path = WORKSPACE_PATH.joinpath("dropbase_test_app/page1/scripts")

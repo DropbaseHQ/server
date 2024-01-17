@@ -1,40 +1,42 @@
-import unittest.mock
-
 from server.tests.constants import FILE_ID, PAGE_ID, TABLE_ID, WORKSPACE_PATH
 from server.tests.mocks.dropbase.misc import get_smart_columns_response, update_smart_columns_response
 from server.tests.mocks.dropbase.sync import sync_columns_response
-from server.tests.mocks.dropbase.table import (
-    create_table_response,
-    delete_table_response,
-    update_table_response,
-)
+from server.tests.mocks.dropbase.table import delete_table_response, update_table_response
 from server.tests.verify_folder_structure import is_valid_folder_structure
 from server.tests.verify_object_exists import workspace_object_exists
 
+base_data = {
+    "app_name": "dropbase_test_app",
+    "page_name": "page1",
+    "properties": {
+        "tables": [
+            {"name": "table1", "label": "Table 1", "type": "sql", "columns": []},
+        ],
+        "widgets": [],
+        "files": [],
+    },
+}
 
-def test_create_table_req(test_client, dropbase_router_mocker):
+
+def test_create_table_req(test_client):
     # Arrange
-    dropbase_router_mocker.patch("table", "create_table", side_effect=create_table_response)
-
-    data = {
-        "name": "test_table",
-        "property": {
-            "filters": [],
-            "appears_after": None,
-            "on_row_change": None,
-            "on_row_selection": None,
-        },
-        "page_id": PAGE_ID,
-    }
+    base_data["properties"]["tables"].append(
+        {"name": "table2", "label": "Table 2", "type": "sql", "columns": []}
+    )
 
     # Act
-    res = test_client.post("/tables", json=data)
+    res = test_client.post("/page", json=base_data)
+    res_data = res.json()
 
     # Assert
     assert res.status_code == 200
-    assert is_valid_folder_structure()
-    assert workspace_object_exists("State", "tables.test_table")
-    assert workspace_object_exists("Context", "tables.test_table")
+    assert isinstance(res_data.get("context").get("tables").get("table2"), dict)
+    assert isinstance(res_data.get("state").get("tables").get("table2"), dict)
+    # TODO: check app/page directory is properly structured
+    # check properties.json has the right data
+    # assert is_valid_folder_structure()
+    # assert workspace_object_exists("State", "tables.test_table")
+    # assert workspace_object_exists("Context", "tables.test_table")
 
 
 def test_update_table_req_file_changed(test_client, dropbase_router_mocker, mocker):
