@@ -31,7 +31,11 @@ def run_python_query(
             df = function_result
             df = clean_df(df)
             return convert_df_to_resp_obj(df), 200
-        else:
+        elif (
+            isinstance(function_result, tuple)
+            and (isinstance(function_result[0], pd.DataFrame))
+            and (isinstance(function_result[1], dict))
+        ):
             df, context = function_result
 
             df = clean_df(df)
@@ -39,7 +43,7 @@ def run_python_query(
                 "dataframe": convert_df_to_resp_obj(df),
                 "context": context,
             }, 200
-
+        return {"result": function_result}, 200
     except Exception as e:
         return {"error": str(e)}, 500
 
