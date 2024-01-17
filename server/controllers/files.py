@@ -38,7 +38,7 @@ def {req.name}(state: State, context: Context) -> Context:
     return context
 """
     elif req.type == "data_fetcher":
-        return f"""from workspace.{req.app_name}.{req.page_name} import State
+        return f"""from workspace.{req.app_name}.{req.page_name} import State, Context
 import pandas as pd\n\n
 def {req.name}(state: State, context: Context) -> pd.DataFrame:
     df = pd.DataFrame()
