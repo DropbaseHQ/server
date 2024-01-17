@@ -42,9 +42,12 @@ def run_process_with_exec(args: dict):
         # read results from file
         with open(file_path, "rb") as f:
             result = pickle.load(f)
-            if isinstance(result, tuple):
-                # If the result is a tuple, we can assume it is a dataframe and context returned
-                # This happens in a data_fetcher file
+            if isinstance(result, tuple) and (
+                isinstance(result[0], pd.DataFrame) and isinstance(result[1], dict)
+            ):
+                # If the result is a tuple, with the first element being a dataframe
+                # and the second element being a dict, we can assume the second element
+                # is a context object. This happens in a data_fetcher file
                 result_df = pd.DataFrame(result[0]).to_dict(orient="split")
                 result = {
                     "dataframe": result_df,
