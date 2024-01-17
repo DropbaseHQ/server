@@ -9,8 +9,15 @@ from sqlalchemy.engine import Engine
 from server.constants import DATA_PREVIEW_SIZE, cwd
 from server.controllers.dataframe import convert_df_to_resp_obj
 from server.controllers.properties import read_page_properties
-from server.controllers.python_subprocess import format_process_result, run_process_task_unwrap
-from server.controllers.utils import clean_df, connect_to_user_db, get_table_data_fetcher
+from server.controllers.python_subprocess import (
+    format_process_result,
+    run_process_task_unwrap,
+)
+from server.controllers.utils import (
+    clean_df,
+    connect_to_user_db,
+    get_table_data_fetcher,
+)
 from server.schemas.files import DataFile
 from server.schemas.run_python import QueryPythonRequest
 from server.schemas.table import FilterSort, TableFilter, TablePagination, TableSort
@@ -32,26 +39,38 @@ def run_query(req: QueryPythonRequest):
     file = DataFile(**file)
 
     if file.type == "data_fetcher":
-        resp = run_python_query(req.app_name, req.page_name, file, req.state, req.filter_sort)
+        resp = run_python_query(
+            req.app_name, req.page_name, file, req.state, req.context, req.filter_sort
+        )
     else:
-        resp = run_sql_query(req.app_name, req.page_name, file, req.state, req.filter_sort)
+        resp = run_sql_query(
+            req.app_name, req.page_name, file, req.state, req.filter_sort
+        )
     return resp
 
 
 def run_python_query(
-    app_name: str, page_name: str, file: DataFile, state: dict, filter_sort: FilterSort
+    app_name: str,
+    page_name: str,
+    file: DataFile,
+    state: dict,
+    context: dict,
+    filter_sort: FilterSort,
 ):
     args = {
         "app_name": app_name,
         "page_name": page_name,
         "file": file.dict(),
         "state": state,
+        "context": context,
         "filter_sort": filter_sort.dict(),
     }
     return run_process_task_unwrap("run_python_query", args)
 
 
-def run_sql_query(app_name: str, page_name: str, file: DataFile, state: dict, filter_sort: FilterSort):
+def run_sql_query(
+    app_name: str, page_name: str, file: DataFile, state: dict, filter_sort: FilterSort
+):
     verify_state(app_name, page_name, state)
 
     sql = get_sql_from_file(app_name, page_name, file.name)
@@ -61,7 +80,9 @@ def run_sql_query(app_name: str, page_name: str, file: DataFile, state: dict, fi
     return format_process_result(res)
 
 
-def run_sql_query_from_string(sql: str, source: str, app_name: str, page_name: str, state: dict):
+def run_sql_query_from_string(
+    sql: str, source: str, app_name: str, page_name: str, state: dict
+):
     verify_state(app_name, page_name, state)
     df = run_df_query(sql, source, state)
     res = convert_df_to_resp_obj(df)
@@ -83,7 +104,9 @@ def run_df_query(
     source: str,
     state: dict,
     filter_sort: FilterSort = FilterSort(
-        filters=[], sorts=[], pagination=TablePagination(page=0, page_size=DATA_PREVIEW_SIZE)
+        filters=[],
+        sorts=[],
+        pagination=TablePagination(page=0, page_size=DATA_PREVIEW_SIZE),
     ),
 ) -> pd.DataFrame:
     filter_sql, filter_values = prepare_sql(user_sql, state, filter_sort)
@@ -100,7 +123,9 @@ def process_query_result(res) -> pd.DataFrame:
 def prepare_sql(user_sql: str, state: dict, filter_sort: FilterSort):
     sql = clean_sql(user_sql)
     sql = render_sql(sql, state)
-    return apply_filters(sql, filter_sort.filters, filter_sort.sorts, filter_sort.pagination)
+    return apply_filters(
+        sql, filter_sort.filters, filter_sort.sorts, filter_sort.pagination
+    )
 
 
 def clean_sql(sql):
@@ -134,7 +159,10 @@ def query_db(sql, values, source_name):
 
 
 def apply_filters(
-    table_sql: str, filters: List[TableFilter], sorts: List[TableSort], pagination: TablePagination = {}
+    table_sql: str,
+    filters: List[TableFilter],
+    sorts: List[TableSort],
+    pagination: TablePagination = {},
 ):
     # clean sql
     table_sql = table_sql.strip("\n ;")
@@ -153,7 +181,9 @@ def apply_filters(
                     filter.value = f"%{filter.value}%"
                 case "is null" | "is not null":
                     # handle unary operators
-                    filters_list.append(f'user_query."{filter.column_name}" {filter.condition}')
+                    filters_list.append(
+                        f'user_query."{filter.column_name}" {filter.condition}'
+                    )
                     continue
 
             filter_values[filter_value_name] = filter.value
@@ -190,11 +220,15 @@ def get_column_names(user_db_engine: Engine, user_sql: str) -> list[str]:
     return col_names
 
 
-def get_table_columns(app_name: str, page_name: str, file: dict, state: dict) -> List[str]:
+def get_table_columns(
+    app_name: str, page_name: str, file: dict, state: dict
+) -> List[str]:
     if file.get("type") == "data_fetcher":
         df = run_df_function(app_name, page_name, file, state)["result"]
     else:
         verify_state(app_name, page_name, state)
         sql = get_sql_from_file(app_name, page_name, file.get("name"))
-        df = run_df_query(sql, file.get("source"), state, FilterSort(filters=[], sorts=[]))
+        df = run_df_query(
+            sql, file.get("source"), state, FilterSort(filters=[], sorts=[])
+        )
     return df.columns.tolist()

@@ -1,4 +1,4 @@
-from typing import Any, Dict
+from typing import Any, Dict, Optional
 
 from pydantic import BaseModel
 
@@ -24,3 +24,4 @@ class QueryPythonRequest(BaseModel):
     table: TableBase
     filter_sort: FilterSort
     state: dict
+    context: Optional[dict] = None
