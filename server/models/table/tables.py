@@ -24,7 +24,7 @@ class PinnedFilter(BaseModel):
 class TableDisplayProperty(BaseModel):
     message: Optional[str]
     message_type: Optional[str]
-    should_reload: Annotated[Optional[bool], PropertyCategory.other] = False
+    reload: Annotated[Optional[bool], PropertyCategory.other] = False
 
 
 class TableSharedProperty(BaseModel):
@@ -48,8 +48,9 @@ class TableBaseProperty(BaseModel):
     size: Annotated[Optional[int], PropertyCategory.default] = 10
 
     # actions
-    on_row_change: Annotated[Optional[str], PropertyCategory.events]
-    on_row_selection: Annotated[Optional[str], PropertyCategory.events]
+    # TODO: implement these
+    # on_row_change: Annotated[Optional[str], PropertyCategory.events]
+    # on_row_selection: Annotated[Optional[str], PropertyCategory.events]
 
     # table filters
     filters: Annotated[Optional[List[PinnedFilter]], PropertyCategory.other]
