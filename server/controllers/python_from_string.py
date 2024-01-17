@@ -42,19 +42,6 @@ def run_process_with_exec(args: dict):
         # read results from file
         with open(file_path, "rb") as f:
             result = pickle.load(f)
-
-            if isinstance(result, tuple) and (
-                isinstance(result[0], pd.DataFrame)
-                and result[1].__class__.__name__ == "Context"
-            ):
-                # If the result is a tuple, with the first element being a dataframe
-                # and the second element being a dict, we can assume the second element
-                # is a context object. This happens in a data_fetcher file
-                result_df = pd.DataFrame(result[0]).to_dict(orient="split")
-                result = {
-                    "dataframe": result_df,
-                    "context": result[1],
-                }
     finally:
         # remove file
         os.remove(file_path)
@@ -109,12 +96,12 @@ def run_exec_task(child_conn, args):
             last_var = last_var[:DATA_PREVIEW_SIZE]
             # output = json.loads(last_var.to_json(orient="split"))
             output = convert_df_to_resp_obj(last_var)
+
         elif last_var.__class__.__name__ == "Context":
             output = {"context": last_var.dict()}
 
         elif isinstance(last_var, tuple) and (
-            isinstance(last_var[0], pd.DataFrame)
-            and last_var[1].__class__.__name__ == "Context"
+            isinstance(last_var[0], pd.DataFrame) and last_var[1].__class__.__name__ == "Context"
         ):
             new_df = clean_df(last_var[0])
             new_df = new_df[:DATA_PREVIEW_SIZE]
@@ -138,23 +125,15 @@ def run_exec_task(child_conn, args):
         with open(file_path, "wb") as f:
             pickle.dump(exception, f)
 
-        child_logs = (
-            redirected_output.getvalue()
-        )  # get print statements before exception
+        child_logs = redirected_output.getvalue()  # get print statements before exception
         child_conn.send((False, child_logs, file_path))
     finally:
         child_conn.close()
         sys.stdout = old_stdout
 
 
-def compose_string_to_exec(
-    app_name: str, page_name: str, payload: dict, python_string: str, file: dict
-):
-    file_name = (
-        file.get("name") + ".sql"
-        if file.get("type") == "sql"
-        else file.get("name") + ".py"
-    )
+def compose_string_to_exec(app_name: str, page_name: str, payload: dict, python_string: str, file: dict):
+    file_name = file.get("name") + ".sql" if file.get("type") == "sql" else file.get("name") + ".py"
     file_path = f"/workspace/{app_name}/{page_name}/scripts/{file_name}"
     file_content = ""
     with open(cwd + file_path, "r") as f:

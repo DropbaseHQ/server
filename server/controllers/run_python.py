@@ -1,3 +1,5 @@
+import pandas as pd
+
 from server.controllers.dataframe import convert_df_to_resp_obj
 from server.controllers.utils import (
     call_function,
@@ -9,7 +11,6 @@ from server.controllers.utils import (
 )
 from server.schemas.files import DataFile
 from server.schemas.table import FilterSort
-import pandas as pd
 
 
 def run_python_query(
@@ -27,17 +28,18 @@ def run_python_query(
         function_name = get_data_function_by_file(app_name, page_name, file)
         function_result = call_function(function_name, **args)
 
+        # NOTE: this should be invalid and removed
         if isinstance(function_result, pd.DataFrame):
             df = function_result
             df = clean_df(df)
             return convert_df_to_resp_obj(df), 200
+        # check for datafetchers that return df and context
         elif (
             isinstance(function_result, tuple)
             and (isinstance(function_result[0], pd.DataFrame))
             and function_result[1].__class__.__name__ == "Context"
         ):
             df, context = function_result
-
             df = clean_df(df)
             return {
                 "dataframe": convert_df_to_resp_obj(df),
