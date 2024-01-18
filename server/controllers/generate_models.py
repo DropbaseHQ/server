@@ -203,7 +203,7 @@ def get_table_context(tables_props):
 
         # add each table context class into main context class
         tables_context[table_name] = (locals()[table_class_name], ...)
-    return create_model("TablessContext", **tables_context)
+    return create_model("TablesContext", **tables_context)
 
 
 def create_context(component_props):
