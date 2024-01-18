@@ -1,6 +1,6 @@
 import copy
 
-from server.tests.verify_state_and_context_exists import verify_object_in_state_context
+from server.tests.verify_state_and_context import verify_object_in_state_context
 
 base_data = {
     "app_name": "dropbase_test_app",
