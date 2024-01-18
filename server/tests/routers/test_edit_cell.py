@@ -2,65 +2,61 @@ from sqlalchemy import text
 
 data = {
     # could be ignored, mocking in mock db
-    "file": {
-        "source": "local",
-        "id": "7699d7d1-d01f-487f-9dd2-474d1080a4a0",
-        "date": "2023-12-08T21:52:27.613807",
-        "page_id": "8ba52662-41c8-485f-a62f-6b14499144e5",
-        "name": "demo_sql",
-        "type": "sql",
-    },
+    "file": {"name": "demo_sql", "type": "sql", "source": "local", "depends_on": []},
     "edits": [
         {
             "row": {"user_id": 1, "username": "John Doe", "email": "john.doe@example.com"},
             "column_name": "username",
-            "columns": {
-                "user_id": {
+            "columns": [
+                {
                     "name": "user_id",
-                    "type": "INTEGER",
+                    "column_type": "INTEGER",
+                    "display_type": "integer",
                     "unique": False,
                     "default": "nextval('\"public\".users_user_id_seq'::regclass)",
                     "visible": True,
                     "editable": False,
-                    "Noneable": False,
                     "edit_keys": [],
                     "table_name": "users",
                     "column_name": "user_id",
                     "foreign_key": False,
                     "primary_key": True,
                     "schema_name": "public",
+                    "nullable": False,
                 },
-                "username": {
+                {
                     "name": "username",
-                    "type": "VARCHAR(255)",
+                    "column_type": "VARCHAR(255)",
+                    "display_type": "text",
                     "unique": False,
                     "default": None,
                     "visible": True,
                     "editable": True,
-                    "Noneable": False,
                     "edit_keys": ["user_id"],
                     "table_name": "users",
                     "column_name": "username",
                     "foreign_key": False,
                     "primary_key": False,
                     "schema_name": "public",
+                    "nullable": True,
                 },
-                "email": {
+                {
                     "name": "email",
-                    "type": "VARCHAR(255)",
+                    "column_type": "VARCHAR(255)",
+                    "display_type": "text",
                     "unique": False,
                     "default": None,
                     "visible": True,
                     "editable": False,
-                    "Noneable": False,
                     "edit_keys": ["user_id"],
                     "table_name": "users",
                     "column_name": "email",
                     "foreign_key": False,
                     "primary_key": False,
                     "schema_name": "public",
+                    "nullable": True,
                 },
-            },
+            ],
             "old_value": "John Doe",
             "new_value": "Hello World",
         }
