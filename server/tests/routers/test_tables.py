@@ -1,6 +1,7 @@
 import copy
 
-from server.tests.verify_state_and_context_exists import verify_object_in_state_context
+from server.tests.verify_state_and_context import verify_object_in_state_context
+from server.tests.verify_property_exists import verify_property_exists
 
 base_data = {
     "app_name": "dropbase_test_app",
@@ -35,6 +36,9 @@ def test_create_table_req(test_client):
     assert verify_object_in_state_context("TablesState", "table2")
     assert verify_object_in_state_context("TablesContext", "table2", True)
 
+    assert verify_property_exists("tables[1].label", "Table 2")
+    assert verify_property_exists("tables[1].name", "table2")
+
 
 def test_update_table_req_file_changed(test_client):
     # Arrange
@@ -60,6 +64,9 @@ def test_update_table_req_file_changed(test_client):
 
     assert verify_object_in_state_context("TablesState", "table3")
     assert verify_object_in_state_context("TablesContext", "table3", True)
+
+    assert verify_property_exists("tables[1].label", "Table 3")
+    assert verify_property_exists("tables[1].name", "table3")
 
 
 def test_delete_table_req(test_client):
