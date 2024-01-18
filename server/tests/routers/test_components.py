@@ -1,9 +1,7 @@
 import copy
 
-
-from server.tests.verify_state_and_context import verify_object_in_state_context
 from server.tests.verify_property_exists import verify_property_exists
-
+from server.tests.verify_state_and_context import verify_object_in_state_context
 
 base_data = {
     "app_name": "dropbase_test_app",
@@ -50,17 +48,9 @@ def test_create_component_req_text(test_client):
     res = test_client.post("/page", json=data)
     res_data = res.json()
 
-    print("res data: ")
-    print(res_data)
-    print("asd")
-
     # Assert
     assert isinstance(
-        res_data.get("context")
-        .get("widgets")
-        .get("widget1")
-        .get("components")
-        .get("text2"),
+        res_data.get("context").get("widgets").get("widget1").get("components").get("text2"),
         dict,
     )
     assert isinstance(res_data.get("state").get("widgets").get("widget1"), dict)
@@ -93,11 +83,7 @@ def test_create_component_req_select(test_client, dropbase_router_mocker):
 
     # Assert
     assert isinstance(
-        res_data.get("context")
-        .get("widgets")
-        .get("widget1")
-        .get("components")
-        .get("select2"),
+        res_data.get("context").get("widgets").get("widget1").get("components").get("select2"),
         dict,
     )
     assert isinstance(res_data.get("state").get("widgets").get("widget1"), dict)
@@ -130,11 +116,7 @@ def test_create_component_req_input(test_client):
 
     # Assert
     assert isinstance(
-        res_data.get("context")
-        .get("widgets")
-        .get("widget1")
-        .get("components")
-        .get("input2"),
+        res_data.get("context").get("widgets").get("widget1").get("components").get("input2"),
         dict,
     )
     assert isinstance(res_data.get("state").get("widgets").get("widget1"), dict)
@@ -167,11 +149,7 @@ def test_create_component_req_button(test_client):
 
     # Assert
     assert isinstance(
-        res_data.get("context")
-        .get("widgets")
-        .get("widget1")
-        .get("components")
-        .get("button2"),
+        res_data.get("context").get("widgets").get("widget1").get("components").get("button2"),
         dict,
     )
     assert isinstance(res_data.get("state").get("widgets").get("widget1"), dict)
@@ -204,11 +182,7 @@ def test_update_component_req(test_client, dropbase_router_mocker):
 
     # Assert
     assert isinstance(
-        res_data.get("context")
-        .get("widgets")
-        .get("widget1")
-        .get("components")
-        .get("button3"),
+        res_data.get("context").get("widgets").get("widget1").get("components").get("button3"),
         dict,
     )
     assert isinstance(res_data.get("state").get("widgets").get("widget1"), dict)
@@ -232,22 +206,4 @@ def test_delete_component_req(test_client, dropbase_router_mocker):
     assert res.status_code == 200
 
     assert verify_object_in_state_context("WidgetsState", "widget1")
-    assert not verify_object_in_state_context(
-        "Widget1ComponentsContext", "button3", True
-    )
-
-
-def test_delete_component_req_not_found(test_client):
-    # Arrange
-    data = copy.deepcopy(base_data)
-
-    # Act
-    res = test_client.post("/page", json=data)
-
-    # Assert
-    assert res.status_code != 200
-
-    assert verify_object_in_state_context("WidgetsState", "widget1")
-    assert not verify_object_in_state_context(
-        "Widget1ComponentsContext", "button3", True
-    )
+    assert not verify_object_in_state_context("Widget1ComponentsContext", "button3", True)

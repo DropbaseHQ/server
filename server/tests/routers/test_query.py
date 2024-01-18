@@ -1,21 +1,32 @@
-data = {
+import copy
+
+base_data = {
     "app_name": "dropbase_test_app",
     "page_name": "page1",
-    "file": {
-        "source": "local",
-        "id": "b21b973c-b83a-4ade-9e34-815e912bb7f0",
-        "date": "2023-12-11T20:50:14.248251",
-        "page_id": "b3a1c199-3181-4683-85b7-a5a0060755d7",
-        "name": "test_sql",
+    "table": {
+        "label": "Table 1",
+        "name": "table1",
+        "description": None,
+        "fetcher": "CUSTOM_FETCHER_GOES_HERE",
+        "height": "",
+        "size": 10,
+        "filters": None,
         "type": "sql",
+        "smart": False,
     },
     "state": {"widgets": {"widget1": {}}, "tables": {"table1": {}}},
-    "filter_sort": {"filters": [], "sorts": [], "pagination": {"page": 0, "page_size": 20}},
+    "context": {
+        "tables": {"table1": {"message": None, "message_type": None, "reload": False, "columns": {}}},
+        "widgets": {},
+    },
+    "filter_sort": {"filters": [], "sorts": [], "pagination": {"page": 0, "page_size": 10}},
 }
 
 
 def test_run_query_sql(test_client, mocker, mock_db):
     # Arrange
+    data = copy.deepcopy(base_data)
+    data["table"]["fetcher"] = "test_sql"
     mocker.patch("server.controllers.query.connect_to_user_db", return_value=mock_db)
 
     # Act
@@ -27,21 +38,15 @@ def test_run_query_sql(test_client, mocker, mock_db):
 
 
 def test_run_query_python(test_client):
-    data = {
-        "app_name": "dropbase_test_app",
-        "page_name": "page1",
-        "filter_sort": {
-            "filters": [],
-            "sorts": [],
-        },
-        "file": {"name": "test_function_data_fetcher", "type": "data_fetcher"},
-        "state": {"widgets": {"widget1": {}}, "tables": {"table1": {}}},
-    }
+    # Arrange
+    data = copy.deepcopy(base_data)
+    data["table"]["fetcher"] = "test_data_fetcher"
 
     # Act
     res = test_client.post("/query", json=data)
 
     # Assert
     assert res.status_code == 200
-    assert res.json()["result"]["columns"] == ["x"]
-    assert res.json()["result"]["data"] == [[1]]
+    res_data = res.json()["result"]
+    assert res_data["columns"] == [{"name": "x", "column_type": "int64", "display_type": "integer"}]
+    assert res_data["data"] == [[1]]

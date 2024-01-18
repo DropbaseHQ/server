@@ -8,6 +8,7 @@ from fastapi.testclient import TestClient
 from sqlalchemy import create_engine
 from sqlalchemy.pool import NullPool
 
+from server.controllers.properties import read_page_properties, update_properties
 from server.main import app
 from server.requests.dropbase_router import get_dropbase_router
 from server.tests.constants import DEMO_INIT_SQL_PATH, TEMPDIR_PATH, WORKSPACE_PATH
@@ -63,10 +64,13 @@ def mock_db(postgresql):
 
 
 def pytest_sessionstart():
+    TEST_APP_NAME = "dropbase_test_app"
+    TEST_PAGE_NAME = "page1"
+
     import unittest.mock
 
     from server.controllers.workspace import AppCreator, create_file, create_folder
-    from server.tests.mocks.dropbase.app import get_app_response, update_app_response
+    from server.tests.mocks.dropbase.app import update_app_response
     from server.tests.mocks.dropbase.sync import sync_components_response_empty
 
     create_folder(TEMPDIR_PATH)
@@ -76,23 +80,32 @@ def pytest_sessionstart():
     mock_dropbase_router.app.update_app.side_effect = update_app_response
 
     AppCreator(
-        "dropbase_test_app",
+        TEST_APP_NAME,
         WORKSPACE_PATH,
     ).create()
 
-    scripts_path = WORKSPACE_PATH.joinpath("dropbase_test_app/page1/scripts")
+    scripts_path = WORKSPACE_PATH.joinpath(f"{TEST_APP_NAME}/{TEST_PAGE_NAME}/scripts")
     create_file(scripts_path, "", "function1.py")
     create_file(
         scripts_path,
-        'from workspace.dropbase_test_app.page1 import State, Context\ndef test_function(state: State, context: Context) -> Context:\n\n\n    print("test")\n    return context\n',
-        "test_function.py",
+        f'from workspace.{TEST_APP_NAME}.{TEST_PAGE_NAME} import State, Context\ndef test_ui(state: State, context: Context) -> Context:\n\n\n    print("test")\n    return context\n',
+        "test_ui.py",
     )
     create_file(
         scripts_path,
-        'import pandas as pd\nfrom workspace.dropbase_test_app.page1 import State, Context\ndef test_function_data_fetcher(state: State) -> pd.DataFrame:\n\n    return pd.DataFrame(data=[[1]], columns=["x"])\n',
-        "test_function_data_fetcher.py",
+        f'import pandas as pd\nfrom workspace.{TEST_APP_NAME}.{TEST_PAGE_NAME} import State, Context\ndef test_data_fetcher(state: State) -> pd.DataFrame:\n\n    return pd.DataFrame(data=[[1]], columns=["x"])\n',
+        "test_data_fetcher.py",
     )
     create_file(scripts_path, "select * from users;", "test_sql.sql")
+
+    # add files to properties
+    properties = read_page_properties(TEST_APP_NAME, TEST_PAGE_NAME)
+    properties["files"] = [
+        {"name": "test_sql", "type": "sql", "source": "local", "depends_on": []},
+        {"name": "test_ui", "type": "ui", "source": None, "depends_on": None},
+        {"name": "test_data_fetcher", "type": "data_fetcher", "source": None, "depends_on": None},
+    ]
+    update_properties(TEST_APP_NAME, TEST_PAGE_NAME, properties)
 
 
 def pytest_sessionfinish():
