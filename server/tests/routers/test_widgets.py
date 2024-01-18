@@ -22,6 +22,7 @@ base_data = {
 
 
 def test_create_widget_req(test_client):
+    # Arrange
     data = copy.deepcopy(base_data)
     data["properties"]["widgets"].append(
         {
@@ -35,8 +36,6 @@ def test_create_widget_req(test_client):
     # Act
     res = test_client.post("/page", json=data)
     res_data = res.json()
-
-    print(res_data)
 
     # Assert
     assert res.status_code == 200
@@ -52,6 +51,7 @@ def test_create_widget_req(test_client):
 
 
 def test_update_widget_req(test_client):
+    # Arrange
     data = copy.deepcopy(base_data)
     data["properties"]["widgets"].append(
         {
@@ -80,6 +80,7 @@ def test_update_widget_req(test_client):
 
 
 def test_delete_widget_req(test_client):
+    # Arrange
     data = copy.deepcopy(base_data)
 
     # Act
