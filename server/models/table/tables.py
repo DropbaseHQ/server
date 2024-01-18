@@ -56,7 +56,8 @@ class TableBaseProperty(BaseModel):
     filters: Annotated[Optional[List[PinnedFilter]], PropertyCategory.other]
 
     # internal
-    type: Annotated[Literal["python", "sql"], PropertyCategory.default] = "sql"
+    type: Optional[Literal["python", "sql"]] = "sql"
+    smart: Optional[bool] = False
 
 
 class TableDefinedProperty(TableBaseProperty, TableSharedProperty):

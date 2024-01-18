@@ -52,6 +52,7 @@ def convert_sql_table(req: ConvertTableRequest, router: DropbaseRouter):
 
         for table in properties["tables"]:
             if table["name"] == req.table.name:
+                table["smart"] = True
                 table["columns"] = column_props
 
         # update properties
