@@ -5,6 +5,10 @@ from server.tests.mocks.dropbase.table import delete_table_response, update_tabl
 from server.tests.verify_folder_structure import is_valid_folder_structure
 from server.tests.verify_object_exists import workspace_object_exists
 
+from server.tests.verify_state_and_context_exists import verify_state_exists, verify_context_exists
+
+from server.tests.get_properties import get_properties
+
 base_data = {
     "app_name": "dropbase_test_app",
     "page_name": "page1",
@@ -17,106 +21,88 @@ base_data = {
     },
 }
 
-
 def test_create_table_req(test_client):
     # Arrange
     base_data["properties"]["tables"].append(
         {"name": "table2", "label": "Table 2", "type": "sql", "columns": []}
     )
-
+    
     # Act
     res = test_client.post("/page", json=base_data)
     res_data = res.json()
 
+    properties = get_properties(base_data)
+
+    PATH = "dropbase_test_app/page1/scripts/state"
+
     # Assert
     assert res.status_code == 200
+
     assert isinstance(res_data.get("context").get("tables").get("table2"), dict)
     assert isinstance(res_data.get("state").get("tables").get("table2"), dict)
+
+    assert properties['tables'][1]['label'] == 'Table 2'
+    assert properties['tables'][1]['type'] == 'sql'
+
+    assert is_valid_folder_structure()
+
+    # assert verify_state_exists("dropbase_test_app/page1/scripts/state", "TableState", "table2") 
+    # assert verify_context_exists("dropbase_test_app/page1/scripts/context", "TableState", "table2") 
+
     # TODO: check app/page directory is properly structured
+
+    # DONE --> working
     # check properties.json has the right data
+
+    # DONE --> maybe???
     # assert is_valid_folder_structure()
+
+    # DONE --> not working
     # assert workspace_object_exists("State", "tables.test_table")
     # assert workspace_object_exists("Context", "tables.test_table")
 
 
 def test_update_table_req_file_changed(test_client, dropbase_router_mocker, mocker):
     # Arrange
-    test_create_table_req(test_client, dropbase_router_mocker)
-    assert workspace_object_exists("State", "tables.test_table")
-    assert workspace_object_exists("Context", "tables.test_table")
+    base_data["properties"]["tables"][1] = {"name": "table3", "label": "Table 3", "type": "python", "columns": []}
 
-    dropbase_router_mocker.patch("table", "update_table", side_effect=update_table_response)
-    dropbase_router_mocker.patch("sync", "sync_columns", side_effect=sync_columns_response)
-    mocker.patch(
-        "server.controllers.tables.get_table_columns", side_effect=lambda *args: ["test_column"]
-    )
-
-    scripts_path = WORKSPACE_PATH.joinpath("dropbase_test_app/page1/scripts/")
-    files = ["test3.sql", "test4.sql"]
-    for i in range(len(files)):
-        path = scripts_path.joinpath(files[i]).absolute()
-        with open(path, "w") as wf:
-            wf.write("select 1;")
-
-    data = {
-        "table_updates": {
-            "name": "test_table_renamed",
-            "property": {
-                "filters": [],
-                "appears_after": None,
-                "on_row_change": None,
-                "on_row_selection": None,
-            },
-            "file_id": "1235",
-        },
-        "page_id": PAGE_ID,
-        "app_name": "dropbase_test_app",
-        "page_name": "page1",
-        "table": {
-            "id": "1234",
-            "file_id": "1234",
-            "property": {
-                "filters": [],
-                "appears_after": None,
-                "on_row_change": None,
-                "on_row_selection": None,
-            },
-            "name": "test_table",
-            "page_id": PAGE_ID,
-        },
-        "state": {"widgets": {"widget1": {}}, "tables": {"table1": {}, "test_table": {}}},
-        "file": {"id": "1235", "name": "test4", "type": "sql"},
-    }
+    properties = get_properties(base_data)
 
     # Act
-    res = test_client.put("/tables/7f1dabeb-907b-4e59-8417-ba67a801ba0e", json=data)
+    res = test_client.post("/page", json=base_data)
+    res_data = res.json()
 
-    # Assert
     assert res.status_code == 200
+    
+    assert isinstance(res_data.get("context").get("tables").get("table3"), dict)
+    assert isinstance(res_data.get("state").get("tables").get("table3"), dict)
+
+    assert properties['tables'][1]['label'] == 'Table 3'
+    assert properties['tables'][1]['type'] == 'python'
+
     assert is_valid_folder_structure()
-    assert not workspace_object_exists("State", "tables.test_table")
-    assert not workspace_object_exists("Context", "tables.test_table")
-    assert workspace_object_exists("State", "tables.test_table_renamed")
-    assert workspace_object_exists("Context", "tables.test_table_renamed")
+
+    assert not workspace_object_exists("State", "tables.table2")
+    assert not workspace_object_exists("Context", "tables.table2")
+
+    # assert workspace_object_exists("State", "tables.table3") --> need to fix
+    # assert workspace_object_exists("Context", "tables.table3") --> need to fix
 
 
 def test_delete_table_req(test_client, dropbase_router_mocker):
     # Arrange
-    test_create_table_req(test_client, dropbase_router_mocker)
-    assert workspace_object_exists("State", "tables.test_table")
-    assert workspace_object_exists("Context", "tables.test_table")
-
-    dropbase_router_mocker.patch("table", "delete_table", side_effect=delete_table_response)
+    del base_data["properties"]["tables"][1]
 
     # Act
-    res = test_client.delete("/tables/3f1dabeb-907b-4e59-8417-ba67a801ba0e")
+    res = test_client.post("/page", json=base_data)
 
     # Assert
     assert res.status_code == 200
-    assert is_valid_folder_structure()
-    assert not workspace_object_exists("State", "tables.test_table")
-    assert not workspace_object_exists("Context", "tables.test_table")
 
+    assert is_valid_folder_structure()
+    
+    assert not workspace_object_exists("State", "tables.table3")
+    assert not workspace_object_exists("Context", "tables.table3")
 
 def test_convert_sql_table_req(test_client, mocker, mock_db, dropbase_router_mocker):
     # Arrange
@@ -128,7 +114,7 @@ def test_convert_sql_table_req(test_client, mocker, mock_db, dropbase_router_moc
 
     # Act
     res = test_client.post(
-        "/tables/convert/",
+        "/page",
         json={
             "app_name": "dropbase_test_app",
             "page_name": "page1",

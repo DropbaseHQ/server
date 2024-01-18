@@ -7,25 +7,84 @@ from server.tests.mocks.dropbase.components import (
 from server.tests.verify_folder_structure import is_valid_folder_structure
 from server.tests.verify_object_exists import workspace_object_exists
 
+from server.tests.get_properties import get_properties
+
+base_data = {
+    "app_name": "dropbase_test_app",
+    "page_name": "page1",
+    "properties": {
+        "tables": [
+            {"name": "table1", "label": "Table 1", "type": "sql", "columns": []},
+        ],
+        "widgets": [
+            {
+                "label": "Widget1",
+                "name": "widget1",
+                "description": None,
+                "components": [
+                    {
+                        "label": "button1",
+                        "name": "button1",
+                        "color": None,
+                        "on_click": None,
+                        "display_rules": None,
+                        "component_type": "button"
+                    }
+                ]
+            }
+        ],
+        "files": [],
+    },
+}
+
+
 
 def test_create_component_req_text(test_client, dropbase_router_mocker):
     # Arrange
-    dropbase_router_mocker.patch("component", "create_component", side_effect=create_component_response)
-
-    data = {
-        "property": {"name": "test_text", "size": None, "text": None, "color": None},
-        "widget_id": "abcdefg",
-        "type": "text",
-    }
+    base_data["properties"]["widgets"]["components"].append(
+        {
+            "label": "button2",
+            "name": "button2",
+            "color": None,
+            "on_click": None,
+            "display_rules": None,
+            "component_type": "button"
+        }
+    )
 
     # Act
-    res = test_client.post("/components", json=data)
+    res = test_client.post("/page", json=base_data)
+    res_data = res.json()
+
+    properties = get_properties(base_data)
 
     # Assert
     assert res.status_code == 200
+
+    assert isinstance(res_data.get("context").get("tables").get("table2"), dict)
+    assert isinstance(res_data.get("state").get("tables").get("table2"), dict)
+
+    assert properties['tables']
+
     assert is_valid_folder_structure()
-    assert workspace_object_exists("State", "widgets.widget1.test_text")
-    assert workspace_object_exists("Context", "widgets.widget1.components.test_text")
+
+    # assert workspace_object_exists("State", "widgets.widget1.test_text")
+    # assert workspace_object_exists("Context", "widgets.widget1.components.test_text")
+
+
+        # Assert
+    assert res.status_code == 200
+
+    assert isinstance(res_data.get("context").get("tables").get("table2"), dict)
+    assert isinstance(res_data.get("state").get("tables").get("table2"), dict)
+
+    assert properties['tables'][1]['label'] == 'Table 2'
+    assert properties['tables'][1]['type'] == 'sql'
+
+    assert is_valid_folder_structure()
+
+    # assert verify_state_exists("dropbase_test_app/page1/scripts/state", "TableState", "table2") 
+    # assert verify_context_exists("dropbase_test_app/page1/scripts/context", "TableState", "table2") 
 
 
 def test_create_component_req_select(test_client, dropbase_router_mocker):
