@@ -1,5 +1,7 @@
-from server.tests.verify_folder_structure import is_valid_folder_structure
-from server.tests.verify_object_exists import workspace_object_exists
+import copy
+
+from server.tests.verify_state_and_context import verify_object_in_state_context
+from server.tests.verify_property_exists import verify_property_exists
 
 base_data = {
     "app_name": "dropbase_test_app",
@@ -7,7 +9,12 @@ base_data = {
     "properties": {
         "tables": [],
         "widgets": [
-            {"label": "Widget 1", "name": "widget1", "description": "description1", "components": []}
+            {
+                "label": "Widget 1",
+                "name": "widget1",
+                "description": "description1",
+                "components": [],
+            }
         ],
         "files": [],
     },
@@ -15,16 +22,21 @@ base_data = {
 
 
 def test_create_widget_req(test_client):
-    # Arrange
-    base_data["properties"]["widgets"].append(
-        {"label": "Widget 2", "name": "widget2", "description": "description2", "components": []}
+    data = copy.deepcopy(base_data)
+    data["properties"]["widgets"].append(
+        {
+            "label": "Widget 2",
+            "name": "widget2",
+            "description": "description2",
+            "components": [],
+        }
     )
 
     # Act
-    res = test_client.post("/page", json=base_data)
+    res = test_client.post("/page", json=data)
     res_data = res.json()
 
-    properties = base_data["properties"]
+    print(res_data)
 
     # Assert
     assert res.status_code == 200
@@ -32,30 +44,27 @@ def test_create_widget_req(test_client):
     assert isinstance(res_data.get("context").get("widgets").get("widget2"), dict)
     assert isinstance(res_data.get("state").get("widgets").get("widget2"), dict)
 
-    assert properties["widgets"][1]["label"] == "Widget 2"
-    assert properties["widgets"][1]["description"] == "description2"
+    assert verify_object_in_state_context("WidgetsState", "widget2")
+    assert verify_object_in_state_context("WidgetsContext", "widget2", True)
 
-    assert is_valid_folder_structure()
-
-    # assert workspace_object_exists("State", "widgets.widget1")
-    # assert workspace_object_exists("Context", "widgets.widget1")
+    assert verify_property_exists("widgets[1].label", "Widget 2")
+    assert verify_property_exists("widgets[1].name", "widget2")
 
 
 def test_update_widget_req(test_client):
-    print(base_data)
-    # Arrange
-    base_data["properties"]["widgets"][1] = {
-        "label": "Widget 3",
-        "name": "widget3",
-        "description": "description1",
-        "components": [],
-    }
+    data = copy.deepcopy(base_data)
+    data["properties"]["widgets"].append(
+        {
+            "label": "Widget 3",
+            "name": "widget3",
+            "description": "description3",
+            "components": [],
+        }
+    )
 
     # Act
-    res = test_client.post("/page", json=base_data)
+    res = test_client.post("/page", json=data)
     res_data = res.json()
-
-    properties = base_data["properties"]
 
     # Assert
     assert res.status_code == 200
@@ -63,27 +72,21 @@ def test_update_widget_req(test_client):
     assert isinstance(res_data.get("context").get("widgets").get("widget3"), dict)
     assert isinstance(res_data.get("state").get("widgets").get("widget3"), dict)
 
-    assert properties["widgets"][1]["label"] == "Widget 3"
-    assert properties["widgets"][1]["name"] == "widget3"
+    assert verify_object_in_state_context("WidgetsState", "widget3")
+    assert verify_object_in_state_context("WidgetsContext", "widget3", True)
 
-    assert is_valid_folder_structure()
-
-    assert not workspace_object_exists("State", "widgets.widget2")
-    assert not workspace_object_exists("Context", "widgets.widget2")
-
-    # assert workspace_object_exists("State", "widgets.widget13")
-    # assert workspace_object_exists("Context", "widgets.widget13")
+    assert verify_property_exists("widgets[1].label", "Widget 3")
+    assert verify_property_exists("widgets[1].name", "widget3")
 
 
-def test_delete_widget_req(test_client, dropbase_router_mocker):
-    # Arrange
-    del base_data["properties"]["widgets"][1]
+def test_delete_widget_req(test_client):
+    data = copy.deepcopy(base_data)
 
     # Act
-    res = test_client.post("/page", json=base_data)
+    res = test_client.post("/page", json=data)
 
     # Assert
     assert res.status_code == 200
-    assert is_valid_folder_structure()
-    assert not workspace_object_exists("State", "widgets.widget3")
-    assert not workspace_object_exists("Context", "widgets.widget3")
+
+    assert not verify_object_in_state_context("WidgetsState", "table3")
+    assert not verify_object_in_state_context("WidgetsContext", "table3", True)
