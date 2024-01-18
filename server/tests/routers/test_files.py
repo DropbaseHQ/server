@@ -1,7 +1,7 @@
 import os
 import shutil
 
-from server.tests.constants import PAGE_ID, WORKSPACE_PATH
+from server.tests.constants import WORKSPACE_PATH
 from server.tests.mocks.dropbase.file import (
     create_file_response,
     delete_file_response,
@@ -22,7 +22,6 @@ def test_create_file_req(test_client, dropbase_router_mocker):
         "page_name": "page1",
         "name": "test_file",
         "type": "sql",
-        "page_id": PAGE_ID,
     }
 
     # Act
@@ -43,7 +42,6 @@ def test_create_file_req_ui(test_client, dropbase_router_mocker):
         "page_name": "page1",
         "name": "test_file",
         "type": "ui",
-        "page_id": PAGE_ID,
     }
 
     # Act
@@ -64,7 +62,6 @@ def test_create_file_req_data_fetcher(test_client, dropbase_router_mocker):
         "page_name": "page1",
         "name": "test_file",
         "type": "data_fetcher",
-        "page_id": PAGE_ID,
     }
 
     # Act
@@ -89,7 +86,6 @@ def test_create_file_req_bad_request(test_client, dropbase_router_mocker):
         "page_name": "page1",
         "name": "test_file",
         "type": "random gibberish type",
-        "page_id": PAGE_ID,
     }
 
     # Act
@@ -110,7 +106,6 @@ def test_create_file_req_block_path_traversal_vulnerability(test_client, dropbas
         "page_name": "page1",
         "name": "../test_file",
         "type": "random gibberish type",
-        "page_id": PAGE_ID,
     }
 
     # Act
@@ -155,7 +150,6 @@ def test_rename_file_req(test_client, dropbase_router_mocker):
     assert workspace_file_exists("scripts/test_rename.sql")
 
     data = {
-        "page_id": PAGE_ID,
         "old_name": "test_rename",
         "new_name": "test_renamed",
         "app_name": "dropbase_test_app",
@@ -189,7 +183,6 @@ def test_rename_file_req_dropbase_call_failed(test_client, dropbase_router_mocke
     assert workspace_file_exists("scripts/test_rename.sql")
 
     data = {
-        "page_id": PAGE_ID,
         "old_name": "test_rename",
         "new_name": "test_renamed",
         "app_name": "dropbase_test_app",
@@ -215,7 +208,6 @@ def test_rename_file_req_file_not_exists(test_client, dropbase_router_mocker):
     assert not workspace_file_exists("scripts/test_rename.sql")
 
     data = {
-        "page_id": PAGE_ID,
         "old_name": "test_rename",
         "new_name": "test_renamed",
         "app_name": "dropbase_test_app",
@@ -314,7 +306,6 @@ def test_update_file_req(test_client, dropbase_router_mocker):
         "page_name": "page1",
         "name": "test_sql",
         "sql": "mock sql",
-        "file_id": PAGE_ID,
         "type": "sql",
     }
 
