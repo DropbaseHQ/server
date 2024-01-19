@@ -1,6 +1,6 @@
 from typing import Annotated, Any, List, Literal, Optional
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel
 
 from server.models.category import PropertyCategory
 from server.models.common import ComponentDisplayProperties
