@@ -11,7 +11,13 @@ from sqlalchemy.pool import NullPool
 from server.controllers.properties import read_page_properties, update_properties
 from server.main import app
 from server.requests.dropbase_router import get_dropbase_router
-from server.tests.constants import DEMO_INIT_SQL_PATH, TEMPDIR_PATH, WORKSPACE_PATH
+from server.tests.constants import (
+    DEMO_INIT_SQL_PATH,
+    TEMPDIR_PATH,
+    TEST_APP_NAME,
+    TEST_PAGE_NAME,
+    WORKSPACE_PATH,
+)
 from server.tests.mocks.dropbase_router_mocker import DropbaseRouterMocker
 
 
@@ -64,8 +70,6 @@ def mock_db(postgresql):
 
 
 def pytest_sessionstart():
-    TEST_APP_NAME = "dropbase_test_app"
-    TEST_PAGE_NAME = "page1"
 
     import unittest.mock
 

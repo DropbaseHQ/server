@@ -25,7 +25,7 @@ def rename_file_req(req: RenameFile, response: Response):
 
 
 @router.put("/{function_name}")
-def update_file_req(req: UpdateFile, function_name: str, response: Response):
+def update_file_req(function_name: str, req: UpdateFile, response: Response):
     try:
         return update_file(function_name, req)
     except Exception as e:

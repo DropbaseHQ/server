@@ -36,8 +36,8 @@ class DataFile(BaseModel):
 class UpdateFile(BaseModel):
     app_name: str = Field(regex=FILE_NAME_REGEX)
     page_name: str = Field(regex=FILE_NAME_REGEX)
-    name: str = Field(regex=FILE_NAME_REGEX)
-    sql: str
+    file_name: str = Field(regex=FILE_NAME_REGEX)
+    code: str
     source: Optional[str]
     type: TypeEnum
 
