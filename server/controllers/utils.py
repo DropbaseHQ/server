@@ -150,3 +150,7 @@ def get_table_data_fetcher(files: list, fetcher_name: str):
             file_data = file
             break
     return file_data
+
+
+def check_if_object_exists(path: str):
+    return Path(path).exists()
