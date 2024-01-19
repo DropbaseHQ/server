@@ -94,7 +94,7 @@ def update_file(function_name: str, req: UpdateFile):
     # update properties.json
     properties = read_page_properties(req.app_name, req.page_name)
 
-    depends_on = []
+    depends_on = req.depends_on if req.depends_on else []
     if req.type == "sql":
         # update depends on flags in properties.json
         depends_on = get_depend_table_names(user_sql=req.code)

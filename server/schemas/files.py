@@ -40,6 +40,7 @@ class UpdateFile(BaseModel):
     code: str
     source: Optional[str]
     type: TypeEnum
+    depends_on: Optional[List[str]]
 
 
 class RenameFile(BaseModel):
