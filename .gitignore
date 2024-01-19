@@ -20,3 +20,4 @@ proxy/frpc
 workspace/*
 !workspace/demo/
 !workspace/__init__.py
+.temp/

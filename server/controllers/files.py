@@ -65,6 +65,7 @@ def rename_file(req: RenameFile):
     new_path = cwd + f"/workspace/{req.app_name}/{req.page_name}/scripts/{new_file_name}"
     if os.path.exists(file_path):
         os.rename(file_path, new_path)
+
     rename_function_in_file(file_path=new_path, old_name=req.old_name, new_name=req.new_name)
 
     # update properties.json
@@ -88,7 +89,7 @@ def update_file(function_name: str, req: UpdateFile):
     # update file content
     file_path = cwd + f"/workspace/{req.app_name}/{req.page_name}/scripts/{file_name}"
     with open(file_path, "w") as f:
-        f.write(req.sql)
+        f.write(req.code)
 
     # update properties.json
     properties = read_page_properties(req.app_name, req.page_name)
@@ -96,11 +97,11 @@ def update_file(function_name: str, req: UpdateFile):
     depends_on = []
     if req.type == "sql":
         # update depends on flags in properties.json
-        depends_on = get_depend_table_names(user_sql=req.sql)
+        depends_on = get_depend_table_names(user_sql=req.code)
 
     # update file property in properties.json
     for file in properties["files"]:
-        if file["name"] == req.name:
+        if file["name"] == function_name:
             file["source"] = req.source
             file["type"] = req.type
             file["depends_on"] = depends_on

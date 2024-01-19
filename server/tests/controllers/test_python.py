@@ -29,7 +29,7 @@ def test_run_exec_task():
 
     assert success
     assert stdout == "test output"
-    assert output == None
+    assert output is None
 
 
 def test_run_exec_task_exception():
@@ -113,7 +113,7 @@ def test_run_exec_task_last_var_is_df():
     assert success
     assert stdout == ""
     assert output == {
-        "columns": ["test_column"],
+        "columns": [{"name": "test_column", "column_type": "int64", "display_type": "integer"}],
         "index": [0],
         "data": [[1]],
     }
@@ -147,19 +147,9 @@ def test_run_exec_task_last_var_is_context():
     assert stdout == ""
     assert output == {
         "context": {
-            "widgets": {
-                "widget1": {
-                    "message": None,
-                    "message_type": None,
-                    "components": {},
-                }
-            },
+            "widgets": {},
             "tables": {
-                "table1": {
-                    "message": None,
-                    "message_type": None,
-                    "columns": {},
-                }
+                "table1": {"message": None, "message_type": None, "reload": False, "columns": {}}
             },
         }
     }

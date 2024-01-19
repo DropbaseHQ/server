@@ -1,160 +1,209 @@
-from server.tests.mocks.util import mock_response
-from server.tests.mocks.dropbase.components import (
-    create_component_response,
-    update_component_response,
-    delete_component_response,
-)
-from server.tests.verify_folder_structure import is_valid_folder_structure
-from server.tests.verify_object_exists import workspace_object_exists
+import copy
+
+from server.tests.verify_property_exists import verify_property_exists
+from server.tests.verify_state_and_context import verify_object_in_state_context
+
+base_data = {
+    "app_name": "dropbase_test_app",
+    "page_name": "page1",
+    "properties": {
+        "tables": [],
+        "widgets": [
+            {
+                "label": "Widget1",
+                "name": "widget1",
+                "description": None,
+                "components": [
+                    {
+                        "label": "Button 1",
+                        "name": "button1",
+                        "color": None,
+                        "on_click": None,
+                        "display_rules": None,
+                        "component_type": "button",
+                    }
+                ],
+            }
+        ],
+        "files": [],
+    },
+}
 
 
-def test_create_component_req_text(test_client, dropbase_router_mocker):
+def test_create_component_req_text(test_client):
     # Arrange
-    dropbase_router_mocker.patch("component", "create_component", side_effect=create_component_response)
-
-    data = {
-        "property": {"name": "test_text", "size": None, "text": None, "color": None},
-        "widget_id": "abcdefg",
-        "type": "text",
-    }
+    data = copy.deepcopy(base_data)
+    data["properties"]["widgets"][0]["components"].append(
+        {
+            "text": "Text 2",
+            "name": "text2",
+            "color": None,
+            "on_click": None,
+            "display_rules": None,
+            "component_type": "text",
+        }
+    )
 
     # Act
-    res = test_client.post("/components", json=data)
+    res = test_client.post("/page", json=data)
+    res_data = res.json()
 
     # Assert
-    assert res.status_code == 200
-    assert is_valid_folder_structure()
-    assert workspace_object_exists("State", "widgets.widget1.test_text")
-    assert workspace_object_exists("Context", "widgets.widget1.components.test_text")
+    assert isinstance(
+        res_data.get("context").get("widgets").get("widget1").get("components").get("text2"),
+        dict,
+    )
+    assert isinstance(res_data.get("state").get("widgets").get("widget1"), dict)
+
+    assert verify_object_in_state_context("WidgetsState", "widget1")
+    assert verify_object_in_state_context("Widget1ComponentsContext", "text2", True)
+
+    assert verify_property_exists("widgets[0].components[1].text", "Text 2")
+    assert verify_property_exists("widgets[0].components[1].name", "text2")
+    assert verify_property_exists("widgets[0].components[1].component_type", "text")
 
 
 def test_create_component_req_select(test_client, dropbase_router_mocker):
     # Arrange
-    dropbase_router_mocker.patch("component", "create_component", side_effect=create_component_response)
-
-    data = {
-        "property": {
-            "name": "test_select",
-            "label": None,
-            "rules": None,
-            "default": None,
-            "required": None,
-            "on_change": None,
-            "validation": None
-        },
-        "widget_id": "abcdefg",
-        "type": "select",
-    }
+    data = copy.deepcopy(base_data)
+    data["properties"]["widgets"][0]["components"].append(
+        {
+            "label": "Select 2",
+            "name": "select2",
+            "color": None,
+            "on_click": None,
+            "display_rules": None,
+            "component_type": "select",
+        }
+    )
 
     # Act
-    res = test_client.post("/components", json=data)
+    res = test_client.post("/page", json=data)
+    res_data = res.json()
 
     # Assert
-    assert res.status_code == 200
-    assert is_valid_folder_structure()
-    assert workspace_object_exists("State", "widgets.widget1.test_select")
-    assert workspace_object_exists("Context", "widgets.widget1.components.test_select")
+    assert isinstance(
+        res_data.get("context").get("widgets").get("widget1").get("components").get("select2"),
+        dict,
+    )
+    assert isinstance(res_data.get("state").get("widgets").get("widget1"), dict)
+
+    assert verify_object_in_state_context("WidgetsState", "widget1")
+    assert verify_object_in_state_context("Widget1ComponentsContext", "select2", True)
+
+    assert verify_property_exists("widgets[0].components[1].label", "Select 2")
+    assert verify_property_exists("widgets[0].components[1].name", "select2")
+    assert verify_property_exists("widgets[0].components[1].component_type", "select")
 
 
-def test_create_component_req_input(test_client, dropbase_router_mocker):
+def test_create_component_req_input(test_client):
     # Arrange
-    dropbase_router_mocker.patch("component", "create_component", side_effect=create_component_response)
-
-    data = {
-        "property": {
-            "name": "test_input",
-            "type": "text",
-            "label": None,
-            "rules": None,
-            "default": None,
-            "required": None,
-            "validation": None,
-            "placeholder": None
-        },
-        "widget_id": "abcdefg",
-        "type": "input",
-    }
+    data = copy.deepcopy(base_data)
+    data["properties"]["widgets"][0]["components"].append(
+        {
+            "label": "Input 2",
+            "name": "input2",
+            "color": None,
+            "on_click": None,
+            "display_rules": None,
+            "component_type": "input",
+        }
+    )
 
     # Act
-    res = test_client.post("/components", json=data)
+    res = test_client.post("/page", json=data)
+    res_data = res.json()
 
     # Assert
-    assert res.status_code == 200
-    assert is_valid_folder_structure()
-    assert workspace_object_exists("State", "widgets.widget1.test_input")
-    assert workspace_object_exists("Context", "widgets.widget1.components.test_input")
+    assert isinstance(
+        res_data.get("context").get("widgets").get("widget1").get("components").get("input2"),
+        dict,
+    )
+    assert isinstance(res_data.get("state").get("widgets").get("widget1"), dict)
+
+    assert verify_object_in_state_context("WidgetsState", "widget1")
+    assert verify_object_in_state_context("Widget1ComponentsContext", "input2", True)
+
+    assert verify_property_exists("widgets[0].components[1].label", "Input 2")
+    assert verify_property_exists("widgets[0].components[1].name", "input2")
+    assert verify_property_exists("widgets[0].components[1].component_type", "input")
 
 
-def test_create_component_req_button(test_client, dropbase_router_mocker):
+def test_create_component_req_button(test_client):
     # Arrange
-    dropbase_router_mocker.patch("component", "create_component", side_effect=create_component_response)
-
-    data = {
-        "property": {"name": "test_button", "label": None, "visible": None, "on_click": None},
-        "widget_id": "abcdefg",
-        "type": "button",
-    }
+    data = copy.deepcopy(base_data)
+    data["properties"]["widgets"][0]["components"].append(
+        {
+            "label": "Button 2",
+            "name": "button2",
+            "color": None,
+            "on_click": None,
+            "display_rules": None,
+            "component_type": "button",
+        }
+    )
 
     # Act
-    res = test_client.post("/components", json=data)
+    res = test_client.post("/page", json=data)
+    res_data = res.json()
 
     # Assert
-    assert res.status_code == 200
-    assert is_valid_folder_structure()
-    assert workspace_object_exists("State", "widgets.widget1.test_button")
-    assert workspace_object_exists("Context", "widgets.widget1.components.test_button")
+    assert isinstance(
+        res_data.get("context").get("widgets").get("widget1").get("components").get("button2"),
+        dict,
+    )
+    assert isinstance(res_data.get("state").get("widgets").get("widget1"), dict)
+
+    assert verify_object_in_state_context("WidgetsState", "widget1")
+    assert verify_object_in_state_context("Widget1ComponentsContext", "button2", True)
+
+    assert verify_property_exists("widgets[0].components[1].label", "Button 2")
+    assert verify_property_exists("widgets[0].components[1].name", "button2")
+    assert verify_property_exists("widgets[0].components[1].component_type", "button")
 
 
 def test_update_component_req(test_client, dropbase_router_mocker):
     # Arrange
-    test_create_component_req_text(test_client, dropbase_router_mocker)
-    dropbase_router_mocker.patch("component", "update_component", side_effect=update_component_response)
-
-    data = {
-        "property": {"name": "test_text_updated", "size": None, "text": None, "color": None},
-        "type": "text",
-    }
+    data = copy.deepcopy(base_data)
+    data["properties"]["widgets"][0]["components"].append(
+        {
+            "label": "Button 3",
+            "name": "button3",
+            "color": None,
+            "on_click": None,
+            "display_rules": None,
+            "component_type": "button",
+        }
+    )
 
     # Act
-    res = test_client.put("/components/0617281c-c8bf-478e-b532-cb033e40a5ab", json=data)
+    res = test_client.post("/page", json=data)
+    res_data = res.json()
 
     # Assert
-    assert res.status_code == 200
-    assert is_valid_folder_structure()
-    assert not workspace_object_exists("State", "widgets.widget1.test_text")
-    assert not workspace_object_exists("Context", "widgets.widget1.components.test_text")
-    assert workspace_object_exists("State", "widgets.widget1.test_text_updated")
-    assert workspace_object_exists("Context", "widgets.widget1.components.test_text_updated")
+    assert isinstance(
+        res_data.get("context").get("widgets").get("widget1").get("components").get("button3"),
+        dict,
+    )
+    assert isinstance(res_data.get("state").get("widgets").get("widget1"), dict)
+
+    assert verify_object_in_state_context("WidgetsState", "widget1")
+    assert verify_object_in_state_context("Widget1ComponentsContext", "button3", True)
+
+    assert verify_property_exists("widgets[0].components[1].label", "Button 3")
+    assert verify_property_exists("widgets[0].components[1].name", "button3")
+    assert verify_property_exists("widgets[0].components[1].component_type", "button")
 
 
 def test_delete_component_req(test_client, dropbase_router_mocker):
     # Arrange
-    test_create_component_req_text(test_client, dropbase_router_mocker)
-    dropbase_router_mocker.patch("component", "delete_component", side_effect=delete_component_response)
+    data = copy.deepcopy(base_data)
 
     # Act
-    res = test_client.delete("/components/0617281c-c8bf-478e-b532-cb033e40a5ab")
+    res = test_client.post("/page", json=data)
 
     # Assert
     assert res.status_code == 200
-    assert is_valid_folder_structure()
-    assert not workspace_object_exists("State", "widgets.widget1.test_text")
-    assert not workspace_object_exists("Context", "widgets.widget1.components.test_text")
 
-
-def test_delete_component_req_not_found(test_client, dropbase_router_mocker):
-    # Arrange
-    dropbase_router_mocker.patch(
-        "component",
-        "delete_component",
-        side_effect = lambda *args, **kwargs: mock_response(json={}, text="error", status_code=500)
-    )
-
-    # Act
-    res = test_client.delete("/components/0617281c-c8bf-478e-b532-cb033e40a5ab")
-
-    # Assert
-    assert res.status_code != 200
-    assert is_valid_folder_structure()
-    assert not workspace_object_exists("State", "widgets.widget1.test_text")
-    assert not workspace_object_exists("Context", "widgets.widget1.components.test_text")
+    assert verify_object_in_state_context("WidgetsState", "widget1")
+    assert not verify_object_in_state_context("Widget1ComponentsContext", "button3", True)

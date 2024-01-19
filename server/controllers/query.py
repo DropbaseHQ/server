@@ -188,13 +188,3 @@ def get_column_names(user_db_engine: Engine, user_sql: str) -> list[str]:
     with user_db_engine.connect().execution_options(autocommit=True) as conn:
         col_names = list(conn.execute(text(user_sql)).keys())
     return col_names
-
-
-def get_table_columns(app_name: str, page_name: str, file: dict, state: dict) -> List[str]:
-    if file.get("type") == "data_fetcher":
-        df = run_df_function(app_name, page_name, file, state)["result"]
-    else:
-        verify_state(app_name, page_name, state)
-        sql = get_sql_from_file(app_name, page_name, file.get("name"))
-        df = run_df_query(sql, file.get("source"), state, FilterSort(filters=[], sorts=[]))
-    return df.columns.tolist()

@@ -6,6 +6,7 @@ from fastapi import APIRouter, Response
 
 from server.constants import cwd
 from server.controllers.app import get_workspace_apps
+from server.controllers.utils import validate_column_name
 from server.controllers.workspace import AppCreator
 from server.schemas.workspace import CreateAppRequest, RenameAppRequest
 
@@ -18,7 +19,11 @@ def get_user_apps():
 
 
 @router.post("/")
-def create_app_req(req: CreateAppRequest):
+def create_app_req(req: CreateAppRequest, response: Response):
+
+    if not validate_column_name(req.app_name):
+        response.status_code = 400
+        return {"message": "Invalid app name. Only alphanumeric characters and underscores are allowed"}
 
     sys.path.insert(0, cwd)  # TODO: check if we need this line
 
