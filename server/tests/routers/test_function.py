@@ -10,7 +10,7 @@ def test_run_function(test_client):
                 "tables": {"table1": {"columns": {}}},
             },
         },
-        "function_name": "test_function",
+        "function_name": "test_ui",
     }
 
     # Act
