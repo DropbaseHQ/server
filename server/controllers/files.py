@@ -20,7 +20,9 @@ def create_file(req: CreateFile):
 
     # update properties.json
     properties = read_page_properties(req.app_name, req.page_name)
-    properties["files"].append({"name": req.name, "type": req.type, "source": req.source})
+    properties["files"].append(
+        {"name": req.name, "type": req.type, "source": req.source, "depends_on": []}
+    )
 
     # update properties file
     update_properties(req.app_name, req.page_name, properties, update_modes=False)
