@@ -1,3 +1,7 @@
+import os
+import shutil
+
+from fastapi import HTTPException
 from pydantic import BaseModel
 
 from server.controllers.display_rules import run_display_rule
@@ -5,9 +9,6 @@ from server.controllers.properties import update_properties
 from server.controllers.utils import get_state_context_model, validate_column_name
 from server.controllers.workspace import AppCreator
 from server.schemas.page import PageProperties
-from fastapi import HTTPException
-import os
-import shutil
 
 
 def update_page_properties(req: PageProperties):
@@ -48,9 +49,7 @@ def get_page_state_context(app_name: str, page_name: str):
 def _dict_from_pydantic_model(model):
     data = {}
     for name, field in model.__fields__.items():
-        if isinstance(field.outer_type_, type) and issubclass(
-            field.outer_type_, BaseModel
-        ):
+        if isinstance(field.outer_type_, type) and issubclass(field.outer_type_, BaseModel):
             data[name] = _dict_from_pydantic_model(field.outer_type_)
         else:
             data[name] = field.default
@@ -63,7 +62,7 @@ def create_page(app_name: str, page_name: str):
         app_creator = AppCreator(app_name, r_path_to_workspace)
         app_creator.create_page(page_name=page_name)
         return {"success": True}
-    except Exception as e:
+    except Exception:
         raise HTTPException(status_code=500, detail="Unable to create page")
 
 
@@ -73,7 +72,7 @@ def rename_page(app_name: str, page_name: str, new_page_name: str):
         app_creator = AppCreator(app_name, r_path_to_workspace)
         app_creator.rename_page(old_page_name=page_name, new_page_name=new_page_name)
         return {"success": True}
-    except Exception as e:
+    except Exception:
         raise HTTPException(status_code=500, detail="Unable to create rename page")
 
 
@@ -83,5 +82,5 @@ def delete_page(app_name: str, page_name: str):
         shutil.rmtree(os.path.join(r_path_to_workspace, app_name, page_name))
 
         return {"success": True}
-    except Exception as e:
+    except Exception:
         raise HTTPException(status_code=500, detail="Unable to delete page")
