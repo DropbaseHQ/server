@@ -67,6 +67,8 @@ def test_create_app_req_error_illegal_name_space_between(test_client):
     # Assert
     assert res.status_code != 200
 
+    assert not check_directory_structure(f"workspace/My New App/page1")
+
     assert (
         res_data["message"]
         == "Invalid app name. Only alphanumeric characters and underscores are allowed"
@@ -84,6 +86,8 @@ def test_create_app_req_error_illegal_name_special_characters(test_client):
     # Assert
     assert res.status_code != 200
 
+    assert not check_directory_structure(f"workspace/My_New_App!/page1")
+
     assert (
         res_data["message"]
         == "Invalid app name. Only alphanumeric characters and underscores are allowed"
@@ -100,6 +104,8 @@ def test_create_app_req_error_illegal_name_url_path(test_client):
 
     # Assert
     assert res.status_code != 200
+
+    assert not check_directory_structure(f"workspace/../../new_app/page1")
 
     assert (
         res_data["message"]
