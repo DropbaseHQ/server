@@ -40,6 +40,63 @@ def test_create_table_req(test_client):
     assert verify_property_exists("tables[1].name", "table2")
 
 
+def test_create_table_req_error_illegal_name_space_between(test_client):
+    # Arrange
+    data = copy.deepcopy(base_data)
+    data["properties"]["tables"].append(
+        {"name": "table 2", "label": "Table 2", "type": "sql", "columns": []}
+    )
+
+    # Act
+    res = test_client.post("/page", json=data)
+    res_data = res.json()
+
+    # Assert
+    assert res.status_code != 200
+
+    assert not verify_object_in_state_context("TablesState", "table 2")
+
+    assert res_data["message"] == "Invalid table names present in the table"
+
+
+def test_create_table_req_error_illegal_name_special_characters(test_client):
+    # Arrange
+    data = copy.deepcopy(base_data)
+    data["properties"]["tables"].append(
+        {"name": "table_2!", "label": "Table 2", "type": "sql", "columns": []}
+    )
+
+    # Act
+    res = test_client.post("/page", json=data)
+    res_data = res.json()
+
+    # Assert
+    assert res.status_code != 200
+
+    assert not verify_object_in_state_context("TablesState", "table_2!")
+
+    assert res_data["message"] == "Invalid table names present in the table"
+
+
+def test_create_table_req_error_illegal_name_url_path(test_client):
+    # Arrange
+    data = copy.deepcopy(base_data)
+    data["properties"]["tables"].append(
+        {"name": "../../table2", "label": "Table 2", "type": "sql", "columns": []}
+    )
+
+    # Act
+    res = test_client.post("/page", json=data)
+    res_data = res.json()
+
+    # Assert
+    assert res.status_code != 200
+
+    assert not verify_object_in_state_context("TablesState", "../../table 2")
+
+    assert res_data["message"] == "Invalid table names present in the table"
+
+
 def test_update_table_req_file_changed(test_client):
     # Arrange
     data = copy.deepcopy(base_data)
