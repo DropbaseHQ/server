@@ -19,6 +19,7 @@ from server.tests.constants import (
     WORKSPACE_PATH,
 )
 from server.tests.mocks.dropbase_router_mocker import DropbaseRouterMocker
+from server.tests.templates import get_test_data_fetcher, get_test_ui
 
 
 # Setup pytest-postgresql db with test data
@@ -65,7 +66,12 @@ def dropbase_router_mocker():
 
 @pytest.fixture
 def mock_db(postgresql):
-    connection = f"postgresql+psycopg2://{postgresql.info.user}:@{postgresql.info.host}:{postgresql.info.port}/{postgresql.info.dbname}"
+    connection = "postgresql+psycopg2://{user}:@{host}:{port}/{dbname}".format(
+        user=postgresql.info.user,
+        host=postgresql.info.host,
+        port=postgresql.info.port,
+        dbname=postgresql.info.dbname,
+    )
     return create_engine(connection, echo=False, poolclass=NullPool)
 
 
@@ -82,16 +88,8 @@ def pytest_sessionstart():
 
     scripts_path = WORKSPACE_PATH.joinpath(f"{TEST_APP_NAME}/{TEST_PAGE_NAME}/scripts")
     create_file(scripts_path, "", "function1.py")
-    create_file(
-        scripts_path,
-        f'from workspace.{TEST_APP_NAME}.{TEST_PAGE_NAME} import State, Context\ndef test_ui(state: State, context: Context) -> Context:\n\n\n    print("test")\n    return context\n',
-        "test_ui.py",
-    )
-    create_file(
-        scripts_path,
-        f'import pandas as pd\nfrom workspace.{TEST_APP_NAME}.{TEST_PAGE_NAME} import State, Context\ndef test_data_fetcher(state: State) -> pd.DataFrame:\n\n    return pd.DataFrame(data=[[1]], columns=["x"])\n',
-        "test_data_fetcher.py",
-    )
+    create_file(scripts_path, get_test_ui(), "test_ui.py")
+    create_file(scripts_path, get_test_data_fetcher(), "test_data_fetcher.py")
     create_file(scripts_path, "select * from users;", "test_sql.sql")
 
     # add files to properties
