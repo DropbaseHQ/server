@@ -36,7 +36,6 @@ def test_create_file_req_ui(test_client):
 
     # Assert
     assert res.status_code == 200
-    # assert is_valid_folder_structure()
     assert workspace_file_exists("scripts/test_file.py")
 
 

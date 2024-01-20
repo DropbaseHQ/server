@@ -71,15 +71,9 @@ def mock_db(postgresql):
 
 def pytest_sessionstart():
 
-    import unittest.mock
-
     from server.controllers.workspace import AppCreator, create_file, create_folder
-    from server.tests.mocks.dropbase.sync import sync_components_response_empty
 
     create_folder(TEMPDIR_PATH)
-
-    mock_dropbase_router = unittest.mock.MagicMock()
-    mock_dropbase_router.misc.sync_components.side_effect = sync_components_response_empty
 
     AppCreator(
         TEST_APP_NAME,
