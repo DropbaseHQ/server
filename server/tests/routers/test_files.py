@@ -32,7 +32,7 @@ def test_create_file_req_ui(test_client):
     data["type"] = "ui"
 
     # Act
-    res = test_client.post("/files", json=data)
+    res = test_client.post("/files/", json=data)
 
     # Assert
     assert res.status_code == 200
@@ -47,7 +47,7 @@ def test_create_file_req_data_fetcher(test_client):
     data["type"] = "data_fetcher"
 
     # Act
-    res = test_client.post("/files", json=data)
+    res = test_client.post("/files/", json=data)
 
     # Assert
     assert res.status_code == 200
@@ -61,11 +61,55 @@ def test_create_file_req_bad_request(test_client):
     data["type"] = "bad_type"
 
     # Act
-    res = test_client.post("/files", json=data)
+    res = test_client.post("/files/", json=data)
 
     # Assert
     assert res.status_code != 200
     assert not workspace_file_exists("scripts/test_file.py")
+
+
+def test_create_file_req_error_illegal_name_space_between(test_client):
+    # Arrange
+    data = copy.deepcopy(base_data)
+    data["name"] = "test file"
+    data["type"] = "bad_type"
+
+    # Act
+    res = test_client.post("/files/", json=data)
+    res_data = res.json()
+
+    print(res_data["detail"][0]["msg"])
+
+    # Assert
+    assert res.status_code != 200
+
+    assert not workspace_file_exists("scripts/test file.py")
+
+    assert (
+        res_data["detail"][0]["msg"] == 'string does not match regex "^[A-Za-z0-9_.]+$"'
+    )
+
+
+def test_create_file_req_error_illegal_name_special_characters(test_client):
+    # Arrange
+    data = copy.deepcopy(base_data)
+    data["name"] = "test_file$"
+    data["type"] = "bad_type"
+
+    # Act
+    res = test_client.post("/files/", json=data)
+    res_data = res.json()
+
+    print(res_data["detail"][0]["msg"])
+
+    # Assert
+    assert res.status_code != 200
+
+    assert not workspace_file_exists("scripts/test file.py")
+
+    assert (
+        res_data["detail"][0]["msg"] == 'string does not match regex "^[A-Za-z0-9_.]+$"'
+    )
 
 
 def test_create_file_req_block_path_traversal_vulnerability(test_client):
@@ -74,7 +118,7 @@ def test_create_file_req_block_path_traversal_vulnerability(test_client):
     data["name"] = "../test_file"
 
     # Act
-    res = test_client.post("/files", json=data)
+    res = test_client.post("/files/", json=data)
 
     # Assert
     assert res.status_code != 200
@@ -185,6 +229,8 @@ def test_update_file_req(test_client):
     # Assert
     assert res.status_code == 200
 
-    file_path = WORKSPACE_PATH.joinpath(f"{TEST_APP_NAME}/{TEST_PAGE_NAME}/scripts/{file_name}.py")
+    file_path = WORKSPACE_PATH.joinpath(
+        f"{TEST_APP_NAME}/{TEST_PAGE_NAME}/scripts/{file_name}.py"
+    )
     with open(file_path, "r") as r:
         assert r.read() == "mock sql"
