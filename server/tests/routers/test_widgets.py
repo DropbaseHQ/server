@@ -50,6 +50,27 @@ def test_create_widget_req(test_client):
     assert verify_property_exists("widgets[1].name", "widget2")
 
 
+def test_create_widget_req_error_duplicate_names(test_client):
+    # Arrange
+    data = copy.deepcopy(base_data)
+    data["properties"]["widgets"].append(
+        {
+            "label": "Widget 1",
+            "name": "widget1",
+            "description": "description2",
+            "components": [],
+        }
+    )
+
+    res = test_client.post("/page", json=data)
+    res_data = res.json()
+
+    # Assert
+    assert res.status_code != 200
+
+    assert res_data["message"] == "A widget with this name already exists"
+
+
 def test_create_widget_req_error_illegal_name_space_between(test_client):
     # Arrange
     data = copy.deepcopy(base_data)

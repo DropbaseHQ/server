@@ -23,6 +23,7 @@ def update_page_properties(req: PageProperties):
 def validate_property_names(properties: dict):
     # create a set to track table names
     table_names = set()
+    widget_names = set()
 
     # validate column names
     for table in properties["tables"]:
@@ -41,6 +42,13 @@ def validate_property_names(properties: dict):
                 raise Exception("Invalid column names present in the table")
     # validate component names
     for widget in properties["widgets"]:
+        if widget["name"] in widget_names:
+            raise HTTPException(
+                status_code=400, detail="A widget with this name already exists"
+            )
+
+        widget_names.add(widget["name"])
+
         if not validate_column_name(widget["name"]):
             raise Exception("Invalid widget names present in the table")
         for component in widget.get("components"):

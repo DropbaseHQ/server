@@ -44,7 +44,7 @@ def test_create_table_req_error_duplicate_names(test_client):
     # Arrange
     data = copy.deepcopy(base_data)
     data["properties"]["tables"].append(
-        {"name": "table1", "label": "Table 2", "type": "sql", "columns": []}
+        {"name": "table1", "label": "Table 1", "type": "sql", "columns": []}
     )
 
     res = test_client.post("/page", json=data)
