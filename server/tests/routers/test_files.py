@@ -68,17 +68,34 @@ def test_create_file_req_bad_request(test_client):
     assert not workspace_file_exists("scripts/test_file.py")
 
 
+def test_create_file_req_error_duplicate_names(test_client):
+    # Arrange
+    data = copy.deepcopy(base_data)
+    data["name"] = "test_file"
+    data["type"] = "data_fetcher"
+
+    # Act
+    create_first_file = test_client.post("/files/", json=data)
+
+    res = test_client.post("/files/", json=data)
+    res_data = res.json()
+
+    # Assert
+    assert create_first_file.status_code == 200
+    assert res.status_code != 200
+
+    assert res_data["message"] == "File with the same name already exists"
+
+
 def test_create_file_req_error_illegal_name_space_between(test_client):
     # Arrange
     data = copy.deepcopy(base_data)
     data["name"] = "test file"
-    data["type"] = "bad_type"
+    data["type"] = "data_fetcher"
 
     # Act
     res = test_client.post("/files/", json=data)
     res_data = res.json()
-
-    print(res_data["detail"][0]["msg"])
 
     # Assert
     assert res.status_code != 200
@@ -94,13 +111,11 @@ def test_create_file_req_error_illegal_name_special_characters(test_client):
     # Arrange
     data = copy.deepcopy(base_data)
     data["name"] = "test_file$"
-    data["type"] = "bad_type"
+    data["type"] = "data_fetcher"
 
     # Act
     res = test_client.post("/files/", json=data)
     res_data = res.json()
-
-    print(res_data["detail"][0]["msg"])
 
     # Assert
     assert res.status_code != 200

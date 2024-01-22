@@ -1,3 +1,5 @@
+from fastapi import HTTPException
+
 import glob
 import os
 import re
@@ -20,7 +22,20 @@ def create_file(req: CreateFile):
 
     # update properties.json
     properties = read_page_properties(req.app_name, req.page_name)
-    properties["files"].append({"name": req.name, "type": req.type, "source": req.source})
+    properties["files"].append(
+        {"name": req.name, "type": req.type, "source": req.source}
+    )
+
+    file_names = set()
+
+    # Check for duplicate file names in properties
+    for file in properties["files"]:
+        if file["name"] in file_names:
+            raise HTTPException(
+                status_code=400, detail="File with the same name already exists"
+            )
+
+        file_names.add(file["name"])
 
     # update properties file
     update_properties(req.app_name, req.page_name, properties, update_modes=False)
@@ -62,11 +77,15 @@ def rename_file(req: RenameFile):
         raise Exception("The file does not exist")
 
     new_file_name = req.new_name + file_ext
-    new_path = cwd + f"/workspace/{req.app_name}/{req.page_name}/scripts/{new_file_name}"
+    new_path = (
+        cwd + f"/workspace/{req.app_name}/{req.page_name}/scripts/{new_file_name}"
+    )
     if os.path.exists(file_path):
         os.rename(file_path, new_path)
 
-    rename_function_in_file(file_path=new_path, old_name=req.old_name, new_name=req.new_name)
+    rename_function_in_file(
+        file_path=new_path, old_name=req.old_name, new_name=req.new_name
+    )
 
     # update properties.json
     properties = read_page_properties(req.app_name, req.page_name)
@@ -135,8 +154,12 @@ def delete_file(req: DeleteFile):
 
 
 def get_all_files(app_name: str, page_name: str):
-    if not (re.match(FILE_NAME_REGEX, app_name) and re.match(FILE_NAME_REGEX, page_name)):
-        raise Exception("No files found. Please check if the app name and page name are valid.")
+    if not (
+        re.match(FILE_NAME_REGEX, app_name) and re.match(FILE_NAME_REGEX, page_name)
+    ):
+        raise Exception(
+            "No files found. Please check if the app name and page name are valid."
+        )
     dir_path = cwd + f"/workspace/{app_name}/{page_name}/scripts"
     py_files = glob.glob(os.path.join(dir_path, "*.py"))
     py_files = [file for file in py_files if not file.endswith("__init__.py")]
