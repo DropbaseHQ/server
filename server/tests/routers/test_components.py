@@ -178,6 +178,29 @@ def test_create_component_req_button(test_client):
     assert verify_property_exists("widgets[0].components[1].component_type", "button")
 
 
+def test_create_component_req_error_duplicate_names(test_client):
+    # Arrange
+    data = copy.deepcopy(base_data)
+    data["properties"]["widgets"][0]["components"].append(
+        {
+            "text": "Button 1",
+            "name": "button1",
+            "color": None,
+            "on_click": None,
+            "display_rules": None,
+            "component_type": "text",
+        }
+    )
+
+    res = test_client.post("/page", json=data)
+    res_data = res.json()
+
+    # Assert
+    assert res.status_code != 200
+
+    assert res_data["message"] == "A component with this name already exists"
+
+
 def test_create_component_req_error_illegal_name_space_between(test_client):
     # Arrange
     data = copy.deepcopy(base_data)

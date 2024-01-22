@@ -51,7 +51,16 @@ def validate_property_names(properties: dict):
 
         if not validate_column_name(widget["name"]):
             raise Exception("Invalid widget names present in the table")
+
+        component_names = set()
         for component in widget.get("components"):
+            if component["name"] in component_names:
+                raise HTTPException(
+                    status_code=400, detail="A component with this name already exists"
+                )
+
+            component_names.add(component["name"])
+
             if not validate_column_name(component["name"]):
                 raise Exception("Invalid component names present in the table")
 
