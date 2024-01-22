@@ -118,18 +118,22 @@ def validate_names(req, type):
     if type == "app":
         if not validate_column_name(req.app_name):
             return {
-                "status_code": 400,
                 "message": "Invalid app name. Only alphanumeric characters and underscores are allowed",
                 "invalid": True,
             }
     elif type == "page":
-        pass
+            return {
+                "message": "Invalid page name. Only alphanumeric characters and underscores are allowed",
+                "invalid": True,
+            }
     elif type == "table":
         pass
     elif type == "widget":
         pass
     elif type == "component":
         pass
+    
+    return {"invalid": False}
 
 
 def get_class_properties(pydantic_model):

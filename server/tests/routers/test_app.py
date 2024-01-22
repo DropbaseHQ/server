@@ -55,6 +55,24 @@ def test_create_app_req_error_duplicate_names(test_client):
 
     assert res_data["message"] == "An app with this name already exists"
 
+def test_rename_app_req_error_duplicate_names(test_client):
+    # Arrange
+    data = {"app_name": NEW_APP_NAME}
+    create_app = test_client.post("/app/", json=data)
+
+    # Act
+    req = {"old_name": OLD_APP_NAME, "new_name": NEW_APP_NAME}
+    
+    res = test_client.put("/app/", json=req)
+    res_data = res.json()
+
+    # Assert
+    assert create_app.status_code == 200
+    assert res.status_code != 200
+
+    assert res_data["message"] == "An app with this name already exists"
+
+
 
 def test_create_app_req_error_illegal_name_space_between(test_client):
     # Arrange
@@ -86,7 +104,7 @@ def test_create_app_req_error_illegal_name_special_characters(test_client):
     # Assert
     assert res.status_code != 200
 
-    assert not check_directory_structure(f"workspace/My_New_App!/page1")
+    assert not check_directory_structure(f"workspace/My_New_App/page1")
 
     assert (
         res_data["message"]
