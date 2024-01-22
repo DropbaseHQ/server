@@ -40,6 +40,22 @@ def test_create_table_req(test_client):
     assert verify_property_exists("tables[1].name", "table2")
 
 
+def test_create_table_req_error_duplicate_names(test_client):
+    # Arrange
+    data = copy.deepcopy(base_data)
+    data["properties"]["tables"].append(
+        {"name": "table1", "label": "Table 2", "type": "sql", "columns": []}
+    )
+
+    res = test_client.post("/page", json=data)
+    res_data = res.json()
+
+    # Assert
+    assert res.status_code != 200
+
+    assert res_data["message"] == "A table with this name already exists"
+
+
 def test_create_table_req_error_illegal_name_space_between(test_client):
     # Arrange
     data = copy.deepcopy(base_data)

@@ -121,13 +121,6 @@ def validate_names(req, type):
                 "message": "Invalid app name. Only alphanumeric characters and underscores are allowed",
                 "invalid": True,
             }
-    elif type == "page":
-        return {
-            "message": "Invalid page name. Only alphanumeric characters and underscores are allowed",
-            "invalid": True,
-        }
-    elif type == "table":
-        pass
     elif type == "widget":
         pass
     elif type == "component":

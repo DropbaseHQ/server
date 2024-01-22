@@ -4,8 +4,7 @@ import shutil
 from fastapi import APIRouter, Response
 
 from server.controllers.app import get_workspace_apps
-from server.controllers.utils import check_if_object_exists, validate_column_name
-from server.controllers.utils import validate_names
+from server.controllers.utils import check_if_object_exists, validate_names
 from server.controllers.workspace import AppCreator
 from server.schemas.workspace import CreateAppRequest, RenameAppRequest
 
@@ -22,7 +21,6 @@ def get_user_apps():
 @router.post("/")
 def create_app_req(req: CreateAppRequest, response: Response):
 
-    # TODO: turn this into a utility function
     validate = validate_names(req, "app")
 
     if validate["invalid"]:

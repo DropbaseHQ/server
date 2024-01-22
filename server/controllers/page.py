@@ -21,8 +21,19 @@ def update_page_properties(req: PageProperties):
 
 
 def validate_property_names(properties: dict):
+    # create a set to track table names
+    table_names = set()
+
     # validate column names
     for table in properties["tables"]:
+        # Check for duplicate table names
+        if table["name"] in table_names:
+            raise HTTPException(
+                status_code=400, detail="A table with this name already exists"
+            )
+
+        table_names.add(table["name"])
+
         if not validate_column_name(table["name"]):
             raise Exception("Invalid table names present in the table")
         for column in table.get("columns"):
@@ -49,7 +60,9 @@ def get_page_state_context(app_name: str, page_name: str):
 def _dict_from_pydantic_model(model):
     data = {}
     for name, field in model.__fields__.items():
-        if isinstance(field.outer_type_, type) and issubclass(field.outer_type_, BaseModel):
+        if isinstance(field.outer_type_, type) and issubclass(
+            field.outer_type_, BaseModel
+        ):
             data[name] = _dict_from_pydantic_model(field.outer_type_)
         else:
             data[name] = field.default
