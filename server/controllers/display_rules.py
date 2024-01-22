@@ -43,6 +43,22 @@ def display_rule(state, context, rules: DisplayRules):
         component_visible = False
 
         for rule in component_display_rules.rules:
+            # If the current component's target is not visible, then even if there
+            # is a value in the target that matches the rule, the component should
+            # not be visible
+            if rule.target.startswith("widgets"):
+                widgets_context = getattr(context, "widgets")
+                target_widget = rule.target.split(".")[1]
+                target_component = rule.target.split(".")[2]
+
+                widget_context = getattr(widgets_context, target_widget)
+                components_context = getattr(widget_context, "components")
+                component_context = getattr(components_context, target_component)
+
+                if component_context.visible == False:
+                    component_visible = False
+                    break
+
             # get the relevant value from the state based on the target
             target_value = get_by_path(state, rule.target)
             # compare the target value from the state with the rule value
