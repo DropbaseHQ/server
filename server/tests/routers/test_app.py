@@ -55,31 +55,13 @@ def test_create_app_req_error_duplicate_names(test_client):
 
     assert res_data["message"] == "An app with this name already exists"
 
-def test_rename_app_req_error_duplicate_names(test_client):
-    # Arrange
-    data = {"app_name": NEW_APP_NAME}
-    create_app = test_client.post("/app/", json=data)
-
-    # Act
-    req = {"old_name": OLD_APP_NAME, "new_name": NEW_APP_NAME}
-    
-    res = test_client.put("/app/", json=req)
-    res_data = res.json()
-
-    # Assert
-    assert create_app.status_code == 200
-    assert res.status_code != 200
-
-    assert res_data["message"] == "An app with this name already exists"
-
-
 
 def test_create_app_req_error_illegal_name_space_between(test_client):
     # Arrange
     data = {"app_name": "My New App"}
 
     # Act
-    res = test_client.post("/app", json=data)
+    res = test_client.post("/app/", json=data)
     res_data = res.json()
 
     # Assert
@@ -98,7 +80,7 @@ def test_create_app_req_error_illegal_name_special_characters(test_client):
     data = {"app_name": "My_New_App!"}
 
     # Act
-    res = test_client.post("/app", json=data)
+    res = test_client.post("/app/", json=data)
     res_data = res.json()
 
     # Assert
@@ -114,21 +96,39 @@ def test_create_app_req_error_illegal_name_special_characters(test_client):
 
 def test_create_app_req_error_illegal_name_url_path(test_client):
     # Arrange
-    data = {"app_name": "../../new_app"}
+    data = {"app_name": "../../my_app"}
 
     # Act
-    res = test_client.post("/app", json=data)
+    res = test_client.post("/app/", json=data)
     res_data = res.json()
 
     # Assert
     assert res.status_code != 200
 
-    assert not check_directory_structure(f"workspace/../../new_app/page1")
+    assert not check_directory_structure(f"workspace/../../my_app/page1")
 
     assert (
         res_data["message"]
         == "Invalid app name. Only alphanumeric characters and underscores are allowed"
     )
+
+
+def test_rename_app_req_error_duplicate_names(test_client):
+    # Arrange
+    data = {"app_name": NEW_APP_NAME}
+    create_app = test_client.post("/app/", json=data)
+
+    # Act
+    req = {"old_name": OLD_APP_NAME, "new_name": NEW_APP_NAME}
+
+    res = test_client.put("/app/", json=req)
+    res_data = res.json()
+
+    # Assert
+    assert create_app.status_code == 200
+    assert res.status_code != 200
+
+    assert res_data["message"] == "An app with this name already exists"
 
 
 def test_rename_app_req(test_client):

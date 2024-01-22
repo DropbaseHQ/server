@@ -9,7 +9,9 @@ from server.controllers.utils import validate_names
 from server.controllers.workspace import AppCreator
 from server.schemas.workspace import CreateAppRequest, RenameAppRequest
 
-router = APIRouter(prefix="/app", tags=["app"], responses={404: {"description": "Not found"}})
+router = APIRouter(
+    prefix="/app", tags=["app"], responses={404: {"description": "Not found"}}
+)
 
 
 @router.get("/list/")
@@ -23,7 +25,7 @@ def create_app_req(req: CreateAppRequest, response: Response):
     # TODO: turn this into a utility function
     validate = validate_names(req, "app")
 
-    if(validate["invalid"]):
+    if validate["invalid"]:
         response.status_code = 400
         return {"message": validate["message"]}
 
@@ -50,7 +52,7 @@ def rename_app_req(req: RenameAppRequest, response: Response):
     if check_if_object_exists(f"workspace/{req.new_name}/"):
         response.status_code = 400
         return {"message": "An app with this name already exists"}
-    
+
     workspace_folder_path = os.path.join(os.path.dirname(__file__), "../../workspace")
     app_path = os.path.join(workspace_folder_path, req.old_name)
     new_path = os.path.join(workspace_folder_path, req.new_name)
