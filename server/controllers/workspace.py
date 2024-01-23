@@ -1,6 +1,7 @@
 import json
 import os
 import shutil
+
 from fastapi import HTTPException
 
 from server.controllers.generate_models import create_state_context_files
@@ -103,6 +104,7 @@ def create_init_file(path, init_code=INIT_CODE):
 
 
 def create_folder(path):
+    # NOTE: this is a dangerous function, let's add some checks
     if os.path.exists(path):
         shutil.rmtree(path)
     os.mkdir(path)
