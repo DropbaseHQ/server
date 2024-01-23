@@ -19,7 +19,6 @@ def get_user_apps():
 @router.post("/")
 def create_app_req(req: CreateAppRequest, response: Response):
 
-    # TODO: turn this into a utility function
     if not validate_column_name(req.app_name):
         response.status_code = 400
         return {"message": "Invalid app name. Only alphanumeric characters and underscores are allowed"}
@@ -42,7 +41,12 @@ def create_app_req(req: CreateAppRequest, response: Response):
 
 
 @router.put("/")
-def rename_app_req(req: RenameAppRequest):
+def rename_app_req(req: RenameAppRequest, response: Response):
+    # assert page does not exist
+    if check_if_object_exists(f"workspace/{req.new_name}/"):
+        response.status_code = 400
+        return {"message": "An app with this name already exists"}
+
     workspace_folder_path = os.path.join(os.path.dirname(__file__), "../../workspace")
     app_path = os.path.join(workspace_folder_path, req.old_name)
     new_path = os.path.join(workspace_folder_path, req.new_name)

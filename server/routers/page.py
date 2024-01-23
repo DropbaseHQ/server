@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Response
+from fastapi import APIRouter, Response, HTTPException
 
 from server.controllers.page import (
     create_page,
@@ -85,6 +85,10 @@ def cud_page_props(
     try:
         # update local json file
         return update_page_properties(req)
+    except HTTPException as e:
+        response.status_code = e.status_code
+        return {"message": str(e.detail)}
+
     except Exception as e:
         # TODO: delete files if error
         response.status_code = 500

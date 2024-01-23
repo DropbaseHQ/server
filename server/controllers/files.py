@@ -2,6 +2,8 @@ import glob
 import os
 import re
 
+from fastapi import HTTPException
+
 from server.constants import FILE_NAME_REGEX, cwd
 from server.controllers.properties import read_page_properties, update_properties
 from server.controllers.query import get_depend_table_names
@@ -23,6 +25,15 @@ def create_file(req: CreateFile):
     properties["files"].append(
         {"name": req.name, "type": req.type, "source": req.source, "depends_on": []}
     )
+
+    file_names = set()
+
+    # Check for duplicate file names in properties
+    for file in properties["files"]:
+        if file["name"] in file_names:
+            raise HTTPException(status_code=400, detail="File with the same name already exists")
+
+        file_names.add(file["name"])
 
     # update properties file
     update_properties(req.app_name, req.page_name, properties, update_modes=False)
