@@ -1,7 +1,6 @@
 import ast
 import functools
 import importlib
-import inspect
 import json
 import re
 from pathlib import Path
@@ -12,13 +11,6 @@ from sqlalchemy import create_engine, text
 from sqlalchemy.engine import Engine
 
 from server.controllers.sources import db_type_to_class, get_sources
-from server.schemas.files import DataFile
-
-
-def call_function(fn, **kwargs):
-    sig = inspect.signature(fn)
-    kwargs = {k: v for k, v in kwargs.items() if k in sig.parameters}
-    return fn(**kwargs)
 
 
 def rename_function_in_file(
@@ -49,13 +41,6 @@ def get_function_by_name(app_name: str, page_name: str, function_name: str):
     file_module = f"workspace.{app_name}.{page_name}.scripts.{function_name}"
     scripts = importlib.import_module(file_module)
     function = getattr(scripts, function_name)
-    return function
-
-
-def get_data_function_by_file(app_name: str, page_name: str, file: DataFile):
-    file_module = f"workspace.{app_name}.{page_name}.scripts.{file.name}"
-    scripts = importlib.import_module(file_module)
-    function = getattr(scripts, file.name)
     return function
 
 

@@ -46,7 +46,6 @@ async def run_query_req(req: QueryPythonRequest):
                 "page_name": req.page_name,
                 "file": file.dict(),
                 "state": req.state,
-                "filter_sort": req.filter_sort.dict(),
             }
             return run_process_task_unwrap("run_python_query", args)
         else:
