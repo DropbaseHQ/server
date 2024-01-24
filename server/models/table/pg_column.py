@@ -30,6 +30,10 @@ class PgColumnBaseProperty(BaseModel):
 
     edit_keys: list = []
 
+    # visibility
+    hidden: bool = False
+    editable: bool = False
+
 
 class PgColumnDefinedProperty(PgColumnBaseProperty, PgColumnSharedProperty):
     pass

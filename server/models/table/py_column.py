@@ -18,6 +18,9 @@ class PyColumnBaseProperty(BaseModel):
     column_type: Optional[str]
     display_type: Optional[Literal["text", "integer", "float", "boolean", "datetime", "date", "time"]]
 
+    # visibility
+    hidden: bool = False
+
 
 class PyColumnDefinedProperty(PyColumnBaseProperty, PyColumnSharedProperty):
     pass
