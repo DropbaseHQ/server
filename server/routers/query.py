@@ -13,6 +13,7 @@ from server.schemas.run_python import QueryPythonRequest, RunPythonStringRequest
 router = APIRouter(prefix="/query", tags=["query"], responses={404: {"description": "Not found"}})
 
 
+# sql data fetcher
 @router.post("/sql_string/")
 async def run_sql_from_string_req(request: RunSQLRequest, response: Response):
     try:
@@ -22,6 +23,7 @@ async def run_sql_from_string_req(request: RunSQLRequest, response: Response):
         return format_process_result(str(e))
 
 
+# could be either sql or python data fetcher
 @router.post("/python_string/")
 async def run_python_string(request: RunPythonStringRequest, response: Response):
     try:
@@ -31,6 +33,7 @@ async def run_python_string(request: RunPythonStringRequest, response: Response)
         return format_process_result(str(e))
 
 
+# sql and python data fetcher
 @router.post("/")
 async def run_query_req(req: QueryPythonRequest):
     try:

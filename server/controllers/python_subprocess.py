@@ -72,6 +72,7 @@ def run_task(child_conn, function_name, args):
 
     importlib.invalidate_caches()
 
+    # redirect logs/print statements to custom stream
     old_stdout = sys.stdout
     redirected_output = StringIO()
     sys.stdout = redirected_output
@@ -81,7 +82,9 @@ def run_task(child_conn, function_name, args):
     file_path = cwd + f"/.temp/{random_file_name}.pkl"
 
     try:
+        # execute function
         output, status_code = globals()[function_name](**args)
+
         # save output to file
         with open(file_path, "wb") as f:
             pickle.dump(output, f)

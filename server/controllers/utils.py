@@ -1,7 +1,6 @@
 import ast
 import functools
 import importlib
-import inspect
 import json
 import re
 from pathlib import Path
@@ -13,12 +12,6 @@ from sqlalchemy.engine import Engine
 
 from server.controllers.sources import db_type_to_class, get_sources
 from server.schemas.files import DataFile
-
-
-def call_function(fn, **kwargs):
-    sig = inspect.signature(fn)
-    kwargs = {k: v for k, v in kwargs.items() if k in sig.parameters}
-    return fn(**kwargs)
 
 
 def rename_function_in_file(
@@ -62,7 +55,6 @@ def get_data_function_by_file(app_name: str, page_name: str, file: DataFile):
 def get_state_context(app_name: str, page_name: str, state: dict, context: dict):
     page_module = f"workspace.{app_name}.{page_name}"
     page = importlib.import_module(page_module)
-    # page = importlib.reload(page)
     State = getattr(page, "State")
     Context = getattr(page, "Context")
     return State(**state), Context(**context)
@@ -71,7 +63,6 @@ def get_state_context(app_name: str, page_name: str, state: dict, context: dict)
 def get_state(app_name: str, page_name: str, state: dict):
     page_module = f"workspace.{app_name}.{page_name}"
     page = importlib.import_module(page_module)
-    # page = importlib.reload(page)
     State = getattr(page, "State")
     return State(**state)
 
