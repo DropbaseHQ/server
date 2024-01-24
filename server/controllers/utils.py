@@ -8,7 +8,8 @@ from pathlib import Path
 
 import pandas as pd
 from datamodel_code_generator import generate
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, text
+from sqlalchemy.engine import Engine
 
 from server.controllers.sources import db_type_to_class, get_sources
 from server.schemas.files import DataFile
@@ -154,3 +155,25 @@ def get_table_data_fetcher(files: list, fetcher_name: str):
 
 def check_if_object_exists(path: str):
     return Path(path).exists()
+
+
+def get_depend_table_names(user_sql: str):
+    pattern = re.compile(r"\{\{state\.tables\.(\w+)\.\w+\}\}")
+    matches = pattern.findall(user_sql)
+    return list(set(matches))
+
+
+def get_column_names(user_db_engine: Engine, user_sql: str) -> list[str]:
+    if user_sql == "":
+        return []
+    user_sql = user_sql.strip("\n ;")
+    user_sql = f"SELECT * FROM ({user_sql}) AS q LIMIT 1"
+    with user_db_engine.connect().execution_options(autocommit=True) as conn:
+        col_names = list(conn.execute(text(user_sql)).keys())
+    return col_names
+
+
+def process_query_result(res) -> pd.DataFrame:
+    df = pd.DataFrame(res)
+    df = clean_df(df)
+    return df

@@ -1,8 +1,8 @@
 from server.controllers.page import get_page_state_context
 from server.controllers.properties import read_page_properties, update_properties
-from server.controllers.query import get_column_names, get_sql_from_file, render_sql
+from server.controllers.run_sql import get_sql_from_file, render_sql
 from server.controllers.source import get_db_schema
-from server.controllers.utils import connect_to_user_db, get_table_data_fetcher
+from server.controllers.utils import connect_to_user_db, get_column_names, get_table_data_fetcher
 from server.controllers.validation import validate_smart_cols
 from server.requests.dropbase_router import DropbaseRouter
 from server.schemas.files import DataFile

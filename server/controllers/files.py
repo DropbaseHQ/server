@@ -6,8 +6,7 @@ from fastapi import HTTPException
 
 from server.constants import FILE_NAME_REGEX, cwd
 from server.controllers.properties import read_page_properties, update_properties
-from server.controllers.query import get_depend_table_names
-from server.controllers.utils import rename_function_in_file
+from server.controllers.utils import get_depend_table_names, rename_function_in_file
 from server.schemas.files import CreateFile, DeleteFile, RenameFile, UpdateFile
 
 

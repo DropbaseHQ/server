@@ -15,7 +15,7 @@ def test_run_python_string(test_client):
     }
 
     # Act
-    res = test_client.post("/run_python/run_python_string", json=data)
+    res = test_client.post("/query/python_string", json=data)
 
     # Assert
     assert res.status_code == 200

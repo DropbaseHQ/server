@@ -3,10 +3,10 @@ from server.schemas.table import TableFilter, TableSort
 
 def test_query_db(mocker, mock_db):
     # Arrange
-    mocker.patch("server.controllers.query.connect_to_user_db", return_value=mock_db)
+    mocker.patch("server.controllers.run_sql.connect_to_user_db", return_value=mock_db)
 
     # from sqlalchemy import text
-    from server.controllers.query import query_db
+    from server.controllers.run_sql import query_db
 
     # Act
     output = query_db("select * from users;", {}, "mock_source")
@@ -18,7 +18,7 @@ def test_query_db(mocker, mock_db):
 
 def test_apply_filters():
     # Arrange
-    from server.controllers.query import apply_filters
+    from server.controllers.run_sql import apply_filters
 
     table_sql = "select user_id, username, email from users"
     filters = [TableFilter(column_name="username", condition="=", value="Charlie Brown")]
@@ -39,7 +39,7 @@ def test_apply_filters():
 
 def test_apply_sorts():
     # Arrange
-    from server.controllers.query import apply_filters
+    from server.controllers.run_sql import apply_filters
 
     table_sql = "select * from users"
     filters = []

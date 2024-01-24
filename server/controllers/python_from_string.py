@@ -16,9 +16,18 @@ import pandas as pd
 from server.constants import DATA_PREVIEW_SIZE, TASK_TIMEOUT, cwd
 from server.controllers.dataframe import convert_df_to_resp_obj
 from server.controllers.utils import clean_df
+from server.schemas.run_python import RunPythonStringRequest
 
 
-def run_process_with_exec(args: dict):
+def run_python_script_from_string(req: RunPythonStringRequest):
+    args = {
+        "app_name": req.app_name,
+        "page_name": req.page_name,
+        "python_string": req.python_string,
+        "payload": req.payload.dict(),
+        "file": req.file,
+    }
+
     parent_conn, child_conn = Pipe()
     task = Process(
         target=run_exec_task,
