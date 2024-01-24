@@ -1,4 +1,4 @@
-from typing import Annotated, Any, Dict, List, Literal, Optional
+from typing import Annotated, Any, List, Literal, Optional
 
 from pydantic import BaseModel
 
@@ -8,8 +8,7 @@ from server.models.common import ComponentDisplayProperties
 
 # select
 class SelectSharedProperties(BaseModel):
-    value: Optional[str]
-    options: Annotated[Optional[List[Dict]], PropertyCategory.default]
+    pass
 
 
 class SelectContextProperty(ComponentDisplayProperties, SelectSharedProperties):
