@@ -35,7 +35,7 @@ def verify_server_token(cookies: AccessCookies):
     return response
 
 
-def verify_user_access_token(request: Request, Authorize: AuthJWT):
+def verify_user_access_token(request: Request, Authorize: AuthJWT = Depends()):
     if not request.cookies.get("worker_sl_token"):
         server_access_cookies = get_access_cookies(request)
         logger.info("VERIFYING SERVER TOKEN")
@@ -50,7 +50,7 @@ def verify_user_access_token(request: Request, Authorize: AuthJWT):
         )
         max_age = 60
         raise HTTPException(
-            status_code=303,
+            status_code=401,
             detail="Invalid access token",
             headers={
                 "set-cookie": f"{WORKER_SL_TOKEN_NAME}={worker_sl_token}; Max-Age={max_age}; Path=/; HttpOnly;"
@@ -123,7 +123,6 @@ class EnforceUserAppPermissions:
     def __call__(
         self, user_app_permissions: dict = Depends(check_user_app_permissions)
     ):
-        print("allowed to perform action", user_app_permissions.get(self.action))
         if self.action not in user_app_permissions or not user_app_permissions.get(
             self.action
         ):
