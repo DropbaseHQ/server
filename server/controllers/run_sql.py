@@ -10,6 +10,7 @@ from server.controllers.python_subprocess import format_process_result, run_proc
 from server.controllers.utils import connect_to_user_db, process_query_result
 from server.schemas.files import DataFile
 from server.schemas.query import RunSQLRequest
+from server.schemas.run_python import QueryPythonRequest
 from server.schemas.table import FilterSort, TableFilter, TablePagination, TableSort
 
 
@@ -26,14 +27,14 @@ def run_df_query(
     return process_query_result(res)
 
 
-def run_sql_query(app_name: str, page_name: str, file: DataFile, state: dict, filter_sort: FilterSort):
-    verify_state(app_name, page_name, state)
+def run_sql_query(req: QueryPythonRequest, file: DataFile):
+    verify_state(req.app_name, req.page_name, req.state)
 
-    sql = get_sql_from_file(app_name, page_name, file.name)
-    df = run_df_query(sql, file.source, state, filter_sort)
+    sql = get_sql_from_file(req.app_name, req.page_name, file.name)
+    df = run_df_query(sql, file.source, req.state, req.filter_sort)
 
     res = convert_df_to_resp_obj(df)
-    return format_process_result(res)
+    return {"result": res}, 200
 
 
 def run_sql_query_from_string(req: RunSQLRequest):

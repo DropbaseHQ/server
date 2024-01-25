@@ -31,6 +31,7 @@ class TableBase(BaseModel):
     name: str
     type: Optional[str]
     fetcher: Optional[str]
+    df_table: Optional[str]
 
 
 class ConvertTableRequest(BaseModel):

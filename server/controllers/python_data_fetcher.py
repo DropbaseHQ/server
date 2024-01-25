@@ -1,9 +1,8 @@
-import importlib
 import os
 import sys
 import traceback
 import uuid
-from io import StringIO
+from datetime import datetime
 from multiprocessing import Process
 
 from sqlalchemy import create_engine
@@ -15,60 +14,87 @@ from server.controllers.sqlite import con
 from server.controllers.utils import clean_df, get_function_by_name, get_state
 from server.schemas.files import DataFile
 from server.schemas.run_python import QueryPythonRequest
-from server.schemas.table import FilterSort
 
 
-def query_python_table(table_name: str, filter_sort: FilterSort):
-    # check if table exists and is ready
-    status = con.execute("SELECT status FROM table_names WHERE table_name = ?", (table_name,)).fetchone()
-    if not status:
-        raise Exception("Table not found")
-    if status[0] == 0:
-        raise Exception("Table is still being processed")
+def query_python_table(req: QueryPythonRequest, file: DataFile):
+    try:
+        table = req.table
+        filter_sort = req.filter_sort
 
-    base_sql = f"SELECT * FROM {table_name}"
+        # if request does not have df_table, start a job
+        if not table.df_table:
+            return run_data_fetcher_task(req, file)
 
-    # apply filters and pagination
-    filter_sql, filter_values = apply_filters(
-        base_sql, filter_sort.filters, filter_sort.sorts, filter_sort.pagination
-    )
+        # check if table exists and is ready
+        status = con.execute(
+            "SELECT status FROM table_names WHERE table_name = ?", (table.df_table,)
+        ).fetchone()
+        if not status:
+            return run_data_fetcher_task(req, file)
+        if status[0] == 0:
+            return {"message": "Table is still being processed"}, 202
 
-    # query table data
-    data = con.execute(filter_sql, filter_values).fetchall()
-    data = [list(row) for row in data]
+        base_sql = f"SELECT * FROM {table.df_table}"
 
-    # query column types
-    column_types = con.execute(
-        "SELECT * FROM column_types WHERE table_name = ?",
-        (table_name,),
-    ).fetchall()
-    columns = [{"name": row[1], "column_type": row[2], "display_type": row[3]} for row in column_types]
+        # apply filters and pagination
+        filter_sql, filter_values = apply_filters(
+            base_sql, filter_sort.filters, filter_sort.sorts, filter_sort.pagination
+        )
 
-    # return data
-    return {
-        "data": data,
-        "columns": columns,
-    }
+        # query table data
+        data = con.execute(filter_sql, filter_values).fetchall()
+        data = [list(row) for row in data]
+
+        # query column types
+        column_types = con.execute(
+            "SELECT * FROM column_types WHERE table_name = ?",
+            (table.df_table,),
+        ).fetchall()
+
+        # convert to list of dicts
+        columns = [
+            {"name": row[1], "column_type": row[2], "display_type": row[3]} for row in column_types
+        ]
+
+        # update last_used flag
+        con.execute(
+            "UPDATE table_names SET last_used = ? WHERE table_name = ?",
+            (
+                str(datetime.now()),
+                table.df_table,
+            ),
+        )
+
+        # return data
+        return {
+            "result": {
+                "data": data,
+                "columns": columns,
+            }
+        }, 200
+    except Exception as e:
+        return {"message": f"Server error, {str(e)}"}, 500
 
 
 def run_data_fetcher_task(req: QueryPythonRequest, file: DataFile):
     # create a new table name
-    table_name = "t" + uuid.uuid4().hex
+    df_table = "t" + uuid.uuid4().hex
     con.execute(
         "INSERT INTO table_names VALUES (?, ?, ?)",
         (
-            table_name,
+            df_table,
             0,
             "pending",
         ),
     )
 
+    # start task
     task = Process(
         target=run_data_fetcher,
-        args=(table_name, req.dict(), file.dict()),
+        args=(df_table, req.dict(), file.dict()),
     )
     task.start()
-    return {"table_name": table_name}
+    return {"message": "Job has started", "df_table": df_table}, 202
 
 
 def run_data_fetcher(table_name: str, req: dict, file: dict):
@@ -80,13 +106,6 @@ def run_data_fetcher(table_name: str, req: dict, file: dict):
     os.chdir(cwd)
     sys.path.append(cwd)  # Append your root directory to the Python import path
 
-    importlib.invalidate_caches()
-
-    old_stdout = sys.stdout
-    redirected_output = StringIO()
-    sys.stdout = redirected_output
-
-    # random file name
     try:
         app_name, page_name, state = req.get("app_name"), req.get("page_name"), req.get("state")
         state = get_state(app_name, page_name, state)
@@ -136,6 +155,3 @@ def run_data_fetcher(table_name: str, req: dict, file: dict):
                 table_name,
             ),
         )
-
-    finally:
-        sys.stdout = old_stdout

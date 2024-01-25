@@ -2,8 +2,9 @@ import sqlalchemy.exc
 from fastapi import APIRouter, HTTPException, Response
 
 from server.controllers.properties import read_page_properties
+from server.controllers.python_data_fetcher import query_python_table
 from server.controllers.python_from_string import run_python_script_from_string
-from server.controllers.python_subprocess import format_process_result, run_process_task_unwrap
+from server.controllers.python_subprocess import format_process_result
 from server.controllers.run_sql import run_sql_query, run_sql_query_from_string
 from server.controllers.utils import get_table_data_fetcher
 from server.schemas.files import DataFile
@@ -32,7 +33,7 @@ async def run_python_string(request: RunPythonStringRequest, response: Response)
 
 
 @router.post("/")
-async def run_query_req(req: QueryPythonRequest):
+async def run_query_req(req: QueryPythonRequest, response: Response):
     try:
         # read page properties
         properties = read_page_properties(req.app_name, req.page_name)
@@ -40,16 +41,10 @@ async def run_query_req(req: QueryPythonRequest):
         file = DataFile(**file)
 
         if file.type == "data_fetcher":
-
-            args = {
-                "app_name": req.app_name,
-                "page_name": req.page_name,
-                "file": file.dict(),
-                "state": req.state,
-            }
-            return run_process_task_unwrap("run_python_query", args)
+            resp, status_code = query_python_table(req, file)
         else:
-            resp = run_sql_query(req.app_name, req.page_name, file, req.state, req.filter_sort)
+            resp, status_code = run_sql_query(req, file)
+        response.status_code = status_code
         return resp
     except sqlalchemy.exc.ProgrammingError as e:
         raise HTTPException(400, str(e))
