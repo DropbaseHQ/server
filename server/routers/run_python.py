@@ -1,14 +1,20 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends
 
 from server.controllers.python_from_string import run_process_with_exec
 from server.schemas.run_python import RunPythonStringRequest
+from server.auth.dependency import EnforceUserAppPermissions
 
 router = APIRouter(
-    prefix="/run_python", tags=["run_python"], responses={404: {"description": "Not found"}}
+    prefix="/run_python",
+    tags=["run_python"],
+    responses={404: {"description": "Not found"}},
 )
 
 
-@router.post("/run_python_string/")
+@router.post(
+    "/run_python_string/",
+    dependencies=[Depends(EnforceUserAppPermissions(action="use"))],
+)
 async def run_python_string(req: RunPythonStringRequest):
     args = {
         "app_name": req.app_name,
