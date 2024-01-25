@@ -7,24 +7,56 @@ import uuid
 from io import StringIO
 from multiprocessing import Process
 
+from sqlalchemy import create_engine
+
 from server.constants import INFER_TYPE_SAMPLE_SIZE, cwd
 from server.controllers.dataframe import get_column_types
+from server.controllers.run_sql import apply_filters
+from server.controllers.sqlite import con, cur
 from server.controllers.utils import clean_df, get_function_by_name, get_state
 from server.schemas.files import DataFile
 from server.schemas.run_python import QueryPythonRequest
+from server.schemas.table import FilterSort
 
 
-def query_python_table(table_name: str):
+def query_python_table(table_name: str, filter_sort: FilterSort):
+
+    eng = create_engine("sqlite:///page_tables.db")
+    con = eng.connect()
+
     # check if table exists and is ready
+    status = con.execute("SELECT status FROM table_names WHERE table_name = ?", (table_name,)).fetchone()
+    if not status:
+        raise Exception("Table not found")
+    if status[0] == 0:
+        raise Exception("Table is still being processed")
+
+    sql = f"SELECT * FROM {table_name}"
+
     # apply filters and pagination
-    # fetch data and column types
+    filter_sql, filter_values = apply_filters(
+        sql, filter_sort.filters, filter_sort.sorts, filter_sort.pagination
+    )
+
+    # query table data
+    data = con.execute(filter_sql, filter_values).fetchall()
+    data = [list(row) for row in data]
+
+    # query column types
+    column_types = con.execute(
+        "SELECT * FROM column_types WHERE table_name = ?",
+        (table_name,),
+    ).fetchall()
+    columns = [{"name": row[1], "column_type": row[2], "display_type": row[3]} for row in column_types]
+
     # return data
-    pass
+    return {
+        "data": data,
+        "columns": columns,
+    }
 
 
 def run_data_fetcher_task(req: QueryPythonRequest, file: DataFile):
-    from server.controllers.sqlite import con, cur
-
     # create a new table name
     table_name = "t" + uuid.uuid4().hex
     cur.execute(
@@ -37,7 +69,6 @@ def run_data_fetcher_task(req: QueryPythonRequest, file: DataFile):
     )
     con.commit()
 
-    # run_data_fetcher(table_name, req.dict(), file.dict())
     task = Process(
         target=run_data_fetcher,
         args=(table_name, req.dict(), file.dict()),
