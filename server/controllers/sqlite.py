@@ -1,7 +1,7 @@
-import sqlite3
+from sqlalchemy import create_engine
 
-con = sqlite3.connect("page_tables.db")
-cur = con.cursor()
+eng = create_engine("sqlite:///page_tables.db")
+con = eng.connect()
 
 
 def setup_tables():

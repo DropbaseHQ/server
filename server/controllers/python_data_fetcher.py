@@ -1,6 +1,5 @@
 import importlib
 import os
-import sqlite3
 import sys
 import traceback
 import uuid
@@ -12,7 +11,7 @@ from sqlalchemy import create_engine
 from server.constants import INFER_TYPE_SAMPLE_SIZE, cwd
 from server.controllers.dataframe import get_column_types
 from server.controllers.run_sql import apply_filters
-from server.controllers.sqlite import con, cur
+from server.controllers.sqlite import con
 from server.controllers.utils import clean_df, get_function_by_name, get_state
 from server.schemas.files import DataFile
 from server.schemas.run_python import QueryPythonRequest
@@ -20,10 +19,6 @@ from server.schemas.table import FilterSort
 
 
 def query_python_table(table_name: str, filter_sort: FilterSort):
-
-    eng = create_engine("sqlite:///page_tables.db")
-    con = eng.connect()
-
     # check if table exists and is ready
     status = con.execute("SELECT status FROM table_names WHERE table_name = ?", (table_name,)).fetchone()
     if not status:
@@ -31,11 +26,11 @@ def query_python_table(table_name: str, filter_sort: FilterSort):
     if status[0] == 0:
         raise Exception("Table is still being processed")
 
-    sql = f"SELECT * FROM {table_name}"
+    base_sql = f"SELECT * FROM {table_name}"
 
     # apply filters and pagination
     filter_sql, filter_values = apply_filters(
-        sql, filter_sort.filters, filter_sort.sorts, filter_sort.pagination
+        base_sql, filter_sort.filters, filter_sort.sorts, filter_sort.pagination
     )
 
     # query table data
@@ -59,7 +54,7 @@ def query_python_table(table_name: str, filter_sort: FilterSort):
 def run_data_fetcher_task(req: QueryPythonRequest, file: DataFile):
     # create a new table name
     table_name = "t" + uuid.uuid4().hex
-    cur.execute(
+    con.execute(
         "INSERT INTO table_names VALUES (?, ?, ?)",
         (
             table_name,
@@ -67,22 +62,19 @@ def run_data_fetcher_task(req: QueryPythonRequest, file: DataFile):
             "pending",
         ),
     )
-    con.commit()
 
     task = Process(
         target=run_data_fetcher,
         args=(table_name, req.dict(), file.dict()),
     )
     task.start()
-    return {
-        "table_name": table_name,
-    }
+    return {"table_name": table_name}
 
 
 def run_data_fetcher(table_name: str, req: dict, file: dict):
-    # create con and cur within the function
-    con = sqlite3.connect("page_tables.db")
-    cur = con.cursor()
+    # NOTE: because this runs in subprocess, it has to have its own connection
+    eng = create_engine("sqlite:///page_tables.db")
+    con = eng.connect()
 
     # Change the current working directory to root_directory
     os.chdir(cwd)
@@ -105,12 +97,10 @@ def run_data_fetcher(table_name: str, req: dict, file: dict):
         df = clean_df(df)
 
         # write to sqlite table
-        print("writing to sqlite table")
         df.to_sql(table_name, con=con, index=False, if_exists="replace")
 
         # update tables
-        print("updating table_names")
-        cur.execute(
+        con.execute(
             "update table_names SET status = ?, message = ? where table_name = ?;",
             (
                 1,
@@ -124,9 +114,8 @@ def run_data_fetcher(table_name: str, req: dict, file: dict):
             df = df.sample(INFER_TYPE_SAMPLE_SIZE)
         columns = get_column_types(df)
         # insert into column_types table
-        print("updating column_types")
         for column in columns:
-            cur.execute(
+            con.execute(
                 "INSERT INTO column_types VALUES (?, ?, ?, ?)",
                 (
                     table_name,
@@ -139,7 +128,7 @@ def run_data_fetcher(table_name: str, req: dict, file: dict):
     except Exception:
         # save exception to file
         exception = traceback.format_exc()  # get full exception traceback string
-        cur.execute(
+        con.execute(
             "update table_names SET status = ?, message = ? where table_name = ?;",
             (
                 2,
@@ -149,5 +138,4 @@ def run_data_fetcher(table_name: str, req: dict, file: dict):
         )
 
     finally:
-        con.commit()
         sys.stdout = old_stdout
