@@ -1,3 +1,4 @@
+import logging
 import requests
 import asyncio
 from server.constants import DROPBASE_API_URL
@@ -6,7 +7,10 @@ from server.auth.permissions_registry import permissions_registry
 from fastapi import Depends, Request, Response, HTTPException
 from fastapi_jwt_auth import AuthJWT, exceptions
 from pydantic import BaseModel
-import jwt
+
+logger = logging.getLogger(__name__)
+
+WORKER_SL_TOKEN_NAME = "worker_sl_token"
 
 
 class Settings(BaseModel):
@@ -31,10 +35,10 @@ def verify_server_token(cookies: AccessCookies):
     return response
 
 
-def verify_user_access_token(request: Request, Authorize: AuthJWT, response: Response):
+def verify_user_access_token(request: Request, Authorize: AuthJWT):
     if not request.cookies.get("worker_sl_token"):
         server_access_cookies = get_access_cookies(request)
-        print("VERIFYING SERVER TOKEN FROM DROPBASE API")
+        logger.info("VERIFYING SERVER TOKEN")
         verify_response = requests.post(
             DROPBASE_API_URL + "/worker/verify_token",
             cookies={"access_token_cookie": server_access_cookies.access_token_cookie},
@@ -49,12 +53,12 @@ def verify_user_access_token(request: Request, Authorize: AuthJWT, response: Res
             status_code=303,
             detail="Invalid access token",
             headers={
-                "set-cookie": f"worker_sl_token={worker_sl_token}; Max-Age={max_age}; Path=/; HttpOnly;"
+                "set-cookie": f"{WORKER_SL_TOKEN_NAME}={worker_sl_token}; Max-Age={max_age}; Path=/; HttpOnly;"
             },
         )
     else:
         try:
-            Authorize._access_cookie_key = "worker_sl_token"
+            Authorize._access_cookie_key = WORKER_SL_TOKEN_NAME
             Authorize._verify_and_get_jwt_in_cookies("access", Authorize._request)
             subject = Authorize.get_jwt_subject()
             return subject
@@ -71,14 +75,12 @@ def get_resource_id_from_req_body(resource_id_accessor: str, request: Request):
 
 def check_user_app_permissions(
     request: Request,
-    response: Response,
     access_cookies: AccessCookies = Depends(get_access_cookies),
     Authorize: AuthJWT = Depends(),
 ):
-    verify_response = verify_user_access_token(request, Authorize, response)
+    verify_response = verify_user_access_token(request, Authorize)
     if verify_response:
         user_id = verify_response
-
     if user_id is None:
         raise Exception("No user id provided")
 
@@ -91,13 +93,13 @@ def check_user_app_permissions(
     workspace_id = request.headers.get("workspace-id")
     if not workspace_id:
         raise Exception("No workspace id provided")
-    if not app_name:
-        raise Exception("No app name provided")
+
     user_app_permissions = permissions_registry.get_user_app_permissions(
         app_name, user_id
     )
+
     if not user_app_permissions:
-        print("FETCHING PERMISSIONS FROM DROPBASE API")
+        logger.info("FETCHING PERMISSIONS FROM DROPBASE API")
         response = requests.post(
             DROPBASE_API_URL + f"/user/check_permission",
             cookies={"access_token_cookie": access_cookies.access_token_cookie},
@@ -107,6 +109,7 @@ def check_user_app_permissions(
             raise Exception("Invalid access token")
 
         permissions_registry.save_permissions(app_name, user_id, response.json())
+
     user_app_permissions = permissions_registry.get_user_app_permissions(
         app_name, user_id
     )
@@ -130,12 +133,3 @@ class EnforceUserAppPermissions:
             )
 
         return True
-
-
-def enforce_user_app_permissions(
-    action: str, user_app_permissions: dict = Depends(check_user_app_permissions)
-):
-    if action not in user_app_permissions or not user_app_permissions[action]:
-        raise Exception("You do not have permission to perform this action")
-
-    return True
