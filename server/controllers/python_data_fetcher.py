@@ -7,7 +7,7 @@ from multiprocessing import Process
 
 from sqlalchemy import create_engine
 
-from server.constants import INFER_TYPE_SAMPLE_SIZE, cwd
+from server.constants import DF_TABLES_DB, INFER_TYPE_SAMPLE_SIZE, cwd
 from server.controllers.dataframe import get_column_types
 from server.controllers.run_sql import apply_filters
 from server.controllers.sqlite import con
@@ -27,7 +27,7 @@ def query_python_table(req: QueryPythonRequest, file: DataFile):
 
         # check if table exists and is ready
         status = con.execute(
-            "SELECT status FROM table_names WHERE table_name = ?", (table.df_table,)
+            "SELECT status FROM table_registry WHERE table_name = ?", (table.df_table,)
         ).fetchone()
         if not status:
             return run_data_fetcher_task(req, file)
@@ -58,7 +58,7 @@ def query_python_table(req: QueryPythonRequest, file: DataFile):
 
         # update last_used flag
         con.execute(
-            "UPDATE table_names SET last_used = ? WHERE table_name = ?",
+            "UPDATE table_registry SET last_used = ? WHERE table_name = ?",
             (
                 str(datetime.now()),
                 table.df_table,
@@ -80,7 +80,7 @@ def run_data_fetcher_task(req: QueryPythonRequest, file: DataFile):
     # create a new table name
     df_table = "t" + uuid.uuid4().hex
     con.execute(
-        "INSERT INTO table_names VALUES (?, ?, ?)",
+        "INSERT INTO table_registry VALUES (?, ?, ?)",
         (
             df_table,
             0,
@@ -99,7 +99,7 @@ def run_data_fetcher_task(req: QueryPythonRequest, file: DataFile):
 
 def run_data_fetcher(table_name: str, req: dict, file: dict):
     # NOTE: because this runs in subprocess, it has to have its own connection
-    eng = create_engine("sqlite:///page_tables.db")
+    eng = create_engine(f"sqlite:///{DF_TABLES_DB}")
     con = eng.connect()
 
     # Change the current working directory to root_directory
@@ -120,7 +120,7 @@ def run_data_fetcher(table_name: str, req: dict, file: dict):
 
         # update tables
         con.execute(
-            "update table_names SET status = ?, message = ? where table_name = ?;",
+            "update table_registry SET status = ?, message = ? where table_name = ?;",
             (
                 1,
                 "success",
@@ -148,7 +148,7 @@ def run_data_fetcher(table_name: str, req: dict, file: dict):
         # save exception to file
         exception = traceback.format_exc()  # get full exception traceback string
         con.execute(
-            "update table_names SET status = ?, message = ? where table_name = ?;",
+            "update table_registry SET status = ?, message = ? where table_name = ?;",
             (
                 2,
                 str(exception),

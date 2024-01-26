@@ -1,4 +1,5 @@
 import asyncio
+from contextlib import asynccontextmanager
 
 import requests
 from fastapi import FastAPI
@@ -6,6 +7,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 
 from server.constants import DROPBASE_API_URL, DROPBASE_TOKEN, WORKER_VERSION
+from server.controllers.sqlite import delete_sqlite_database, prune_stale_tables, setup_tables
 from server.routers import (  # run_python_router,; run_sql_router,
     app_router,
     component_router,
@@ -29,7 +31,18 @@ class NoCacheStaticFiles(StaticFiles):
         return response
 
 
-app = FastAPI()
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # create df_tables database and register tables
+    setup_tables()
+    # start pruning stale tables background task
+    asyncio.create_task(prune_stale_tables())
+    yield
+    # delete df_tables database
+    delete_sqlite_database()
+
+
+app = FastAPI(lifespan=lifespan)
 origins = ["http://localhost:3030", "http://www.localhost:3030"]
 
 app.add_middleware(
