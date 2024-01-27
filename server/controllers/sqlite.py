@@ -16,6 +16,7 @@ def setup_tables():
     table_name text PRIMARY KEY,
     status integer NOT NULL,
     message text NOT NULL,
+    version text,
     last_used text);"""
     con.execute(create_table_registry_sql)
 

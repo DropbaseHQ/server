@@ -1,4 +1,5 @@
 from typing import Any, Dict
+from uuid import UUID
 
 from pydantic import BaseModel
 
@@ -19,6 +20,7 @@ class RunPythonStringRequest(BaseModel):
 
 
 class QueryPythonRequest(BaseModel):
+    user_id: UUID
     app_name: str
     page_name: str
     table: TableBase
