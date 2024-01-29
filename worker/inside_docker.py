@@ -50,29 +50,22 @@ connection = pika.BlockingConnection(pika.ConnectionParameters(host="host.docker
 channel = connection.channel()
 
 try:
-    print("Inside Docker")
+    # get evn variables
     app_name = os.getenv("app_name")
     page_name = os.getenv("page_name")
-
     state = json.loads(os.getenv("state"))
     file = json.loads(os.getenv("file"))
 
-    print(state)
-    print(file)
-
-    # Your Python script here
+    # run python script and get result
     result = run_python_query(app_name, page_name, file, state)
     result = json.dumps(result, indent=2).encode("utf-8")
 
-    print(result)
-
+    # send result to rabbitmq
     channel.basic_publish(exchange="", routing_key="results", body=result)
 
 except Exception as e:
-    print("in error!")
-    print(e)
+    # catch any error and tracebacks and send to rabbitmq
     error_string = traceback.format_exc()
-    print(error_string)
     channel.basic_publish(exchange="", routing_key="results", body=error_string + str(e))
 
 connection.close()
