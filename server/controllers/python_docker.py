@@ -18,7 +18,7 @@ def run_container(env_vars: dict):
     # Run the Docker container with the mount
     container = client.containers.run(
         "worker",
-        command="python inside_docker.py",
+        command="python inside_docker_redis.py",
         mounts=[mount1, mount2],
         environment=env_vars,  # pass environment variables here
         detach=True,

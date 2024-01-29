@@ -44,6 +44,7 @@ async def start_docker(req: QueryPythonRequest, background_tasks: BackgroundTask
         "page_name": req.page_name,
         "file": json.dumps(file.dict()),
         "state": json.dumps(req.state),
+        "job_id": "test_job_id",
     }
     background_tasks.add_task(run_container, args)
     return {"message": "Container started."}
