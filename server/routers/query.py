@@ -1,7 +1,10 @@
+import json
+
 import sqlalchemy.exc
-from fastapi import APIRouter, HTTPException, Response
+from fastapi import APIRouter, BackgroundTasks, HTTPException, Response
 
 from server.controllers.properties import read_page_properties
+from server.controllers.python_docker import run_container
 from server.controllers.python_from_string import run_python_script_from_string
 from server.controllers.python_subprocess import format_process_result, run_process_task_unwrap
 from server.controllers.run_sql import run_sql_query, run_sql_query_from_string
@@ -29,6 +32,21 @@ async def run_python_string(request: RunPythonStringRequest, response: Response)
     except Exception as e:
         response.status_code = 400
         return format_process_result(str(e))
+
+
+@router.post("/test")
+async def start_docker(req: QueryPythonRequest, background_tasks: BackgroundTasks):
+    properties = read_page_properties(req.app_name, req.page_name)
+    file = get_table_data_fetcher(properties["files"], req.table.fetcher)
+    file = DataFile(**file)
+    args = {
+        "app_name": req.app_name,
+        "page_name": req.page_name,
+        "file": json.dumps(file.dict()),
+        "state": json.dumps(req.state),
+    }
+    background_tasks.add_task(run_container, args)
+    return {"message": "Container started."}
 
 
 @router.post("/")
