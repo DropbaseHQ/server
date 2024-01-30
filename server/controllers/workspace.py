@@ -142,6 +142,17 @@ class AppFolderController:
 
         self._write_app_properties_data(app_properties_data)
 
+    def get_pages(self):
+        if os.path.exists(os.path.join(self.app_folder_path, "properties.json")):
+            pages = []
+            for page in self._get_app_properties_data()["pages"]:
+                pages.append({"name": page["name"]})
+            return pages
+
+        page_names = get_subdirectories(self.app_folder_path)
+        pages = [{"name": page} for page in page_names]
+        return pages
+
     def create_app(self):
         self._create_default_workspace_files()
         return {"success": True}
@@ -179,3 +190,11 @@ def create_folder(path):
     if os.path.exists(path):
         shutil.rmtree(path)
     os.mkdir(path)
+
+
+def get_subdirectories(path):
+    return [
+        name
+        for name in os.listdir(path)
+        if os.path.isdir(os.path.join(path, name)) and name != "__pycache__"
+    ]
