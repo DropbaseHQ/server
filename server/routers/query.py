@@ -8,6 +8,7 @@ from server.controllers.properties import read_page_properties
 from server.controllers.python_docker import run_container
 from server.controllers.python_from_string import run_python_script_from_string
 from server.controllers.python_subprocess import format_process_result, run_process_task_unwrap
+from server.controllers.redis import r
 from server.controllers.run_sql import run_sql_query, run_sql_query_from_string
 from server.controllers.utils import get_table_data_fetcher
 from server.schemas.files import DataFile
@@ -22,12 +23,13 @@ router = APIRouter(prefix="/query", tags=["query"], responses={404: {"descriptio
 
 
 @router.post("/sql_string/")
-async def run_sql_from_string_req(request: RunSQLRequest, response: Response):
-    try:
-        return run_sql_query_from_string(request)
-    except Exception as e:
-        response.status_code = 400
-        return format_process_result(str(e))
+async def run_sql_from_string_req(
+    request: RunSQLRequest, response: Response, background_tasks: BackgroundTasks
+):
+    job_id = uuid.uuid4().hex
+    background_tasks.add_task(run_sql_query_from_string, request, job_id)
+    response.status_code = 202
+    return {"message": "job has been scheduled", "job_id": job_id}
 
 
 @router.post("/python_string/")
@@ -40,7 +42,9 @@ async def run_python_string(request: RunPythonStringRequest, response: Response)
 
 
 @router.post("/test_python_string/")
-async def run_python_string_test(req: RunPythonStringRequestNew, background_tasks: BackgroundTasks):
+async def run_python_string_test(
+    req: RunPythonStringRequestNew, response: Response, background_tasks: BackgroundTasks
+):
     job_id = uuid.uuid4().hex
     args = {
         "file_code": req.file_code,
@@ -50,11 +54,12 @@ async def run_python_string_test(req: RunPythonStringRequestNew, background_task
         "job_id": job_id,
     }
     background_tasks.add_task(run_container, args, "inside_docker_string")
+    response.status_code = 202
     return {"message": "job has been scheduled", "job_id": job_id}
 
 
 @router.post("/test")
-async def start_docker(req: QueryPythonRequest, background_tasks: BackgroundTasks):
+async def start_docker(req: QueryPythonRequest, response: Response, background_tasks: BackgroundTasks):
     properties = read_page_properties(req.app_name, req.page_name)
     file = get_table_data_fetcher(properties["files"], req.table.fetcher)
     file = DataFile(**file)
@@ -62,19 +67,25 @@ async def start_docker(req: QueryPythonRequest, background_tasks: BackgroundTask
     args = {
         "app_name": req.app_name,
         "page_name": req.page_name,
-        "file": json.dumps(file.dict()),
-        "state": json.dumps(req.state),
         "job_id": job_id,
     }
-    background_tasks.add_task(run_container, args)
+    if file.type == "data_fetcher":
+        # need to turn into json to pass to docker container as environment variables
+        args["file"] = json.dumps(file.dict())
+        args["state"] = json.dumps(req.state)
+        background_tasks.add_task(run_container, args)
+    else:
+        # called internally, so can pass objects directly
+        args["file"] = file
+        args["state"] = req.state
+        args["filter_sort"] = req.filter_sort
+        background_tasks.add_task(run_sql_query, args)
+    response.status_code = 202
     return {"message": "job has been scheduled", "job_id": job_id}
 
 
 @router.get("/status/{job_id}")
 async def get_job_status(job_id):
-    import redis
-
-    r = redis.Redis(host="localhost", port=6379, db=0)
     result_json = r.get(job_id)
     return {"message": result_json.decode("utf-8")}
 

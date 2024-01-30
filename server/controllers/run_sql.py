@@ -1,3 +1,4 @@
+import json
 from typing import List
 
 import pandas as pd
@@ -7,8 +8,10 @@ from sqlalchemy import text
 from server.constants import DATA_PREVIEW_SIZE, cwd
 from server.controllers.dataframe import convert_df_to_resp_obj
 from server.controllers.python_subprocess import format_process_result, run_process_task_unwrap
+from server.controllers.redis import r
 from server.controllers.utils import connect_to_user_db, process_query_result
-from server.schemas.files import DataFile
+
+# from server.schemas.files import DataFile
 from server.schemas.query import RunSQLRequest
 from server.schemas.table import FilterSort, TableFilter, TablePagination, TableSort
 
@@ -26,21 +29,36 @@ def run_df_query(
     return process_query_result(res)
 
 
-def run_sql_query(app_name: str, page_name: str, file: DataFile, state: dict, filter_sort: FilterSort):
-    verify_state(app_name, page_name, state)
+def run_sql_query(args: dict):
 
-    sql = get_sql_from_file(app_name, page_name, file.name)
-    df = run_df_query(sql, file.source, state, filter_sort)
+    app_name = args.get("app_name")
+    page_name = args.get("page_name")
+    file = args.get("file")
+    state = args.get("state")
+    filter_sort = args.get("filter_sort")
+    job_id = args.get("job_id")
 
-    res = convert_df_to_resp_obj(df)
-    return format_process_result(res)
+    # app_name: str, page_name: str, file: DataFile, state: dict, filter_sort: FilterSort
+    try:
+        verify_state(app_name, page_name, state)
+
+        sql = get_sql_from_file(app_name, page_name, file.name)
+        df = run_df_query(sql, file.source, state, filter_sort)
+
+        res = convert_df_to_resp_obj(df)
+        r.set(job_id, json.dumps(res))
+    except Exception as e:
+        r.set(job_id, format_process_result(str(e)))
 
 
-def run_sql_query_from_string(req: RunSQLRequest):
-    verify_state(req.app_name, req.page_name, req.state)
-    df = run_df_query(req.file_content, req.source, req.state)
-    res = convert_df_to_resp_obj(df)
-    return format_process_result(res)
+def run_sql_query_from_string(req: RunSQLRequest, job_id: str):
+    try:
+        verify_state(req.app_name, req.page_name, req.state)
+        df = run_df_query(req.file_content, req.source, req.state)
+        res = convert_df_to_resp_obj(df)
+        r.set(job_id, json.dumps(res))
+    except Exception as e:
+        r.set(job_id, format_process_result(str(e)))
 
 
 def prepare_sql(user_sql: str, state: dict, filter_sort: FilterSort):
