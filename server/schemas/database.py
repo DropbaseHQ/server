@@ -1,9 +1,15 @@
 from pydantic import BaseModel
 
 
-class PgCreds(BaseModel):
+class BaseDbCreds(BaseModel):
     host: str
     database: str
     username: str
     password: str
-    port: int
+
+class PgCreds(BaseDbCreds):
+    port: int = 5432 
+
+# Child class for MySQL credentials
+class MySQLCreds(BaseDbCreds):
+    port: int = 3306

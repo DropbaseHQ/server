@@ -66,10 +66,17 @@ def clean_df(df: pd.DataFrame) -> pd.DataFrame:
 def connect_to_user_db(source_name: str):
     sources = get_sources()
     creds = sources.get(source_name)
+    creds_type = creds.get("type")
     CredsClass = db_type_to_class.get(creds.get("type"))
     creds = CredsClass(**creds)
-    SQLALCHEMY_DATABASE_URL = f"postgresql+psycopg2://{creds.username}:{creds.password}@{creds.host}:{creds.port}/{creds.database}"  # noqa
-    return create_engine(SQLALCHEMY_DATABASE_URL, future=True)
+
+    if(creds_type == "PG"):
+        SQLALCHEMY_DATABASE_URL = f"postgresql+psycopg2://{creds.username}:{creds.password}@{creds.host}:{creds.port}/{creds.database}"  # noqa
+        return create_engine(SQLALCHEMY_DATABASE_URL, future=True)
+    elif(creds_type == "MYSQL"):
+        SQLALCHEMY_DATABASE_URL = f"mysql+pymysql://{creds.username}:{creds.password}@{creds.host}:{creds.port}/{creds.database}"
+        return create_engine(SQLALCHEMY_DATABASE_URL, future=True)
+
 
 
 def validate_column_name(column: str):
