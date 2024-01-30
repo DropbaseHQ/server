@@ -18,35 +18,36 @@ def get_function_by_name(app_name: str, page_name: str, function_name: str):
     return function
 
 
-def get_state_context(app_name: str, page_name: str, state: dict, context: dict):
+def get_state(app_name: str, page_name: str, class_dict: dict, class_name: str = "State"):
     page_module = f"workspace.{app_name}.{page_name}"
     page = importlib.import_module(page_module)
-    State = getattr(page, "State")
-    Context = getattr(page, "Context")
-    return State(**state), Context(**context)
-
-
-def get_state(app_name: str, page_name: str, state: dict):
-    page_module = f"workspace.{app_name}.{page_name}"
-    page = importlib.import_module(page_module)
-    State = getattr(page, "State")
-    return State(**state)
+    ClassName = getattr(page, class_name)
+    return ClassName(**class_dict)
 
 
 # run data fetcher code
-def run_python_query(app_name: str, page_name: str, file: dict, state: dict):
-    try:
-        state = get_state(app_name, page_name, state)
-        args = {"state": state}
-        function_name = get_function_by_name(app_name, page_name, file.get("name"))
-        # call function
-        df = function_name(**args)
-        return convert_df_to_resp_obj(df), 200
-    except Exception as e:
-        return {"error": str(e)}, 500
+def run_python_data_fetcher(app_name: str, page_name: str, file: dict, state: dict):
+    state = get_state(app_name, page_name, state, "State")
+    args = {"state": state}
+    function_name = get_function_by_name(app_name, page_name, file.get("name"))
+    # call function
+    df = function_name(**args)
+    return convert_df_to_resp_obj(df)
+
+
+# for ui functions
+def run_python_ui(app_name: str, page_name: str, file: dict, state: dict, context: dict):
+    state = get_state(app_name, page_name, state, "State")
+    context = get_state(app_name, page_name, context, "Context")
+    args = {"state": state, "context": context}
+    function_name = get_function_by_name(app_name, page_name, file.get("name"))
+    # call function
+    context = function_name(**args)
+    return context.dict()
 
 
 r = redis.Redis(host="host.docker.internal", port=6379, db=0)
+
 
 try:
     # get evn variables
@@ -57,7 +58,11 @@ try:
     job_id = os.getenv("job_id")
 
     # run python script and get result
-    result = run_python_query(app_name, page_name, file, state)
+    if file["type"] == "ui":
+        result = run_python_ui(app_name, page_name, file, state)
+    elif file["type"] == "data_fetcher":
+        result = run_python_data_fetcher(app_name, page_name, file, state)
+
     result = json.dumps(result)
 
     # send result to redis

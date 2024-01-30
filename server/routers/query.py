@@ -1,4 +1,5 @@
 import json
+import uuid
 
 import sqlalchemy.exc
 from fastapi import APIRouter, BackgroundTasks, HTTPException, Response
@@ -11,7 +12,11 @@ from server.controllers.run_sql import run_sql_query, run_sql_query_from_string
 from server.controllers.utils import get_table_data_fetcher
 from server.schemas.files import DataFile
 from server.schemas.query import RunSQLRequest
-from server.schemas.run_python import QueryPythonRequest, RunPythonStringRequest
+from server.schemas.run_python import (
+    QueryPythonRequest,
+    RunPythonStringRequest,
+    RunPythonStringRequestNew,
+)
 
 router = APIRouter(prefix="/query", tags=["query"], responses={404: {"description": "Not found"}})
 
@@ -34,20 +39,44 @@ async def run_python_string(request: RunPythonStringRequest, response: Response)
         return format_process_result(str(e))
 
 
+@router.post("/test_python_string/")
+async def run_python_string_test(req: RunPythonStringRequestNew, background_tasks: BackgroundTasks):
+    job_id = uuid.uuid4().hex
+    args = {
+        "file_code": req.file_code,
+        "test_code": req.test_code,
+        "state": json.dumps(req.state),
+        "context": json.dumps(req.context),
+        "job_id": job_id,
+    }
+    background_tasks.add_task(run_container, args, "inside_docker_string")
+    return {"message": "job has been scheduled", "job_id": job_id}
+
+
 @router.post("/test")
 async def start_docker(req: QueryPythonRequest, background_tasks: BackgroundTasks):
     properties = read_page_properties(req.app_name, req.page_name)
     file = get_table_data_fetcher(properties["files"], req.table.fetcher)
     file = DataFile(**file)
+    job_id = uuid.uuid4().hex
     args = {
         "app_name": req.app_name,
         "page_name": req.page_name,
         "file": json.dumps(file.dict()),
         "state": json.dumps(req.state),
-        "job_id": "test_job_id",
+        "job_id": job_id,
     }
     background_tasks.add_task(run_container, args)
-    return {"message": "Container started."}
+    return {"message": "job has been scheduled", "job_id": job_id}
+
+
+@router.get("/status/{job_id}")
+async def get_job_status(job_id):
+    import redis
+
+    r = redis.Redis(host="localhost", port=6379, db=0)
+    result_json = r.get(job_id)
+    return {"message": result_json.decode("utf-8")}
 
 
 @router.post("/")

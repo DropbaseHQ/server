@@ -60,12 +60,12 @@ r = redis.Redis(host="host.docker.internal", port=6379, db=0)
 
 # get job id
 job_id = os.getenv("job_id")
-file_name = uuid.uuid4().hex + ".py"
+file_name = "f" + uuid.uuid4().hex + ".py"
 
 try:
-    file_code = os.getenv("file_code")
     state = json.loads(os.getenv("state") or "{}")
     context = json.loads(os.getenv("context") or "{}")
+    file_code = os.getenv("file_code")
     test_code = os.getenv("test_code")
 
     # assign last expression to variable if needed
@@ -74,7 +74,7 @@ try:
     # write exec file
     write_file(file_code, test_code, state, context, file_name)
 
-    # import temp.py file
+    # import temp file
     module_name = file_name.split(".")[0]  # this gets you "temp_file"
     module = importlib.import_module(module_name)  # this imports the module
     result = module.result  # this gets the "result" from the module

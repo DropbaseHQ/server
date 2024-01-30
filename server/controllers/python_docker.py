@@ -1,11 +1,11 @@
-import time
+# import time
 
 import docker
 
 from server.constants import cwd
 
 
-def run_container(env_vars: dict):
+def run_container(env_vars: dict, docker_script: str = "inside_docker"):
     client = docker.from_env()
 
     # mount workspace directory
@@ -18,16 +18,16 @@ def run_container(env_vars: dict):
     # Run the Docker container with the mount
     container = client.containers.run(
         "worker",
-        command="python inside_docker_redis.py",
+        command=f"python {docker_script}.py",
         mounts=[mount1, mount2],
         environment=env_vars,  # pass environment variables here
         detach=True,
         working_dir="/app",  # set working directory as /app
     )
 
-    time.sleep(1)
+    # time.sleep(1)
+    # # Fetch and print container's log
+    # logs = container.logs()
+    # print(logs.decode("utf-8"))  # Decode bytes to string format.
 
-    # Fetch and print container's log
-    logs = container.logs()
-    print(logs.decode("utf-8"))  # Decode bytes to string format.
     container.stop()
