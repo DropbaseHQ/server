@@ -1,10 +1,14 @@
 import ast
+import importlib
 import json
 import os
 import traceback
+import uuid
 
 import astor
+import pandas as pd
 import redis
+from dataframe import convert_df_to_resp_obj
 
 
 def assign_last_expression(script: str) -> str:
@@ -14,9 +18,10 @@ def assign_last_expression(script: str) -> str:
     module = ast.parse(script)
 
     if module.body:
+        # get the last statement
         last_statement = module.body[-1]
 
-        # Replace Expr statement with assignment to "_"
+        # Replace Expr statement with assignment to "result"
         assign = ast.Assign(targets=[ast.Name(id="result", ctx=ast.Store())], value=last_statement.value)
         module.body[-1] = assign
 
@@ -24,18 +29,24 @@ def assign_last_expression(script: str) -> str:
     return astor.to_source(module)
 
 
-def write_file(file_code: str, test_code: str, state: dict, file_name: str):
+def write_file(file_code: str, test_code: str, state: dict, context: dict, file_name: str):
     python_str = file_code
-    python_str += f"""
-import json
-
+    python_str += "\n\nimport json\n"
+    if state:
+        python_str += f"""
 state = {state}
-
 try:
     state = State(**state)
 except:
-    pass
-
+    pass\n\n
+"""
+    if context:
+        python_str += f"""
+context = {context}
+try:
+    context = Context(**context)
+except:
+    pass\n\n
 """
     python_str += test_code
 
@@ -49,21 +60,33 @@ r = redis.Redis(host="host.docker.internal", port=6379, db=0)
 
 # get job id
 job_id = os.getenv("job_id")
-file_name = "temp.py"
+file_name = uuid.uuid4().hex + ".py"
 
 try:
     file_code = os.getenv("file_code")
-    state = json.loads(os.getenv("state"))
+    state = json.loads(os.getenv("state") or "{}")
+    context = json.loads(os.getenv("context") or "{}")
     test_code = os.getenv("test_code")
 
     # assign last expression to variable if needed
     test_code = assign_last_expression(test_code)
 
     # write exec file
-    write_file(file_code, test_code, state, file_name)
+    write_file(file_code, test_code, state, context, file_name)
 
-    # import the file
-    from temp import result
+    # import temp.py file
+    module_name = file_name.split(".")[0]  # this gets you "temp_file"
+    module = importlib.import_module(module_name)  # this imports the module
+    result = module.result  # this gets the "result" from the module
+
+    # convert result to json
+    if isinstance(result, dict) or isinstance(result, list):
+        result = json.dumps(result)
+    elif isinstance(result, pd.DataFrame):
+        result = convert_df_to_resp_obj(result)
+        result = json.dumps(result)
+    else:
+        result = str(result)
 
     # send result to redis
     r.set(job_id, result)
@@ -74,3 +97,7 @@ except Exception as e:
     result = error_string + str(e)
     r.set(job_id, result)
     r.expire(job_id, 60)
+
+finally:
+    # remove temp file
+    os.remove(file_name)
