@@ -33,57 +33,30 @@ class AppFolderController:
         self.app_folder_path = os.path.join(self.r_path_to_workspace, self.app_name)
         self.page_properties = PAGE_PROPERTIES_TEMPLATE
 
-    def create_page(self, app_folder_path: str = None, page_name: str = None):
-        app_folder_path = app_folder_path or self.app_folder_path
-        page_name = page_name or self.page_name
-
-        # Create new page folder with __init__.py
-        page_folder_path = os.path.join(app_folder_path, page_name)
-
-        create_folder(path=page_folder_path)
-        create_init_file(path=page_folder_path, init_code=PAGE_INIT_CODE)
-
-        create_file(path=page_folder_path, content="", file_name="state.py")
-        create_file(path=page_folder_path, content="", file_name="context.py")
-        # create properties.json
-        create_file(
-            path=page_folder_path,
-            content=json.dumps(self.page_properties, indent=2),
-            file_name="properties.json",
-        )
-
-        # Create new scripts folder with __init__.py
-        scripts_folder_name = "scripts"
-        scripts_folder_path = os.path.join(page_folder_path, scripts_folder_name)
-        create_folder(path=scripts_folder_path)
-        create_init_file(path=scripts_folder_path, init_code="")
-
-        create_state_context_files(self.app_name, page_name, self.page_properties)
-        self.add_page_to_app_properties(page_name)
-
-    def _add_page_to_app_properties(self, page_name: str):
+    def _get_app_properties_data(self):
         path_to_app_properties = os.path.join(self.app_folder_path, "properties.json")
         with open(path_to_app_properties, "r") as file:
-            app_properties = json.load(file)
+            return json.load(file)
+
+    def _write_app_properties_data(self, app_properties_data: dict):
+        path_to_app_properties = os.path.join(self.app_folder_path, "properties.json")
+        with open(path_to_app_properties, "w") as file:
+            json.dump(app_properties_data, file, indent=2)
+
+    def _add_page_to_app_properties(self, page_name: str):
+        app_properties_data = self._get_app_properties_data()
 
         page_object = {
             "name": page_name,
             "label": page_name,
             "id": str(uuid.uuid4()),
         }
-        if "pages" in app_properties:
-            app_properties["pages"].append(page_object)
+        if "pages" in app_properties_data:
+            app_properties_data["pages"].append(page_object)
         else:
-            app_properties["pages"] = [page_object]
+            app_properties_data["pages"] = [page_object]
 
-        with open(path_to_app_properties, "w") as file:
-            json.dump(app_properties, file, indent=2)
-
-    def rename_page(self, old_page_name: str, new_page_name: str):
-        # rename page folder
-        old_page_folder_path = os.path.join(self.app_folder_path, old_page_name)
-        new_page_folder_path = os.path.join(self.app_folder_path, new_page_name)
-        os.rename(old_page_folder_path, new_page_folder_path)
+        self._write_app_properties_data(app_properties_data)
 
     def _create_default_workspace_files(self) -> str | None:
         try:
@@ -111,6 +84,63 @@ class AppFolderController:
         new_app_properties["app_label"] = self.app_name
         new_app_properties["app_id"] = str(uuid.uuid4())
         return new_app_properties
+
+    def create_page(self, app_folder_path: str = None, page_name: str = None):
+        app_folder_path = app_folder_path or self.app_folder_path
+        page_name = page_name or self.page_name
+
+        # Create new page folder with __init__.py
+        page_folder_path = os.path.join(app_folder_path, page_name)
+
+        create_folder(path=page_folder_path)
+        create_init_file(path=page_folder_path, init_code=PAGE_INIT_CODE)
+
+        create_file(path=page_folder_path, content="", file_name="state.py")
+        create_file(path=page_folder_path, content="", file_name="context.py")
+        # create properties.json
+        create_file(
+            path=page_folder_path,
+            content=json.dumps(self.page_properties, indent=2),
+            file_name="properties.json",
+        )
+
+        # Create new scripts folder with __init__.py
+        scripts_folder_name = "scripts"
+        scripts_folder_path = os.path.join(page_folder_path, scripts_folder_name)
+        create_folder(path=scripts_folder_path)
+        create_init_file(path=scripts_folder_path, init_code="")
+
+        create_state_context_files(self.app_name, page_name, self.page_properties)
+        self._add_page_to_app_properties(page_name)
+
+    def rename_page(self, old_page_name: str, new_page_name: str):
+        # rename page folder
+        old_page_folder_path = os.path.join(self.app_folder_path, old_page_name)
+        new_page_folder_path = os.path.join(self.app_folder_path, new_page_name)
+        os.rename(old_page_folder_path, new_page_folder_path)
+
+        # rename page in properties.json
+        app_properties_data = self._get_app_properties_data()
+        for page in app_properties_data["pages"]:
+            if page["name"] == old_page_name:
+                page["name"] = new_page_name
+                page["label"] = new_page_name
+                break
+
+        self._write_app_properties_data(app_properties_data)
+
+    def delete_page(self, page_name: str):
+        page_folder_path = os.path.join(self.app_folder_path, page_name)
+        shutil.rmtree(page_folder_path)
+
+        # remove page from properties.json
+        app_properties_data = self._get_app_properties_data()
+        for page in app_properties_data["pages"]:
+            if page["name"] == page_name:
+                app_properties_data["pages"].remove(page)
+                break
+
+        self._write_app_properties_data(app_properties_data)
 
     def create_app(self):
         self._create_default_workspace_files()
