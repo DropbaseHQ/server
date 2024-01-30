@@ -21,7 +21,7 @@ PAGE_PROPERTIES_TEMPLATE = {
 }
 
 
-class AppCreator:
+class AppFolderController:
     def __init__(
         self,
         app_name: str,
@@ -61,7 +61,7 @@ class AppCreator:
         create_state_context_files(self.app_name, page_name, self.page_properties)
         self.add_page_to_app_properties(page_name)
 
-    def add_page_to_app_properties(self, page_name: str):
+    def _add_page_to_app_properties(self, page_name: str):
         path_to_app_properties = os.path.join(self.app_folder_path, "properties.json")
         with open(path_to_app_properties, "r") as file:
             app_properties = json.load(file)
@@ -112,7 +112,7 @@ class AppCreator:
         new_app_properties["app_id"] = str(uuid.uuid4())
         return new_app_properties
 
-    def create(self):
+    def create_app(self):
         self._create_default_workspace_files()
         return {"success": True}
 

@@ -7,7 +7,7 @@ from pydantic import BaseModel
 from server.controllers.display_rules import run_display_rule
 from server.controllers.properties import update_properties
 from server.controllers.utils import get_state_context_model, validate_column_name
-from server.controllers.workspace import AppCreator
+from server.controllers.workspace import AppFolderController
 from server.schemas.page import PageProperties
 
 
@@ -89,8 +89,8 @@ def _dict_from_pydantic_model(model):
 def create_page(app_name: str, page_name: str):
     r_path_to_workspace = os.path.join(os.path.dirname(__file__), "../../workspace")
     try:
-        app_creator = AppCreator(app_name, r_path_to_workspace)
-        app_creator.create_page(page_name=page_name)
+        app_folder_controller = AppFolderController(app_name, r_path_to_workspace)
+        app_folder_controller.create_page(page_name=page_name)
         return {"success": True}
     except Exception:
         raise HTTPException(status_code=500, detail="Unable to create page")
@@ -99,8 +99,10 @@ def create_page(app_name: str, page_name: str):
 def rename_page(app_name: str, page_name: str, new_page_name: str):
     r_path_to_workspace = os.path.join(os.path.dirname(__file__), "../../workspace")
     try:
-        app_creator = AppCreator(app_name, r_path_to_workspace)
-        app_creator.rename_page(old_page_name=page_name, new_page_name=new_page_name)
+        app_folder_controller = AppFolderController(app_name, r_path_to_workspace)
+        app_folder_controller.rename_page(
+            old_page_name=page_name, new_page_name=new_page_name
+        )
         return {"success": True}
     except Exception:
         raise HTTPException(status_code=500, detail="Unable to create rename page")
