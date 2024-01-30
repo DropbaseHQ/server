@@ -29,24 +29,22 @@ def assign_last_expression(script: str) -> str:
     return astor.to_source(module)
 
 
-def write_file(file_code: str, test_code: str, state: dict, context: dict, file_name: str):
+def write_file(file_code: str, test_code: str, state: dict, context: dict = {}, file_name: str = {}):
     python_str = file_code
-    python_str += "\n\nimport json\n"
-    if state:
-        python_str += f"""
+    # NOTE: not all user functions will have state and context, so wrapping in try-except
+    python_str += f"""
 state = {state}
+context = {context}
+
 try:
     state = State(**state)
 except:
-    pass\n\n
-"""
-    if context:
-        python_str += f"""
-context = {context}
+    pass
+
 try:
     context = Context(**context)
 except:
-    pass\n\n
+    pass
 """
     python_str += test_code
 
@@ -80,6 +78,8 @@ try:
     result = module.result  # this gets the "result" from the module
 
     # convert result to json
+    if result.__class__.__name__ == "Context":
+        result = json.dumps(result.dict())
     if isinstance(result, dict) or isinstance(result, list):
         result = json.dumps(result)
     elif isinstance(result, pd.DataFrame):
