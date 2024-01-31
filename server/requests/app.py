@@ -7,3 +7,6 @@ class AppRouter:
             url="app/",
             json={**app_properties},
         )
+
+    def delete_app(self, app_id: str):
+        return self.session.delete(url=f"app/{app_id}")

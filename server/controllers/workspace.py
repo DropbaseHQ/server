@@ -3,7 +3,7 @@ import os
 import shutil
 import uuid
 
-from fastapi import HTTPException
+from fastapi import HTTPException, Response
 
 from server.controllers.generate_models import create_state_context_files
 from server.requests.dropbase_router import DropbaseRouter
@@ -60,7 +60,7 @@ class AppFolderController:
         self._write_app_properties_data(app_properties_data)
         return page_object
 
-    def _create_default_workspace_files(self) -> str | None:
+    def _create_default_workspace_files(self, router: DropbaseRouter) -> str | None:
         try:
             # Create new app folder
             create_folder(path=self.app_folder_path)
@@ -74,7 +74,7 @@ class AppFolderController:
             )
 
             # Create new page folder with __init__.py
-            self.create_page()
+            self.create_page(router=router)
 
         except Exception as e:
             print("Unable to create app folder", e)
@@ -165,7 +165,7 @@ class AppFolderController:
         return pages
 
     def create_app(self, workspace_id, router: DropbaseRouter):
-        self._create_default_workspace_files()
+        self._create_default_workspace_files(router=router)
 
         path_to_app_properties = os.path.join(self.app_folder_path, "properties.json")
         with open(path_to_app_properties, "r") as file:
@@ -180,6 +180,21 @@ class AppFolderController:
         router.app.create_app(app_create_request)
 
         return {"success": True}
+
+    def delete_app(self, app_name: str, response: Response, router: DropbaseRouter):
+        app_path = os.path.join(self.r_path_to_workspace, app_name)
+        app_properties = self._get_app_properties_data()
+        if os.path.exists(app_path):
+            shutil.rmtree(app_path)
+
+            if app_properties:
+                app_id = app_properties.get("app_id", None)
+                router.app.delete_app(app_id=app_id)
+
+            return {"message": "App deleted"}
+        else:
+            response.status_code = 400
+            return {"message": "App does not exist"}
 
 
 INIT_CODE = """

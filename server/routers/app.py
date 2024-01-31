@@ -65,11 +65,13 @@ def rename_app_req(req: RenameAppRequest, response: Response):
 
 
 @router.delete("/{app_name}")
-def delete_app_req(app_name: str, response: Response):
-    app_path = os.path.join(os.path.dirname(__file__), "../../workspace", app_name)
-    if os.path.exists(app_path):
-        shutil.rmtree(app_path)
-        return {"message": "App deleted"}
-    else:
-        response.status_code = 400
-        return {"message": "App does not exist"}
+def delete_app_req(
+    app_name: str,
+    response: Response,
+    router: DropbaseRouter = Depends(get_dropbase_router),
+):
+    r_path_to_workspace = os.path.join(os.path.dirname(__file__), "../../workspace")
+    app_folder_controller = AppFolderController(app_name, r_path_to_workspace)
+    return app_folder_controller.delete_app(
+        app_name=app_name, response=response, router=router
+    )
