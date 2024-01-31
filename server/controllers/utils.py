@@ -8,7 +8,8 @@ import pandas as pd
 from sqlalchemy import create_engine, text
 from sqlalchemy.engine import Engine
 
-from server.controllers.sources import db_type_to_class, db_type_to_connection, get_sources
+from server.controllers.sources import db_type_to_class, db_type_to_connection, db_type_to_driver, get_sources
+from server.models.connect import BaseDatabase
 
 
 def rename_function_in_file(
@@ -61,20 +62,20 @@ def clean_df(df: pd.DataFrame) -> pd.DataFrame:
     # TODO: implement cleaning
     return df
 
-
 @functools.lru_cache
 def connect_to_user_db(source_name: str):
     sources = get_sources()
     creds = sources.get(source_name)
     creds_type = creds.get("type")
+
     CredsClass = db_type_to_class.get(creds_type)
     creds = CredsClass(**creds)
+    creds_dict = creds.dict()
 
     if CredsClass is None:
         raise ValueError(f"Unsupported database type: {creds_type}")
     
-    db_class = db_type_to_connection.get(creds_type)
-    db_instance = db_class(creds)
+    db_instance = BaseDatabase(creds=creds_dict)
 
     return db_instance.get_engine()
 

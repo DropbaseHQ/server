@@ -1,10 +1,14 @@
 from sqlalchemy import create_engine
+from sqlalchemy.engine import URL
 
 
 # Potential classes
 class BaseDatabase:
     def __init__(self, creds): # Make it so that the function changes based on which Cred type is given? Poly?
         self.creds = creds
+    
+    def get_connection_url(self):
+        return URL.create(**self.creds)
 
     def get_engine(self):
         return create_engine(self.get_connection_url(), future=True)

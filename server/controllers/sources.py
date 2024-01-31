@@ -7,6 +7,8 @@ from server.models.connect import PostgresDatabase, MySQLDatabase, SQLiteDatabas
 
 db_type_to_class = {"postgres": PgCreds, "pg": PgCreds, "mysql": MySQLCreds, "sqlite": SqliteCreds, "snowflake": SnowflakeCreds}
 
+db_type_to_driver = {"postgres": "postgresql+psycopg2", "pg": "postgresql+psycopg2", "mysql": "mysql+pymysql", "sqlite": "sqlite", "snowflake": "snowflake"}
+
 db_type_to_connection = {
     "postgres": PostgresDatabase,
     "pg": PostgresDatabase,
@@ -26,9 +28,11 @@ def get_sources():
             if name in sources:
                 sources[name][field] = value
             else:
-                sources[name] = {field: value, "type": type} 
+                sources[name] = {field: value, "type": type}
+
     verified_sources = {}
     for name, source in sources.items():
+        source["drivername"] = db_type_to_driver.get(source["type"])
         SourceClass = db_type_to_class.get(source["type"])
         try:
             SourceClass(**source)
