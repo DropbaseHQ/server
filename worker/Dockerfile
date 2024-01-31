@@ -5,3 +5,6 @@ RUN mkdir -p /app/data
 
 COPY requirements.txt requirements.txt
 RUN pip install --no-cache-dir --upgrade -r requirements.txt
+
+COPY requirements-custom.txt requirements-custom.txt
+RUN pip install --no-cache-dir --upgrade -r requirements-custom.txt
