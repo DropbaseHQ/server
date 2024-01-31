@@ -53,14 +53,14 @@ def run_sql_query(args: dict):
         response["message"] = "job completed"
         response["type"] = "table"
 
-        response["status_code"] = 500
+        response["status_code"] = 200
 
     except Exception as e:
         response["traceback"] = traceback.format_exc()
         response["message"] = str(e)
         response["type"] = "error"
 
-        response["status_code"] = 200
+        response["status_code"] = 500
 
         r.set(job_id, format_process_result(str(e)))
     finally:

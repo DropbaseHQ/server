@@ -70,15 +70,14 @@ try:
         response["data"] = result["data"]
         response["columns"] = result["columns"]
 
-    response["status_code"] = 200
     response["message"] = "job completed"
-
+    response["status_code"] = 200
 except Exception as e:
     # catch any error and tracebacks and send to rabbitmq
+    response["type"] = "error"
     response["traceback"] = traceback.format_exc()
     response["message"] = str(e)
     response["status_code"] = 500
-    response["type"] = "error"
 
 finally:
     # send result to redis

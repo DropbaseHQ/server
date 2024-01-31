@@ -93,20 +93,14 @@ try:
         response["data"] = result["data"]
         response["columns"] = result["columns"]
         response["type"] = "table"
-    elif isinstance(result, dict) or isinstance(result, list):
-        result = json.dumps(result)
+    else:
         response["data"] = result
         response["type"] = "generic"
-    else:
-        response["data"] = str(result)
-        response["type"] = "generic"
 
-    response["status_code"] = 200
     response["message"] = "Job has been completed"
 
 except Exception as e:
     response["type"] = "error"
-    response["status_code"] = 200
     response["traceback"] = traceback.format_exc()
     response["message"] = str(e)
 
@@ -117,6 +111,8 @@ finally:
     # time.sleep(10)
 
     # remove temp file
+    response["status_code"] = 200
+    # get stdout
     response["stdout"] = redirected_output.getvalue()
     sys.stdout = old_stdout
 
@@ -124,4 +120,5 @@ finally:
     r.set(job_id, json.dumps(response))
     r.expire(job_id, 60)
 
+    # remove temp file
     os.remove(file_name)
