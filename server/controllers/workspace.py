@@ -126,9 +126,9 @@ class AppFolderController:
             app_object = {}
             with open(app_properties, "r") as file:
                 app_props = json.load(file)
-                app_object["name"] = app_props["app_name"]
-                app_object["label"] = app_props["app_label"]
-                app_object["id"] = app_props["app_id"]
+                app_object["name"] = app_props.get("app_name")
+                app_object["label"] = app_props.get("app_label")
+                app_object["id"] = app_props.get("app_id")
             app_info.append(app_object)
 
         create_file(
@@ -195,8 +195,9 @@ class AppFolderController:
         self._write_app_properties_data(app_properties_data)
 
     def create_app(self):
-        self._create_default_workspace_files()
         self.create_workspace_properties()
+        self._create_default_workspace_files()
+
         return {"success": True}
 
 
