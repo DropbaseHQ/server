@@ -1,5 +1,3 @@
-# import time
-
 import docker
 
 from server.constants import cwd
@@ -31,3 +29,4 @@ def run_container(env_vars: dict, docker_script: str = "inside_docker"):
     # print(logs.decode("utf-8"))  # Decode bytes to string format.
 
     container.stop()
+    container.remove()

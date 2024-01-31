@@ -1,4 +1,5 @@
 import json
+import traceback
 from typing import List
 
 import pandas as pd
@@ -10,8 +11,6 @@ from server.controllers.dataframe import convert_df_to_resp_obj
 from server.controllers.python_subprocess import format_process_result, run_process_task_unwrap
 from server.controllers.redis import r
 from server.controllers.utils import connect_to_user_db, process_query_result
-
-# from server.schemas.files import DataFile
 from server.schemas.query import RunSQLRequest
 from server.schemas.table import FilterSort, TableFilter, TablePagination, TableSort
 
@@ -38,6 +37,8 @@ def run_sql_query(args: dict):
     filter_sort = args.get("filter_sort")
     job_id = args.get("job_id")
 
+    response = {"stdout": "", "traceback": "", "message": "", "type": "", "status_code": 202}
+
     # app_name: str, page_name: str, file: DataFile, state: dict, filter_sort: FilterSort
     try:
         verify_state(app_name, page_name, state)
@@ -47,18 +48,48 @@ def run_sql_query(args: dict):
 
         res = convert_df_to_resp_obj(df)
         r.set(job_id, json.dumps(res))
+        response["data"] = res["data"]
+        response["columns"] = res["columns"]
+        response["message"] = "job completed"
+        response["type"] = "table"
+
+        response["status_code"] = 500
+
     except Exception as e:
+        response["traceback"] = traceback.format_exc()
+        response["message"] = str(e)
+        response["type"] = "error"
+
+        response["status_code"] = 200
+
         r.set(job_id, format_process_result(str(e)))
+    finally:
+        r.set(job_id, json.dumps(response))
 
 
 def run_sql_query_from_string(req: RunSQLRequest, job_id: str):
+    response = {"stdout": "", "traceback": "", "message": "", "type": "", "status_code": 202}
     try:
         verify_state(req.app_name, req.page_name, req.state)
         df = run_df_query(req.file_content, req.source, req.state)
         res = convert_df_to_resp_obj(df)
-        r.set(job_id, json.dumps(res))
+        # r.set(job_id, json.dumps(res))
+
+        response["data"] = res["data"]
+        response["columns"] = res["columns"]
+        response["message"] = "job completed"
+        response["type"] = "table"
+
+        response["status_code"] = 200
     except Exception as e:
-        r.set(job_id, format_process_result(str(e)))
+        response["traceback"] = traceback.format_exc()
+        response["message"] = str(e)
+        response["type"] = "error"
+
+        response["status_code"] = 200
+    finally:
+        # pass
+        r.set(job_id, json.dumps(response))
 
 
 def prepare_sql(user_sql: str, state: dict, filter_sort: FilterSort):

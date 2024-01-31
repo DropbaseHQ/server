@@ -106,16 +106,22 @@ try:
 
 except Exception as e:
     response["type"] = "error"
-    response["status_code"] = 500
+    response["status_code"] = 200
     response["traceback"] = traceback.format_exc()
     response["message"] = str(e)
 
 finally:
+
+    # testing timeout
+    # import time
+    # time.sleep(10)
+
+    # remove temp file
+    response["stdout"] = redirected_output.getvalue()
+    sys.stdout = old_stdout
+
     # send result to redis
     r.set(job_id, json.dumps(response))
     r.expire(job_id, 60)
 
-    # remove temp file
-    stdout = redirected_output.getvalue()
-    sys.stdout = old_stdout
     os.remove(file_name)

@@ -28,8 +28,18 @@ async def run_sql_from_string_req(
 ):
     job_id = uuid.uuid4().hex
     background_tasks.add_task(run_sql_query_from_string, request, job_id)
-    response.status_code = 202
-    return {"message": "job has been scheduled", "job_id": job_id}
+
+    status_code = 202
+    reponse_payload = {"message": "job started", "status_code": status_code, "job_id": job_id}
+
+    # set initial status to pending
+
+    r.set(job_id, json.dumps(reponse_payload))
+    r.expire(job_id, 300)  # timeout in 5 minutes
+
+    response.status_code = status_code
+    reponse_payload.pop("status_code")
+    return reponse_payload
 
 
 @router.post("/python_string/")
@@ -54,8 +64,18 @@ async def run_python_string_test(
         "job_id": job_id,
     }
     background_tasks.add_task(run_container, args, "inside_docker_string")
-    response.status_code = 202
-    return {"message": "job has been scheduled", "job_id": job_id}
+
+    status_code = 202
+    reponse_payload = {"message": "job started", "status_code": status_code, "job_id": job_id}
+
+    # set initial status to pending
+
+    r.set(job_id, json.dumps(reponse_payload))
+    r.expire(job_id, 300)  # timeout in 5 minutes
+
+    response.status_code = status_code
+    reponse_payload.pop("status_code")
+    return reponse_payload
 
 
 @router.post("/test")
@@ -82,18 +102,19 @@ async def start_docker(req: QueryPythonRequest, response: Response, background_t
         background_tasks.add_task(run_sql_query, args)
 
     status_code = 202
-    reponse_payload = {"message": "job started", "status_code": status_code}
+    reponse_payload = {"message": "job started", "status_code": status_code, "job_id": job_id}
 
     # set initial status to pending
     r.set(job_id, json.dumps(reponse_payload))
     r.expire(job_id, 300)  # timeout in 5 minutes
 
     response.status_code = status_code
+    reponse_payload.pop("status_code")
     return reponse_payload
 
 
 @router.get("/status/{job_id}")
-async def get_job_status(job_id: str, response: Response):
+async def get_job_status(job_id: str, response: Response, use_cache=False):
     """
     generic = 123
     table = {data, columns}
@@ -105,7 +126,7 @@ async def get_job_status(job_id: str, response: Response):
         result.data = []
         result.columns = []
         result.context = {}
-        result.type = {generic, table, context} - send type. if generic, use result.data. if table, use result.data and result.columns. if context, use result.context
+        result.type = {generic, table, context} - send type. if generic, use result.data. if table, use result.data and result.columns. if context, use result.context  # noqa
         stdout
         traceback
     },
