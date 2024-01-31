@@ -3,7 +3,7 @@ import os
 from pydantic import ValidationError
 from server.schemas.database import PgCreds, MySQLCreds, SqliteCreds, SnowflakeCreds
 
-from server.models.connect import PostgresDatabase, MySQLDatabase, SQLiteDatabase
+from server.models.connect import PostgresDatabase, MySQLDatabase, SQLiteDatabase, SnowflakeDatabase
 
 db_type_to_class = {"postgres": PgCreds, "pg": PgCreds, "mysql": MySQLCreds, "sqlite": SqliteCreds, "snowflake": SnowflakeCreds}
 
@@ -12,7 +12,7 @@ db_type_to_connection = {
     "pg": PostgresDatabase,
     "mysql": MySQLDatabase,
     "sqlite": SQLiteDatabase,
-    "snowflake": SnowflakeCreds
+    "snowflake": SnowflakeDatabase
 }
 
 

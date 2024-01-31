@@ -23,4 +23,4 @@ class SQLiteDatabase(BaseDatabase):
 
 class SnowflakeDatabase(BaseDatabase):
     def get_connection_url(self):
-        return f"snowflake://{self.creds.account}.{self.creds.region}.snowflakecomputing.com/?warehouse={self.creds.warehouse}&role={self.creds.role}&db={self.creds.database}&schema={self.creds.schema}"
+        return f"snowflake://{self.creds.username}:{self.creds.password}@{self.creds.account}/{self.creds.database}/{self.creds.dbschema}?warehouse={self.creds.warehouse}"

@@ -19,7 +19,9 @@ class SqliteCreds(BaseModel):
 
 class SnowflakeCreds(BaseModel):
     account: str
-    region: str
     warehouse: str
     role: str
-    schema: str
+    dbschema: str
+    database: str
+    username: str
+    password: str

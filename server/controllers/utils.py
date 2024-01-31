@@ -68,6 +68,7 @@ def connect_to_user_db(source_name: str):
     creds = sources.get(source_name)
     creds_type = creds.get("type")
     CredsClass = db_type_to_class.get(creds_type)
+    creds = CredsClass(**creds)
 
     if CredsClass is None:
         raise ValueError(f"Unsupported database type: {creds_type}")
