@@ -19,10 +19,10 @@ def set_by_path(root, items, value):
 
 # helper function to compare values with operators
 def compare_values(value_a: Any, operator: str, value_b: Any):
-    # Values entered in the UI are always strings for now
-    # For proper comparison, we need to convert value_a to string
-    if value_a != None:
+    if not type(value_a) == type(value_b):
         value_a = str(value_a)
+        value_b = str(value_b)
+
     if operator == "equals":
         return value_a == value_b
     elif operator == "gt":
