@@ -85,6 +85,34 @@ class AppFolderController:
         new_app_properties["app_id"] = str(uuid.uuid4())
         return new_app_properties
 
+    def create_workspace_properties(self):
+        if os.path.exists(os.path.join(self.r_path_to_workspace, "properties.json")):
+            return
+
+        created_app_names = get_subdirectories(self.r_path_to_workspace)
+        app_info = []
+        for app_name in created_app_names:
+            app_properties = os.path.join(
+                self.r_path_to_workspace, app_name, "properties.json"
+            )
+            if not os.path.exists(app_properties):
+                app_info.append({"name": app_name, "label": app_name, "id": None})
+                continue
+
+            app_object = {}
+            with open(app_properties, "r") as file:
+                app_props = json.load(file)
+                app_object["name"] = app_props["app_name"]
+                app_object["label"] = app_props["app_label"]
+                app_object["id"] = app_props["app_id"]
+            app_info.append(app_object)
+
+        create_file(
+            path=self.r_path_to_workspace,
+            content=json.dumps({"apps": app_info}, indent=2),
+            file_name="properties.json",
+        )
+
     def create_page(self, app_folder_path: str = None, page_name: str = None):
         app_folder_path = app_folder_path or self.app_folder_path
         page_name = page_name or self.page_name
@@ -144,6 +172,7 @@ class AppFolderController:
 
     def create_app(self):
         self._create_default_workspace_files()
+        self._create_workspace_properties()
         return {"success": True}
 
 
@@ -179,3 +208,11 @@ def create_folder(path):
     if os.path.exists(path):
         shutil.rmtree(path)
     os.mkdir(path)
+
+
+def get_subdirectories(path):
+    return [
+        name
+        for name in os.listdir(path)
+        if os.path.isdir(os.path.join(path, name)) and name != "__pycache__"
+    ]
