@@ -13,3 +13,6 @@ class PgCreds(BaseDbCreds):
 # Child class for MySQL credentials
 class MySQLCreds(BaseDbCreds):
     port: int = 3306
+
+class SqliteCreds(BaseModel):
+    host: str

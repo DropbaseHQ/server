@@ -1,9 +1,9 @@
 import logging
 import os
 from pydantic import ValidationError
-from server.schemas.database import PgCreds, MySQLCreds
+from server.schemas.database import PgCreds, MySQLCreds, SqliteCreds
 
-db_type_to_class = {"postgres": PgCreds, "pg": PgCreds, "mysql": MySQLCreds}
+db_type_to_class = {"postgres": PgCreds, "pg": PgCreds, "mysql": MySQLCreds, "sqlite": SqliteCreds}
 
 
 def get_sources():

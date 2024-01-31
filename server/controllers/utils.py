@@ -76,6 +76,9 @@ def connect_to_user_db(source_name: str):
     elif(creds_type == "mysql"):
         SQLALCHEMY_DATABASE_URL = f"mysql+pymysql://{creds.username}:{creds.password}@{creds.host}:{creds.port}/{creds.database}"
         return create_engine(SQLALCHEMY_DATABASE_URL, future=True)
+    elif(creds_type == "sqlite"):
+        SQLALCHEMY_DATABASE_URL = f"sqlite:///{creds.host}"
+        return create_engine(SQLALCHEMY_DATABASE_URL, future=True)
 
 
 
