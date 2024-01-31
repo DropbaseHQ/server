@@ -1,10 +1,17 @@
+import os
+
 import docker
 
 from server.constants import cwd
 
 
 def run_container(env_vars: dict, docker_script: str = "inside_docker"):
+
     client = docker.from_env()
+
+    # add environment variables from .env file
+    config = {key: os.getenv(key) for key in os.environ.keys()}
+    env_vars = {**env_vars, **config}
 
     # mount workspace directory
     workspace_dir = cwd + "/workspace"
