@@ -6,6 +6,7 @@ from pydantic import BaseModel
 
 from server.controllers.display_rules import run_display_rule
 from server.controllers.properties import update_properties
+from server.requests.dropbase_router import DropbaseRouter
 from server.controllers.utils import get_state_context_model, validate_column_name
 from server.controllers.workspace import AppFolderController
 from server.schemas.page import PageProperties
@@ -86,11 +87,11 @@ def _dict_from_pydantic_model(model):
     return data
 
 
-def create_page(app_name: str, page_name: str):
+def create_page(app_name: str, page_name: str, router: DropbaseRouter):
     r_path_to_workspace = os.path.join(os.path.dirname(__file__), "../../workspace")
     try:
         app_folder_controller = AppFolderController(app_name, r_path_to_workspace)
-        app_folder_controller.create_page(page_name=page_name)
+        app_folder_controller.create_page(router=router, page_name=page_name)
         return {"success": True}
     except Exception:
         raise HTTPException(status_code=500, detail="Unable to create page")

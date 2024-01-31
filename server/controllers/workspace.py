@@ -6,6 +6,7 @@ import uuid
 from fastapi import HTTPException
 
 from server.controllers.generate_models import create_state_context_files
+from server.requests.dropbase_router import DropbaseRouter
 
 APP_PROPERTIES_TEMPLATE = {
     "app_name": "app1",
@@ -57,6 +58,7 @@ class AppFolderController:
             app_properties_data["pages"] = [page_object]
 
         self._write_app_properties_data(app_properties_data)
+        return page_object
 
     def _create_default_workspace_files(self) -> str | None:
         try:
@@ -85,7 +87,9 @@ class AppFolderController:
         new_app_properties["app_id"] = str(uuid.uuid4())
         return new_app_properties
 
-    def create_page(self, app_folder_path: str = None, page_name: str = None):
+    def create_page(
+        self, router: DropbaseRouter, app_folder_path: str = None, page_name: str = None
+    ):
         app_folder_path = app_folder_path or self.app_folder_path
         page_name = page_name or self.page_name
 
@@ -111,7 +115,14 @@ class AppFolderController:
         create_init_file(path=scripts_folder_path, init_code="")
 
         create_state_context_files(self.app_name, page_name, self.page_properties)
-        self._add_page_to_app_properties(page_name)
+        page_object = self._add_page_to_app_properties(page_name)
+
+        router.page.create_page(
+            {
+                **page_object,
+                "app_id": self._get_app_properties_data().get("app_id", None),
+            }
+        )
 
     def rename_page(self, old_page_name: str, new_page_name: str):
         # rename page folder
@@ -153,8 +164,21 @@ class AppFolderController:
         pages = [{"name": page} for page in page_names]
         return pages
 
-    def create_app(self):
+    def create_app(self, workspace_id, router: DropbaseRouter):
         self._create_default_workspace_files()
+
+        path_to_app_properties = os.path.join(self.app_folder_path, "properties.json")
+        with open(path_to_app_properties, "r") as file:
+            app_properties = json.load(file)
+
+        app_create_request = {
+            "name": app_properties["app_name"],
+            "label": app_properties["app_label"],
+            "id": app_properties["app_id"],
+            "workspace_id": workspace_id,
+        }
+        router.app.create_app(app_create_request)
+
         return {"success": True}
 
 
