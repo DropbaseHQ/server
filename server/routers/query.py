@@ -80,18 +80,59 @@ async def start_docker(req: QueryPythonRequest, response: Response, background_t
         args["state"] = req.state
         args["filter_sort"] = req.filter_sort
         background_tasks.add_task(run_sql_query, args)
-    response.status_code = 202
-    return {"message": "job has been scheduled", "job_id": job_id}
+
+    status_code = 202
+    reponse_payload = {"message": "job started", "status_code": status_code}
+
+    # set initial status to pending
+    r.set(job_id, json.dumps(reponse_payload))
+    r.expire(job_id, 300)  # timeout in 5 minutes
+
+    response.status_code = status_code
+    return reponse_payload
 
 
 @router.get("/status/{job_id}")
-async def get_job_status(job_id):
+async def get_job_status(job_id: str, response: Response):
+    """
+    generic = 123
+    table = {data, columns}
+    context = {}
+    result.data = 123
+
+    # run python from string
+    {
+        result.data = []
+        result.columns = []
+        result.context = {}
+        result.type = {generic, table, context} - send type. if generic, use result.data. if table, use result.data and result.columns. if context, use result.context
+        stdout
+        traceback
+    },
+    status_code
+    """
     result_json = r.get(job_id)
-    return {"message": result_json.decode("utf-8")}
+    if result_json:
+        result = json.loads(result_json.decode("utf-8"))
+        response.status_code = result.get("status_code")
+        result.pop("status_code")
+        return result
+    else:
+        response.status_code = 404
+        return {"message": "job not found"}
 
 
 @router.post("/")
 async def run_query_req(req: QueryPythonRequest):
+    """
+    response:
+    {
+        result.data
+        result.columns
+        result.message
+    }
+    status_code
+    """
     try:
         # read page properties
         properties = read_page_properties(req.app_name, req.page_name)
@@ -114,3 +155,12 @@ async def run_query_req(req: QueryPythonRequest):
         raise HTTPException(400, str(e))
     except Exception as e:
         raise HTTPException(500, str(e))
+
+
+"""
+status_code = 202,
+{
+    message = "job has been scheduled"
+    job_id = "123"
+}
+"""

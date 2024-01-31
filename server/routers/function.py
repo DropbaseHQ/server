@@ -12,6 +12,14 @@ router = APIRouter(
 
 @router.post("/")
 async def run_function_req(req: RunFunction, response: Response):
+    """
+    response:
+    {
+        result.context
+        result.message
+    }
+    status_code
+    """
     args = {
         "app_name": req.app_name,
         "page_name": req.page_name,
