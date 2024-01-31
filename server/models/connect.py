@@ -1,8 +1,9 @@
 from sqlalchemy import create_engine
 
+
 # Potential classes
 class BaseDatabase:
-    def __init__(self, creds):
+    def __init__(self, creds): # Make it so that the function changes based on which Cred type is given? Poly?
         self.creds = creds
 
     def get_engine(self):
@@ -19,3 +20,7 @@ class MySQLDatabase(BaseDatabase):
 class SQLiteDatabase(BaseDatabase):
     def get_connection_url(self):
         return f"sqlite:///{self.creds.host}"
+
+class SnowflakeDatabase(BaseDatabase):
+    def get_connection_url(self):
+        return f"snowflake://{self.creds.account}.{self.creds.region}.snowflakecomputing.com/?warehouse={self.creds.warehouse}&role={self.creds.role}&db={self.creds.database}&schema={self.creds.schema}"

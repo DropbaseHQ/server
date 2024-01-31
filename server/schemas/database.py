@@ -16,3 +16,10 @@ class MySQLCreds(BaseDbCreds):
 
 class SqliteCreds(BaseModel):
     host: str
+
+class SnowflakeCreds(BaseModel):
+    account: str
+    region: str
+    warehouse: str
+    role: str
+    schema: str

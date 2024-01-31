@@ -8,7 +8,7 @@ import pandas as pd
 from sqlalchemy import create_engine, text
 from sqlalchemy.engine import Engine
 
-from server.controllers.sources import db_type_to_class, get_sources
+from server.controllers.sources import db_type_to_class, db_type_to_connection, get_sources
 
 
 def rename_function_in_file(
@@ -67,19 +67,15 @@ def connect_to_user_db(source_name: str):
     sources = get_sources()
     creds = sources.get(source_name)
     creds_type = creds.get("type")
-    CredsClass = db_type_to_class.get(creds.get("type"))
-    creds = CredsClass(**creds)
+    CredsClass = db_type_to_class.get(creds_type)
 
-    if(creds_type == "pg" or creds_type == "postgres"):
-        SQLALCHEMY_DATABASE_URL = f"postgresql+psycopg2://{creds.username}:{creds.password}@{creds.host}:{creds.port}/{creds.database}"  # noqa
-        return create_engine(SQLALCHEMY_DATABASE_URL, future=True)
-    elif(creds_type == "mysql"):
-        SQLALCHEMY_DATABASE_URL = f"mysql+pymysql://{creds.username}:{creds.password}@{creds.host}:{creds.port}/{creds.database}"
-        return create_engine(SQLALCHEMY_DATABASE_URL, future=True)
-    elif(creds_type == "sqlite"):
-        SQLALCHEMY_DATABASE_URL = f"sqlite:///{creds.host}"
-        return create_engine(SQLALCHEMY_DATABASE_URL, future=True)
+    if CredsClass is None:
+        raise ValueError(f"Unsupported database type: {creds_type}")
+    
+    db_class = db_type_to_connection.get(creds_type)
+    db_instance = db_class(creds)
 
+    return db_instance.get_engine()
 
 
 def validate_column_name(column: str):
