@@ -1,7 +1,7 @@
 from sqlalchemy import text
 from sqlalchemy.exc import SQLAlchemyError
 
-from server.models.table.pg_column import PgColumnBaseProperty
+from server.models.table.pg_column import PgColumnDefinedProperty
 
 
 class ColumnPathInferenceError(BaseException):
@@ -50,14 +50,14 @@ def get_slow_sql(
     """
 
 
-def get_table_path(col_data: PgColumnBaseProperty) -> str:
+def get_table_path(col_data: PgColumnDefinedProperty) -> str:
     return f"{col_data.schema_name}.{col_data.table_name}"
 
 
 def get_primary_keys(smart_cols: dict[str, dict]) -> dict[str, dict]:
     primary_keys = {}
     for col_data in smart_cols.values():
-        col_data = PgColumnBaseProperty(**col_data)
+        col_data = PgColumnDefinedProperty(**col_data)
         if col_data.primary_key:
             primary_keys[get_table_path(col_data)] = col_data.column_name
     return primary_keys
@@ -68,7 +68,7 @@ def validate_smart_cols(user_db_engine, smart_cols: dict[str, dict], user_sql: s
     primary_keys = get_primary_keys(smart_cols)
     validated = []
     for col_name, col_data in smart_cols.items():
-        col_data = PgColumnBaseProperty(**col_data)
+        col_data = PgColumnDefinedProperty(**col_data)
         pk_name = primary_keys.get(get_table_path(col_data))
         if pk_name:
             validation_sql = get_fast_sql(
