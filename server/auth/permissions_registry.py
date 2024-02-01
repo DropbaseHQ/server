@@ -2,7 +2,7 @@ from uuid import UUID
 import time
 
 
-PERMISSISONS_EXPIRY_TIME = 60 * 5  # 5 minutes
+PERMISSISONS_EXPIRY_TIME = 60  # 1 minute
 
 
 class PermissionsRegistry:
