@@ -8,9 +8,6 @@ from fastapi import HTTPException
 from server.controllers.generate_models import create_state_context_files
 
 APP_PROPERTIES_TEMPLATE = {
-    "app_name": "app1",
-    "app_label": "App 1",
-    "app_id": "1234",
     "pages": [],
 }
 
@@ -43,6 +40,20 @@ class AppFolderController:
         with open(path_to_app_properties, "w") as file:
             json.dump(app_properties_data, file, indent=2)
 
+    def _get_workspace_properties(self):
+        workspace_properties_path = os.path.join(
+            self.r_path_to_workspace, "properties.json"
+        )
+        with open(workspace_properties_path, "r") as file:
+            return json.load(file)
+
+    def _write_workspace_properties(self, workspace_properties: dict):
+        workspace_properties_path = os.path.join(
+            self.r_path_to_workspace, "properties.json"
+        )
+        with open(workspace_properties_path, "w") as file:
+            json.dump(workspace_properties, file, indent=2)
+
     def _add_page_to_app_properties(self, page_name: str):
         app_properties_data = self._get_app_properties_data()
 
@@ -58,11 +69,27 @@ class AppFolderController:
 
         self._write_app_properties_data(app_properties_data)
 
+    def _add_app_to_workspace_properties(self, app_name: str):
+        workspace_properties = self._get_workspace_properties()
+        app_object = {
+            "name": app_name,
+            "label": app_name,
+            "id": str(uuid.uuid4()),
+        }
+        if "apps" in workspace_properties:
+            workspace_properties["apps"].append(app_object)
+        else:
+            workspace_properties["apps"] = [app_object]
+
+        self._write_workspace_properties(workspace_properties)
+
     def _create_default_workspace_files(self) -> str | None:
         try:
             # Create new app folder
             create_folder(path=self.app_folder_path)
             create_init_file(path=self.app_folder_path)
+
+            self._add_app_to_workspace_properties(self.app_name)
 
             new_app_properties = self._get_app_properties()
             create_file(
@@ -80,10 +107,35 @@ class AppFolderController:
 
     def _get_app_properties(self):
         new_app_properties = APP_PROPERTIES_TEMPLATE
-        new_app_properties["app_name"] = self.app_name
-        new_app_properties["app_label"] = self.app_name
-        new_app_properties["app_id"] = str(uuid.uuid4())
         return new_app_properties
+
+    def create_workspace_properties(self):
+        if os.path.exists(os.path.join(self.r_path_to_workspace, "properties.json")):
+            return
+
+        created_app_names = get_subdirectories(self.r_path_to_workspace)
+        app_info = []
+        for app_name in created_app_names:
+            app_properties = os.path.join(
+                self.r_path_to_workspace, app_name, "properties.json"
+            )
+            if not os.path.exists(app_properties):
+                app_info.append({"name": app_name, "label": app_name, "id": None})
+                continue
+
+            app_object = {}
+            with open(app_properties, "r") as file:
+                app_props = json.load(file)
+                app_object["name"] = app_props.get("app_name")
+                app_object["label"] = app_props.get("app_label")
+                app_object["id"] = app_props.get("app_id")
+            app_info.append(app_object)
+
+        create_file(
+            path=self.r_path_to_workspace,
+            content=json.dumps({"apps": app_info}, indent=2),
+            file_name="properties.json",
+        )
 
     def create_page(self, app_folder_path: str = None, page_name: str = None):
         app_folder_path = app_folder_path or self.app_folder_path
@@ -154,7 +206,9 @@ class AppFolderController:
         return pages
 
     def create_app(self):
+        self.create_workspace_properties()
         self._create_default_workspace_files()
+
         return {"success": True}
 
 
