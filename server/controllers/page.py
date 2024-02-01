@@ -109,11 +109,11 @@ def rename_page(app_name: str, page_name: str, new_page_name: str):
         raise HTTPException(status_code=500, detail="Unable to create rename page")
 
 
-def delete_page(app_name: str, page_name: str):
+def delete_page(app_name: str, page_name: str, router: DropbaseRouter):
     r_path_to_workspace = os.path.join(os.path.dirname(__file__), "../../workspace")
     try:
         app_folder_controller = AppFolderController(app_name, r_path_to_workspace)
-        app_folder_controller.delete_page(page_name=page_name)
+        app_folder_controller.delete_page(page_name=page_name, router=router)
 
         return {"success": True}
     except Exception:

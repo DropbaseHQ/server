@@ -73,9 +73,10 @@ def delete_page_req(
     app_name: str,
     page_name: str,
     response: Response,
+    router: DropbaseRouter = Depends(get_dropbase_router),
 ):
     try:
-        return delete_page(app_name, page_name)
+        return delete_page(app_name, page_name, router)
     except Exception as e:
         response.status_code = 500
         return {"error": str(e)}

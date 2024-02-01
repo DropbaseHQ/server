@@ -7,3 +7,6 @@ class PageRouter:
             url="page/",
             json={**page_properties},
         )
+
+    def delete_page(self, page_id: str):
+        return self.session.delete(url=f"page/{page_id}")
