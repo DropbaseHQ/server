@@ -33,8 +33,20 @@ def test_run_query_sql(test_client, mocker, mock_db):
     res = test_client.post("/query", json=data)
 
     # Assert
+    assert res.status_code == 202
+    response_data = res.json()
+    job_id = response_data["job_id"]
+
+    import time
+
+    time.sleep(2)
+
+    res = test_client.get(f"/query/status/{job_id}")
     assert res.status_code == 200
-    assert res.json()["success"]
+    res_data = res.json()
+    assert res_data["type"] == "table"
+    assert isinstance(res_data["data"], list)
+    assert isinstance(res_data["columns"], list)
 
 
 def test_run_query_python(test_client):
@@ -46,7 +58,17 @@ def test_run_query_python(test_client):
     res = test_client.post("/query", json=data)
 
     # Assert
+    assert res.status_code == 202
+    response_data = res.json()
+    job_id = response_data["job_id"]
+
+    import time
+
+    time.sleep(2)
+
+    res = test_client.get(f"/query/status/{job_id}")
     assert res.status_code == 200
-    res_data = res.json()["result"]
+    res_data = res.json()
+    assert res_data["type"] == "table"
     assert res_data["columns"] == [{"name": "x", "column_type": "int64", "display_type": "integer"}]
     assert res_data["data"] == [[1]]
