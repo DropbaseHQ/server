@@ -1,14 +1,7 @@
 import os
 
 from server.constants import cwd
-
-
-def get_subdirectories(path):
-    return [
-        name
-        for name in os.listdir(path)
-        if os.path.isdir(os.path.join(path, name)) and name != "__pycache__"
-    ]
+from server.controllers.workspace import AppFolderController, get_subdirectories
 
 
 def get_workspace_apps():
@@ -16,8 +9,7 @@ def get_workspace_apps():
     app_names = get_subdirectories(folder_path)
     response = []
     for app_name in app_names:
-        page_path = os.path.join(folder_path, app_name)
-        page_names = get_subdirectories(page_path)
-        pages = [{"name": page} for page in page_names]
+        app_folder_controller = AppFolderController(app_name, folder_path)
+        pages = app_folder_controller.get_pages()
         response.append({"name": app_name, "pages": pages})
     return response
