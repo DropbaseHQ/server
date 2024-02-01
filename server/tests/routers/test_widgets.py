@@ -1,7 +1,7 @@
 import copy
 
-from server.tests.verify_state_and_context import verify_object_in_state_context
 from server.tests.verify_property_exists import verify_property_exists
+from server.tests.verify_state_and_context import verify_object_in_state_context
 
 base_data = {
     "app_name": "dropbase_test_app",
@@ -14,6 +14,8 @@ base_data = {
                 "name": "widget1",
                 "description": "description1",
                 "components": [],
+                "type": "base",
+                "menu_item": True,
             }
         ],
         "files": [],
@@ -30,6 +32,8 @@ def test_create_widget_req(test_client):
             "name": "widget2",
             "description": "description2",
             "components": [],
+            "type": "base",
+            "menu_item": True,
         }
     )
 
@@ -50,6 +54,110 @@ def test_create_widget_req(test_client):
     assert verify_property_exists("widgets[1].name", "widget2")
 
 
+def test_create_widget_req_error_duplicate_names(test_client):
+    # Arrange
+    data = copy.deepcopy(base_data)
+    data["properties"]["widgets"].append(
+        {
+            "label": "Widget 1",
+            "name": "widget1",
+            "description": "description2",
+            "components": [],
+            "type": "base",
+            "menu_item": True,
+        }
+    )
+
+    res = test_client.post("/page", json=data)
+    res_data = res.json()
+
+    # Assert
+    assert res.status_code != 200
+
+    assert res_data["message"] == "A widget with this name already exists"
+
+
+def test_create_widget_req_error_illegal_name_space_between(test_client):
+    # Arrange
+    data = copy.deepcopy(base_data)
+    data["properties"]["widgets"].append(
+        {
+            "label": "Widget 2",
+            "name": "widget 2",
+            "description": "description2",
+            "components": [],
+            "type": "base",
+            "menu_item": True,
+        }
+    )
+
+    # Act
+    res = test_client.post("/page", json=data)
+    res_data = res.json()
+
+    # Assert
+    assert res.status_code != 200
+
+    assert not verify_object_in_state_context("WidgetsState", "widget 2")
+    assert not verify_object_in_state_context("WidgetsContext", "widget 2", True)
+
+    assert res_data["message"] == "Invalid widget names present in the table"
+
+
+def test_create_widget_req_error_illegal_name_special_characters(test_client):
+    # Arrange
+    data = copy.deepcopy(base_data)
+    data["properties"]["widgets"].append(
+        {
+            "label": "Widget 2",
+            "name": "widget_2!",
+            "description": "description2",
+            "components": [],
+            "type": "base",
+            "menu_item": True,
+        }
+    )
+
+    # Act
+    res = test_client.post("/page", json=data)
+    res_data = res.json()
+
+    # Assert
+    assert res.status_code != 200
+
+    assert not verify_object_in_state_context("WidgetsState", "widget_2!")
+    assert not verify_object_in_state_context("WidgetsContext", "widget_2!", True)
+
+    assert res_data["message"] == "Invalid widget names present in the table"
+
+
+def test_create_widget_req_error_illegal_name_url_path(test_client):
+    # Arrange
+    data = copy.deepcopy(base_data)
+    data["properties"]["widgets"].append(
+        {
+            "label": "Widget 2",
+            "name": "../../widget2",
+            "description": "description2",
+            "components": [],
+            "type": "base",
+            "menu_item": True,
+        }
+    )
+
+    # Act
+    res = test_client.post("/page", json=data)
+    res_data = res.json()
+
+    # Assert
+    assert res.status_code != 200
+
+    assert not verify_object_in_state_context("WidgetsState", "../../widget2!")
+    assert not verify_object_in_state_context("WidgetsContext", "../../", True)
+
+    assert res_data["message"] == "Invalid widget names present in the table"
+
+
 def test_update_widget_req(test_client):
     # Arrange
     data = copy.deepcopy(base_data)
@@ -59,6 +167,8 @@ def test_update_widget_req(test_client):
             "name": "widget3",
             "description": "description3",
             "components": [],
+            "type": "base",
+            "menu_item": True,
         }
     )
 

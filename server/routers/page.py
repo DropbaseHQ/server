@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Response, Depends
+from fastapi import APIRouter, Response, HTTPException, Depends
 
 from server.controllers.page import (
     create_page,
@@ -10,6 +10,7 @@ from server.controllers.page import (
 from server.controllers.properties import read_page_properties
 from server.controllers.utils import check_if_object_exists, validate_column_name
 from server.auth.dependency import EnforceUserAppPermissions
+from server.requests.dropbase_router import DropbaseRouter, get_dropbase_router
 from server.schemas.page import CreatePageRequest, PageProperties, RenamePageRequest
 
 router = APIRouter(
@@ -43,6 +44,7 @@ def create_page_req(
     app_name: str,
     request: CreatePageRequest,
     response: Response,
+    router: DropbaseRouter = Depends(get_dropbase_router),
 ):
     try:
         # assert app_name is valid
@@ -57,7 +59,7 @@ def create_page_req(
             response.status_code = 400
             return {"message": "Page already exists"}
 
-        return create_page(app_name, request.page_name)
+        return create_page(app_name, request.page_name, router)
     except Exception as e:
         response.status_code = 500
         return {"error": str(e)}
@@ -88,9 +90,10 @@ def delete_page_req(
     app_name: str,
     page_name: str,
     response: Response,
+    router: DropbaseRouter = Depends(get_dropbase_router),
 ):
     try:
-        return delete_page(app_name, page_name)
+        return delete_page(app_name, page_name, router)
     except Exception as e:
         response.status_code = 500
         return {"error": str(e)}
@@ -104,6 +107,10 @@ def cud_page_props(
     try:
         # update local json file
         return update_page_properties(req)
+    except HTTPException as e:
+        response.status_code = e.status_code
+        return {"message": str(e.detail)}
+
     except Exception as e:
         # TODO: delete files if error
         response.status_code = 500

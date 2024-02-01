@@ -1,23 +1,14 @@
 import ast
 import functools
 import importlib
-import inspect
-import json
 import re
 from pathlib import Path
 
 import pandas as pd
-from datamodel_code_generator import generate
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, text
+from sqlalchemy.engine import Engine
 
 from server.controllers.sources import db_type_to_class, get_sources
-from server.schemas.files import DataFile
-
-
-def call_function(fn, **kwargs):
-    sig = inspect.signature(fn)
-    kwargs = {k: v for k, v in kwargs.items() if k in sig.parameters}
-    return fn(**kwargs)
 
 
 def rename_function_in_file(
@@ -51,17 +42,9 @@ def get_function_by_name(app_name: str, page_name: str, function_name: str):
     return function
 
 
-def get_data_function_by_file(app_name: str, page_name: str, file: DataFile):
-    file_module = f"workspace.{app_name}.{page_name}.scripts.{file.name}"
-    scripts = importlib.import_module(file_module)
-    function = getattr(scripts, file.name)
-    return function
-
-
 def get_state_context(app_name: str, page_name: str, state: dict, context: dict):
     page_module = f"workspace.{app_name}.{page_name}"
     page = importlib.import_module(page_module)
-    # page = importlib.reload(page)
     State = getattr(page, "State")
     Context = getattr(page, "Context")
     return State(**state), Context(**context)
@@ -70,7 +53,6 @@ def get_state_context(app_name: str, page_name: str, state: dict, context: dict)
 def get_state(app_name: str, page_name: str, state: dict):
     page_module = f"workspace.{app_name}.{page_name}"
     page = importlib.import_module(page_module)
-    # page = importlib.reload(page)
     State = getattr(page, "State")
     return State(**state)
 
@@ -78,24 +60,6 @@ def get_state(app_name: str, page_name: str, state: dict):
 def clean_df(df: pd.DataFrame) -> pd.DataFrame:
     # TODO: implement cleaning
     return df
-
-
-def update_state_context_files(app_name, page_name, state, context):
-    try:
-        output_state_path = Path(f"workspace/{app_name}/{page_name}/state.py")
-        generate(
-            input_=json.dumps(state),
-            input_file_type="json",
-            output=output_state_path,
-        )
-        output_context_path = Path(f"workspace/{app_name}/{page_name}/context.py")
-        generate(
-            input_=json.dumps(context),
-            input_file_type="json",
-            output=output_context_path,
-        )
-    except Exception as e:
-        raise Exception(f"Error updating state and context files: {e}")
 
 
 @functools.lru_cache
@@ -111,29 +75,6 @@ def connect_to_user_db(source_name: str):
 def validate_column_name(column: str):
     pattern = re.compile(r"^[a-zA-Z_][a-zA-Z0-9_]*$")
     return False if pattern.fullmatch(column) is None else True
-
-
-def get_class_properties(pydantic_model):
-    model_schema = pydantic_model.schema()
-    model_props = model_schema.get("properties")
-
-    obj_props = []
-    for key in model_props.keys():
-        prop = model_props[key]
-        prop["name"] = key
-
-        if key in model_schema.get("required", []):
-            prop["required"] = True
-
-        if "description" in prop:
-            prop["type"] = prop["description"]
-            prop.pop("description")
-
-        if "enum" in prop:
-            prop["type"] = "select"
-        obj_props.append(prop)
-
-    return obj_props
 
 
 def get_state_context_model(app_name: str, page_name: str, model_type: str):
@@ -154,3 +95,25 @@ def get_table_data_fetcher(files: list, fetcher_name: str):
 
 def check_if_object_exists(path: str):
     return Path(path).exists()
+
+
+def get_depend_table_names(user_sql: str):
+    pattern = re.compile(r"\{\{state\.tables\.(\w+)\.\w+\}\}")
+    matches = pattern.findall(user_sql)
+    return list(set(matches))
+
+
+def get_column_names(user_db_engine: Engine, user_sql: str) -> list[str]:
+    if user_sql == "":
+        return []
+    user_sql = user_sql.strip("\n ;")
+    user_sql = f"SELECT * FROM ({user_sql}) AS q LIMIT 1"
+    with user_db_engine.connect().execution_options(autocommit=True) as conn:
+        col_names = list(conn.execute(text(user_sql)).keys())
+    return col_names
+
+
+def process_query_result(res) -> pd.DataFrame:
+    df = pd.DataFrame(res)
+    df = clean_df(df)
+    return df

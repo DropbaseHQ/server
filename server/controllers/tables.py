@@ -1,8 +1,8 @@
 from server.controllers.page import get_page_state_context
 from server.controllers.properties import read_page_properties, update_properties
-from server.controllers.query import get_column_names, get_sql_from_file, render_sql
+from server.controllers.run_sql import get_sql_from_file, render_sql
 from server.controllers.source import get_db_schema
-from server.controllers.utils import connect_to_user_db, get_table_data_fetcher
+from server.controllers.utils import connect_to_user_db, get_column_names, get_table_data_fetcher
 from server.controllers.validation import validate_smart_cols
 from server.requests.dropbase_router import DropbaseRouter
 from server.schemas.files import DataFile
@@ -48,7 +48,7 @@ def convert_sql_table(req: ConvertTableRequest, router: DropbaseRouter):
         column_props = [value for name, value in smart_cols.items() if name in validated]
 
         for column in column_props:
-            column["display_type"] = pg_base_type_mapper.get(column["column_type"])
+            column["display_type"] = detect_displau_type_for_pg_col(column["column_type"].lower())
 
         for table in properties["tables"]:
             if table["name"] == req.table.name:
@@ -65,37 +65,23 @@ def convert_sql_table(req: ConvertTableRequest, router: DropbaseRouter):
         return str(e), 500
 
 
-pg_base_type_mapper = {
-    "TEXT": "text",
-    "VARCHAR": "text",
-    "CHAR": "text",
-    "CHARACTER": "text",
-    "STRING": "text",
-    "BINARY": "text",
-    "VARBINARY": "text",
-    "INTEGER": "integer",
-    "INT": "integer",
-    "BIGINT": "integer",
-    "SMALLINT": "integer",
-    "TINYINT": "integer",
-    "BYTEINT": "integer",
-    "REAL": "float",
-    "FLOAT": "float",
-    "FLOAT4": "float",
-    "FLOAT8": "float",
-    "DOUBLE": "float",
-    "DOUBLE PRECISION": "float",
-    "DECIMAL": "float",
-    "NUMERIC": "float",
-    "BOOLEAN": "boolean",
-    "DATE": "date",
-    "TIME": "time",
-    "DATETIME": "datetime",
-    "TIMESTAMP": "datetime",
-    "TIMESTAMP_LTZ": "datetime",
-    "TIMESTAMP_NTZ": "datetime",
-    "TIMESTAMP_TZ": "datetime",
-    "VARIANT": "text",
-    "OBJECT": "text",
-    "ARRAY": "text",
-}
+# TODO: duplicate, move to utils
+def detect_displau_type_for_pg_col(col_type):
+    if "float" in col_type:
+        return "float"
+    elif col_type in ["real", "double", "double precision", "decimal", "numeric"]:
+        return "float"
+    elif "int" in col_type:
+        return "integer"
+    elif col_type == "date":
+        return "date"
+    elif col_type == "time":
+        return "time"
+    elif col_type == "datetime":
+        return "datetime"
+    elif "timestamp" in col_type:
+        return "datetime"
+    elif "bool" in col_type:
+        return "boolean"
+    else:
+        return "text"

@@ -7,6 +7,8 @@ from server.constants import DROPBASE_API_URL
 
 from .main_request import DropbaseSession
 from .misc import MiscRouter
+from .app import AppRouter
+from .page import PageRouter
 
 base_url = DROPBASE_API_URL + "/worker/"
 
@@ -22,13 +24,19 @@ class DropbaseRouter:
         elif type(cookies) is AccessCookies:
             self.cookies = cookies.dict()
 
-        self.session.cookies["access_token_cookie"] = self.cookies["access_token_cookie"]
+        self.session.cookies["access_token_cookie"] = self.cookies[
+            "access_token_cookie"
+        ]
         if "refresh_token_cookie" in self.cookies:
-            self.session.cookies["refresh_token_cookie"] = self.cookies["refresh_token_cookie"]
+            self.session.cookies["refresh_token_cookie"] = self.cookies[
+                "refresh_token_cookie"
+            ]
         self._assign_sub_routers()
 
     def _assign_sub_routers(self):
         self.misc = MiscRouter(session=self.session)
+        self.app = AppRouter(session=self.session)
+        self.page = PageRouter(session=self.session)
 
 
 class AccessCookies(BaseModel):

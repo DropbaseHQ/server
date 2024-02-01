@@ -6,19 +6,15 @@ from server.models.category import PropertyCategory
 from server.models.common import ComponentDisplayProperties
 
 
-# select
-class SelectSharedProperties(BaseModel):
-    value: Optional[str]
-    options: Annotated[Optional[List[Dict]], PropertyCategory.default]
-
-
-class SelectContextProperty(ComponentDisplayProperties, SelectSharedProperties):
+class SelectContextProperty(ComponentDisplayProperties):
     pass
 
 
-class SelectBaseProperties(BaseModel):
+class SelectDefinedProperty(BaseModel):
     label: Annotated[str, PropertyCategory.default]
     name: Annotated[str, PropertyCategory.default]
+
+    options: Annotated[Optional[List[Dict]], PropertyCategory.default]
     default: Annotated[Optional[Any], PropertyCategory.other]
 
     # events
@@ -29,7 +25,3 @@ class SelectBaseProperties(BaseModel):
 
     # internal
     component_type: Literal["select"]
-
-
-class SelectDefinedProperty(SelectBaseProperties, SelectSharedProperties):
-    pass

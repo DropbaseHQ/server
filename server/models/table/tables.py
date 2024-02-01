@@ -21,21 +21,13 @@ class PinnedFilter(BaseModel):
     condition: Literal["=", ">", "<", ">=", "<=", "like", "in"]
 
 
-class TableDisplayProperty(BaseModel):
+class TableContextProperty(BaseModel):
     message: Optional[str]
     message_type: Optional[str]
     reload: Annotated[Optional[bool], PropertyCategory.other] = False
 
 
-class TableSharedProperty(BaseModel):
-    pass
-
-
-class TableContextProperty(TableDisplayProperty, TableSharedProperty):
-    pass
-
-
-class TableBaseProperty(BaseModel):
+class TableDefinedProperty(BaseModel):
     label: Annotated[str, PropertyCategory.default]
     name: Annotated[str, PropertyCategory.default]
     description: Annotated[Optional[str], PropertyCategory.default]
@@ -58,7 +50,3 @@ class TableBaseProperty(BaseModel):
     # internal
     type: Optional[Literal["python", "sql"]] = "sql"
     smart: Optional[bool] = False
-
-
-class TableDefinedProperty(TableBaseProperty, TableSharedProperty):
-    pass

@@ -19,10 +19,10 @@ def set_by_path(root, items, value):
 
 # helper function to compare values with operators
 def compare_values(value_a: Any, operator: str, value_b: Any):
-    # Values entered in the UI are always strings for now
-    # For proper comparison, we need to convert value_a to string
-    if value_a != None:
+    if not type(value_a) == type(value_b):
         value_a = str(value_a)
+        value_b = str(value_b)
+
     if operator == "equals":
         return value_a == value_b
     elif operator == "gt":
@@ -43,6 +43,22 @@ def display_rule(state, context, rules: DisplayRules):
         component_visible = False
 
         for rule in component_display_rules.rules:
+            # If the current component's target is not visible, then even if there
+            # is a value in the target that matches the rule, the component should
+            # not be visible
+            if rule.target.startswith("widgets"):
+                widgets_context = getattr(context, "widgets")
+                target_widget = rule.target.split(".")[1]
+                target_component = rule.target.split(".")[2]
+
+                widget_context = getattr(widgets_context, target_widget)
+                components_context = getattr(widget_context, "components")
+                component_context = getattr(components_context, target_component)
+
+                if component_context.visible == False:
+                    component_visible = False
+                    break
+
             # get the relevant value from the state based on the target
             target_value = get_by_path(state, rule.target)
             # compare the target value from the state with the rule value

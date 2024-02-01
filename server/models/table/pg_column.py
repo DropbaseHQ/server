@@ -5,16 +5,11 @@ from pydantic import BaseModel
 from server.models.common import ComponentDisplayProperties
 
 
-class PgColumnSharedProperty(BaseModel):
-    visible: bool = True
-    editable: bool = False
-
-
-class PgColumnContextProperty(ComponentDisplayProperties, PgColumnSharedProperty):
+class PgColumnContextProperty(ComponentDisplayProperties):
     pass
 
 
-class PgColumnBaseProperty(BaseModel):
+class PgColumnDefinedProperty(BaseModel):
     name: str
     column_type: Optional[str]
     display_type: Optional[Literal["text", "integer", "float", "boolean", "datetime", "date", "time"]]
@@ -31,6 +26,6 @@ class PgColumnBaseProperty(BaseModel):
 
     edit_keys: list = []
 
-
-class PgColumnDefinedProperty(PgColumnBaseProperty, PgColumnSharedProperty):
-    pass
+    # visibility
+    hidden: bool = False
+    editable: bool = False

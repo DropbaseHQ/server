@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Response, Depends
+from fastapi import APIRouter, Response, HTTPException, Depends
 
 from server.controllers.files import (
     create_file,
@@ -22,6 +22,9 @@ router = APIRouter(
 def create_file_req(req: CreateFile, resp: Response):
     try:
         return create_file(req)
+    except HTTPException as e:
+        resp.status_code = e.status_code
+        return {"message": str(e.detail)}
     except Exception as e:
         resp.status_code = 400
         return {"message": str(e)}
