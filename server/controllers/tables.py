@@ -48,7 +48,7 @@ def convert_sql_table(req: ConvertTableRequest, router: DropbaseRouter):
         column_props = [value for name, value in smart_cols.items() if name in validated]
 
         for column in column_props:
-            column["display_type"] = pg_base_type_mapper.get(column["column_type"])
+            column["display_type"] = detect_col_type(column["column_type"])
 
         for table in properties["tables"]:
             if table["name"] == req.table.name:
@@ -65,37 +65,15 @@ def convert_sql_table(req: ConvertTableRequest, router: DropbaseRouter):
         return str(e), 500
 
 
-pg_base_type_mapper = {
-    "TEXT": "text",
-    "VARCHAR": "text",
-    "CHAR": "text",
-    "CHARACTER": "text",
-    "STRING": "text",
-    "BINARY": "text",
-    "VARBINARY": "text",
-    "INTEGER": "integer",
-    "INT": "integer",
-    "BIGINT": "integer",
-    "SMALLINT": "integer",
-    "TINYINT": "integer",
-    "BYTEINT": "integer",
-    "REAL": "float",
-    "FLOAT": "float",
-    "FLOAT4": "float",
-    "FLOAT8": "float",
-    "DOUBLE": "float",
-    "DOUBLE PRECISION": "float",
-    "DECIMAL": "float",
-    "NUMERIC": "float",
-    "BOOLEAN": "boolean",
-    "DATE": "date",
-    "TIME": "time",
-    "DATETIME": "datetime",
-    "TIMESTAMP": "datetime",
-    "TIMESTAMP_LTZ": "datetime",
-    "TIMESTAMP_NTZ": "datetime",
-    "TIMESTAMP_TZ": "datetime",
-    "VARIANT": "text",
-    "OBJECT": "text",
-    "ARRAY": "text",
-}
+# TODO: duplicate, move to utils
+def detect_col_type(col_type):
+    if "float" in col_type:
+        return "float"
+    elif "int" in col_type:
+        return "integer"
+    elif "date" in col_type:
+        return "datetime"
+    elif "bool" in col_type:
+        return "boolean"
+    else:
+        return "text"
