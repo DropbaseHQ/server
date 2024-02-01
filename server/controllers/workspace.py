@@ -91,7 +91,7 @@ class AppFolderController:
         return app_object
 
     def _create_default_workspace_files(
-        self, router: DropbaseRouter, workspace_id: str
+        self, router: DropbaseRouter, workspace_id: str = None
     ) -> str | None:
         try:
             # Create new app folder
