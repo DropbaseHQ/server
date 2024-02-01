@@ -1,29 +1,18 @@
-from typing import Annotated, Optional
+from typing import Annotated, Literal, Optional
 
 from pydantic import BaseModel
 
 from server.models.category import PropertyCategory
 
 
-# widget
-class WidgetDisplayProperty(BaseModel):
+class WidgetContextProperty(BaseModel):
     message: Optional[str]
     message_type: Optional[str]
 
 
-class WidgetSharedProperty(BaseModel):
-    pass
-
-
-class WidgetContextProperty(WidgetDisplayProperty, WidgetSharedProperty):
-    pass
-
-
-class WidgetBaseProperty(BaseModel):
+class WidgetDefinedProperty(BaseModel):
     label: Annotated[str, PropertyCategory.default]
     name: Annotated[str, PropertyCategory.default]
     description: Annotated[Optional[str], PropertyCategory.default]
-
-
-class WidgetDefinedProperty(WidgetBaseProperty, WidgetSharedProperty):
-    pass
+    type: Annotated[Literal["base", "modal"], PropertyCategory.default] = "sql"
+    menu_item: Annotated[bool, PropertyCategory.default] = True
