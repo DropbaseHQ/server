@@ -31,6 +31,7 @@ def update_value(user_db_engine, edit: CellEdit):
         column = columns_dict[columns_name]
 
         if edit.column_type == "DATE" or edit.column_type == "TIMESTAMP":
+            # new_value will be epoch time in ms, convert it to sec first then create datetime
             edit.new_value = datetime.fromtimestamp(edit.new_value // 1000)
 
         values = {
