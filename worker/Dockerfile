@@ -1,10 +1,12 @@
 # Use an official Python runtime as a parent image
 FROM python:3.11-slim
+
+# Set the working directory in the container
 WORKDIR /app
-RUN mkdir -p /app/data
 
-COPY requirements.txt requirements.txt
+# Copy the current directory contents into the container at /app
+ADD . .
+
+# Install packages
 RUN pip install --no-cache-dir --upgrade -r requirements.txt
-
-COPY requirements-custom.txt requirements-custom.txt
 RUN pip install --no-cache-dir --upgrade -r requirements-custom.txt
