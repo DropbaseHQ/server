@@ -47,7 +47,6 @@ class Database:
             self.commit()
         return [dict(x) for x in result.fetchall()]
     
-
     def select(self, table: str, where_clause: str = None, values: dict = None):
         if where_clause:
             sql = f"""SELECT * FROM {self.schema}.{table} WHERE {where_clause};"""
@@ -81,3 +80,16 @@ class Database:
         if auto_commit:
             self.commit()
         return res.rowcount
+
+    def filter_and_sort(self, table: str, filter_clauses: list, sort_by: str = None, ascending: bool = True):
+        sql = f"""SELECT * FROM {self.schema}.{table}"""
+        if filter_clauses:
+            sql += " WHERE " + " AND ".join(filter_clauses)
+        if sort_by:
+            sql += f" ORDER BY {sort_by} {'ASC' if ascending else 'DESC'}"
+        result = self.session.execute(text(sql))
+        return [dict(row) for row in result.fetchall()]
+
+    def execute_custom_query(self, sql: str, values: dict = None):
+        result = self.session.execute(text(sql), values if values else {})
+        return [dict(row) for row in result.fetchall()]
