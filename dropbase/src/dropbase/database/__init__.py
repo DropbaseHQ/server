@@ -46,6 +46,19 @@ class Database:
         if auto_commit:
             self.commit()
         return [dict(x) for x in result.fetchall()]
+    
+
+    def select(self, table: str, where_clause: str = None, values: dict = None):
+        if where_clause:
+            sql = f"""SELECT * FROM {self.schema}.{table} WHERE {where_clause};"""
+        else:
+            sql = f"""SELECT * FROM {self.schema}.{table};"""
+
+        if values is None:
+            values = {}
+
+        result = self.session.execute(text(sql), values)
+        return [dict(row) for row in result.fetchall()]
 
     def insert(self, table: str, values: dict, auto_commit: bool = False):
         keys = list(values.keys())
