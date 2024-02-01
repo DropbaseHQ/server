@@ -15,19 +15,6 @@ from server.schemas.query import RunSQLRequest
 from server.schemas.table import FilterSort, TableFilter, TablePagination, TableSort
 
 
-def run_df_query(
-    user_sql: str,
-    source: str,
-    state: dict,
-    filter_sort: FilterSort = FilterSort(
-        filters=[], sorts=[], pagination=TablePagination(page=0, page_size=DATA_PREVIEW_SIZE)
-    ),
-) -> pd.DataFrame:
-    filter_sql, filter_values = prepare_sql(user_sql, state, filter_sort)
-    res = query_db(filter_sql, filter_values, source)
-    return process_query_result(res)
-
-
 def run_sql_query(args: dict):
 
     app_name = args.get("app_name")
@@ -39,7 +26,6 @@ def run_sql_query(args: dict):
 
     response = {"stdout": "", "traceback": "", "message": "", "type": "", "status_code": 202}
 
-    # app_name: str, page_name: str, file: DataFile, state: dict, filter_sort: FilterSort
     try:
         verify_state(app_name, page_name, state)
 
@@ -90,6 +76,19 @@ def run_sql_query_from_string(req: RunSQLRequest, job_id: str):
     finally:
         # pass
         r.set(job_id, json.dumps(response))
+
+
+def run_df_query(
+    user_sql: str,
+    source: str,
+    state: dict,
+    filter_sort: FilterSort = FilterSort(
+        filters=[], sorts=[], pagination=TablePagination(page=0, page_size=DATA_PREVIEW_SIZE)
+    ),
+) -> pd.DataFrame:
+    filter_sql, filter_values = prepare_sql(user_sql, state, filter_sort)
+    res = query_db(filter_sql, filter_values, source)
+    return process_query_result(res)
 
 
 def prepare_sql(user_sql: str, state: dict, filter_sort: FilterSort):
