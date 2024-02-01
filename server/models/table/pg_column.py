@@ -6,8 +6,7 @@ from server.models.common import ComponentDisplayProperties
 
 
 class PgColumnSharedProperty(BaseModel):
-    visible: bool = True
-    editable: bool = False
+    pass
 
 
 class PgColumnContextProperty(ComponentDisplayProperties, PgColumnSharedProperty):
@@ -30,6 +29,10 @@ class PgColumnBaseProperty(BaseModel):
     unique: bool = False
 
     edit_keys: list = []
+
+    # visibility
+    hidden: bool = False
+    editable: bool = False
 
 
 class PgColumnDefinedProperty(PgColumnBaseProperty, PgColumnSharedProperty):

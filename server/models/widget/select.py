@@ -8,8 +8,7 @@ from server.models.common import ComponentDisplayProperties
 
 # select
 class SelectSharedProperties(BaseModel):
-    value: Optional[str]
-    options: Annotated[Optional[List[Dict]], PropertyCategory.default]
+    pass
 
 
 class SelectContextProperty(ComponentDisplayProperties, SelectSharedProperties):
@@ -19,6 +18,8 @@ class SelectContextProperty(ComponentDisplayProperties, SelectSharedProperties):
 class SelectBaseProperties(BaseModel):
     label: Annotated[str, PropertyCategory.default]
     name: Annotated[str, PropertyCategory.default]
+
+    options: Annotated[Optional[List[Dict]], PropertyCategory.default]
     default: Annotated[Optional[Any], PropertyCategory.other]
 
     # events

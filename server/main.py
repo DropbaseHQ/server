@@ -6,7 +6,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 
 from server.constants import DROPBASE_API_URL, DROPBASE_TOKEN, WORKER_VERSION
-from server.routers import (
+from server.routers import (  # run_python_router,; run_sql_router,
     app_router,
     component_router,
     edit_cell_router,
@@ -15,8 +15,6 @@ from server.routers import (
     health_router,
     page_router,
     query_router,
-    run_python_router,
-    run_sql_router,
     sources_router,
     tables_router,
     websocket_router,
@@ -49,8 +47,8 @@ app.include_router(query_router)
 app.include_router(function_router)
 app.include_router(files_router)
 app.include_router(sources_router)
-app.include_router(run_sql_router)
-app.include_router(run_python_router)
+# app.include_router(run_sql_router)
+# app.include_router(run_python_router)
 app.include_router(tables_router)
 app.include_router(component_router)
 app.include_router(app_router)

@@ -1,15 +1,26 @@
-from fastapi import APIRouter, Response
+from fastapi import APIRouter, Response, HTTPException
 
-from server.controllers.files import create_file, delete_file, get_all_files, rename_file, update_file
+from server.controllers.files import (
+    create_file,
+    delete_file,
+    get_all_files,
+    rename_file,
+    update_file,
+)
 from server.schemas.files import CreateFile, DeleteFile, RenameFile, UpdateFile
 
-router = APIRouter(prefix="/files", tags=["files"], responses={404: {"description": "Not found"}})
+router = APIRouter(
+    prefix="/files", tags=["files"], responses={404: {"description": "Not found"}}
+)
 
 
 @router.post("/")
 def create_file_req(req: CreateFile, resp: Response):
     try:
         return create_file(req)
+    except HTTPException as e:
+        resp.status_code = e.status_code
+        return {"message": str(e.detail)}
     except Exception as e:
         resp.status_code = 400
         return {"message": str(e)}

@@ -19,6 +19,7 @@ from server.tests.constants import (
     WORKSPACE_PATH,
 )
 from server.tests.mocks.dropbase_router_mocker import DropbaseRouterMocker
+from server.tests.templates import get_test_data_fetcher, get_test_ui
 
 
 # Setup pytest-postgresql db with test data
@@ -57,7 +58,9 @@ def test_client():
 def dropbase_router_mocker():
     mocker = DropbaseRouterMocker()
     # app.dependency_overrides uses function as a key. part of fastapi
-    app.dependency_overrides[get_dropbase_router] = lambda: mocker.get_mock_dropbase_router()
+    app.dependency_overrides[
+        get_dropbase_router
+    ] = lambda: mocker.get_mock_dropbase_router()
     yield mocker
     # delete get_dropbase_router from dependency overwrite once test is done
     del app.dependency_overrides[get_dropbase_router]
@@ -65,39 +68,33 @@ def dropbase_router_mocker():
 
 @pytest.fixture
 def mock_db(postgresql):
-    connection = f"postgresql+psycopg2://{postgresql.info.user}:@{postgresql.info.host}:{postgresql.info.port}/{postgresql.info.dbname}"
+    connection = "postgresql+psycopg2://{user}:@{host}:{port}/{dbname}".format(
+        user=postgresql.info.user,
+        host=postgresql.info.host,
+        port=postgresql.info.port,
+        dbname=postgresql.info.dbname,
+    )
     return create_engine(connection, echo=False, poolclass=NullPool)
 
 
 def pytest_sessionstart():
-
-    import unittest.mock
-
-    from server.controllers.workspace import AppCreator, create_file, create_folder
-    from server.tests.mocks.dropbase.sync import sync_components_response_empty
+    from server.controllers.workspace import (
+        AppFolderController,
+        create_file,
+        create_folder,
+    )
 
     create_folder(TEMPDIR_PATH)
 
-    mock_dropbase_router = unittest.mock.MagicMock()
-    mock_dropbase_router.misc.sync_components.side_effect = sync_components_response_empty
-
-    AppCreator(
+    AppFolderController(
         TEST_APP_NAME,
         WORKSPACE_PATH,
-    ).create()
+    ).create_app()
 
     scripts_path = WORKSPACE_PATH.joinpath(f"{TEST_APP_NAME}/{TEST_PAGE_NAME}/scripts")
     create_file(scripts_path, "", "function1.py")
-    create_file(
-        scripts_path,
-        f'from workspace.{TEST_APP_NAME}.{TEST_PAGE_NAME} import State, Context\ndef test_ui(state: State, context: Context) -> Context:\n\n\n    print("test")\n    return context\n',
-        "test_ui.py",
-    )
-    create_file(
-        scripts_path,
-        f'import pandas as pd\nfrom workspace.{TEST_APP_NAME}.{TEST_PAGE_NAME} import State, Context\ndef test_data_fetcher(state: State) -> pd.DataFrame:\n\n    return pd.DataFrame(data=[[1]], columns=["x"])\n',
-        "test_data_fetcher.py",
-    )
+    create_file(scripts_path, get_test_ui(), "test_ui.py")
+    create_file(scripts_path, get_test_data_fetcher(), "test_data_fetcher.py")
     create_file(scripts_path, "select * from users;", "test_sql.sql")
 
     # add files to properties
@@ -105,7 +102,12 @@ def pytest_sessionstart():
     properties["files"] = [
         {"name": "test_sql", "type": "sql", "source": "local", "depends_on": []},
         {"name": "test_ui", "type": "ui", "source": None, "depends_on": None},
-        {"name": "test_data_fetcher", "type": "data_fetcher", "source": None, "depends_on": None},
+        {
+            "name": "test_data_fetcher",
+            "type": "data_fetcher",
+            "source": None,
+            "depends_on": None,
+        },
     ]
     update_properties(TEST_APP_NAME, TEST_PAGE_NAME, properties)
 
