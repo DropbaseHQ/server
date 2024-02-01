@@ -1,19 +1,24 @@
 import json
 import os
 import shutil
+import uuid
 
 from fastapi import HTTPException
 
 from server.controllers.generate_models import create_state_context_files
 
-PROPERTIES_TEMPLATE = {
+APP_PROPERTIES_TEMPLATE = {
+    "pages": [],
+}
+
+PAGE_PROPERTIES_TEMPLATE = {
     "tables": [{"name": "table1", "label": "Table 1", "type": "sql", "columns": []}],
     "widgets": [],
     "files": [],
 }
 
 
-class AppCreator:
+class AppFolderController:
     def __init__(
         self,
         app_name: str,
@@ -23,7 +28,114 @@ class AppCreator:
         self.page_name = "page1"
         self.r_path_to_workspace = r_path_to_workspace
         self.app_folder_path = os.path.join(self.r_path_to_workspace, self.app_name)
-        self.properties = PROPERTIES_TEMPLATE
+        self.page_properties = PAGE_PROPERTIES_TEMPLATE
+
+    def _get_app_properties_data(self):
+        path_to_app_properties = os.path.join(self.app_folder_path, "properties.json")
+        with open(path_to_app_properties, "r") as file:
+            return json.load(file)
+
+    def _write_app_properties_data(self, app_properties_data: dict):
+        path_to_app_properties = os.path.join(self.app_folder_path, "properties.json")
+        with open(path_to_app_properties, "w") as file:
+            json.dump(app_properties_data, file, indent=2)
+
+    def _get_workspace_properties(self):
+        workspace_properties_path = os.path.join(
+            self.r_path_to_workspace, "properties.json"
+        )
+        with open(workspace_properties_path, "r") as file:
+            return json.load(file)
+
+    def _write_workspace_properties(self, workspace_properties: dict):
+        workspace_properties_path = os.path.join(
+            self.r_path_to_workspace, "properties.json"
+        )
+        with open(workspace_properties_path, "w") as file:
+            json.dump(workspace_properties, file, indent=2)
+
+    def _add_page_to_app_properties(self, page_name: str):
+        app_properties_data = self._get_app_properties_data()
+
+        page_object = {
+            "name": page_name,
+            "label": page_name,
+            "id": str(uuid.uuid4()),
+        }
+        if "pages" in app_properties_data:
+            app_properties_data["pages"].append(page_object)
+        else:
+            app_properties_data["pages"] = [page_object]
+
+        self._write_app_properties_data(app_properties_data)
+
+    def _add_app_to_workspace_properties(self, app_name: str):
+        workspace_properties = self._get_workspace_properties()
+        app_object = {
+            "name": app_name,
+            "label": app_name,
+            "id": str(uuid.uuid4()),
+        }
+        if "apps" in workspace_properties:
+            workspace_properties["apps"].append(app_object)
+        else:
+            workspace_properties["apps"] = [app_object]
+
+        self._write_workspace_properties(workspace_properties)
+
+    def _create_default_workspace_files(self) -> str | None:
+        try:
+            # Create new app folder
+            create_folder(path=self.app_folder_path)
+            create_init_file(path=self.app_folder_path)
+
+            self._add_app_to_workspace_properties(self.app_name)
+
+            new_app_properties = self._get_app_properties()
+            create_file(
+                path=self.app_folder_path,
+                content=json.dumps(new_app_properties, indent=2),
+                file_name="properties.json",
+            )
+
+            # Create new page folder with __init__.py
+            self.create_page()
+
+        except Exception as e:
+            print("Unable to create app folder", e)
+            raise HTTPException(status_code=500, detail="Unable to create app folder")
+
+    def _get_app_properties(self):
+        new_app_properties = APP_PROPERTIES_TEMPLATE
+        return new_app_properties
+
+    def create_workspace_properties(self):
+        if os.path.exists(os.path.join(self.r_path_to_workspace, "properties.json")):
+            return
+
+        created_app_names = get_subdirectories(self.r_path_to_workspace)
+        app_info = []
+        for app_name in created_app_names:
+            app_properties = os.path.join(
+                self.r_path_to_workspace, app_name, "properties.json"
+            )
+            if not os.path.exists(app_properties):
+                app_info.append({"name": app_name, "label": app_name, "id": None})
+                continue
+
+            app_object = {}
+            with open(app_properties, "r") as file:
+                app_props = json.load(file)
+                app_object["name"] = app_props.get("app_name")
+                app_object["label"] = app_props.get("app_label")
+                app_object["id"] = app_props.get("app_id")
+            app_info.append(app_object)
+
+        create_file(
+            path=self.r_path_to_workspace,
+            content=json.dumps({"apps": app_info}, indent=2),
+            file_name="properties.json",
+        )
 
     def create_page(self, app_folder_path: str = None, page_name: str = None):
         app_folder_path = app_folder_path or self.app_folder_path
@@ -40,7 +152,7 @@ class AppCreator:
         # create properties.json
         create_file(
             path=page_folder_path,
-            content=json.dumps(self.properties, indent=2),
+            content=json.dumps(self.page_properties, indent=2),
             file_name="properties.json",
         )
 
@@ -50,7 +162,8 @@ class AppCreator:
         create_folder(path=scripts_folder_path)
         create_init_file(path=scripts_folder_path, init_code="")
 
-        create_state_context_files(self.app_name, page_name, self.properties)
+        create_state_context_files(self.app_name, page_name, self.page_properties)
+        self._add_page_to_app_properties(page_name)
 
     def rename_page(self, old_page_name: str, new_page_name: str):
         # rename page folder
@@ -58,21 +171,33 @@ class AppCreator:
         new_page_folder_path = os.path.join(self.app_folder_path, new_page_name)
         os.rename(old_page_folder_path, new_page_folder_path)
 
-    def _create_default_workspace_files(self) -> str | None:
-        try:
-            # Create new app folder
-            create_folder(path=self.app_folder_path)
-            create_init_file(path=self.app_folder_path)
+        # rename page in properties.json
+        app_properties_data = self._get_app_properties_data()
+        for page in app_properties_data["pages"]:
+            if page["name"] == old_page_name:
+                page["name"] = new_page_name
+                page["label"] = new_page_name
+                break
 
-            # Create new page folder with __init__.py
-            self.create_page()
+        self._write_app_properties_data(app_properties_data)
 
-        except Exception as e:
-            print("Unable to create app folder", e)
-            raise HTTPException(status_code=500, detail="Unable to create app folder")
+    def delete_page(self, page_name: str):
+        page_folder_path = os.path.join(self.app_folder_path, page_name)
+        shutil.rmtree(page_folder_path)
 
-    def create(self):
+        # remove page from properties.json
+        app_properties_data = self._get_app_properties_data()
+        for page in app_properties_data["pages"]:
+            if page["name"] == page_name:
+                app_properties_data["pages"].remove(page)
+                break
+
+        self._write_app_properties_data(app_properties_data)
+
+    def create_app(self):
+        self.create_workspace_properties()
         self._create_default_workspace_files()
+
         return {"success": True}
 
 
@@ -108,3 +233,11 @@ def create_folder(path):
     if os.path.exists(path):
         shutil.rmtree(path)
     os.mkdir(path)
+
+
+def get_subdirectories(path):
+    return [
+        name
+        for name in os.listdir(path)
+        if os.path.isdir(os.path.join(path, name)) and name != "__pycache__"
+    ]
