@@ -106,12 +106,13 @@ class AppFolderController:
                 content=json.dumps(new_app_properties, indent=2),
                 file_name="properties.json",
             )
-            router.app.create_app(
-                app_properties={
-                    **app_object,
-                    "workspace_id": workspace_id,
-                }
-            )
+            if router:
+                router.app.create_app(
+                    app_properties={
+                        **app_object,
+                        "workspace_id": workspace_id,
+                    }
+                )
 
             # Create new page folder with __init__.py
             self.create_page(router=router)
@@ -162,7 +163,10 @@ class AppFolderController:
         )
 
     def create_page(
-        self, router: DropbaseRouter, app_folder_path: str = None, page_name: str = None
+        self,
+        router: DropbaseRouter = None,
+        app_folder_path: str = None,
+        page_name: str = None,
     ):
         app_folder_path = app_folder_path or self.app_folder_path
         page_name = page_name or self.page_name
@@ -195,7 +199,8 @@ class AppFolderController:
             "app_id": app_id,
             **page_object,
         }
-        router.page.create_page(page_properties=create_page_payload)
+        if router:
+            router.page.create_page(page_properties=create_page_payload)
 
     def rename_page(self, old_page_name: str, new_page_name: str):
         # rename page folder
@@ -243,7 +248,7 @@ class AppFolderController:
         pages = [{"name": page} for page in page_names]
         return pages
 
-    def create_app(self, router: DropbaseRouter, workspace_id: str):
+    def create_app(self, router: DropbaseRouter = None, workspace_id: str = None):
         self.create_workspace_properties()
         self._create_default_workspace_files(router=router, workspace_id=workspace_id)
 
