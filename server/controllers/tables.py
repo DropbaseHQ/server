@@ -67,12 +67,18 @@ def convert_sql_table(req: ConvertTableRequest, router: DropbaseRouter):
 
 # TODO: duplicate, move to utils
 def detect_col_type(col_type):
+    col_type = col_type.lower()
+
     if "float" in col_type:
         return "float"
     elif "int" in col_type:
         return "integer"
-    elif "date" in col_type:
+    elif "timestamp" in col_type or "datetime" in col_type:
         return "datetime"
+    elif "time" in col_type:
+        return "time"
+    elif "date" in col_type:
+        return "date"
     elif "bool" in col_type:
         return "boolean"
     else:
