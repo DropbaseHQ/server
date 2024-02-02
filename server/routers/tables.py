@@ -1,14 +1,13 @@
 from fastapi import APIRouter, Depends, Response
 
+from server.auth.dependency import EnforceUserAppPermissions
+from server.constants import pg_base_type_mapper
 from server.controllers.columns import commit_table_columns
 from server.controllers.tables import convert_sql_table
 from server.requests.dropbase_router import DropbaseRouter, get_dropbase_router
 from server.schemas.table import CommitTableColumnsRequest, ConvertTableRequest
-from server.auth.dependency import EnforceUserAppPermissions
 
-router = APIRouter(
-    prefix="/tables", tags=["tables"], responses={404: {"description": "Not found"}}
-)
+router = APIRouter(prefix="/tables", tags=["tables"], responses={404: {"description": "Not found"}})
 
 
 @router.post("/convert/")
@@ -22,9 +21,7 @@ def convert_sql_table_req(
     return resp
 
 
-@router.post(
-    "/commit/", dependencies=[Depends(EnforceUserAppPermissions(action="edit"))]
-)
+@router.post("/commit/", dependencies=[Depends(EnforceUserAppPermissions(action="edit"))])
 def commit_table_columns_req(req: CommitTableColumnsRequest, response: Response):
     try:
         return commit_table_columns(req)
