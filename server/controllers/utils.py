@@ -8,7 +8,12 @@ import pandas as pd
 from sqlalchemy import text
 from sqlalchemy.engine import Engine
 
-from server.controllers.sources import db_type_to_class, get_sources
+
+from server.controllers.sources import (
+    db_type_to_class,
+    db_type_to_connection,
+    get_sources,
+)
 from server.models.connect import BaseDatabase
 
 
@@ -76,7 +81,8 @@ def connect_to_user_db(source_name: str):
     if CredsClass is None:
         raise ValueError(f"Unsupported database type: {creds_type}")
 
-    db_instance = BaseDatabase(creds=creds_dict)
+    db_class = db_type_to_connection.get(creds_type)
+    db_instance = db_class(creds_dict=creds_dict, creds=creds)
 
     return db_instance.get_engine()
 
