@@ -15,7 +15,7 @@ base_data = {
                 "description": "description1",
                 "components": [],
                 "type": "base",
-                "menu_item": True,
+                "in_menu": True,
             }
         ],
         "files": [],
@@ -33,7 +33,7 @@ def test_create_widget_req(test_client):
             "description": "description2",
             "components": [],
             "type": "base",
-            "menu_item": True,
+            "in_menu": True,
         }
     )
 
@@ -64,7 +64,7 @@ def test_create_widget_req_error_duplicate_names(test_client):
             "description": "description2",
             "components": [],
             "type": "base",
-            "menu_item": True,
+            "in_menu": True,
         }
     )
 
@@ -87,7 +87,7 @@ def test_create_widget_req_error_illegal_name_space_between(test_client):
             "description": "description2",
             "components": [],
             "type": "base",
-            "menu_item": True,
+            "in_menu": True,
         }
     )
 
@@ -114,7 +114,7 @@ def test_create_widget_req_error_illegal_name_special_characters(test_client):
             "description": "description2",
             "components": [],
             "type": "base",
-            "menu_item": True,
+            "in_menu": True,
         }
     )
 
@@ -141,7 +141,7 @@ def test_create_widget_req_error_illegal_name_url_path(test_client):
             "description": "description2",
             "components": [],
             "type": "base",
-            "menu_item": True,
+            "in_menu": True,
         }
     )
 
@@ -168,7 +168,7 @@ def test_update_widget_req(test_client):
             "description": "description3",
             "components": [],
             "type": "base",
-            "menu_item": True,
+            "in_menu": True,
         }
     )
 

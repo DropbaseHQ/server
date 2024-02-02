@@ -14,7 +14,7 @@ base_data = {
                 "name": "widget1",
                 "description": None,
                 "type": "base",
-                "menu_item": True,
+                "in_menu": True,
                 "components": [
                     {
                         "label": "Button 1",

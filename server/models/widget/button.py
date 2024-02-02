@@ -10,6 +10,11 @@ class ButtonContextProperty(ComponentDisplayProperties):
     pass
 
 
+class OnSelect(BaseModel):
+    type: Literal["widget", "function"] = "function"
+    target: str
+
+
 class ButtonDefinedProperty(BaseModel):
     label: Annotated[str, PropertyCategory.default]
     name: Annotated[str, PropertyCategory.default]
@@ -32,7 +37,7 @@ class ButtonDefinedProperty(BaseModel):
     ]
 
     # events
-    on_click: Annotated[Optional[str], PropertyCategory.events]
+    on_click: Annotated[Optional[OnSelect], PropertyCategory.events]
 
     # display rules
     display_rules: Annotated[Optional[List[dict]], PropertyCategory.display_rules]
