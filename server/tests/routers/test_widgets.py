@@ -1,7 +1,7 @@
 import copy
 
-from server.tests.verify_state_and_context import verify_object_in_state_context
 from server.tests.verify_property_exists import verify_property_exists
+from server.tests.verify_state_and_context import verify_object_in_state_context
 
 base_data = {
     "app_name": "dropbase_test_app",
@@ -14,6 +14,8 @@ base_data = {
                 "name": "widget1",
                 "description": "description1",
                 "components": [],
+                "type": "base",
+                "in_menu": True,
             }
         ],
         "files": [],
@@ -30,6 +32,8 @@ def test_create_widget_req(test_client):
             "name": "widget2",
             "description": "description2",
             "components": [],
+            "type": "base",
+            "in_menu": True,
         }
     )
 
@@ -59,6 +63,8 @@ def test_create_widget_req_error_duplicate_names(test_client):
             "name": "widget1",
             "description": "description2",
             "components": [],
+            "type": "base",
+            "in_menu": True,
         }
     )
 
@@ -80,6 +86,8 @@ def test_create_widget_req_error_illegal_name_space_between(test_client):
             "name": "widget 2",
             "description": "description2",
             "components": [],
+            "type": "base",
+            "in_menu": True,
         }
     )
 
@@ -105,6 +113,8 @@ def test_create_widget_req_error_illegal_name_special_characters(test_client):
             "name": "widget_2!",
             "description": "description2",
             "components": [],
+            "type": "base",
+            "in_menu": True,
         }
     )
 
@@ -130,6 +140,8 @@ def test_create_widget_req_error_illegal_name_url_path(test_client):
             "name": "../../widget2",
             "description": "description2",
             "components": [],
+            "type": "base",
+            "in_menu": True,
         }
     )
 
@@ -155,6 +167,8 @@ def test_update_widget_req(test_client):
             "name": "widget3",
             "description": "description3",
             "components": [],
+            "type": "base",
+            "in_menu": True,
         }
     )
 

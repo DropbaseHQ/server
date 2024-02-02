@@ -18,6 +18,13 @@ class RunPythonStringRequest(BaseModel):
     file: dict
 
 
+class RunPythonStringRequestNew(BaseModel):
+    file_code: str
+    test_code: str
+    state: dict
+    context: dict
+
+
 class QueryPythonRequest(BaseModel):
     app_name: str
     page_name: str

@@ -5,9 +5,7 @@ cwd = os.getcwd()
 
 
 DROPBASE_TOKEN = os.getenv("DROPBASE_TOKEN")
-DROPBASE_API_URL = (
-    os.getenv("DROPBASE_API_URL") if os.getenv("DROPBASE_API_URL") else "https://api.dropbase.io"
-)
+DROPBASE_API_URL = os.getenv("DROPBASE_API_URL") or "https://api.dropbase.io"
 TASK_TIMEOUT = os.getenv("TASK_TIMEOUT") if os.getenv("TASK_TIMEOUT") else 60
 DATA_PREVIEW_SIZE = 100
 INFER_TYPE_SAMPLE_SIZE = 50

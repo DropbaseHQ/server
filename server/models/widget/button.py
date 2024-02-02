@@ -6,16 +6,16 @@ from server.models.category import PropertyCategory
 from server.models.common import ComponentDisplayProperties
 
 
-# button
-class ButtonSharedProperties(BaseModel):
+class ButtonContextProperty(ComponentDisplayProperties):
     pass
 
 
-class ButtonContextProperty(ComponentDisplayProperties, ButtonSharedProperties):
-    pass
+class OnSelect(BaseModel):
+    type: Literal["widget", "function"] = "function"
+    value: str
 
 
-class ButtonBaseProperties(BaseModel):
+class ButtonDefinedProperty(BaseModel):
     label: Annotated[str, PropertyCategory.default]
     name: Annotated[str, PropertyCategory.default]
     color: Annotated[
@@ -37,14 +37,10 @@ class ButtonBaseProperties(BaseModel):
     ]
 
     # events
-    on_click: Annotated[Optional[str], PropertyCategory.events]
+    on_click: Annotated[Optional[OnSelect], PropertyCategory.events]
 
     # display rules
     display_rules: Annotated[Optional[List[dict]], PropertyCategory.display_rules]
 
     # internal
     component_type: Literal["button"]
-
-
-class ButtonDefinedProperty(ButtonBaseProperties, ButtonSharedProperties):
-    pass

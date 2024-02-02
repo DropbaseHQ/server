@@ -6,16 +6,11 @@ from server.models.category import PropertyCategory
 from server.models.common import ComponentDisplayProperties
 
 
-# text
-class TextSharedProperties(BaseModel):
+class TextContextProperty(ComponentDisplayProperties):
     pass
 
 
-class TextContextProperty(ComponentDisplayProperties, TextSharedProperties):
-    pass
-
-
-class TextBaseProperties(BaseModel):
+class TextDefinedProperty(BaseModel):
     name: Annotated[str, PropertyCategory.default]
     text: Annotated[str, PropertyCategory.default]
     size: Annotated[Optional[Literal["small", "medium", "large"]], PropertyCategory.default]
@@ -42,7 +37,3 @@ class TextBaseProperties(BaseModel):
 
     # internal
     component_type: Literal["text"]
-
-
-class TextDefinedProperty(TextBaseProperties, TextSharedProperties):
-    pass

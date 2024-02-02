@@ -20,6 +20,7 @@ from server.tests.constants import (
 )
 from server.tests.mocks.dropbase_router_mocker import DropbaseRouterMocker
 from server.tests.templates import get_test_data_fetcher, get_test_ui
+from server.auth.dependency import EnforceUserAppPermissions
 
 
 # Setup pytest-postgresql db with test data
@@ -51,6 +52,15 @@ def test_workspace():
 
 @pytest.fixture(scope="session")
 def test_client():
+    def override_check_user_app_permissions():
+        return {"use": True, "edit": True, "own": True}
+
+    app.dependency_overrides[EnforceUserAppPermissions(action="edit")] = (
+        override_check_user_app_permissions
+    )
+    app.dependency_overrides[EnforceUserAppPermissions(action="use")] = (
+        override_check_user_app_permissions
+    )
     return TestClient(app)
 
 
@@ -58,7 +68,9 @@ def test_client():
 def dropbase_router_mocker():
     mocker = DropbaseRouterMocker()
     # app.dependency_overrides uses function as a key. part of fastapi
-    app.dependency_overrides[get_dropbase_router] = lambda: mocker.get_mock_dropbase_router()
+    app.dependency_overrides[get_dropbase_router] = (
+        lambda: mocker.get_mock_dropbase_router()
+    )
     yield mocker
     # delete get_dropbase_router from dependency overwrite once test is done
     del app.dependency_overrides[get_dropbase_router]
@@ -76,15 +88,18 @@ def mock_db(postgresql):
 
 
 def pytest_sessionstart():
-
-    from server.controllers.workspace import AppCreator, create_file, create_folder
+    from server.controllers.workspace import (
+        AppFolderController,
+        create_file,
+        create_folder,
+    )
 
     create_folder(TEMPDIR_PATH)
 
-    AppCreator(
+    AppFolderController(
         TEST_APP_NAME,
         WORKSPACE_PATH,
-    ).create()
+    ).create_app()
 
     scripts_path = WORKSPACE_PATH.joinpath(f"{TEST_APP_NAME}/{TEST_PAGE_NAME}/scripts")
     create_file(scripts_path, "", "function1.py")
@@ -97,7 +112,12 @@ def pytest_sessionstart():
     properties["files"] = [
         {"name": "test_sql", "type": "sql", "source": "local", "depends_on": []},
         {"name": "test_ui", "type": "ui", "source": None, "depends_on": None},
-        {"name": "test_data_fetcher", "type": "data_fetcher", "source": None, "depends_on": None},
+        {
+            "name": "test_data_fetcher",
+            "type": "data_fetcher",
+            "source": None,
+            "depends_on": None,
+        },
     ]
     update_properties(TEST_APP_NAME, TEST_PAGE_NAME, properties)
 
