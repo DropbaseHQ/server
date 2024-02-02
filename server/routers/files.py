@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Response, HTTPException
+from fastapi import APIRouter, Response, HTTPException, Depends
 
 from server.controllers.files import (
     create_file,
@@ -8,9 +8,13 @@ from server.controllers.files import (
     update_file,
 )
 from server.schemas.files import CreateFile, DeleteFile, RenameFile, UpdateFile
+from server.auth.dependency import verify_user_access_token, EnforceUserAppPermissions
 
 router = APIRouter(
-    prefix="/files", tags=["files"], responses={404: {"description": "Not found"}}
+    prefix="/files",
+    tags=["files"],
+    responses={404: {"description": "Not found"}},
+    dependencies=[Depends(EnforceUserAppPermissions(action="edit"))],
 )
 
 

@@ -20,6 +20,7 @@ from server.tests.constants import (
 )
 from server.tests.mocks.dropbase_router_mocker import DropbaseRouterMocker
 from server.tests.templates import get_test_data_fetcher, get_test_ui
+from server.auth.dependency import EnforceUserAppPermissions
 
 
 # Setup pytest-postgresql db with test data
@@ -51,6 +52,15 @@ def test_workspace():
 
 @pytest.fixture(scope="session")
 def test_client():
+    def override_check_user_app_permissions():
+        return {"use": True, "edit": True, "own": True}
+
+    app.dependency_overrides[EnforceUserAppPermissions(action="edit")] = (
+        override_check_user_app_permissions
+    )
+    app.dependency_overrides[EnforceUserAppPermissions(action="use")] = (
+        override_check_user_app_permissions
+    )
     return TestClient(app)
 
 
@@ -58,9 +68,9 @@ def test_client():
 def dropbase_router_mocker():
     mocker = DropbaseRouterMocker()
     # app.dependency_overrides uses function as a key. part of fastapi
-    app.dependency_overrides[
-        get_dropbase_router
-    ] = lambda: mocker.get_mock_dropbase_router()
+    app.dependency_overrides[get_dropbase_router] = (
+        lambda: mocker.get_mock_dropbase_router()
+    )
     yield mocker
     # delete get_dropbase_router from dependency overwrite once test is done
     del app.dependency_overrides[get_dropbase_router]

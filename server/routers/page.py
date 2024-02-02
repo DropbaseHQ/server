@@ -9,6 +9,7 @@ from server.controllers.page import (
 )
 from server.controllers.properties import read_page_properties
 from server.controllers.utils import check_if_object_exists, validate_column_name
+from server.auth.dependency import EnforceUserAppPermissions
 from server.requests.dropbase_router import DropbaseRouter, get_dropbase_router
 from server.schemas.page import CreatePageRequest, PageProperties, RenamePageRequest
 
@@ -17,8 +18,15 @@ router = APIRouter(
 )
 
 
-@router.get("/{app_name}/{page_name}")
-def get_state_context_req(app_name: str, page_name: str, response: Response):
+@router.get(
+    "/{app_name}/{page_name}",
+    dependencies=[Depends(EnforceUserAppPermissions(action="use"))],
+)
+def get_state_context_req(
+    app_name: str,
+    page_name: str,
+    response: Response,
+):
     try:
         state_context = get_page_state_context(app_name, page_name)
         state_context["properties"] = read_page_properties(app_name, page_name)
@@ -28,7 +36,10 @@ def get_state_context_req(app_name: str, page_name: str, response: Response):
         return {"message": str(e)}
 
 
-@router.post("/{app_name}")
+@router.post(
+    "/{app_name}",
+    dependencies=[Depends(EnforceUserAppPermissions(action="edit"))],
+)
 def create_page_req(
     app_name: str,
     request: CreatePageRequest,
@@ -54,7 +65,10 @@ def create_page_req(
         return {"error": str(e)}
 
 
-@router.put("/{app_name}/{page_name}")
+@router.put(
+    "/{app_name}/{page_name}",
+    dependencies=[Depends(EnforceUserAppPermissions(action="edit"))],
+)
 def rename_page_req(
     app_name: str,
     page_name: str,
@@ -68,7 +82,10 @@ def rename_page_req(
         return {"error": str(e)}
 
 
-@router.delete("/{app_name}/{page_name}")
+@router.delete(
+    "/{app_name}/{page_name}",
+    dependencies=[Depends(EnforceUserAppPermissions(action="edit"))],
+)
 def delete_page_req(
     app_name: str,
     page_name: str,
@@ -82,7 +99,7 @@ def delete_page_req(
         return {"error": str(e)}
 
 
-@router.post("/")
+@router.post("/", dependencies=[Depends(EnforceUserAppPermissions(action="edit"))])
 def cud_page_props(
     req: PageProperties,
     response: Response,
