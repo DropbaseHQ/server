@@ -1,20 +1,33 @@
 import logging
 import os
+
 from pydantic import ValidationError
-from server.schemas.database import PgCreds, MySQLCreds, SqliteCreds, SnowflakeCreds
 
-from server.models.connect import PostgresDatabase, MySQLDatabase, SQLiteDatabase, SnowflakeDatabase
+from server.models.connect import MySQLDatabase, PostgresDatabase, SnowflakeDatabase, SQLiteDatabase
+from server.schemas.database import MySQLCreds, PgCreds, SnowflakeCreds, SqliteCreds
 
-db_type_to_class = {"postgres": PgCreds, "pg": PgCreds, "mysql": MySQLCreds, "sqlite": SqliteCreds, "snowflake": SnowflakeCreds}
+db_type_to_class = {
+    "postgres": PgCreds,
+    "pg": PgCreds,
+    "mysql": MySQLCreds,
+    "sqlite": SqliteCreds,
+    "snowflake": SnowflakeCreds,
+}
 
-db_type_to_driver = {"postgres": "postgresql+psycopg2", "pg": "postgresql+psycopg2", "mysql": "mysql+pymysql", "sqlite": "sqlite", "snowflake": "snowflake"}
+db_type_to_driver = {
+    "postgres": "postgresql+psycopg2",
+    "pg": "postgresql+psycopg2",
+    "mysql": "mysql+pymysql",
+    "sqlite": "sqlite",
+    "snowflake": "snowflake",
+}
 
 db_type_to_connection = {
     "postgres": PostgresDatabase,
     "pg": PostgresDatabase,
     "mysql": MySQLDatabase,
     "sqlite": SQLiteDatabase,
-    "snowflake": SnowflakeDatabase
+    "snowflake": SnowflakeDatabase,
 }
 
 
@@ -36,7 +49,11 @@ def get_sources():
         SourceClass = db_type_to_class.get(source["type"])
         try:
             SourceClass(**source)
-            verified_sources[name] = source # For now, the "name" is the unique identifier, which means there can not be classes of the same name, even if they are of different types
+            """
+            For now, the "name" is the unique identifier, which means there can not be classes of
+            the same name, even if they are of different types
+            """
+            verified_sources[name] = source
         except ValidationError as e:
             logging.warning(f"Failed to validate source {name}.\n\nError: " + str(e))
     return verified_sources

@@ -5,10 +5,10 @@ import re
 from pathlib import Path
 
 import pandas as pd
-from sqlalchemy import create_engine, text
+from sqlalchemy import text
 from sqlalchemy.engine import Engine
 
-from server.controllers.sources import db_type_to_class, db_type_to_connection, db_type_to_driver, get_sources
+from server.controllers.sources import db_type_to_class, get_sources
 from server.models.connect import BaseDatabase
 
 
@@ -62,6 +62,7 @@ def clean_df(df: pd.DataFrame) -> pd.DataFrame:
     # TODO: implement cleaning
     return df
 
+
 @functools.lru_cache
 def connect_to_user_db(source_name: str):
     sources = get_sources()
@@ -74,7 +75,7 @@ def connect_to_user_db(source_name: str):
 
     if CredsClass is None:
         raise ValueError(f"Unsupported database type: {creds_type}")
-    
+
     db_instance = BaseDatabase(creds=creds_dict)
 
     return db_instance.get_engine()
