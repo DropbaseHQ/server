@@ -10,7 +10,7 @@ router = APIRouter(
 )
 
 
-@router.get("/", dependencies=[Depends(EnforceUserAppPermissions(action="use"))])
+@router.get("/")
 async def get_workspace_sources():
     sources = get_sources()
     return {"sources": list(sources.keys())}
