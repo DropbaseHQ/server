@@ -12,7 +12,7 @@ class ButtonContextProperty(ComponentDisplayProperties):
 
 class OnSelect(BaseModel):
     type: Literal["widget", "function"] = "function"
-    target: str
+    value: str
 
 
 class ButtonDefinedProperty(BaseModel):
