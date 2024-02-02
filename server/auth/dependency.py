@@ -132,3 +132,13 @@ class EnforceUserAppPermissions:
             )
 
         return True
+
+    def __hash__(self):
+        # FIXME find something uniq and repeatable
+        return 1234
+
+    def __eq__(self, other):
+        """Overrides the default implementation"""
+        if isinstance(other, EnforceUserAppPermissions):
+            return self.action == other.action
+        return False
