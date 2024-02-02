@@ -8,12 +8,7 @@ import pandas as pd
 from sqlalchemy import text
 from sqlalchemy.engine import Engine
 
-
-from server.controllers.sources import (
-    db_type_to_class,
-    db_type_to_connection,
-    get_sources,
-)
+from server.controllers.sources import db_type_to_class, db_type_to_connection, get_sources
 from server.models.connect import BaseDatabase
 
 

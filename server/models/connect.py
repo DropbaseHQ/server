@@ -6,9 +6,7 @@ from sqlalchemy.engine import URL
 
 # Potential classes
 class BaseDatabase(ABC):
-    def __init__(
-        self, creds_dict, creds
-    ):  # Make it so that the function changes based on which Cred type is given? Poly?
+    def __init__(self, creds_dict, creds):
         self.creds_dict = creds_dict
         self.creds = creds
 
