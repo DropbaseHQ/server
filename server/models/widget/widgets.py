@@ -14,5 +14,5 @@ class WidgetDefinedProperty(BaseModel):
     label: Annotated[str, PropertyCategory.default]
     name: Annotated[str, PropertyCategory.default]
     description: Annotated[Optional[str], PropertyCategory.default]
-    type: Annotated[Literal["base", "modal"], PropertyCategory.default] = "sql"
+    type: Annotated[Literal["base", "modal"], PropertyCategory.default] = "base"
     in_menu: Annotated[bool, PropertyCategory.default] = True
