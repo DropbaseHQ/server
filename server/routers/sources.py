@@ -1,6 +1,7 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends
 
 from server.controllers.sources import get_sources
+from server.auth.dependency import EnforceUserAppPermissions
 
 router = APIRouter(
     prefix="/sources",
@@ -9,7 +10,7 @@ router = APIRouter(
 )
 
 
-@router.get("/")
+@router.get("/", dependencies=[Depends(EnforceUserAppPermissions(action="use"))])
 async def get_workspace_sources():
     sources = get_sources()
     return {"sources": list(sources.keys())}

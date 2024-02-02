@@ -1,3 +1,8 @@
+import sqlalchemy.exc
+from fastapi import APIRouter, HTTPException, Depends
+
+from server.schemas.run_python import QueryPythonRequest
+from server.auth.dependency import EnforceUserAppPermissions
 import json
 import uuid
 
@@ -12,10 +17,14 @@ from server.schemas.files import DataFile
 from server.schemas.query import RunSQLRequest
 from server.schemas.run_python import QueryPythonRequest, RunPythonStringRequestNew
 
-router = APIRouter(prefix="/query", tags=["query"], responses={404: {"description": "Not found"}})
+router = APIRouter(
+    prefix="/query", tags=["query"], responses={404: {"description": "Not found"}}
+)
 
 
-@router.post("/sql_string/")
+@router.post(
+    "/sql_string/", dependencies=[Depends(EnforceUserAppPermissions(action="use"))]
+)
 async def run_sql_from_string_req(
     request: RunSQLRequest, response: Response, background_tasks: BackgroundTasks
 ):
@@ -23,7 +32,11 @@ async def run_sql_from_string_req(
     background_tasks.add_task(run_sql_query_from_string, request, job_id)
 
     status_code = 202
-    reponse_payload = {"message": "job started", "status_code": status_code, "job_id": job_id}
+    reponse_payload = {
+        "message": "job started",
+        "status_code": status_code,
+        "job_id": job_id,
+    }
 
     # set initial status to pending
     r.set(job_id, json.dumps(reponse_payload))
@@ -36,7 +49,9 @@ async def run_sql_from_string_req(
 
 @router.post("/python_string/")
 async def run_python_string_test(
-    req: RunPythonStringRequestNew, response: Response, background_tasks: BackgroundTasks
+    req: RunPythonStringRequestNew,
+    response: Response,
+    background_tasks: BackgroundTasks,
 ):
     job_id = uuid.uuid4().hex
     args = {
@@ -49,7 +64,11 @@ async def run_python_string_test(
     background_tasks.add_task(run_container, args, "inside_docker_string")
 
     status_code = 202
-    reponse_payload = {"message": "job started", "status_code": status_code, "job_id": job_id}
+    reponse_payload = {
+        "message": "job started",
+        "status_code": status_code,
+        "job_id": job_id,
+    }
 
     # set initial status to pending
     r.set(job_id, json.dumps(reponse_payload))
@@ -61,7 +80,9 @@ async def run_python_string_test(
 
 
 @router.post("/")
-async def start_docker(req: QueryPythonRequest, response: Response, background_tasks: BackgroundTasks):
+async def start_docker(
+    req: QueryPythonRequest, response: Response, background_tasks: BackgroundTasks
+):
     properties = read_page_properties(req.app_name, req.page_name)
     file = get_table_data_fetcher(properties["files"], req.table.fetcher)
     file = DataFile(**file)
@@ -80,7 +101,11 @@ async def start_docker(req: QueryPythonRequest, response: Response, background_t
         background_tasks.add_task(run_sql_query, args)
 
     status_code = 202
-    reponse_payload = {"message": "job started", "status_code": status_code, "job_id": job_id}
+    reponse_payload = {
+        "message": "job started",
+        "status_code": status_code,
+        "job_id": job_id,
+    }
 
     # set initial status to pending
     r.set(job_id, json.dumps(reponse_payload))
