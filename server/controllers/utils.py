@@ -71,13 +71,12 @@ def connect_to_user_db(source_name: str):
 
     CredsClass = db_type_to_class.get(creds_type)
     creds = CredsClass(**creds)
-    creds_dict = creds.dict()
 
     if CredsClass is None:
         raise ValueError(f"Unsupported database type: {creds_type}")
 
     db_class = db_type_to_connection.get(creds_type)
-    db_instance = db_class(creds_dict=creds_dict, creds=creds)
+    db_instance = db_class(creds)
 
     return db_instance.get_engine()
 
