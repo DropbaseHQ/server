@@ -7,6 +7,7 @@ from fastapi import HTTPException, Response
 
 from server.controllers.generate_models import create_state_context_files
 from server.requests.dropbase_router import DropbaseRouter
+from server.constants import WORKSPACE_ID
 
 APP_PROPERTIES_TEMPLATE = {
     "pages": [],
@@ -90,9 +91,7 @@ class AppFolderController:
         self._write_workspace_properties(workspace_properties)
         return app_object
 
-    def _create_default_workspace_files(
-        self, router: DropbaseRouter, workspace_id: str = None
-    ) -> str | None:
+    def _create_default_workspace_files(self, router: DropbaseRouter) -> str | None:
         try:
             # Create new app folder
             create_folder(path=self.app_folder_path)
@@ -110,7 +109,7 @@ class AppFolderController:
                 router.app.create_app(
                     app_properties={
                         **app_object,
-                        "workspace_id": workspace_id,
+                        "workspace_id": WORKSPACE_ID,
                     }
                 )
 
@@ -248,9 +247,9 @@ class AppFolderController:
         pages = [{"name": page} for page in page_names]
         return pages
 
-    def create_app(self, router: DropbaseRouter = None, workspace_id: str = None):
+    def create_app(self, router: DropbaseRouter = None):
         self.create_workspace_properties()
-        self._create_default_workspace_files(router=router, workspace_id=workspace_id)
+        self._create_default_workspace_files(router=router)
 
         return {"success": True}
 

@@ -9,6 +9,7 @@ from pydantic import BaseModel
 from server.auth.permissions_registry import permissions_registry
 from server.constants import DROPBASE_API_URL
 from server.requests.dropbase_router import AccessCookies, get_access_cookies
+from server.constants import WORKSPACE_ID
 
 logger = logging.getLogger(__name__)
 
@@ -47,7 +48,9 @@ def verify_user_access_token(request: Request, Authorize: AuthJWT = Depends()):
         )
         if verify_response.status_code != 200:
             raise HTTPException(status_code=401, detail="Invalid access token")
-        worker_sl_token = Authorize.create_access_token(subject=verify_response.json().get("user_id"))
+        worker_sl_token = Authorize.create_access_token(
+            subject=verify_response.json().get("user_id")
+        )
         max_age = 60
         raise HTTPException(
             status_code=401,
@@ -90,11 +93,13 @@ def check_user_app_permissions(
     if app_name is None:
         raise Exception("No app name provided")
 
-    workspace_id = request.headers.get("workspace-id")
+    workspace_id = WORKSPACE_ID
     if not workspace_id:
         raise Exception("No workspace id provided")
 
-    user_app_permissions = permissions_registry.get_user_app_permissions(app_name, user_id)
+    user_app_permissions = permissions_registry.get_user_app_permissions(
+        app_name, user_id
+    )
 
     if not user_app_permissions:
         logger.info("FETCHING PERMISSIONS FROM DROPBASE API")
@@ -108,7 +113,9 @@ def check_user_app_permissions(
 
         permissions_registry.save_permissions(app_name, user_id, response.json())
 
-    user_app_permissions = permissions_registry.get_user_app_permissions(app_name, user_id)
+    user_app_permissions = permissions_registry.get_user_app_permissions(
+        app_name, user_id
+    )
     return user_app_permissions
 
 
@@ -116,8 +123,12 @@ class EnforceUserAppPermissions:
     def __init__(self, action: str):
         self.action = action
 
-    def __call__(self, user_app_permissions: dict = Depends(check_user_app_permissions)):
-        if self.action not in user_app_permissions or not user_app_permissions.get(self.action):
+    def __call__(
+        self, user_app_permissions: dict = Depends(check_user_app_permissions)
+    ):
+        if self.action not in user_app_permissions or not user_app_permissions.get(
+            self.action
+        ):
             raise HTTPException(
                 status_code=403,
                 detail="You do not have permission to perform this action",
