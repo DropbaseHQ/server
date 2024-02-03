@@ -1,5 +1,6 @@
 import asyncio
 import logging
+import os
 
 import requests
 from fastapi import Depends, HTTPException, Request
@@ -9,7 +10,10 @@ from pydantic import BaseModel
 from server.auth.permissions_registry import permissions_registry
 from server.constants import DROPBASE_API_URL
 from server.requests.dropbase_router import AccessCookies, get_access_cookies
+from server.controllers.workspace import AppFolderController
 
+
+cwd = os.getcwd()
 logger = logging.getLogger(__name__)
 
 WORKER_SL_TOKEN_NAME = "worker_sl_token"
@@ -47,7 +51,9 @@ def verify_user_access_token(request: Request, Authorize: AuthJWT = Depends()):
         )
         if verify_response.status_code != 200:
             raise HTTPException(status_code=401, detail="Invalid access token")
-        worker_sl_token = Authorize.create_access_token(subject=verify_response.json().get("user_id"))
+        worker_sl_token = Authorize.create_access_token(
+            subject=verify_response.json().get("user_id")
+        )
         max_age = 60
         raise HTTPException(
             status_code=401,
@@ -90,25 +96,38 @@ def check_user_app_permissions(
     if app_name is None:
         raise Exception("No app name provided")
 
+    app_folder_controller = AppFolderController(
+        app_name=app_name, r_path_to_workspace=os.path.join(cwd, "workspace")
+    )
+    app_id = app_folder_controller.get_app_id(app_name)
+    if app_id is None:
+        raise Exception(f"App {app_name} either does not exist or has no id.")
+
     workspace_id = request.headers.get("workspace-id")
     if not workspace_id:
         raise Exception("No workspace id provided")
 
-    user_app_permissions = permissions_registry.get_user_app_permissions(app_name, user_id)
+    user_app_permissions = permissions_registry.get_user_app_permissions(
+        app_id=app_id, user_id=user_id
+    )
 
     if not user_app_permissions:
         logger.info("FETCHING PERMISSIONS FROM DROPBASE API")
         response = requests.post(
             DROPBASE_API_URL + "/user/check_permission",
             cookies={"access_token_cookie": access_cookies.access_token_cookie},
-            json={"workspace_id": workspace_id, "app_name": app_name},
+            json={"workspace_id": workspace_id, "app_name": app_id},
         )
         if response.status_code != 200:
             raise Exception("Invalid access token")
 
-        permissions_registry.save_permissions(app_name, user_id, response.json())
+        permissions_registry.save_permissions(
+            app_id=app_id, user_id=user_id, permissions=response.json()
+        )
 
-    user_app_permissions = permissions_registry.get_user_app_permissions(app_name, user_id)
+    user_app_permissions = permissions_registry.get_user_app_permissions(
+        app_id=app_id, user_id=user_id
+    )
     return user_app_permissions
 
 
@@ -116,8 +135,12 @@ class EnforceUserAppPermissions:
     def __init__(self, action: str):
         self.action = action
 
-    def __call__(self, user_app_permissions: dict = Depends(check_user_app_permissions)):
-        if self.action not in user_app_permissions or not user_app_permissions.get(self.action):
+    def __call__(
+        self, user_app_permissions: dict = Depends(check_user_app_permissions)
+    ):
+        if self.action not in user_app_permissions or not user_app_permissions.get(
+            self.action
+        ):
             raise HTTPException(
                 status_code=403,
                 detail="You do not have permission to perform this action",
