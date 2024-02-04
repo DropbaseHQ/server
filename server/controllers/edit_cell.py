@@ -2,7 +2,7 @@ from typing import List
 
 from sqlalchemy import text
 
-from server.controllers.utils import connect_to_user_db
+from server.controllers.database import connect_to_user_db
 from server.schemas.edit_cell import CellEdit
 
 

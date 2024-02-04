@@ -1,11 +1,30 @@
+import functools
 from abc import ABC, abstractmethod
 
 from sqlalchemy.orm import scoped_session, sessionmaker
 
-from server.controllers.utils import connect_to_user_db
+from server.controllers.sources import db_type_to_class, db_type_to_connection, get_sources
 from server.requests.dropbase_router import DropbaseRouter
 from server.schemas.query import RunSQLRequest
 from server.schemas.table import ConvertTableRequest
+
+
+@functools.lru_cache
+def connect_to_user_db(source_name: str):
+    sources = get_sources()
+    creds = sources.get(source_name)
+    creds_type = creds.get("type")
+
+    CredsClass = db_type_to_class.get(creds_type)
+    creds = CredsClass(**creds)
+
+    if CredsClass is None:
+        raise ValueError(f"Unsupported database type: {creds_type}")
+
+    db_class = db_type_to_connection.get(creds_type)
+    db_instance = db_class(creds)
+
+    return db_instance.get_engine()
 
 
 class Database(ABC):
