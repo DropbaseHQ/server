@@ -1,4 +1,6 @@
 import functools
+import json
+import traceback
 from abc import ABC, abstractmethod
 
 from sqlalchemy.orm import scoped_session, sessionmaker
@@ -9,6 +11,7 @@ from server.controllers.dataframe import convert_df_to_resp_obj
 from server.controllers.page import get_page_state_context
 from server.controllers.properties import read_page_properties, update_properties
 from server.controllers.python_subprocess import format_process_result
+from server.controllers.redis import r
 from server.controllers.run_sql import get_sql_from_file, render_sql, run_df_query, verify_state
 from server.controllers.source import get_db_schema
 from server.controllers.sources import db_type_to_class, db_type_to_connection, get_sources
@@ -222,8 +225,27 @@ class PostgresDatabase(Database):
         except Exception as e:
             return str(e), 500
 
-    def run_sql_query_from_string(req: RunSQLRequest):
-        verify_state(req.app_name, req.page_name, req.state)
-        df = run_df_query(req.file_content, req.source, req.state)
-        res = convert_df_to_resp_obj(df)
-        return format_process_result(res)
+    def run_sql_query_from_string(self, req: RunSQLRequest, job_id: str):
+        response = {"stdout": "", "traceback": "", "message": "", "type": "", "status_code": 202}
+        try:
+            verify_state(req.app_name, req.page_name, req.state)
+            df = run_df_query(self.engine, req.file_content, req.state)
+            res = convert_df_to_resp_obj(df)
+            r.set(job_id, json.dumps(res))
+
+            response["data"] = res["data"]
+            response["columns"] = res["columns"]
+            response["message"] = "job completed"
+            response["type"] = "table"
+
+            response["status_code"] = 200
+            return {"message": "success"}
+        except Exception as e:
+            response["traceback"] = traceback.format_exc()
+            response["message"] = str(e)
+            response["type"] = "error"
+
+            response["status_code"] = 200
+        finally:
+            # pass
+            r.set(job_id, json.dumps(response))

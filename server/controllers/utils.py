@@ -8,8 +8,6 @@ import pandas as pd
 from sqlalchemy import text
 from sqlalchemy.engine import Engine
 
-from server.models.connect import BaseDatabase
-
 
 def rename_function_in_file(
     file_path: str,
