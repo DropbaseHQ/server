@@ -6,8 +6,7 @@ from sqlalchemy.engine import URL
 
 # Potential classes
 class BaseDatabase(ABC):
-    def __init__(self, creds_dict, creds):
-        self.creds_dict = creds_dict
+    def __init__(self, creds):
         self.creds = creds
 
     @abstractmethod
@@ -20,12 +19,12 @@ class BaseDatabase(ABC):
 
 class PostgresDatabase(BaseDatabase):
     def get_connection_url(self):
-        return URL.create(**self.creds_dict)
+        return URL.create(**self.creds.dict())
 
 
 class MySQLDatabase(BaseDatabase):
     def get_connection_url(self):
-        return URL.create(**self.creds_dict)
+        return URL.create(**self.creds.dict())
 
 
 class SQLiteDatabase(BaseDatabase):
@@ -35,4 +34,15 @@ class SQLiteDatabase(BaseDatabase):
 
 class SnowflakeDatabase(BaseDatabase):
     def get_connection_url(self):
-        return f"snowflake://{self.creds.username}:{self.creds.password}@{self.creds.host}/{self.creds.database}/{self.creds.dbschema}?warehouse={self.creds.warehouse}"
+        creds_dict = self.creds.dict()
+
+        query = {}
+        for key in ["warehouse", "role", "dbschema"]:
+            if key in creds_dict:
+                # If the key is 'dbschema', change it to 'schema' when adding to the query dictionary
+                if key == "dbschema":
+                    query["schema"] = creds_dict.pop(key)
+                else:
+                    query[key] = creds_dict.pop(key)
+
+        return URL.create(query=query, **creds_dict)

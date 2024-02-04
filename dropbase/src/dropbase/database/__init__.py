@@ -1,7 +1,7 @@
 from sqlalchemy.orm import scoped_session, sessionmaker
 from sqlalchemy.sql import text
 
-from server.controllers.utils import connect_to_user_db
+from server.controllers.database import connect_to_user_db
 
 
 class Database:

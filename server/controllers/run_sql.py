@@ -7,10 +7,11 @@ from jinja2 import Environment
 from sqlalchemy import text
 
 from server.constants import DATA_PREVIEW_SIZE, cwd
+from server.controllers.database import connect_to_user_db
 from server.controllers.dataframe import convert_df_to_resp_obj
 from server.controllers.python_subprocess import format_process_result, run_process_task_unwrap
 from server.controllers.redis import r
-from server.controllers.utils import connect_to_user_db, process_query_result
+from server.controllers.utils import process_query_result
 from server.schemas.query import RunSQLRequest
 from server.schemas.table import FilterSort, TableFilter, TablePagination, TableSort
 
