@@ -1,18 +1,4 @@
-from server.controllers.dataframe import convert_df_to_resp_obj
-from server.controllers.utils import clean_df, get_function_by_name, get_state, get_state_context
-
-
-def run_python_query(app_name: str, page_name: str, file: dict, state: dict):
-    try:
-        state = get_state(app_name, page_name, state)
-        args = {"state": state}
-        function_name = get_function_by_name(app_name, page_name, file.get("name"))
-        # call function
-        df = function_name(**args)
-        df = clean_df(df)
-        return convert_df_to_resp_obj(df), 200
-    except Exception as e:
-        return {"error": str(e)}, 500
+from server.controllers.utils import get_function_by_name, get_state_context
 
 
 def run_python_ui(app_name: str, page_name: str, function_name: str, payload: dict):
