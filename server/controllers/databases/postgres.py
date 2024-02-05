@@ -11,6 +11,7 @@ from server.controllers.dataframe import convert_df_to_resp_obj
 from server.controllers.redis import r
 from server.controllers.run_sql import run_df_query, verify_state
 from server.models.table.pg_column import PgColumnDefinedProperty
+from server.schemas.edit_cell import CellEdit
 from server.schemas.query import RunSQLRequest
 
 
@@ -227,6 +228,44 @@ class PostgresDatabase(Database):
 
     def _get_table_path(self, col_data: PgColumnDefinedProperty) -> str:
         return f"{col_data.schema_name}.{col_data.table_name}"
+
+    def _update_value(self, edit: CellEdit):
+        try:
+            columns_name = edit.column_name
+            # NOTE: client sends columns as a list of column objects. we need to convert it to a dict
+            columns_dict = {col.column_name: col for col in edit.columns}
+            column = columns_dict[columns_name]
+
+            values = {
+                "new_value": edit.new_value,
+                "old_value": edit.old_value,
+            }
+            prim_key_list = []
+            edit_keys = column.edit_keys
+            for key in edit_keys:
+                pk_col = columns_dict[key]
+                prim_key_list.append(f"{pk_col.column_name} = :{pk_col.column_name}")
+                values[pk_col.column_name] = edit.row[pk_col.name]
+            prim_key_str = " AND ".join(prim_key_list)
+
+            sql = f"""UPDATE "{column.schema_name}"."{column.table_name}"
+        SET {column.column_name} = :new_value
+        WHERE {prim_key_str}"""
+
+            # TODO: add check for prev column value
+            # AND {column.column_name} = :old_value
+
+            with self.engine.connect() as conn:
+                result = conn.execute(text(sql), values)
+                conn.commit()
+                if result.rowcount == 0:
+                    raise Exception("No rows were updated")
+            return f"Updated {edit.column_name} from {edit.old_value} to {edit.new_value}", True
+        except Exception as e:
+            return (
+                f"Failed to update {edit.column_name} from {edit.old_value} to {edit.new_value}. Error: {str(e)}",  # noqa
+                False,
+            )
 
 
 # helper functions

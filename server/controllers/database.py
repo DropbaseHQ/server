@@ -3,6 +3,7 @@ from abc import ABC, abstractmethod
 from sqlalchemy.engine import create_engine
 from sqlalchemy.orm import scoped_session, sessionmaker
 
+from server.schemas.edit_cell import CellEdit
 from server.schemas.query import RunSQLRequest
 
 
@@ -76,6 +77,10 @@ class Database(ABC):
 
     @abstractmethod
     def _validate_smart_cols(self, smart_cols: dict[str, dict], user_sql: str):
+        pass
+
+    @abstractmethod
+    def _update_value(self, edit: CellEdit):
         pass
 
     def _detect_col_display_type(self, col_type: str):
