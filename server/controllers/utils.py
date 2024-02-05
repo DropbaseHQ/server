@@ -1,5 +1,4 @@
 import ast
-import functools
 import importlib
 import re
 from pathlib import Path
@@ -7,8 +6,6 @@ from pathlib import Path
 import pandas as pd
 from sqlalchemy import text
 from sqlalchemy.engine import Engine
-
-from server.models.connect import BaseDatabase
 
 
 def rename_function_in_file(

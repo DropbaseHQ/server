@@ -1,9 +1,11 @@
 import functools
 from abc import ABC, abstractmethod
 
+from sqlalchemy.engine import create_engine
 from sqlalchemy.orm import scoped_session, sessionmaker
 
-from server.controllers.sources import db_type_to_class, db_type_to_connection, get_sources
+from server.constants import WORKSPACE_SOURCES
+from server.controllers.sources import db_type_to_class, db_type_to_connection
 from server.requests.dropbase_router import DropbaseRouter
 from server.schemas.query import RunSQLRequest
 from server.schemas.table import ConvertTableRequest
@@ -11,8 +13,7 @@ from server.schemas.table import ConvertTableRequest
 
 @functools.lru_cache
 def connect_to_user_db(source_name: str):
-    sources = get_sources()
-    creds = sources.get(source_name)
+    creds = WORKSPACE_SOURCES.get(source_name)
     creds_type = creds.get("type")
 
     CredsClass = db_type_to_class.get(creds_type)
@@ -31,14 +32,16 @@ class Database(ABC):
     def __init__(self, database: str, schema: str = "public"):
         self.source = database
         self.schema = schema
-        self.engine = connect_to_user_db(database)
+        creds = WORKSPACE_SOURCES.get(database)
+        self.creds = self._define_creds(creds)
+        self.engine = create_engine(self._get_connection_url(), future=True)
         self.session_obj = scoped_session(sessionmaker(bind=self.engine))
 
     def __enter__(self):
         self.session = self.session_obj()
         return self
 
-    def __exit__(self, type, value, traceback):
+    def __exit__(self):
         self.session.close()
         self.engine.dispose()
 
@@ -51,6 +54,14 @@ class Database(ABC):
 
     def rollback(self):
         self.session.rollback()
+
+    @abstractmethod
+    def _define_creds(self, creds: dict):
+        pass
+
+    @abstractmethod
+    def _get_connection_url(self):
+        pass
 
     @abstractmethod
     def update(self, table: str, keys: dict, values: dict, auto_commit: bool = False):
