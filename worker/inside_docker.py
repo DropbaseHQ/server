@@ -46,40 +46,42 @@ def run_python_ui(app_name: str, page_name: str, file: dict, state: dict, contex
     return context.dict()
 
 
-r = redis.Redis(host="host.docker.internal", port=6379, db=0)
+if __name__ == "__main__":
 
-response = {"stdout": "", "traceback": "", "message": "", "type": "", "status_code": 202}
+    r = redis.Redis(host="host.docker.internal", port=6379, db=0)
 
+    response = {"stdout": "", "traceback": "", "message": "", "type": "", "status_code": 202}
 
-try:
-    # get evn variables
-    app_name = os.getenv("app_name")
-    page_name = os.getenv("page_name")
-    state = json.loads(os.getenv("state"))
-    file = json.loads(os.getenv("file"))
-    job_id = os.getenv("job_id")
+    try:
+        # get evn variables
+        app_name = os.getenv("app_name")
+        page_name = os.getenv("page_name")
+        state = json.loads(os.getenv("state"))
+        file = json.loads(os.getenv("file"))
+        job_id = os.getenv("job_id")
 
-    # run python script and get result
-    if file["type"] == "ui":
-        result = run_python_ui(app_name, page_name, file, state)
-        response["type"] = "context"
-        response["context"] = result
-    elif file["type"] == "data_fetcher":
-        result = run_python_data_fetcher(app_name, page_name, file, state)
-        response["type"] = "table"
-        response["data"] = result["data"]
-        response["columns"] = result["columns"]
+        # run python script and get result
+        if file["type"] == "ui":
+            context = json.loads(os.getenv("context"))
+            result = run_python_ui(app_name, page_name, file, state, context)
+            response["type"] = "context"
+            response["context"] = result
+        elif file["type"] == "data_fetcher":
+            result = run_python_data_fetcher(app_name, page_name, file, state)
+            response["type"] = "table"
+            response["data"] = result["data"]
+            response["columns"] = result["columns"]
 
-    response["message"] = "job completed"
-    response["status_code"] = 200
-except Exception as e:
-    # catch any error and tracebacks and send to rabbitmq
-    response["type"] = "error"
-    response["traceback"] = traceback.format_exc()
-    response["message"] = str(e)
-    response["status_code"] = 500
+        response["message"] = "job completed"
+        response["status_code"] = 200
+    except Exception as e:
+        # catch any error and tracebacks and send to rabbitmq
+        response["type"] = "error"
+        response["traceback"] = traceback.format_exc()
+        response["message"] = str(e)
+        response["status_code"] = 500
 
-finally:
-    # send result to redis
-    r.set(job_id, json.dumps(response))
-    r.expire(job_id, 60)
+    finally:
+        # send result to redis
+        r.set(job_id, json.dumps(response))
+        r.expire(job_id, 60)

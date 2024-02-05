@@ -1,14 +1,9 @@
 import ast
-import functools
 import importlib
 import re
 from pathlib import Path
 
 import pandas as pd
-from sqlalchemy import create_engine, text
-from sqlalchemy.engine import Engine
-
-from server.controllers.sources import db_type_to_class, get_sources
 
 
 def rename_function_in_file(
@@ -62,16 +57,6 @@ def clean_df(df: pd.DataFrame) -> pd.DataFrame:
     return df
 
 
-@functools.lru_cache
-def connect_to_user_db(source_name: str):
-    sources = get_sources()
-    creds = sources.get(source_name)
-    CredsClass = db_type_to_class.get(creds.get("type"))
-    creds = CredsClass(**creds)
-    SQLALCHEMY_DATABASE_URL = f"postgresql+psycopg2://{creds.username}:{creds.password}@{creds.host}:{creds.port}/{creds.database}"  # noqa
-    return create_engine(SQLALCHEMY_DATABASE_URL, future=True)
-
-
 def validate_column_name(column: str):
     pattern = re.compile(r"^[a-zA-Z_][a-zA-Z0-9_]*$")
     return False if pattern.fullmatch(column) is None else True
@@ -101,16 +86,6 @@ def get_depend_table_names(user_sql: str):
     pattern = re.compile(r"\{\{state\.tables\.(\w+)\.\w+\}\}")
     matches = pattern.findall(user_sql)
     return list(set(matches))
-
-
-def get_column_names(user_db_engine: Engine, user_sql: str) -> list[str]:
-    if user_sql == "":
-        return []
-    user_sql = user_sql.strip("\n ;")
-    user_sql = f"SELECT * FROM ({user_sql}) AS q LIMIT 1"
-    with user_db_engine.connect().execution_options(autocommit=True) as conn:
-        col_names = list(conn.execute(text(user_sql)).keys())
-    return col_names
 
 
 def process_query_result(res) -> pd.DataFrame:
