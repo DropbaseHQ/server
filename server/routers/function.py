@@ -19,33 +19,41 @@ router = APIRouter(
 
 @router.post("/")
 async def run_function_req(req: RunFunction, response: Response, background_tasks: BackgroundTasks):
-    job_id = uuid.uuid4().hex
-    properties = read_page_properties(req.app_name, req.page_name)
-    file = get_table_data_fetcher(properties["files"], req.function_name)
-    file = DataFile(**file)
+    try:
+        properties = read_page_properties(req.app_name, req.page_name)
+        file = get_table_data_fetcher(properties["files"], req.function_name)
+        if file is None:
+            response.status_code = 404
+            return {"message": "function not found"}
 
-    args = {
-        "app_name": req.app_name,
-        "page_name": req.page_name,
-        "file": json.dumps(file.dict()),
-        "state": json.dumps(req.payload.state),
-        "context": json.dumps(req.payload.context),
-        "job_id": job_id,
-    }
-    # start a job
-    background_tasks.add_task(run_container, args)
+        file = DataFile(**file)
 
-    status_code = 202
-    reponse_payload = {
-        "message": "job started",
-        "status_code": status_code,
-        "job_id": job_id,
-    }
+        job_id = uuid.uuid4().hex
+        args = {
+            "app_name": req.app_name,
+            "page_name": req.page_name,
+            "file": json.dumps(file.dict()),
+            "state": json.dumps(req.payload.state),
+            "context": json.dumps(req.payload.context),
+            "job_id": job_id,
+        }
+        # start a job
+        background_tasks.add_task(run_container, args)
 
-    # set initial status to pending
-    r.set(job_id, json.dumps(reponse_payload))
-    r.expire(job_id, 300)  # timeout in 5 minutes
+        status_code = 202
+        reponse_payload = {
+            "message": "job started",
+            "status_code": status_code,
+            "job_id": job_id,
+        }
 
-    response.status_code = status_code
-    reponse_payload.pop("status_code")
-    return reponse_payload
+        # set initial status to pending
+        r.set(job_id, json.dumps(reponse_payload))
+        r.expire(job_id, 300)  # timeout in 5 minutes
+
+        response.status_code = status_code
+        reponse_payload.pop("status_code")
+        return reponse_payload
+    except Exception as e:
+        response.status_code = 500
+        return {"message": str(e)}
