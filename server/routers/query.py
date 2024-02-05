@@ -4,14 +4,13 @@ import uuid
 from fastapi import APIRouter, BackgroundTasks, Depends, Response
 
 from server.auth.dependency import EnforceUserAppPermissions
-from server.controllers.connect import connect_to_user_db
 from server.controllers.properties import read_page_properties
 from server.controllers.python_docker import run_container
 from server.controllers.redis import r
-from server.controllers.run_sql import run_sql_query
+from server.controllers.run_sql import run_sql_query, run_sql_query_from_string
 from server.controllers.utils import get_table_data_fetcher
 from server.schemas.files import DataFile
-from server.schemas.query import RunSQLRequest
+from server.schemas.query import RunSQLStringRequest
 from server.schemas.run_python import QueryPythonRequest, RunPythonStringRequestNew
 
 router = APIRouter(prefix="/query", tags=["query"], responses={404: {"description": "Not found"}})
@@ -19,11 +18,10 @@ router = APIRouter(prefix="/query", tags=["query"], responses={404: {"descriptio
 
 @router.post("/sql_string/", dependencies=[Depends(EnforceUserAppPermissions(action="use"))])
 async def run_sql_from_string_req(
-    request: RunSQLRequest, response: Response, background_tasks: BackgroundTasks
+    request: RunSQLStringRequest, response: Response, background_tasks: BackgroundTasks
 ):
     job_id = uuid.uuid4().hex
-    user_db = connect_to_user_db(request.source)
-    background_tasks.add_task(user_db.run_sql_query_from_string, request, job_id)
+    background_tasks.add_task(run_sql_query_from_string, request, job_id)
 
     status_code = 202
     reponse_payload = {
@@ -90,7 +88,7 @@ async def start_docker(req: QueryPythonRequest, response: Response, background_t
         args["file"] = file
         args["state"] = req.state
         args["filter_sort"] = req.filter_sort
-        background_tasks.add_task(run_sql_query, args)
+        background_tasks.add_task(run_sql_query, args, job_id)
 
     status_code = 202
     reponse_payload = {

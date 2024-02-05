@@ -2,49 +2,63 @@ import json
 import traceback
 from typing import List
 
-import pandas as pd
 from jinja2 import Environment
-from sqlalchemy import text
-from sqlalchemy.engine.base import Engine
 
-from server.constants import DATA_PREVIEW_SIZE, cwd
+from server.constants import cwd
+from server.controllers.connect import connect_to_user_db
 from server.controllers.dataframe import convert_df_to_resp_obj
 from server.controllers.python_subprocess import format_process_result, run_process_task_unwrap
 from server.controllers.redis import r
 from server.controllers.utils import process_query_result
+from server.schemas.query import RunSQLRequestTask, RunSQLStringRequest
 from server.schemas.table import FilterSort, TableFilter, TablePagination, TableSort
 
 
-def run_df_query(
-    engine: Engine,
-    user_sql: str,
-    state: dict,
-    filter_sort: FilterSort = FilterSort(
-        filters=[], sorts=[], pagination=TablePagination(page=0, page_size=DATA_PREVIEW_SIZE)
-    ),
-) -> pd.DataFrame:
-    filter_sql, filter_values = prepare_sql(user_sql, state, filter_sort)
-    res = query_db(filter_sql, filter_values, engine)
-    return process_query_result(res)
+def run_sql_query_from_string(req: RunSQLStringRequest, job_id: str):
+    response = {"stdout": "", "traceback": "", "message": "", "type": "", "status_code": 202}
+    try:
+        verify_state(req.app_name, req.page_name, req.state)
+        user_db = connect_to_user_db(req.source)
+        # get get query string and values for sqlalchemy query
+        filter_sql, filter_values = prepare_sql(req.file_content, req.state, {})
+        res = user_db._run_query(filter_sql, filter_values)
+        # parse pandas response
+        df = process_query_result(res)
+        res = convert_df_to_resp_obj(df)
+        r.set(job_id, json.dumps(res))
+
+        response["data"] = res["data"]
+        response["columns"] = res["columns"]
+        response["message"] = "job completed"
+        response["type"] = "table"
+
+        response["status_code"] = 200
+        return {"message": "success"}
+    except Exception as e:
+        response["traceback"] = traceback.format_exc()
+        response["message"] = str(e)
+        response["type"] = "error"
+
+        response["status_code"] = 200
+    finally:
+        # pass
+        r.set(job_id, json.dumps(response))
 
 
-def run_sql_query(args: dict):
-
-    app_name = args.get("app_name")
-    page_name = args.get("page_name")
-    file = args.get("file")
-    state = args.get("state")
-    filter_sort = args.get("filter_sort")
-    job_id = args.get("job_id")
+def run_sql_query(args: RunSQLRequestTask, job_id: str):
 
     response = {"stdout": "", "traceback": "", "message": "", "type": "", "status_code": 202}
 
-    # app_name: str, page_name: str, file: DataFile, state: dict, filter_sort: FilterSort
     try:
-        verify_state(app_name, page_name, state)
-
-        sql = get_sql_from_file(app_name, page_name, file.name)
-        df = run_df_query(sql, file.source, state, filter_sort)
+        verify_state(args.app_name, args.page_name, args.state)
+        user_db = connect_to_user_db(args.file.source)
+        # get query from file
+        sql = get_sql_from_file(args.app_name, args.page_name, args.file.name)
+        # get get query string and values for sqlalchemy query
+        filter_sql, filter_values = prepare_sql(sql.user_sql, args.state, args.filter_sort)
+        # query user db
+        res = user_db._run_query(filter_sql, filter_values)
+        df = process_query_result(res)
 
         res = convert_df_to_resp_obj(df)
         r.set(job_id, json.dumps(res))
@@ -73,6 +87,7 @@ def prepare_sql(user_sql: str, state: dict, filter_sort: FilterSort):
     return apply_filters(sql, filter_sort.filters, filter_sort.sorts, filter_sort.pagination)
 
 
+# NOTE: this might need to move to db classes, not all sqls have the same end of line characters
 def clean_sql(sql):
     return sql.strip("\n ;")
 
@@ -88,13 +103,6 @@ def get_sql_from_file(app_name: str, page_name: str, file_name: str) -> str:
     with open(path, "r") as sql_file:
         sql = sql_file.read()
     return sql
-
-
-def query_db(sql, values, engine):
-    with engine.connect().execution_options(autocommit=True) as conn:
-        res = conn.execute(text(sql), values).all()
-
-    return res
 
 
 def apply_filters(

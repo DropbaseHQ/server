@@ -1,18 +1,11 @@
-import json
-import traceback
-
 from sqlalchemy.engine import URL
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.inspection import inspect
 from sqlalchemy.sql import text
 
 from server.controllers.database import Database
-from server.controllers.dataframe import convert_df_to_resp_obj
-from server.controllers.redis import r
-from server.controllers.run_sql import run_df_query, verify_state
 from server.models.table.pg_column import PgColumnDefinedProperty
 from server.schemas.edit_cell import CellEdit
-from server.schemas.query import RunSQLRequest
 
 
 class PostgresDatabase(Database):
@@ -86,31 +79,6 @@ class PostgresDatabase(Database):
     def execute_custom_query(self, sql: str, values: dict = None):
         result = self.session.execute(text(sql), values if values else {})
         return [dict(row) for row in result.fetchall()]
-
-    def run_sql_query_from_string(self, req: RunSQLRequest, job_id: str):
-        response = {"stdout": "", "traceback": "", "message": "", "type": "", "status_code": 202}
-        try:
-            verify_state(req.app_name, req.page_name, req.state)
-            df = run_df_query(self.engine, req.file_content, req.state)
-            res = convert_df_to_resp_obj(df)
-            r.set(job_id, json.dumps(res))
-
-            response["data"] = res["data"]
-            response["columns"] = res["columns"]
-            response["message"] = "job completed"
-            response["type"] = "table"
-
-            response["status_code"] = 200
-            return {"message": "success"}
-        except Exception as e:
-            response["traceback"] = traceback.format_exc()
-            response["message"] = str(e)
-            response["type"] = "error"
-
-            response["status_code"] = 200
-        finally:
-            # pass
-            r.set(job_id, json.dumps(response))
 
     def _get_db_schema(self):
         # TODO: cache this, takes a while
@@ -266,6 +234,11 @@ class PostgresDatabase(Database):
                 f"Failed to update {edit.column_name} from {edit.old_value} to {edit.new_value}. Error: {str(e)}",  # noqa
                 False,
             )
+
+    def _run_query(self, sql: str, values: dict):
+        with self.engine.connect().execution_options(autocommit=True) as conn:
+            res = conn.execute(text(sql), values).all()
+        return res
 
 
 # helper functions

@@ -4,7 +4,6 @@ from sqlalchemy.engine import create_engine
 from sqlalchemy.orm import scoped_session, sessionmaker
 
 from server.schemas.edit_cell import CellEdit
-from server.schemas.query import RunSQLRequest
 
 
 class Database(ABC):
@@ -64,10 +63,6 @@ class Database(ABC):
         pass
 
     @abstractmethod
-    def run_sql_query_from_string(req: RunSQLRequest):
-        pass
-
-    @abstractmethod
     def _get_db_schema(self):
         pass
 
@@ -81,6 +76,10 @@ class Database(ABC):
 
     @abstractmethod
     def _update_value(self, edit: CellEdit):
+        pass
+
+    @abstractmethod
+    def _run_query(self, sql: str, values: dict):
         pass
 
     def _detect_col_display_type(self, col_type: str):
