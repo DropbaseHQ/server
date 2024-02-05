@@ -1,40 +1,24 @@
-import functools
 from abc import ABC, abstractmethod
 
 from sqlalchemy.engine import create_engine
 from sqlalchemy.orm import scoped_session, sessionmaker
 
 from server.constants import WORKSPACE_SOURCES
-from server.controllers.sources import db_type_to_class, db_type_to_connection
 from server.requests.dropbase_router import DropbaseRouter
 from server.schemas.query import RunSQLRequest
 from server.schemas.table import ConvertTableRequest
 
 
-@functools.lru_cache
-def connect_to_user_db(source_name: str):
-    creds = WORKSPACE_SOURCES.get(source_name)
-    creds_type = creds.get("type")
-
-    CredsClass = db_type_to_class.get(creds_type)
-    creds = CredsClass(**creds)
-
-    if CredsClass is None:
-        raise ValueError(f"Unsupported database type: {creds_type}")
-
-    db_class = db_type_to_connection.get(creds_type)
-    db_instance = db_class(creds)
-
-    return db_instance.get_engine()
-
-
 class Database(ABC):
     def __init__(self, database: str, schema: str = "public"):
+        # set source and schema
         self.source = database
         self.schema = schema
+        # get creds
         creds = WORKSPACE_SOURCES.get(database)
-        self.creds = self._define_creds(creds)
-        self.engine = create_engine(self._get_connection_url(), future=True)
+        connection_url = self._get_connection_url(creds.dict())
+        # create engine and session
+        self.engine = create_engine(connection_url, future=True)
         self.session_obj = scoped_session(sessionmaker(bind=self.engine))
 
     def __enter__(self):
@@ -56,11 +40,7 @@ class Database(ABC):
         self.session.rollback()
 
     @abstractmethod
-    def _define_creds(self, creds: dict):
-        pass
-
-    @abstractmethod
-    def _get_connection_url(self):
+    def _get_connection_url(self, creds):
         pass
 
     @abstractmethod
@@ -96,3 +76,23 @@ class Database(ABC):
     @abstractmethod
     def run_sql_query_from_string(req: RunSQLRequest):
         pass
+
+    def _detect_col_display_type(self, col_type: str):
+        if "float" in col_type:
+            return "float"
+        elif col_type in ["real", "double", "double precision", "decimal", "numeric"]:
+            return "float"
+        elif "int" in col_type:
+            return "integer"
+        elif col_type == "date":
+            return "date"
+        elif col_type == "time":
+            return "time"
+        elif col_type == "datetime":
+            return "datetime"
+        elif "timestamp" in col_type:
+            return "datetime"
+        elif "bool" in col_type:
+            return "boolean"
+        else:
+            return "text"

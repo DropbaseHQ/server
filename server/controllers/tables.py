@@ -49,7 +49,7 @@ def convert_sql_table(req: ConvertTableRequest, router: DropbaseRouter):
         column_props = [value for name, value in smart_cols.items() if name in validated]
 
         for column in column_props:
-            column["display_type"] = detect_displau_type_for_pg_col(column["column_type"].lower())
+            column["display_type"] = detect_display_type_for_pg_col(column["column_type"].lower())
 
         for table in properties["tables"]:
             if table["name"] == req.table.name:
@@ -67,7 +67,7 @@ def convert_sql_table(req: ConvertTableRequest, router: DropbaseRouter):
 
 
 # TODO: duplicate, move to utils
-def detect_displau_type_for_pg_col(col_type):
+def detect_display_type_for_pg_col(col_type):
     if "float" in col_type:
         return "float"
     elif col_type in ["real", "double", "double precision", "decimal", "numeric"]:

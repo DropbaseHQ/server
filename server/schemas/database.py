@@ -11,16 +11,18 @@ class BaseDbCreds(BaseModel):
 
 class PgCreds(BaseDbCreds):
     port: int = 5432
+    drivername: str = "postgresql+psycopg2"
 
 
 # Child class for MySQL credentials
 class MySQLCreds(BaseDbCreds):
     port: int = 3306
+    drivername: str = "mysql+pymysql"
 
 
 class SqliteCreds(BaseModel):
-    drivername: str
     host: str
+    drivername: str = "sqlite"
 
 
 class SnowflakeCreds(BaseDbCreds):
@@ -30,3 +32,4 @@ class SnowflakeCreds(BaseDbCreds):
     database: str
     username: str
     password: str
+    drivername: str = "snowflake"
