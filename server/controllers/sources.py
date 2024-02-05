@@ -7,6 +7,7 @@ from server.schemas.database import MySQLCreds, PgCreds, SnowflakeCreds, SqliteC
 
 db_type_to_class = {
     "postgres": PgCreds,
+    "pg": PgCreds,
     "mysql": MySQLCreds,
     "sqlite": SqliteCreds,
     "snowflake": SnowflakeCreds,
@@ -27,6 +28,7 @@ def get_sources():
     verified_sources = {}
     for name, source in sources.items():
         SourceClass = db_type_to_class.get(source["type"])
+
         try:
             source = SourceClass(**source)
             """

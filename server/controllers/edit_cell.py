@@ -2,7 +2,7 @@ from typing import List
 
 from sqlalchemy import text
 
-from server.controllers.database import connect_to_user_db
+from server.controllers.connect import connect_to_user_db
 from server.schemas.edit_cell import CellEdit
 
 
@@ -10,7 +10,8 @@ def edit_cell(file: dict, edits: List[CellEdit]):
     result_dict = {"result": [], "errors": None}
     status_code = 200
     try:
-        user_db_engine = connect_to_user_db(file.get("source"))
+        user_db = connect_to_user_db(file.source)
+        user_db_engine = user_db.engine
         for edit in edits:
             update_res, success = update_value(user_db_engine, edit)
             result_dict["result"].append(update_res)

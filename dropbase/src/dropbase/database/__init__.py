@@ -1,14 +1,18 @@
+from sqlalchemy.engine import URL, create_engine
 from sqlalchemy.orm import scoped_session, sessionmaker
 from sqlalchemy.sql import text
 
-from server.controllers.database import connect_to_user_db
+from server.constants import WORKSPACE_SOURCES
 
 
 class Database:
     def __init__(self, database: str, schema: str = "public"):
+        connection_url = self._get_connection_url(
+            WORKSPACE_SOURCES.get(database)
+        )  # NOTE: May want to change this later, added as temporary solution
         self.source = database
         self.schema = schema
-        self.engine = connect_to_user_db(database)
+        self.engine = create_engine(connection_url, future=True)
         self.session_obj = scoped_session(sessionmaker(bind=self.engine))
 
     def __enter__(self):
@@ -28,6 +32,9 @@ class Database:
 
     def rollback(self):
         self.session.rollback()
+
+    def _get_connection_url(self, creds: dict):
+        return URL.create(**creds)
 
     def update(self, table: str, keys: dict, values: dict, auto_commit: bool = False):
         value_keys = list(values.keys())
