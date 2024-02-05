@@ -61,7 +61,8 @@ try:
 
     # run python script and get result
     if file["type"] == "ui":
-        result = run_python_ui(app_name, page_name, file, state)
+        context = json.loads(os.getenv("context"))
+        result = run_python_ui(app_name, page_name, file, state, context)
         response["type"] = "context"
         response["context"] = result
     elif file["type"] == "data_fetcher":
