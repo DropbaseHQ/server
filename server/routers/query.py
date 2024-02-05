@@ -10,7 +10,7 @@ from server.controllers.redis import r
 from server.controllers.run_sql import run_sql_query, run_sql_query_from_string
 from server.controllers.utils import get_table_data_fetcher
 from server.schemas.files import DataFile
-from server.schemas.query import RunSQLStringRequest
+from server.schemas.query import RunSQLRequestTask, RunSQLStringRequest
 from server.schemas.run_python import QueryPythonRequest, RunPythonStringRequestNew
 
 router = APIRouter(prefix="/query", tags=["query"], responses={404: {"description": "Not found"}})
@@ -88,6 +88,7 @@ async def start_docker(req: QueryPythonRequest, response: Response, background_t
         args["file"] = file
         args["state"] = req.state
         args["filter_sort"] = req.filter_sort
+        args = RunSQLRequestTask(**args)
         background_tasks.add_task(run_sql_query, args, job_id)
 
     status_code = 202

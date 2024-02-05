@@ -19,7 +19,8 @@ def set_by_path(root, items, value):
 
 # helper function to compare values with operators
 def compare_values(value_a: Any, operator: str, value_b: Any):
-    if not type(value_a) == type(value_b):
+    if not type(value_a) == type(value_b):  # noqa
+        # TODO: @Jon could this be repalces with type(value_a) is not type(value_b) ?
         value_a = str(value_a)
         value_b = str(value_b)
 
@@ -55,7 +56,7 @@ def display_rule(state, context, rules: DisplayRules):
                 components_context = getattr(widget_context, "components")
                 component_context = getattr(components_context, target_component)
 
-                if component_context.visible == False:
+                if component_context.visible is False:
                     component_visible = False
                     break
 
@@ -73,9 +74,7 @@ def display_rule(state, context, rules: DisplayRules):
                 component_visible = rule_applies
 
         # the resulting state of the component is defined by the final rule resulting condition
-        set_by_path(
-            context, f"{component_display_rules.component}.visible", component_visible
-        )
+        set_by_path(context, f"{component_display_rules.component}.visible", component_visible)
 
     return context.dict()
 

@@ -19,9 +19,7 @@ def run_sql_query_from_string(req: RunSQLStringRequest, job_id: str):
     try:
         verify_state(req.app_name, req.page_name, req.state)
         user_db = connect_to_user_db(req.source)
-        # get get query string and values for sqlalchemy query
-        filter_sql, filter_values = prepare_sql(req.file_content, req.state, {})
-        res = user_db._run_query(filter_sql, filter_values)
+        res = user_db._run_query(req.file_content, {})
         # parse pandas response
         df = process_query_result(res)
         res = convert_df_to_resp_obj(df)
@@ -53,9 +51,9 @@ def run_sql_query(args: RunSQLRequestTask, job_id: str):
         verify_state(args.app_name, args.page_name, args.state)
         user_db = connect_to_user_db(args.file.source)
         # get query from file
-        sql = get_sql_from_file(args.app_name, args.page_name, args.file.name)
+        file_sql = get_sql_from_file(args.app_name, args.page_name, args.file.name)
         # get get query string and values for sqlalchemy query
-        filter_sql, filter_values = prepare_sql(sql.user_sql, args.state, args.filter_sort)
+        filter_sql, filter_values = prepare_sql(file_sql, args.state, args.filter_sort)
         # query user db
         res = user_db._run_query(filter_sql, filter_values)
         df = process_query_result(res)
