@@ -5,8 +5,6 @@ import psycopg2
 import pytest
 import pytest_postgresql.factories
 from fastapi.testclient import TestClient
-from sqlalchemy import create_engine
-from sqlalchemy.pool import NullPool
 
 from server.auth.dependency import EnforceUserAppPermissions
 from server.controllers.databases.postgres import PostgresDatabase

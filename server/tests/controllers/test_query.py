@@ -30,7 +30,7 @@ def test_apply_filters():
     filter = filters[0]
     assert (
         filter_sql
-        == f'WITH user_query as ({table_sql}) SELECT * FROM user_query\nWHERE \nuser_query."{filter.column_name}" {filter.condition} :{filter.column_name}_filter\n\n'
+        == f'WITH user_query as ({table_sql}) SELECT * FROM user_query\nWHERE \nuser_query."{filter.column_name}" {filter.condition} :{filter.column_name}_filter\n\n'  # noqa
     )
     assert filter_values == {f"{filter.column_name}_filter": "Charlie Brown"}
 
@@ -50,5 +50,5 @@ def test_apply_sorts():
     sort = sorts[0]
     assert (
         filter_sql
-        == f'WITH user_query as ({table_sql}) SELECT * FROM user_query\n\nORDER BY \nuser_query."{sort.column_name}" {sort.value}\n'
+        == f'WITH user_query as ({table_sql}) SELECT * FROM user_query\n\nORDER BY \nuser_query."{sort.column_name}" {sort.value}\n'  # noqa
     )
