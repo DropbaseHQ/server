@@ -1,11 +1,10 @@
 import json
 import uuid
 
-import sqlalchemy.exc
-from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Response
+from fastapi import APIRouter, BackgroundTasks, Depends, Response
 
 from server.auth.dependency import EnforceUserAppPermissions
-from server.controllers.database import PostgresDatabase
+from server.controllers.database import Database
 from server.controllers.properties import read_page_properties
 from server.controllers.python_docker import run_container
 from server.controllers.redis import r
@@ -25,7 +24,7 @@ async def run_sql_from_string_req(
     job_id = uuid.uuid4().hex
 
     source_name = request.source
-    db_instance = PostgresDatabase(source_name)
+    db_instance = Database(source_name)
 
     background_tasks.add_task(db_instance.run_sql_query_from_string, request, job_id)
 

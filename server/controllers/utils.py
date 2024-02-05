@@ -4,8 +4,6 @@ import re
 from pathlib import Path
 
 import pandas as pd
-from sqlalchemy import text
-from sqlalchemy.engine import Engine
 
 
 def rename_function_in_file(
@@ -88,16 +86,6 @@ def get_depend_table_names(user_sql: str):
     pattern = re.compile(r"\{\{state\.tables\.(\w+)\.\w+\}\}")
     matches = pattern.findall(user_sql)
     return list(set(matches))
-
-
-def get_column_names(user_db_engine: Engine, user_sql: str) -> list[str]:
-    if user_sql == "":
-        return []
-    user_sql = user_sql.strip("\n ;")
-    user_sql = f"SELECT * FROM ({user_sql}) AS q LIMIT 1"
-    with user_db_engine.connect().execution_options(autocommit=True) as conn:
-        col_names = list(conn.execute(text(user_sql)).keys())
-    return col_names
 
 
 def process_query_result(res) -> pd.DataFrame:

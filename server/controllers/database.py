@@ -4,9 +4,7 @@ from sqlalchemy.engine import create_engine
 from sqlalchemy.orm import scoped_session, sessionmaker
 
 from server.constants import WORKSPACE_SOURCES
-from server.requests.dropbase_router import DropbaseRouter
 from server.schemas.query import RunSQLRequest
-from server.schemas.table import ConvertTableRequest
 
 
 class Database(ABC):
@@ -70,11 +68,19 @@ class Database(ABC):
         pass
 
     @abstractmethod
-    def convert_sql_table(req: ConvertTableRequest, router: DropbaseRouter):
+    def run_sql_query_from_string(req: RunSQLRequest):
         pass
 
     @abstractmethod
-    def run_sql_query_from_string(req: RunSQLRequest):
+    def _get_db_schema(self):
+        pass
+
+    @abstractmethod
+    def _get_column_names(self, user_sql: str):
+        pass
+
+    @abstractmethod
+    def _validate_smart_cols(self, smart_cols: dict[str, dict], user_sql: str):
         pass
 
     def _detect_col_display_type(self, col_type: str):

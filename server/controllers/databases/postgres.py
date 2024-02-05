@@ -2,21 +2,16 @@ import json
 import traceback
 
 from sqlalchemy.engine import URL
+from sqlalchemy.exc import SQLAlchemyError
+from sqlalchemy.inspection import inspect
 from sqlalchemy.sql import text
 
 from server.controllers.database import Database
 from server.controllers.dataframe import convert_df_to_resp_obj
-from server.controllers.page import get_page_state_context
-from server.controllers.properties import read_page_properties, update_properties
 from server.controllers.redis import r
-from server.controllers.run_sql import get_sql_from_file, render_sql, run_df_query, verify_state
-from server.controllers.source import get_db_schema
-from server.controllers.utils import get_column_names, get_table_data_fetcher
-from server.controllers.validation import validate_smart_cols
-from server.requests.dropbase_router import DropbaseRouter
-from server.schemas.files import DataFile
+from server.controllers.run_sql import run_df_query, verify_state
+from server.models.table.pg_column import PgColumnDefinedProperty
 from server.schemas.query import RunSQLRequest
-from server.schemas.table import ConvertTableRequest
 
 
 class PostgresDatabase(Database):
@@ -91,60 +86,6 @@ class PostgresDatabase(Database):
         result = self.session.execute(text(sql), values if values else {})
         return [dict(row) for row in result.fetchall()]
 
-    def convert_sql_table(self, req: ConvertTableRequest, router: DropbaseRouter):
-        try:
-            # get db schema
-            properties = read_page_properties(req.app_name, req.page_name)
-            file = get_table_data_fetcher(properties["files"], req.table.fetcher)
-            file = DataFile(**file)
-
-            db_schema, gpt_schema = get_db_schema(self.engine)
-
-            # get columns
-            user_sql = get_sql_from_file(req.app_name, req.page_name, file.name)
-            user_sql = render_sql(user_sql, req.state)
-            column_names = get_column_names(self.engine, user_sql)
-
-            # get columns from file
-            get_smart_table_payload = {
-                "user_sql": user_sql,
-                "column_names": column_names,
-                "gpt_schema": gpt_schema,
-                "db_schema": db_schema,
-            }
-
-            resp = router.misc.get_smart_columns(get_smart_table_payload)
-            if resp.status_code != 200:
-                return resp.text
-            smart_cols = resp.json().get("columns")
-            # NOTE: columns type in smart_cols dict (from chatgpt) is called type.
-            # do not confuse it with column_type, which we use internally
-
-            # rename type to column_type
-            for column in smart_cols.values():
-                column["column_type"] = column.pop("type")
-
-            # validate columns
-            validated = validate_smart_cols(self.engine, smart_cols, user_sql)
-            column_props = [value for name, value in smart_cols.items() if name in validated]
-
-            for column in column_props:
-                column["display_type"] = self._detect_col_display_type(column["column_type"])
-
-            for table in properties["tables"]:
-                if table["name"] == req.table.name:
-                    table["smart"] = True
-                    table["columns"] = column_props
-
-            # update properties
-            update_properties(req.app_name, req.page_name, properties)
-
-            # get new steate and context
-            return get_page_state_context(req.app_name, req.page_name), 200
-
-        except Exception as e:
-            return str(e), 500
-
     def run_sql_query_from_string(self, req: RunSQLRequest, job_id: str):
         response = {"stdout": "", "traceback": "", "message": "", "type": "", "status_code": 202}
         try:
@@ -169,3 +110,165 @@ class PostgresDatabase(Database):
         finally:
             # pass
             r.set(job_id, json.dumps(response))
+
+    def _get_db_schema(self):
+        # TODO: cache this, takes a while
+        inspector = inspect(self.engine)
+        schemas = inspector.get_schema_names()
+        default_search_path = inspector.default_schema_name
+
+        db_schema = {}
+        gpt_schema = {
+            "metadata": {
+                "default_schema": default_search_path,
+            },
+            "schema": {},
+        }
+
+        for schema in schemas:
+            if schema == "information_schema":
+                continue
+            tables = inspector.get_table_names(schema=schema)
+            gpt_schema["schema"][schema] = {}
+            db_schema[schema] = {}
+
+            for table_name in tables:
+                columns = inspector.get_columns(table_name, schema=schema)
+
+                # get primary keys
+                primary_keys = inspector.get_pk_constraint(table_name, schema=schema)[
+                    "constrained_columns"
+                ]  # noqa
+
+                # get foreign keys
+                fk_constraints = inspector.get_foreign_keys(table_name, schema=schema)
+                foreign_keys = []
+                for fk_constraint in fk_constraints:
+                    foreign_keys.extend(fk_constraint["constrained_columns"])
+
+                # get unique columns
+                unique_constraints = inspector.get_unique_constraints(table_name, schema=schema)
+                unique_columns = []
+                for unique_constraint in unique_constraints:
+                    unique_columns.extend(unique_constraint["column_names"])
+
+                db_schema[schema][table_name] = {}
+                for column in columns:
+                    col_name = column["name"]
+                    is_pk = col_name in primary_keys
+                    db_schema[schema][table_name][col_name] = {
+                        "schema_name": schema,
+                        "table_name": table_name,
+                        "column_name": col_name,
+                        "type": str(column["type"]),
+                        "nullable": column["nullable"],
+                        "unique": col_name in unique_columns,
+                        "primary_key": is_pk,
+                        "foreign_key": col_name in foreign_keys,
+                        "default": column["default"],
+                        "edit_keys": primary_keys if not is_pk else [],
+                    }
+                gpt_schema["schema"][schema][table_name] = [column["name"] for column in columns]
+        return db_schema, gpt_schema
+
+    def _get_column_names(self, user_sql: str) -> list[str]:
+        if user_sql == "":
+            return []
+        user_sql = user_sql.strip("\n ;")
+        user_sql = f"SELECT * FROM ({user_sql}) AS q LIMIT 1"
+        with self.engine.connect().execution_options(autocommit=True) as conn:
+            col_names = list(conn.execute(text(user_sql)).keys())
+        return col_names
+
+    def _validate_smart_cols(self, smart_cols: dict[str, dict], user_sql: str) -> list[str]:  # noqa
+        # Will delete any columns that are invalid from smart_cols
+        primary_keys = self._get_primary_keys(smart_cols)
+        validated = []
+        for col_name, col_data in smart_cols.items():
+            col_data = PgColumnDefinedProperty(**col_data)
+            pk_name = primary_keys.get(self._get_table_path(col_data))
+            if pk_name:
+                validation_sql = _get_fast_sql(
+                    user_sql,
+                    col_name,
+                    col_data.schema_name,
+                    col_data.table_name,
+                    col_data.column_name,
+                    pk_name,
+                )
+            else:
+                validation_sql = _get_slow_sql(
+                    user_sql,
+                    col_name,
+                    col_data.schema_name,
+                    col_data.table_name,
+                    col_data.column_name,
+                )
+            try:
+                with self.engine.connect().execution_options(autocommit=True) as conn:
+                    # On SQL programming error, we know that the smart cols are invalid,
+                    # no need to catch them
+                    res = conn.execute(text(validation_sql)).all()
+                    if res:
+                        validated.append(col_name)
+                if not res[0][0]:
+                    raise "Invalid column"
+            except (SQLAlchemyError):
+                continue
+        return validated
+
+    def _get_primary_keys(self, smart_cols: dict[str, dict]) -> dict[str, dict]:
+        primary_keys = {}
+        for col_data in smart_cols.values():
+            col_data = PgColumnDefinedProperty(**col_data)
+            if col_data.primary_key:
+                primary_keys[self._get_table_path(col_data)] = col_data.column_name
+        return primary_keys
+
+    def _get_table_path(self, col_data: PgColumnDefinedProperty) -> str:
+        return f"{col_data.schema_name}.{col_data.table_name}"
+
+
+# helper functions
+
+
+def _get_fast_sql(
+    user_sql: str,
+    name: str,
+    schema_name: str,
+    table_name: str,
+    column_name: str,
+    table_pk_name: str,
+) -> str:
+    # Query that results in [(1,)] if valid, [(0,)] if false
+    # NOTE: validate name of the column in user query (name) against column name in table (column_name)
+    return f"""
+    WITH uq as ({user_sql})
+    SELECT min(
+        CASE WHEN
+            t.{column_name} = uq.{name} or
+            t.{column_name} is null and uq.{name} is null
+        THEN 1 ELSE 0 END
+    ) as equal
+    FROM {schema_name}.{table_name} t
+    INNER join uq on t.{table_pk_name} = uq.{table_pk_name}
+    LIMIT 500;
+    """
+
+
+def _get_slow_sql(
+    user_sql: str,
+    name: str,
+    schema_name: str,
+    table_name: str,
+    column_name: str,
+) -> str:
+    # Query that results in [(True,)] if valid, [(False,)] if false
+    # NOTE: validate name of the column in user query (name) against column name in table (column_name)
+    # NOTE: limit user query to 500 rows to improve performance
+    return f"""
+    WITH uq as ({user_sql})
+    SELECT CASE WHEN count(t.{column_name}) = 0 THEN true ELSE false END
+    FROM {schema_name}.{table_name} t
+    WHERE t.{column_name} not in (select uq.{name} from uq LIMIT 500);
+    """

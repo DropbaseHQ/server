@@ -12,7 +12,6 @@ from server.controllers.dataframe import convert_df_to_resp_obj
 from server.controllers.python_subprocess import format_process_result, run_process_task_unwrap
 from server.controllers.redis import r
 from server.controllers.utils import process_query_result
-from server.schemas.query import RunSQLRequest
 from server.schemas.table import FilterSort, TableFilter, TablePagination, TableSort
 
 
