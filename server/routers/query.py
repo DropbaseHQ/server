@@ -4,7 +4,7 @@ import uuid
 from fastapi import APIRouter, BackgroundTasks, Depends, Response
 
 from server.auth.dependency import EnforceUserAppPermissions
-from server.controllers.database import Database
+from server.controllers.connect import connect_to_user_db
 from server.controllers.properties import read_page_properties
 from server.controllers.python_docker import run_container
 from server.controllers.redis import r
@@ -22,11 +22,8 @@ async def run_sql_from_string_req(
     request: RunSQLRequest, response: Response, background_tasks: BackgroundTasks
 ):
     job_id = uuid.uuid4().hex
-
-    source_name = request.source
-    db_instance = Database(source_name)
-
-    background_tasks.add_task(db_instance.run_sql_query_from_string, request, job_id)
+    user_db = connect_to_user_db(request.source)
+    background_tasks.add_task(user_db.run_sql_query_from_string, request, job_id)
 
     status_code = 202
     reponse_payload = {

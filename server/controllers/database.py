@@ -3,18 +3,13 @@ from abc import ABC, abstractmethod
 from sqlalchemy.engine import create_engine
 from sqlalchemy.orm import scoped_session, sessionmaker
 
-from server.constants import WORKSPACE_SOURCES
 from server.schemas.query import RunSQLRequest
 
 
 class Database(ABC):
-    def __init__(self, database: str, schema: str = "public"):
-        # set source and schema
-        self.source = database
-        self.schema = schema
+    def __init__(self, creds: dict):
         # get creds
-        creds = WORKSPACE_SOURCES.get(database)
-        connection_url = self._get_connection_url(creds.dict())
+        connection_url = self._get_connection_url(creds)
         # create engine and session
         self.engine = create_engine(connection_url, future=True)
         self.session_obj = scoped_session(sessionmaker(bind=self.engine))

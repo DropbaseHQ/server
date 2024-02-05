@@ -1,4 +1,4 @@
-from server.controllers.database import Database
+from server.controllers.connect import connect_to_user_db
 from server.controllers.page import get_page_state_context
 from server.controllers.properties import read_page_properties, update_properties
 from server.controllers.run_sql import get_sql_from_file, render_sql
@@ -15,7 +15,7 @@ def convert_sql_table(req: ConvertTableRequest, router: DropbaseRouter):
         file = get_table_data_fetcher(properties["files"], req.table.fetcher)
         file = DataFile(**file)
 
-        user_db = Database(file.source)
+        user_db = connect_to_user_db(file.source)
         db_schema, gpt_schema = user_db._get_db_schema()
 
         # get columns
