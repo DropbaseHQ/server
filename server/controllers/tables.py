@@ -21,7 +21,7 @@ def convert_sql_table(req: ConvertTableRequest, router: DropbaseRouter):
         # get columns
         user_sql = get_sql_from_file(req.app_name, req.page_name, file.name)
         user_sql = render_sql(user_sql, req.state)
-        column_names = user_db._get_column_names()
+        column_names = user_db._get_column_names(user_sql)
 
         # get columns from file
         get_smart_table_payload = {
