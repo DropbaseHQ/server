@@ -6,7 +6,11 @@ from server.models.category import PropertyCategory
 from server.models.common import ComponentDisplayProperties
 
 
-class InputBaseProperties(BaseModel):
+class InputContextProperty(ComponentDisplayProperties):
+    pass
+
+
+class InputDefinedProperty(BaseModel):
     label: Annotated[str, PropertyCategory.default]
     name: Annotated[str, PropertyCategory.default]
     data_type: Annotated[Literal["text", "integer", "float", "date"], PropertyCategory.default] = "text"
@@ -18,15 +22,3 @@ class InputBaseProperties(BaseModel):
 
     # internal
     component_type: Literal["input"]
-
-
-class InputSharedProperties(BaseModel):
-    pass
-
-
-class InputDefinedProperty(InputBaseProperties, InputSharedProperties):
-    pass
-
-
-class InputContextProperty(ComponentDisplayProperties, InputSharedProperties):
-    pass

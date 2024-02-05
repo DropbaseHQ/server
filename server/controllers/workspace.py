@@ -3,9 +3,10 @@ import os
 import shutil
 import uuid
 
-from fastapi import HTTPException
+from fastapi import HTTPException, Response
 
 from server.controllers.generate_models import create_state_context_files
+from server.requests.dropbase_router import DropbaseRouter
 
 APP_PROPERTIES_TEMPLATE = {
     "pages": [],
@@ -32,6 +33,8 @@ class AppFolderController:
 
     def _get_app_properties_data(self):
         path_to_app_properties = os.path.join(self.app_folder_path, "properties.json")
+        if not os.path.exists(path_to_app_properties):
+            return None
         with open(path_to_app_properties, "r") as file:
             return json.load(file)
 
@@ -44,6 +47,8 @@ class AppFolderController:
         workspace_properties_path = os.path.join(
             self.r_path_to_workspace, "properties.json"
         )
+        if not os.path.exists(workspace_properties_path):
+            return None
         with open(workspace_properties_path, "r") as file:
             return json.load(file)
 
@@ -68,6 +73,7 @@ class AppFolderController:
             app_properties_data["pages"] = [page_object]
 
         self._write_app_properties_data(app_properties_data)
+        return page_object
 
     def _add_app_to_workspace_properties(self, app_name: str):
         workspace_properties = self._get_workspace_properties()
@@ -82,14 +88,17 @@ class AppFolderController:
             workspace_properties["apps"] = [app_object]
 
         self._write_workspace_properties(workspace_properties)
+        return app_object
 
-    def _create_default_workspace_files(self) -> str | None:
+    def _create_default_workspace_files(
+        self, router: DropbaseRouter, workspace_id: str = None
+    ) -> str | None:
         try:
             # Create new app folder
             create_folder(path=self.app_folder_path)
             create_init_file(path=self.app_folder_path)
 
-            self._add_app_to_workspace_properties(self.app_name)
+            app_object = self._add_app_to_workspace_properties(self.app_name)
 
             new_app_properties = self._get_app_properties()
             create_file(
@@ -97,9 +106,16 @@ class AppFolderController:
                 content=json.dumps(new_app_properties, indent=2),
                 file_name="properties.json",
             )
+            if router:
+                router.app.create_app(
+                    app_properties={
+                        **app_object,
+                        "workspace_id": workspace_id,
+                    }
+                )
 
             # Create new page folder with __init__.py
-            self.create_page()
+            self.create_page(router=router)
 
         except Exception as e:
             print("Unable to create app folder", e)
@@ -107,7 +123,16 @@ class AppFolderController:
 
     def _get_app_properties(self):
         new_app_properties = APP_PROPERTIES_TEMPLATE
+
         return new_app_properties
+
+    def get_app_id(self, app_name: str):
+        workspace_data = self._get_workspace_properties()
+        app_id = None
+        for app in workspace_data.get("apps", []):
+            if app.get("name") == self.app_name:
+                app_id = app.get("id", None)
+                return app_id
 
     def create_workspace_properties(self):
         if os.path.exists(os.path.join(self.r_path_to_workspace, "properties.json")):
@@ -137,7 +162,12 @@ class AppFolderController:
             file_name="properties.json",
         )
 
-    def create_page(self, app_folder_path: str = None, page_name: str = None):
+    def create_page(
+        self,
+        router: DropbaseRouter = None,
+        app_folder_path: str = None,
+        page_name: str = None,
+    ):
         app_folder_path = app_folder_path or self.app_folder_path
         page_name = page_name or self.page_name
 
@@ -163,7 +193,14 @@ class AppFolderController:
         create_init_file(path=scripts_folder_path, init_code="")
 
         create_state_context_files(self.app_name, page_name, self.page_properties)
-        self._add_page_to_app_properties(page_name)
+        page_object = self._add_page_to_app_properties(page_name)
+        app_id = self.get_app_id(self.app_name)
+        create_page_payload = {
+            "app_id": app_id,
+            **page_object,
+        }
+        if router:
+            router.page.create_page(page_properties=create_page_payload)
 
     def rename_page(self, old_page_name: str, new_page_name: str):
         # rename page folder
@@ -181,18 +218,24 @@ class AppFolderController:
 
         self._write_app_properties_data(app_properties_data)
 
-    def delete_page(self, page_name: str):
+    def delete_page(self, page_name: str, router: DropbaseRouter):
         page_folder_path = os.path.join(self.app_folder_path, page_name)
         shutil.rmtree(page_folder_path)
 
         # remove page from properties.json
         app_properties_data = self._get_app_properties_data()
+        if not app_properties_data:
+            return
+
+        page_id = None
         for page in app_properties_data["pages"]:
             if page["name"] == page_name:
+                page_id = page.get("id", None)
                 app_properties_data["pages"].remove(page)
                 break
 
         self._write_app_properties_data(app_properties_data)
+        router.page.delete_page(page_id=page_id)
 
     def get_pages(self):
         if os.path.exists(os.path.join(self.app_folder_path, "properties.json")):
@@ -205,11 +248,36 @@ class AppFolderController:
         pages = [{"name": page} for page in page_names]
         return pages
 
-    def create_app(self):
+    def create_app(self, router: DropbaseRouter = None, workspace_id: str = None):
         self.create_workspace_properties()
-        self._create_default_workspace_files()
+        self._create_default_workspace_files(router=router, workspace_id=workspace_id)
 
         return {"success": True}
+
+    def delete_app(self, app_name: str, response: Response, router: DropbaseRouter):
+        app_path = os.path.join(self.r_path_to_workspace, app_name)
+        if os.path.exists(app_path):
+            shutil.rmtree(app_path)
+
+            workspace_properties = self._get_workspace_properties()
+            if not workspace_properties:
+                return
+
+            app_id = None
+            for app in workspace_properties["apps"]:
+                if app["name"] == app_name:
+                    app_id = app.get("id", None)
+                    workspace_properties["apps"].remove(app)
+                    break
+
+            self._write_workspace_properties(workspace_properties)
+
+            router.app.delete_app(app_id=app_id)
+
+            return {"message": "App deleted"}
+        else:
+            response.status_code = 400
+            return {"message": "App does not exist"}
 
 
 INIT_CODE = """
