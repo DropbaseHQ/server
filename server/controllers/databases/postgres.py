@@ -217,8 +217,8 @@ class PostgresDatabase(Database):
             prim_key_str = " AND ".join(prim_key_list)
 
             sql = f"""UPDATE "{column.schema_name}"."{column.table_name}"
-        SET {column.column_name} = :new_value
-        WHERE {prim_key_str}"""
+            SET {column.column_name} = :new_value
+            WHERE {prim_key_str}"""
 
             # TODO: add check for prev column value
             # AND {column.column_name} = :old_value
