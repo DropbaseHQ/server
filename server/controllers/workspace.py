@@ -106,12 +106,7 @@ class AppFolderController:
                 file_name="properties.json",
             )
             if router:
-                router.app.create_app(
-                    app_properties={
-                        **app_object,
-                        "workspace_id": WORKSPACE_ID,
-                    }
-                )
+                router.app.create_app(app_properties={**app_object})
 
             # Create new page folder with __init__.py
             self.create_page(router=router)
