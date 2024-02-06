@@ -19,6 +19,53 @@ PAGE_PROPERTIES_TEMPLATE = {
 }
 
 
+class WorkspaceFolderController:
+    def __init__(self, r_path_to_workspace: str):
+        self.r_path_to_workspace = r_path_to_workspace
+
+    def write_workspace_properties(self, workspace_properties: dict):
+        workspace_properties_path = os.path.join(
+            self.r_path_to_workspace, "properties.json"
+        )
+        with open(workspace_properties_path, "w") as file:
+            json.dump(workspace_properties, file, indent=2)
+
+    def get_workspace_properties(self):
+        if os.path.exists(os.path.join(self.r_path_to_workspace, "properties.json")):
+            with open(
+                os.path.join(self.r_path_to_workspace, "properties.json"), "r"
+            ) as file:
+
+                props = json.load(file)
+                print("props", props)
+                return props.get("apps", [])
+
+        return None
+
+    def get_app(self, app_id: str):
+        workspace_data = self.get_workspace_properties()
+        for app in workspace_data:
+            if app.get("id") == app_id:
+                return app
+        return None
+
+    def get_app_id(self, app_name: str):
+        workspace_data = self.get_workspace_properties()
+        app_id = None
+        for app in workspace_data:
+            if app.get("name") == app_name:
+                app_id = app.get("id", None)
+                return app_id
+
+    def update_app_info(self, app_id: str, app_info: dict):
+        workspace_data = self.get_workspace_properties()
+        for app in workspace_data:
+            if app.get("id") == app_id:
+                app.update(app_info)
+                break
+        self.write_workspace_properties({"apps": workspace_data})
+
+
 class AppFolderController:
     def __init__(
         self,
