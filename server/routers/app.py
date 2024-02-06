@@ -1,12 +1,11 @@
 import os
-import shutil
 
-from fastapi import APIRouter, Response, Depends
+from fastapi import APIRouter, Depends, Response
 
 from server.controllers.app import get_workspace_apps
 from server.controllers.utils import check_if_object_exists, validate_column_name
-from server.requests.dropbase_router import DropbaseRouter, get_dropbase_router
 from server.controllers.workspace import AppFolderController
+from server.requests.dropbase_router import DropbaseRouter, get_dropbase_router
 from server.schemas.workspace import CreateAppRequest, RenameAppRequest
 
 router = APIRouter(

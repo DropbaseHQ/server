@@ -5,9 +5,9 @@ import psycopg2
 import pytest
 import pytest_postgresql.factories
 from fastapi.testclient import TestClient
-from sqlalchemy import create_engine
-from sqlalchemy.pool import NullPool
 
+from server.auth.dependency import EnforceUserAppPermissions
+from server.controllers.databases.postgres import PostgresDatabase
 from server.controllers.properties import read_page_properties, update_properties
 from server.main import app
 from server.requests.dropbase_router import get_dropbase_router
@@ -20,7 +20,6 @@ from server.tests.constants import (
 )
 from server.tests.mocks.dropbase_router_mocker import DropbaseRouterMocker
 from server.tests.templates import get_test_data_fetcher, get_test_ui
-from server.auth.dependency import EnforceUserAppPermissions
 
 
 # Setup pytest-postgresql db with test data
@@ -55,12 +54,12 @@ def test_client():
     def override_check_user_app_permissions():
         return {"use": True, "edit": True, "own": True}
 
-    app.dependency_overrides[EnforceUserAppPermissions(action="edit")] = (
-        override_check_user_app_permissions
-    )
-    app.dependency_overrides[EnforceUserAppPermissions(action="use")] = (
-        override_check_user_app_permissions
-    )
+    app.dependency_overrides[
+        EnforceUserAppPermissions(action="edit")
+    ] = override_check_user_app_permissions
+    app.dependency_overrides[
+        EnforceUserAppPermissions(action="use")
+    ] = override_check_user_app_permissions
     return TestClient(app)
 
 
@@ -68,31 +67,40 @@ def test_client():
 def dropbase_router_mocker():
     mocker = DropbaseRouterMocker()
     # app.dependency_overrides uses function as a key. part of fastapi
-    app.dependency_overrides[get_dropbase_router] = (
-        lambda: mocker.get_mock_dropbase_router()
-    )
+    app.dependency_overrides[get_dropbase_router] = lambda: mocker.get_mock_dropbase_router()
     yield mocker
     # delete get_dropbase_router from dependency overwrite once test is done
     del app.dependency_overrides[get_dropbase_router]
 
 
+def connect_to_test_db(db_type: str, creds: dict):
+    # utility function to assist in creating the db instance
+    match db_type:
+        case "postgres":
+            return PostgresDatabase(creds)
+        case "pg":
+            return PostgresDatabase(creds)
+
+
 @pytest.fixture
 def mock_db(postgresql):
-    connection = "postgresql+psycopg2://{user}:@{host}:{port}/{dbname}".format(
-        user=postgresql.info.user,
-        host=postgresql.info.host,
-        port=postgresql.info.port,
-        dbname=postgresql.info.dbname,
-    )
-    return create_engine(connection, echo=False, poolclass=NullPool)
+    # returns a database instance rather than an engine
+    pg_creds_dict = {
+        "host": postgresql.info.host,
+        "drivername": "postgresql+psycopg2",
+        "database": postgresql.info.dbname,
+        "username": postgresql.info.user,
+        "password": "",  # Not required for pytest-postgresql
+        "port": postgresql.info.port,
+    }
+
+    db_instance = connect_to_test_db("postgres", pg_creds_dict)
+
+    return db_instance
 
 
 def pytest_sessionstart():
-    from server.controllers.workspace import (
-        AppFolderController,
-        create_file,
-        create_folder,
-    )
+    from server.controllers.workspace import AppFolderController, create_file, create_folder
 
     create_folder(TEMPDIR_PATH)
 

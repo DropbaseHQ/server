@@ -1,5 +1,6 @@
-from fastapi import APIRouter, Response, HTTPException, Depends
+from fastapi import APIRouter, Depends, HTTPException, Response
 
+from server.auth.dependency import EnforceUserAppPermissions
 from server.controllers.page import (
     create_page,
     delete_page,
@@ -9,13 +10,10 @@ from server.controllers.page import (
 )
 from server.controllers.properties import read_page_properties
 from server.controllers.utils import check_if_object_exists, validate_column_name
-from server.auth.dependency import EnforceUserAppPermissions
 from server.requests.dropbase_router import DropbaseRouter, get_dropbase_router
 from server.schemas.page import CreatePageRequest, PageProperties, RenamePageRequest
 
-router = APIRouter(
-    prefix="/page", tags=["page"], responses={404: {"description": "Not found"}}
-)
+router = APIRouter(prefix="/page", tags=["page"], responses={404: {"description": "Not found"}})
 
 
 @router.get(
@@ -100,10 +98,7 @@ def delete_page_req(
 
 
 @router.post("/", dependencies=[Depends(EnforceUserAppPermissions(action="edit"))])
-def cud_page_props(
-    req: PageProperties,
-    response: Response,
-):
+def cud_page_props(req: PageProperties, response: Response):
     try:
         # update local json file
         return update_page_properties(req)

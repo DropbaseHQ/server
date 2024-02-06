@@ -1,14 +1,8 @@
-from fastapi import APIRouter, Response, HTTPException, Depends
+from fastapi import APIRouter, Depends, HTTPException, Response
 
-from server.controllers.files import (
-    create_file,
-    delete_file,
-    get_all_files,
-    rename_file,
-    update_file,
-)
+from server.auth.dependency import EnforceUserAppPermissions
+from server.controllers.files import create_file, delete_file, get_all_files, rename_file, update_file
 from server.schemas.files import CreateFile, DeleteFile, RenameFile, UpdateFile
-from server.auth.dependency import verify_user_access_token, EnforceUserAppPermissions
 
 router = APIRouter(
     prefix="/files",

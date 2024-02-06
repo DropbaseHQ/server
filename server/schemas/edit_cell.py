@@ -2,6 +2,8 @@ from typing import Any, List
 
 from pydantic import BaseModel
 
+from server.schemas.files import DataFile
+
 
 class CellProps(BaseModel):
     name: str
@@ -13,6 +15,7 @@ class CellProps(BaseModel):
 
 class CellEdit(BaseModel):
     column_name: str
+    column_type: str
     old_value: Any
     new_value: Any
     row: dict
@@ -21,4 +24,4 @@ class CellEdit(BaseModel):
 
 class EditCellRequest(BaseModel):
     edits: List[CellEdit]
-    file: dict
+    file: DataFile

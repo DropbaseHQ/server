@@ -1,6 +1,8 @@
 import os
 import re
 
+from server.controllers.sources import get_sources
+
 cwd = os.getcwd()
 
 
@@ -14,3 +16,5 @@ FILE_NAME_REGEX = re.compile(r"^[A-Za-z0-9_.]+$")
 WORKER_VERSION = "0.2.0"
 
 WORKSPACE_ID = os.getenv("WORKSPACE_ID")
+
+WORKSPACE_SOURCES = get_sources()
