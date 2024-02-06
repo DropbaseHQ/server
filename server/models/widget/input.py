@@ -13,7 +13,9 @@ class InputContextProperty(ComponentDisplayProperties):
 class InputDefinedProperty(BaseModel):
     label: Annotated[str, PropertyCategory.default]
     name: Annotated[str, PropertyCategory.default]
-    data_type: Annotated[Literal["text", "integer", "float", "date"], PropertyCategory.default] = "text"
+    data_type: Annotated[
+        Literal["text", "integer", "float", "datetime", "date", "time"], PropertyCategory.default
+    ] = "text"
     placeholder: Annotated[Optional[str], PropertyCategory.default]
     default: Annotated[Optional[Any], PropertyCategory.default]
 

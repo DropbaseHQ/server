@@ -1,32 +1,24 @@
-import sqlalchemy.exc
-from fastapi import APIRouter, HTTPException, Depends
-
-from server.schemas.run_python import QueryPythonRequest
-from server.auth.dependency import EnforceUserAppPermissions
 import json
 import uuid
 
-from fastapi import APIRouter, BackgroundTasks, Response
+from fastapi import APIRouter, BackgroundTasks, Depends, Response
 
+from server.auth.dependency import EnforceUserAppPermissions
 from server.controllers.properties import read_page_properties
 from server.controllers.python_docker import run_container
 from server.controllers.redis import r
 from server.controllers.run_sql import run_sql_query, run_sql_query_from_string
 from server.controllers.utils import get_table_data_fetcher
 from server.schemas.files import DataFile
-from server.schemas.query import RunSQLRequest
+from server.schemas.query import RunSQLRequestTask, RunSQLStringRequest
 from server.schemas.run_python import QueryPythonRequest, RunPythonStringRequestNew
 
-router = APIRouter(
-    prefix="/query", tags=["query"], responses={404: {"description": "Not found"}}
-)
+router = APIRouter(prefix="/query", tags=["query"], responses={404: {"description": "Not found"}})
 
 
-@router.post(
-    "/sql_string/", dependencies=[Depends(EnforceUserAppPermissions(action="use"))]
-)
+@router.post("/sql_string/", dependencies=[Depends(EnforceUserAppPermissions(action="use"))])
 async def run_sql_from_string_req(
-    request: RunSQLRequest, response: Response, background_tasks: BackgroundTasks
+    request: RunSQLStringRequest, response: Response, background_tasks: BackgroundTasks
 ):
     job_id = uuid.uuid4().hex
     background_tasks.add_task(run_sql_query_from_string, request, job_id)
@@ -80,9 +72,7 @@ async def run_python_string_test(
 
 
 @router.post("/")
-async def start_docker(
-    req: QueryPythonRequest, response: Response, background_tasks: BackgroundTasks
-):
+async def start_docker(req: QueryPythonRequest, response: Response, background_tasks: BackgroundTasks):
     properties = read_page_properties(req.app_name, req.page_name)
     file = get_table_data_fetcher(properties["files"], req.table.fetcher)
     file = DataFile(**file)
@@ -98,7 +88,8 @@ async def start_docker(
         args["file"] = file
         args["state"] = req.state
         args["filter_sort"] = req.filter_sort
-        background_tasks.add_task(run_sql_query, args)
+        args = RunSQLRequestTask(**args)
+        background_tasks.add_task(run_sql_query, args, job_id)
 
     status_code = 202
     reponse_payload = {

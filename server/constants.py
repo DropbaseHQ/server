@@ -1,6 +1,8 @@
 import os
 import re
 
+from server.controllers.sources import get_sources
+
 cwd = os.getcwd()
 
 
@@ -12,3 +14,6 @@ INFER_TYPE_SAMPLE_SIZE = 50
 
 FILE_NAME_REGEX = re.compile(r"^[A-Za-z0-9_.]+$")
 WORKER_VERSION = "0.2.0"
+
+
+WORKSPACE_SOURCES = get_sources()
