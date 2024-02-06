@@ -1,4 +1,3 @@
-from datetime import datetime, timezone
 from typing import List
 
 from server.controllers.connect import connect_to_user_db
