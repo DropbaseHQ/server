@@ -1,3 +1,4 @@
+# TODO: revisit. only used to validate state
 import importlib
 import os
 import pickle
@@ -10,7 +11,6 @@ from multiprocessing import Pipe, Process
 from server.constants import TASK_TIMEOUT, cwd
 
 # NOTE: do not delete these, referenecd by run_task
-from server.controllers.run_python import run_python_query, run_python_ui  # noqa
 from server.controllers.state import verify_state  # noqa
 
 

@@ -56,69 +56,70 @@ except:
     return python_str
 
 
-r = redis.Redis(host="host.docker.internal", port=6379, db=0)
+if __name__ == "__main__":
+    r = redis.Redis(host="host.docker.internal", port=6379, db=0)
 
-# get job id
-job_id = os.getenv("job_id")
-file_name = "f" + uuid.uuid4().hex + ".py"
+    # get job id
+    job_id = os.getenv("job_id")
+    file_name = "f" + uuid.uuid4().hex + ".py"
 
-old_stdout = sys.stdout
-redirected_output = StringIO()
-sys.stdout = redirected_output
-response = {"stdout": "", "traceback": "", "message": "", "type": "", "status_code": 202}
+    old_stdout = sys.stdout
+    redirected_output = StringIO()
+    sys.stdout = redirected_output
+    response = {"stdout": "", "traceback": "", "message": "", "type": "", "status_code": 202}
 
-try:
-    state = json.loads(os.getenv("state") or "{}")
-    context = json.loads(os.getenv("context") or "{}")
-    file_code = os.getenv("file_code")
-    test_code = os.getenv("test_code")
+    try:
+        state = json.loads(os.getenv("state") or "{}")
+        context = json.loads(os.getenv("context") or "{}")
+        file_code = os.getenv("file_code")
+        test_code = os.getenv("test_code")
 
-    # assign last expression to variable if needed
-    test_code = assign_last_expression(test_code)
+        # assign last expression to variable if needed
+        test_code = assign_last_expression(test_code)
 
-    # write exec file
-    write_file(file_code, test_code, state, context, file_name)
+        # write exec file
+        write_file(file_code, test_code, state, context, file_name)
 
-    # import temp file
-    module_name = file_name.split(".")[0]  # this gets you "temp_file"
-    module = importlib.import_module(module_name)  # this imports the module
-    result = module.result  # this gets the "result" from the module
+        # import temp file
+        module_name = file_name.split(".")[0]  # this gets you "temp_file"
+        module = importlib.import_module(module_name)  # this imports the module
+        result = module.result  # this gets the "result" from the module
 
-    # convert result to json
-    if result.__class__.__name__ == "Context":
-        response["context"] = result.dict()
-        response["type"] = "context"
-    elif isinstance(result, pd.DataFrame):
-        result = convert_df_to_resp_obj(result)
-        response["data"] = result["data"]
-        response["columns"] = result["columns"]
-        response["type"] = "table"
-    else:
-        response["data"] = result
-        response["type"] = "generic"
+        # convert result to json
+        if result.__class__.__name__ == "Context":
+            response["context"] = result.dict()
+            response["type"] = "context"
+        elif isinstance(result, pd.DataFrame):
+            result = convert_df_to_resp_obj(result)
+            response["data"] = result["data"]
+            response["columns"] = result["columns"]
+            response["type"] = "table"
+        else:
+            response["data"] = result
+            response["type"] = "generic"
 
-    response["message"] = "Job has been completed"
+        response["message"] = "Job has been completed"
 
-except Exception as e:
-    response["type"] = "error"
-    response["traceback"] = traceback.format_exc()
-    response["message"] = str(e)
+    except Exception as e:
+        response["type"] = "error"
+        response["traceback"] = traceback.format_exc()
+        response["message"] = str(e)
 
-finally:
+    finally:
 
-    # testing timeout
-    # import time
-    # time.sleep(10)
+        # testing timeout
+        # import time
+        # time.sleep(10)
 
-    # remove temp file
-    response["status_code"] = 200
-    # get stdout
-    response["stdout"] = redirected_output.getvalue()
-    sys.stdout = old_stdout
+        # remove temp file
+        response["status_code"] = 200
+        # get stdout
+        response["stdout"] = redirected_output.getvalue()
+        sys.stdout = old_stdout
 
-    # send result to redis
-    r.set(job_id, json.dumps(response))
-    r.expire(job_id, 60)
+        # send result to redis
+        r.set(job_id, json.dumps(response))
+        r.expire(job_id, 60)
 
-    # remove temp file
-    os.remove(file_name)
+        # remove temp file
+        os.remove(file_name)
