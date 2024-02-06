@@ -7,6 +7,7 @@ import pytest_postgresql.factories
 from fastapi.testclient import TestClient
 
 from server.auth.dependency import EnforceUserAppPermissions
+from server.controllers.databases.mysql import MySqlDatabase
 from server.controllers.databases.postgres import PostgresDatabase
 from server.controllers.properties import read_page_properties, update_properties
 from server.main import app
@@ -77,24 +78,40 @@ def connect_to_test_db(db_type: str, creds: dict):
     # utility function to assist in creating the db instance
     match db_type:
         case "postgres":
-            return PostgresDatabase(creds)
+            return PostgresDatabase(creds, schema="public")
         case "pg":
-            return PostgresDatabase(creds)
+            return PostgresDatabase(creds, schema="public")
+        case "mysql":
+            return MySqlDatabase(creds)
 
 
 @pytest.fixture
-def mock_db(postgresql):
+def mock_db(request, postgresql):
     # returns a database instance rather than an engine
-    pg_creds_dict = {
-        "host": postgresql.info.host,
-        "drivername": "postgresql+psycopg2",
-        "database": postgresql.info.dbname,
-        "username": postgresql.info.user,
-        "password": "",  # Not required for pytest-postgresql
-        "port": postgresql.info.port,
-    }
+    db_type = request.param
+    creds_dict = {}
+    match db_type:
+        case "postgres":
+            creds_dict = {
+                "host": postgresql.info.host,
+                "drivername": "postgresql+psycopg2",
+                "database": postgresql.info.dbname,
+                "username": postgresql.info.user,
+                "password": "",  # Not required for pytest-postgresql
+                "port": postgresql.info.port,
+            }
+        case "mysql":
+            pass  # Find mysql alternative
+            # creds_dict = {
+            #     "host": postgresql.info.host,
+            #     "drivername": "postgresql+psycopg2",
+            #     "database": postgresql.info.dbname,
+            #     "username": postgresql.info.user,
+            #     "password": "",  # Not required for pytest-postgresql
+            #     "port": postgresql.info.port,
+            # }
 
-    db_instance = connect_to_test_db("postgres", pg_creds_dict)
+    db_instance = connect_to_test_db("postgres", creds_dict)
 
     return db_instance
 

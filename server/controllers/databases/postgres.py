@@ -9,6 +9,10 @@ from server.schemas.edit_cell import CellEdit
 
 
 class PostgresDatabase(Database):
+    def __init__(self, creds: dict, schema):
+        super().__init__(creds)  # Call to the superclass init, if the superclass has an __init__ method.
+        self.schema = schema
+
     def _get_connection_url(self, creds: dict):
         return URL.create(**creds)
 

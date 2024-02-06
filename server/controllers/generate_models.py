@@ -20,6 +20,7 @@ from server.models import (
     TextDefinedProperty,
     WidgetContextProperty,
 )
+from server.models.table.mysql_column import MySqlColumnContextProperty, MySqlColumnDefinedProperty
 
 component_name_to_models = {
     "button": ButtonDefinedProperty,
@@ -28,6 +29,7 @@ component_name_to_models = {
     "text": TextDefinedProperty,
     "py": PyColumnDefinedProperty,
     "pg": PgColumnDefinedProperty,
+    "mysql": MySqlColumnDefinedProperty,
 }
 
 
@@ -137,6 +139,7 @@ context_model_mapper = {
     "select": SelectContextProperty,
     "text": TextContextProperty,
     "sql": PgColumnContextProperty,
+    "mysql": MySqlColumnContextProperty,
     "python": PyColumnContextProperty,
 }
 
