@@ -1,3 +1,5 @@
+from datetime import datetime, timezone
+
 from sqlalchemy.engine import URL
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.inspection import inspect
@@ -203,6 +205,10 @@ class PostgresDatabase(Database):
             # NOTE: client sends columns as a list of column objects. we need to convert it to a dict
             columns_dict = {col.column_name: col for col in edit.columns}
             column = columns_dict[columns_name]
+
+            if edit.column_type == "DATE" or edit.column_type == "TIMESTAMP":
+                # new_value will be epoch time in ms, convert it to sec first then create datetime
+                edit.new_value = datetime.fromtimestamp(edit.new_value // 1000, timezone.utc)
 
             values = {
                 "new_value": edit.new_value,
