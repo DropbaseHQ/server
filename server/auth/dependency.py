@@ -12,7 +12,6 @@ from server.auth.permissions_registry import permissions_registry
 from server.constants import DROPBASE_API_URL
 from server.requests.dropbase_router import AccessCookies, get_access_cookies
 from server.requests.dropbase_router import DropbaseRouter, get_dropbase_router
-from server.constants import WORKSPACE_ID
 from server.controllers.workspace import AppFolderController
 
 
@@ -123,7 +122,6 @@ def check_user_app_permissions(
     if app_name is None:
         raise Exception("No app name provided")
 
-    workspace_id = WORKSPACE_ID
     app_folder_controller = AppFolderController(
         app_name=app_name, r_path_to_workspace=os.path.join(cwd, "workspace")
     )

@@ -15,6 +15,5 @@ INFER_TYPE_SAMPLE_SIZE = 50
 FILE_NAME_REGEX = re.compile(r"^[A-Za-z0-9_.]+$")
 WORKER_VERSION = "0.2.0"
 
-WORKSPACE_ID = os.getenv("WORKSPACE_ID")
 
 WORKSPACE_SOURCES = get_sources()
