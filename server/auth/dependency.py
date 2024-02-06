@@ -47,7 +47,9 @@ def verify_user_access_token(request: Request, Authorize: AuthJWT = Depends()):
         logger.info("VERIFYING SERVER TOKEN")
         verify_response = requests.post(
             DROPBASE_API_URL + "/worker/verify_token",
-            cookies={"access_token_cookie": server_access_cookies.access_token_cookie},
+            headers={
+                "Authorization": f"Bearer {server_access_cookies.access_token_cookie}"
+            },
         )
         if verify_response.status_code != 200:
             raise HTTPException(status_code=401, detail="Invalid access token")
@@ -115,8 +117,8 @@ def check_user_app_permissions(
         logger.info("FETCHING PERMISSIONS FROM DROPBASE API")
         response = requests.post(
             DROPBASE_API_URL + "/user/check_permission",
-            cookies={"access_token_cookie": access_cookies.access_token_cookie},
-            json={"workspace_id": workspace_id, "app_name": app_id},
+            headers={"Authorization": f"Bearer {access_cookies.access_token_cookie}"},
+            json={"workspace_id": workspace_id, "app_name": app_name},
         )
         if response.status_code != 200:
             raise Exception("Invalid access token")
