@@ -18,8 +18,13 @@ def run_sql_query_from_string(req: RunSQLStringRequest, job_id: str):
     response = {"stdout": "", "traceback": "", "message": "", "type": "", "status_code": 202}
     try:
         verify_state(req.app_name, req.page_name, req.state)
+        # connect to user db
         user_db = connect_to_user_db(req.source)
-        res = user_db._run_query(req.file_content, {})
+        # prepare sql
+        sql = clean_sql(req.file_content)
+        sql = render_sql(sql, req.state)
+        # query db
+        res = user_db._run_query(sql, {})
         # parse pandas response
         df = process_query_result(res)
         res = convert_df_to_resp_obj(df)

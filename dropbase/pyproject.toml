@@ -4,13 +4,17 @@ build-backend = "hatchling.build"
 
 [project]
 name = "dropbase"
-version = "0.0.1"
+version = "0.0.2"
 authors = [
   { name="Dropbase", email="support@dropbase.io" },
 ]
 description = "Dropbase"
 readme = "README.md"
 requires-python = ">=3.11"
+dependencies = [
+    "sqlalchemy==1.4.46",
+    "psycopg2-binary==2.9.9"
+]
 classifiers = [
     "Programming Language :: Python :: 3",
     "License :: OSI Approved :: MIT License",
