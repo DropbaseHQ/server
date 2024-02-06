@@ -1,4 +1,5 @@
 from server.constants import WORKSPACE_SOURCES
+from server.controllers.databases.mysql import MySqlDatabase
 from server.controllers.databases.postgres import PostgresDatabase
 
 
@@ -12,6 +13,6 @@ def connect_to_user_db(name: str):
         case "pg":
             return PostgresDatabase(creds_fields.dict())
         case "mysql":
-            raise Exception("MySQL not supported yet")
+            return MySqlDatabase(creds_fields.dict())
         case _:
             raise Exception(f"Database type {creds_fields.get('type')} not supported")

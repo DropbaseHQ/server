@@ -8,7 +8,7 @@ from server.models.table.pg_column import PgColumnDefinedProperty
 from server.schemas.edit_cell import CellEdit
 
 
-class MySql(Database):
+class MySqlDatabase(Database):
     def _get_connection_url(self, creds: dict):
         return URL.create(**creds)
 
@@ -79,6 +79,8 @@ class MySql(Database):
         result = self.session.execute(text(sql), values if values else {})
         return [dict(row) for row in result.fetchall()]
 
+    # MySQL Compatible up to here
+
     def _get_db_schema(self):
         pass
 
@@ -98,7 +100,9 @@ class MySql(Database):
         pass
 
     def _run_query(self, sql: str, values: dict):
-        pass
+        with self.engine.connect().execution_options(autocommit=True) as conn:
+            res = conn.execute(text(sql), values).all()
+        return res
 
 
 # helper functions --> if these helper functions are compatible with mysql maybe move it to utils?
