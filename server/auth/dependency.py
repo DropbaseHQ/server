@@ -43,12 +43,16 @@ def verify_user_access_token(request: Request, Authorize: AuthJWT = Depends()):
         logger.info("VERIFYING SERVER TOKEN")
         verify_response = requests.post(
             DROPBASE_API_URL + "/worker/verify_token",
-            cookies={"access_token_cookie": server_access_cookies.access_token_cookie},
+            headers={
+                "Authorization": f"Bearer {server_access_cookies.access_token_cookie}"
+            },
         )
         if verify_response.status_code != 200:
             raise HTTPException(status_code=401, detail="Invalid access token")
-        worker_sl_token = Authorize.create_access_token(subject=verify_response.json().get("user_id"))
-        max_age = 60
+        worker_sl_token = Authorize.create_access_token(
+            subject=verify_response.json().get("user_id")
+        )
+        max_age = 5
         raise HTTPException(
             status_code=401,
             detail="Invalid access token",
@@ -94,13 +98,15 @@ def check_user_app_permissions(
     if not workspace_id:
         raise Exception("No workspace id provided")
 
-    user_app_permissions = permissions_registry.get_user_app_permissions(app_name, user_id)
+    user_app_permissions = permissions_registry.get_user_app_permissions(
+        app_name, user_id
+    )
 
     if not user_app_permissions:
         logger.info("FETCHING PERMISSIONS FROM DROPBASE API")
         response = requests.post(
             DROPBASE_API_URL + "/user/check_permission",
-            cookies={"access_token_cookie": access_cookies.access_token_cookie},
+            headers={"Authorization": f"Bearer {access_cookies.access_token_cookie}"},
             json={"workspace_id": workspace_id, "app_name": app_name},
         )
         if response.status_code != 200:
@@ -108,7 +114,9 @@ def check_user_app_permissions(
 
         permissions_registry.save_permissions(app_name, user_id, response.json())
 
-    user_app_permissions = permissions_registry.get_user_app_permissions(app_name, user_id)
+    user_app_permissions = permissions_registry.get_user_app_permissions(
+        app_name, user_id
+    )
     return user_app_permissions
 
 
@@ -116,8 +124,12 @@ class EnforceUserAppPermissions:
     def __init__(self, action: str):
         self.action = action
 
-    def __call__(self, user_app_permissions: dict = Depends(check_user_app_permissions)):
-        if self.action not in user_app_permissions or not user_app_permissions.get(self.action):
+    def __call__(
+        self, user_app_permissions: dict = Depends(check_user_app_permissions)
+    ):
+        if self.action not in user_app_permissions or not user_app_permissions.get(
+            self.action
+        ):
             raise HTTPException(
                 status_code=403,
                 detail="You do not have permission to perform this action",
