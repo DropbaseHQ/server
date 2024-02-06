@@ -54,7 +54,7 @@ def verify_user_access_token(request: Request, Authorize: AuthJWT = Depends()):
         worker_sl_token = Authorize.create_access_token(
             subject=verify_response.json().get("user_id")
         )
-        max_age = 60
+        max_age = 60 * 5
         raise HTTPException(
             status_code=401,
             detail="Invalid access token",
