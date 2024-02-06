@@ -3,12 +3,13 @@ from typing import Optional
 from fastapi import Request
 from pydantic import BaseModel
 
-from server.constants import DROPBASE_API_URL
+from server.constants import DROPBASE_API_URL, DROPBASE_TOKEN
 
 from .main_request import DropbaseSession
 from .misc import MiscRouter
 from .app import AppRouter
 from .page import PageRouter
+from .auth import AuthRouter
 
 base_url = DROPBASE_API_URL + "/worker/"
 
@@ -31,12 +32,18 @@ class DropbaseRouter:
             self.session.cookies["refresh_token_cookie"] = self.cookies[
                 "refresh_token_cookie"
             ]
+
+        if not DROPBASE_TOKEN:
+            raise Exception("No dropbase token found!")
+
+        self.session.headers["dropbase-token"] = DROPBASE_TOKEN
         self._assign_sub_routers()
 
     def _assign_sub_routers(self):
         self.misc = MiscRouter(session=self.session)
         self.app = AppRouter(session=self.session)
         self.page = PageRouter(session=self.session)
+        self.auth = AuthRouter(session=self.session)
 
 
 class AccessCookies(BaseModel):
