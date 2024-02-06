@@ -1,6 +1,7 @@
 import asyncio
 import logging
 import os
+import jwt
 
 import requests
 from fastapi import Depends, HTTPException, Request
@@ -41,35 +42,47 @@ def verify_server_token(cookies: AccessCookies):
     return response
 
 
+def verify_server_access_token(access_token, Authorize: AuthJWT = Depends()):
+    logger.info("VERIFYING SERVER TOKEN")
+    verify_response = requests.post(
+        DROPBASE_API_URL + "/worker/verify_token",
+        headers={"Authorization": f"Bearer {access_token}"},
+    )
+    if verify_response.status_code != 200:
+        raise HTTPException(status_code=401, detail="Invalid access token")
+    worker_sl_token = Authorize.create_access_token(
+        subject=verify_response.json().get("user_id")
+    )
+    max_age = 60 * 5
+    raise HTTPException(
+        status_code=401,
+        detail="Invalid access token",
+        headers={
+            "set-cookie": f"{WORKER_SL_TOKEN_NAME}={worker_sl_token}; Max-Age={max_age}; Path=/; HttpOnly;"  # noqa
+        },
+    )
+
+
 def verify_user_access_token(request: Request, Authorize: AuthJWT = Depends()):
+    server_access_cookies = get_access_cookies(request)
+
     if not request.cookies.get("worker_sl_token"):
-        server_access_cookies = get_access_cookies(request)
-        logger.info("VERIFYING SERVER TOKEN")
-        verify_response = requests.post(
-            DROPBASE_API_URL + "/worker/verify_token",
-            headers={
-                "Authorization": f"Bearer {server_access_cookies.access_token_cookie}"
-            },
-        )
-        if verify_response.status_code != 200:
-            raise HTTPException(status_code=401, detail="Invalid access token")
-        worker_sl_token = Authorize.create_access_token(
-            subject=verify_response.json().get("user_id")
-        )
-        max_age = 60 * 5
-        raise HTTPException(
-            status_code=401,
-            detail="Invalid access token",
-            headers={
-                "set-cookie": f"{WORKER_SL_TOKEN_NAME}={worker_sl_token}; Max-Age={max_age}; Path=/; HttpOnly;"  # noqa
-            },
-        )
+        verify_server_access_token(server_access_cookies.access_token_cookie, Authorize)
     else:
         try:
             Authorize._access_cookie_key = WORKER_SL_TOKEN_NAME
             Authorize._verify_and_get_jwt_in_cookies("access", Authorize._request)
-            subject = Authorize.get_jwt_subject()
-            return subject
+            worker_subject = Authorize.get_jwt_subject()
+
+            server_claims = jwt.decode(
+                server_access_cookies.access_token_cookie, verify=False
+            )
+
+            if worker_subject != server_claims.get("user_id"):
+                verify_server_access_token(
+                    server_access_cookies.access_token_cookie, Authorize
+                )
+            return worker_subject
         except exceptions.JWTDecodeError:
             raise Exception("Invalid access token")
 
@@ -118,7 +131,7 @@ def check_user_app_permissions(
         response = requests.post(
             DROPBASE_API_URL + "/user/check_permission",
             headers={"Authorization": f"Bearer {access_cookies.access_token_cookie}"},
-            json={"workspace_id": workspace_id, "app_name": app_name},
+            json={"workspace_id": workspace_id, "app_id": app_id},
         )
         if response.status_code != 200:
             raise Exception("Invalid access token")
