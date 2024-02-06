@@ -140,7 +140,6 @@ def check_user_app_permissions(
     if not user_app_permissions:
         logger.info("FETCHING PERMISSIONS FROM DROPBASE API")
         response = router.auth.check_permissions(
-            workspace_id=workspace_id,
             app_id=app_id,
             access_token=access_cookies.access_token_cookie,
         )

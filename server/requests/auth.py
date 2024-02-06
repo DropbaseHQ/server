@@ -8,9 +8,9 @@ class AuthRouter:
             headers={"Authorization": f"Bearer {access_token}"},
         )
 
-    def check_permissions(self, workspace_id: str, app_id: str, access_token: str):
+    def check_permissions(self, app_id: str, access_token: str):
         return self.session.post(
             "check_permission",
             headers={"Authorization": f"Bearer {access_token}"},
-            json={"workspace_id": workspace_id, "app_id": app_id},
+            json={"app_id": app_id},
         )
