@@ -4,8 +4,9 @@ import re
 
 from fastapi import HTTPException
 
+from dropbase.constants import FILE_NAME_REGEX
 from dropbase.schemas.files import CreateFile, DeleteFile, RenameFile, UpdateFile
-from server.constants import FILE_NAME_REGEX, cwd
+from server.constants import cwd
 from server.controllers.properties import read_page_properties, update_properties
 from server.controllers.utils import get_depend_table_names, rename_function_in_file
 

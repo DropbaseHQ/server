@@ -11,6 +11,10 @@ from dropbase.schemas.edit_cell import CellEdit
 
 
 class PostgresDatabase(Database):
+    def __init__(self, creds: dict, schema: str = "public"):
+        super().__init__(creds)
+        self.schema = schema
+
     def _get_connection_url(self, creds: dict):
         return URL.create(**creds)
 
@@ -42,7 +46,9 @@ class PostgresDatabase(Database):
         if values is None:
             values = {}
 
-        result = self.session.execute(text(sql), values)
+        with self.engine.connect() as conn:
+            result = conn.execute(text(sql), values)
+
         return [dict(row) for row in result.fetchall()]
 
     def insert(self, table: str, values: dict, auto_commit: bool = False):

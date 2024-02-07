@@ -1,7 +1,6 @@
 import os
-import re
 
-from server.controllers.sources import get_sources
+from dropbase.database.sources import get_sources
 
 cwd = os.getcwd()
 
@@ -12,7 +11,7 @@ TASK_TIMEOUT = os.getenv("TASK_TIMEOUT") if os.getenv("TASK_TIMEOUT") else 60
 DATA_PREVIEW_SIZE = 100
 INFER_TYPE_SAMPLE_SIZE = 50
 
-FILE_NAME_REGEX = re.compile(r"^[A-Za-z0-9_.]+$")
+
 WORKER_VERSION = "0.2.0"
 
 
