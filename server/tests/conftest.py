@@ -9,6 +9,7 @@ from fastapi.testclient import TestClient
 from server.auth.dependency import EnforceUserAppPermissions
 from server.controllers.databases.postgres import PostgresDatabase
 from server.controllers.properties import read_page_properties, update_properties
+from server.controllers.workspace import WorkspaceFolderController
 from server.main import app
 from server.requests.dropbase_router import get_dropbase_router
 from server.tests.constants import (
@@ -36,7 +37,7 @@ postgresql_proc = pytest_postgresql.factories.postgresql_proc(load=[load_test_db
 postgresql = pytest_postgresql.factories.postgresql("postgresql_proc")
 
 
-@pytest.fixture(autouse=True)
+@pytest.fixture(scope="module", autouse=True)
 def test_workspace():
     # used by all tests, so autouse=True
     with tempfile.TemporaryDirectory() as workspace_backup_path:
@@ -47,6 +48,16 @@ def test_workspace():
         shutil.rmtree(WORKSPACE_PATH)
         # restore backup
         shutil.copytree(workspace_backup_path, WORKSPACE_PATH)
+        # Workspace properties is still written to the non test workspace
+        # Its easier to clean it up here
+        workspace_folder_controller = WorkspaceFolderController(
+            r_path_to_workspace=WORKSPACE_PATH
+        )
+        properties = workspace_folder_controller.get_workspace_properties()
+        for app in properties:
+            if app["name"] == TEST_APP_NAME:
+                properties.remove(app)
+        workspace_folder_controller.write_workspace_properties(properties)
 
 
 @pytest.fixture(scope="session")
@@ -54,12 +65,12 @@ def test_client():
     def override_check_user_app_permissions():
         return {"use": True, "edit": True, "own": True}
 
-    app.dependency_overrides[
-        EnforceUserAppPermissions(action="edit")
-    ] = override_check_user_app_permissions
-    app.dependency_overrides[
-        EnforceUserAppPermissions(action="use")
-    ] = override_check_user_app_permissions
+    app.dependency_overrides[EnforceUserAppPermissions(action="edit")] = (
+        override_check_user_app_permissions
+    )
+    app.dependency_overrides[EnforceUserAppPermissions(action="use")] = (
+        override_check_user_app_permissions
+    )
     return TestClient(app)
 
 
@@ -67,7 +78,9 @@ def test_client():
 def dropbase_router_mocker():
     mocker = DropbaseRouterMocker()
     # app.dependency_overrides uses function as a key. part of fastapi
-    app.dependency_overrides[get_dropbase_router] = lambda: mocker.get_mock_dropbase_router()
+    app.dependency_overrides[get_dropbase_router] = (
+        lambda: mocker.get_mock_dropbase_router()
+    )
     yield mocker
     # delete get_dropbase_router from dependency overwrite once test is done
     del app.dependency_overrides[get_dropbase_router]
@@ -100,7 +113,11 @@ def mock_db(postgresql):
 
 
 def pytest_sessionstart():
-    from server.controllers.workspace import AppFolderController, create_file, create_folder
+    from server.controllers.workspace import (
+        AppFolderController,
+        create_file,
+        create_folder,
+    )
 
     create_folder(TEMPDIR_PATH)
 
