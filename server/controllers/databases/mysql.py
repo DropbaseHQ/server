@@ -130,6 +130,7 @@ class MySqlDatabase(Database):
                     col_name = column["name"]
                     is_pk = col_name in primary_keys
                     db_schema[database][table_name][col_name] = {
+                        "schema_name": "public",
                         "table_name": table_name,
                         "column_name": col_name,
                         "type": str(column["type"]),
@@ -218,7 +219,7 @@ class MySqlDatabase(Database):
                 values[pk_col.column_name] = edit.row[pk_col.name]
             prim_key_str = " AND ".join(prim_key_list)
 
-            sql = f"""UPDATE "{column.table_name}"
+            sql = f"""UPDATE `{column.table_name}`
             SET {column.column_name} = :new_value
             WHERE {prim_key_str}"""
 
