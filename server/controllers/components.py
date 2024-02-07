@@ -1,5 +1,6 @@
 from dropbase.models.table import PgColumnDefinedProperty, PyColumnDefinedProperty, TableDefinedProperty
 from dropbase.models.widget import (
+    BooleanDefinedProperty,
     ButtonDefinedProperty,
     InputDefinedProperty,
     SelectDefinedProperty,
@@ -16,6 +17,7 @@ component_property_types = {
     "button": ButtonDefinedProperty,
     "text": TextDefinedProperty,
     "select": SelectDefinedProperty,
+    "boolean": BooleanDefinedProperty,
 }
 
 

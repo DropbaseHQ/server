@@ -4,6 +4,7 @@ from pydantic import BaseModel
 
 from dropbase.models.table import PgColumnDefinedProperty, PyColumnDefinedProperty, TableDefinedProperty
 from dropbase.models.widget import (
+    BooleanDefinedProperty,
     ButtonDefinedProperty,
     InputDefinedProperty,
     SelectDefinedProperty,
@@ -20,6 +21,7 @@ class WidgetProperties(WidgetDefinedProperty):
             SelectDefinedProperty,
             TextDefinedProperty,
             ButtonDefinedProperty,
+            BooleanDefinedProperty,
         ]
     ]
 

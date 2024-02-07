@@ -5,6 +5,8 @@ from datamodel_code_generator import generate
 from pydantic import BaseModel, Field, create_model
 
 from dropbase.models import (
+    BooleanContextProperty,
+    BooleanDefinedProperty,
     ButtonContextProperty,
     ButtonDefinedProperty,
     InputContextProperty,
@@ -25,6 +27,7 @@ component_name_to_models = {
     "button": ButtonDefinedProperty,
     "input": InputDefinedProperty,
     "select": SelectDefinedProperty,
+    "boolean": BooleanDefinedProperty,
     "text": TextDefinedProperty,
     "py": PyColumnDefinedProperty,
     "pg": PgColumnDefinedProperty,
@@ -133,6 +136,7 @@ def create_state(component_props):
 
 context_model_mapper = {
     "button": ButtonContextProperty,
+    "boolean": BooleanContextProperty,
     "input": InputContextProperty,
     "select": SelectContextProperty,
     "text": TextContextProperty,
