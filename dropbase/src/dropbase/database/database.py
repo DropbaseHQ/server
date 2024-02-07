@@ -12,11 +12,7 @@ class Database(ABC):
         connection_url = self._get_connection_url(creds)
         # create engine and session
         self.engine = create_engine(connection_url, future=True)
-        self.session_obj = scoped_session(sessionmaker(bind=self.engine))
-
-    def __enter__(self):
-        self.session = self.session_obj()
-        return self
+        self.session = scoped_session(sessionmaker(bind=self.engine))
 
     def __exit__(self):
         self.session.close()
@@ -50,6 +46,10 @@ class Database(ABC):
 
     @abstractmethod
     def delete(self, table: str, keys: dict, auto_commit: bool = False):
+        pass
+
+    @abstractmethod
+    def query(self, sql: str):
         pass
 
     @abstractmethod
