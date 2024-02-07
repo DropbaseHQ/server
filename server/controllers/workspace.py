@@ -37,7 +37,6 @@ class WorkspaceFolderController:
             ) as file:
 
                 props = json.load(file)
-                print("props", props)
                 return props.get("apps", [])
 
         return None
