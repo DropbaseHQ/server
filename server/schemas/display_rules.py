@@ -6,6 +6,7 @@ from pydantic import BaseModel
 class Rule(BaseModel):
     andor: Optional[str]
     target: str
+    target_type: Optional[str]
     operator: str
     value: Any
 
