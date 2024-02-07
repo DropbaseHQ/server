@@ -2,6 +2,7 @@ import shutil
 import tempfile
 
 import psycopg2
+import pymysql
 import pytest
 import pytest_postgresql.factories
 from fastapi.testclient import TestClient
@@ -24,12 +25,25 @@ from server.tests.templates import get_test_data_fetcher, get_test_ui
 
 
 # Setup pytest-postgresql db with test data
-def load_test_db(**kwargs):
-    conn = psycopg2.connect(**kwargs)
+def load_test_db(db_type, **kwargs):
+    if db_type == "postgres":
+        conn = psycopg2.connect(**kwargs)
+    elif db_type == "mysql":
+        conn = pymysql.connect(**kwargs)
+    else:
+        raise ValueError(f"Unsupported database type: {db_type}")
+
     with open(DEMO_INIT_SQL_PATH, "r") as rf:
         init_sql = rf.read()
+
     with conn.cursor() as cur:
-        cur.execute(init_sql)
+        if db_type == "mysql":
+            # MySQL might require splitting and executing each statement separately
+            for statement in init_sql.split(";"):
+                if statement.strip():
+                    cur.execute(statement)
+        else:
+            cur.execute(init_sql)
         conn.commit()
 
 
