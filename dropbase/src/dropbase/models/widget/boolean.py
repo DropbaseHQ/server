@@ -26,4 +26,5 @@ class BooleanDefinedProperty(BaseModel):
     display_rules: Annotated[Optional[List[dict]], PropertyCategory.display_rules]
 
     # internal
+    data_type: Literal["boolean"] = "boolean"
     component_type: Literal["boolean"]

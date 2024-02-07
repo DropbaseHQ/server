@@ -52,7 +52,7 @@ def component_state_type_mapper(input_type: str):
             return int
         case "float":
             return float
-        case "bool":
+        case "boolean":
             return bool
         case "text":
             return str

@@ -4,6 +4,6 @@ astor==0.8.1
 pika==1.3.2
 pydantic==2.6.0
 redis==5.0.1
-dropbase==0.0.2
 sqlalchemy==1.4.46
 psycopg2-binary==2.9.9
+dropbase==0.0.3
