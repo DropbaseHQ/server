@@ -65,12 +65,10 @@ data = {
 }
 
 
+@pytest.mark.parametrize("mock_db", ["postgres"], indirect=True)
 def test_edit_cell(test_client, mocker, mock_db):
     # Arrange
-    mocker.patch(
-        "server.controllers.connect.connect_to_user_db",
-        return_value=lambda type="postgres": mock_db(type),
-    )
+    mocker.patch("server.controllers.connect.connect_to_user_db", return_value=mock_db)
 
     # Act
     res = test_client.post("/edit_cell/edit_sql_table/", json=data)
@@ -80,12 +78,10 @@ def test_edit_cell(test_client, mocker, mock_db):
     assert res_data["result"] == ["Updated username from John Doe to Hello World"]
 
 
-@pytest.mark.parametrize("db_type", ["postgres"], indirect=["mock_db"])
-def test_edit_cell_db_execute_fail(test_client, mocker, mock_db, db_type):
+@pytest.mark.parametrize("mock_db", ["postgres"], indirect=True)
+def test_edit_cell_db_execute_fail(test_client, mocker, mock_db):
     # Arrange
-    mocker.patch(
-        "server.controllers.connect.connect_to_user_db", return_value=lambda type=db_type: mock_db(type)
-    )
+    mocker.patch("server.controllers.connect.connect_to_user_db", return_value=mock_db)
 
     # Act
     data["edits"][0]["row"] = {"user_id": 77, "username": "John Doe", "email": "john.doe@example.com"}

@@ -87,6 +87,7 @@ def connect_to_test_db(db_type: str, creds: dict):
 
 @pytest.fixture
 def mock_db(request, postgresql):
+
     # returns a database instance rather than an engine
     db_type = request.param
     creds_dict = {}
@@ -100,6 +101,8 @@ def mock_db(request, postgresql):
                 "password": "",  # Not required for pytest-postgresql
                 "port": postgresql.info.port,
             }
+            db_instance = connect_to_test_db("postgres", creds_dict)
+            return db_instance
         case "mysql":
             pass  # Find mysql alternative
             # creds_dict = {
@@ -110,8 +113,7 @@ def mock_db(request, postgresql):
             #     "password": "",  # Not required for pytest-postgresql
             #     "port": postgresql.info.port,
             # }
-
-    db_instance = connect_to_test_db("postgres", creds_dict)
+            db_instance = connect_to_test_db("mysql", creds_dict)
 
     return db_instance
 
