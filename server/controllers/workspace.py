@@ -7,7 +7,6 @@ from fastapi import HTTPException, Response
 
 from server.controllers.generate_models import create_state_context_files
 from server.requests.dropbase_router import DropbaseRouter
-from server.constants import WORKSPACE_ID
 
 APP_PROPERTIES_TEMPLATE = {
     "pages": [],
