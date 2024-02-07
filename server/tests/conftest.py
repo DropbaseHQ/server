@@ -48,16 +48,6 @@ def test_workspace():
         shutil.rmtree(WORKSPACE_PATH)
         # restore backup
         shutil.copytree(workspace_backup_path, WORKSPACE_PATH)
-        # Workspace properties is still written to the non test workspace
-        # Its easier to clean it up here
-        workspace_folder_controller = WorkspaceFolderController(
-            r_path_to_workspace=WORKSPACE_PATH
-        )
-        properties = workspace_folder_controller.get_workspace_properties()
-        for app in properties:
-            if app["name"] == TEST_APP_NAME:
-                properties.remove(app)
-        workspace_folder_controller.write_workspace_properties(properties)
 
 
 @pytest.fixture(scope="session")
@@ -151,3 +141,18 @@ def pytest_sessionfinish():
     import shutil
 
     shutil.rmtree(WORKSPACE_PATH.joinpath("dropbase_test_app"))
+    # Workspace properties is still written to the non test workspace
+    # Its easier to clean it up here
+    workspace_folder_controller = WorkspaceFolderController(
+        r_path_to_workspace=WORKSPACE_PATH
+    )
+    apps = workspace_folder_controller.get_workspace_properties()
+    for app in apps:
+        if app["name"] == TEST_APP_NAME:
+            apps.remove(app)
+
+    workspace_folder_controller.write_workspace_properties(
+        {
+            "apps": apps,
+        }
+    )
