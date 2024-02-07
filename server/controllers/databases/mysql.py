@@ -1,4 +1,4 @@
-from sqlalchemy.engine import URL
+from sqlalchemy.engine import URL, reflection
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.inspection import inspect
 from sqlalchemy.sql import text
@@ -82,11 +82,11 @@ class MySqlDatabase(Database):
     # MySQL Compatible up to here
 
     def _get_db_schema(self):
-        # TODO: cache this, takes a while
-        inspector = inspect(self.engine)
-        databases = (
-            inspector.get_schema_names()
-        )  # In MySql, this returns a list of databases, rather than schemas in Postgres
+        # # TODO: cache this, takes a while
+        inspector = reflection.Inspector.from_engine(self.engine)
+        databases = inspector.get_schema_names()
+
+        # In MySql, this returns a list of databases, rather than schemas in Postgres
 
         db_schema = {}
         gpt_schema = {
@@ -97,8 +97,10 @@ class MySqlDatabase(Database):
         }
 
         for database in databases:
-            if database == "information_schema":
+            ignore_schemas = ["information_schema", "mysql", "performance_schema", "sys"]
+            if database in ignore_schemas:
                 continue
+
             tables = inspector.get_table_names(schema=database)
             gpt_schema["schema"][database] = {}
             db_schema[database] = {}
@@ -139,6 +141,7 @@ class MySqlDatabase(Database):
                         "edit_keys": primary_keys if not is_pk else [],
                     }
                 gpt_schema["schema"][database][table_name] = [column["name"] for column in columns]
+
         return db_schema, gpt_schema
 
     def _get_column_names(self, user_sql: str) -> list[str]:
