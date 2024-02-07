@@ -12,6 +12,7 @@ from server.routers.query import router as query_router
 from server.routers.sources import router as sources_router
 from server.routers.tables import router as tables_router
 from server.routers.websocket import router as websocket_router
+from server.routers.workspace import router as workspace_router
 
 __all__ = [
     "files_router",
@@ -27,4 +28,5 @@ __all__ = [
     "health_router",
     "page_router",
     "websocket_router",
+    "workspace_router",
 ]

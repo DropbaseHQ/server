@@ -14,3 +14,6 @@ class AuthRouter:
             headers={"Authorization": f"Bearer {access_token}"},
             json={"app_id": app_id},
         )
+
+    def get_worker_workspace(self):
+        return self.session.get("worker_workspace")
