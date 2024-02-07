@@ -5,9 +5,9 @@ from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.inspection import inspect
 from sqlalchemy.sql import text
 
-from server.controllers.database import Database
-from server.models.table.pg_column import PgColumnDefinedProperty
-from server.schemas.edit_cell import CellEdit
+from dropbase.database.database import Database
+from dropbase.models.table.pg_column import PgColumnDefinedProperty
+from dropbase.schemas.edit_cell import CellEdit
 
 
 class PostgresDatabase(Database):

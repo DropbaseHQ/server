@@ -3,12 +3,12 @@ import os
 from fastapi import HTTPException
 from pydantic import BaseModel
 
+from dropbase.schemas.page import PageProperties
 from server.controllers.display_rules import run_display_rule
 from server.controllers.properties import update_properties
 from server.controllers.utils import get_state_context_model, validate_column_name
 from server.controllers.workspace import AppFolderController
 from server.requests.dropbase_router import DropbaseRouter
-from server.schemas.page import PageProperties
 
 
 def update_page_properties(req: PageProperties):

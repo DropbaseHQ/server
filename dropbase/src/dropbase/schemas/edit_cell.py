@@ -2,7 +2,7 @@ from typing import Any, List
 
 from pydantic import BaseModel
 
-from server.schemas.files import DataFile
+from dropbase.schemas.files import DataFile
 
 
 class CellProps(BaseModel):

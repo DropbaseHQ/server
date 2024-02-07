@@ -1,5 +1,5 @@
-from server.models.table import PgColumnDefinedProperty, PyColumnDefinedProperty, TableDefinedProperty
-from server.models.widget import (
+from dropbase.models.table import PgColumnDefinedProperty, PyColumnDefinedProperty, TableDefinedProperty
+from dropbase.models.widget import (
     ButtonDefinedProperty,
     InputDefinedProperty,
     SelectDefinedProperty,

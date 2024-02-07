@@ -4,7 +4,7 @@ from pathlib import Path
 from datamodel_code_generator import generate
 from pydantic import BaseModel, Field, create_model
 
-from server.models import (
+from dropbase.models import (
     ButtonContextProperty,
     ButtonDefinedProperty,
     InputContextProperty,

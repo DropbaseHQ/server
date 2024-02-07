@@ -1,10 +1,10 @@
 from fastapi import APIRouter, Depends, Response
 
+from dropbase.schemas.table import CommitTableColumnsRequest, ConvertTableRequest
 from server.auth.dependency import EnforceUserAppPermissions
 from server.controllers.columns import commit_table_columns
 from server.controllers.tables import convert_sql_table
 from server.requests.dropbase_router import DropbaseRouter, get_dropbase_router
-from server.schemas.table import CommitTableColumnsRequest, ConvertTableRequest
 
 router = APIRouter(prefix="/tables", tags=["tables"], responses={404: {"description": "Not found"}})
 

@@ -1,5 +1,5 @@
+from dropbase.database.databases.postgres import PostgresDatabase
 from server.constants import WORKSPACE_SOURCES
-from server.controllers.databases.postgres import PostgresDatabase
 
 
 def connect_to_user_db(name: str):

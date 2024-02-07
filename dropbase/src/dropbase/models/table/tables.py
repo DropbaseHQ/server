@@ -2,7 +2,7 @@ from typing import Annotated, Any, List, Literal, Optional
 
 from pydantic import BaseModel
 
-from server.models.category import PropertyCategory
+from dropbase.models.category import PropertyCategory
 
 
 class Filter(BaseModel):

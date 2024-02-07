@@ -1,9 +1,9 @@
 from functools import reduce
 from typing import Any
 
+from dropbase.schemas.display_rules import DisplayRules
 from server.controllers.properties import read_page_properties
 from server.controllers.utils import get_state_context_model
-from server.schemas.display_rules import DisplayRules
 
 
 def get_by_path(root, items):

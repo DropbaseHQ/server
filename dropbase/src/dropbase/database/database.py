@@ -3,7 +3,7 @@ from abc import ABC, abstractmethod
 from sqlalchemy.engine import create_engine
 from sqlalchemy.orm import scoped_session, sessionmaker
 
-from server.schemas.edit_cell import CellEdit
+from dropbase.schemas.edit_cell import CellEdit
 
 
 class Database(ABC):
