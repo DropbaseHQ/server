@@ -41,6 +41,19 @@ set -o allexport; source .env; set +o allexport
 pylsp --ws --port 9095
 ```
 
+worker local
+
+```
+docker build -f Dockerfile-worker -t worker .
+```
+
+worker prod
+
+```
+cd worker
+docker build -t worker .
+```
+
 ## run tests
 
 ```
