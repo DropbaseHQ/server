@@ -1,8 +1,9 @@
 import logging
 from datetime import datetime
-from dateutil.parser import parse
 from functools import reduce
 from typing import Any
+
+from dateutil.parser import parse
 
 from dropbase.schemas.display_rules import DisplayRules
 from server.controllers.properties import read_page_properties
