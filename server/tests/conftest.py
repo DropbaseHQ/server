@@ -1,5 +1,7 @@
 import shutil
+import subprocess
 import tempfile
+import time
 
 import psycopg2
 import pymysql
@@ -24,8 +26,52 @@ from server.tests.mocks.dropbase_router_mocker import DropbaseRouterMocker
 from server.tests.templates import get_test_data_fetcher, get_test_ui
 
 
+@pytest.fixture()
+def mysql():
+    # Start MySQL container
+    container_id = (
+        subprocess.check_output(
+            [
+                "docker",
+                "run",
+                "-d",
+                "-e",
+                "MYSQL_ROOT_PASSWORD=password",
+                "-e",
+                "MYSQL_DATABASE=test_db",
+                "-p",
+                "3308:3306",
+                "mysql:8.0",
+            ]
+        )
+        .decode()
+        .strip()
+    )
+
+    # Wait for MySQL to be up and running
+    time.sleep(10)  # Adjust as necessary
+
+    db_config = {
+        "drivername": "mysql+pymysql",
+        "host": "localhost",
+        "user": "root",
+        "password": "password",
+        "db": "test_db",
+        "port": 3306,
+    }
+
+    # Optional: Load test data into MySQL
+    load_test_db("mysql", **db_config)
+
+    yield db_config
+
+    # Teardown: Stop MySQL container
+    subprocess.check_call(["docker", "stop", container_id])
+    subprocess.check_call(["docker", "rm", container_id])
+
+
 # Setup pytest-postgresql db with test data
-def load_test_db(db_type, **kwargs):
+def load_test_db(db_type="postgres", **kwargs):
     if db_type == "postgres":
         conn = psycopg2.connect(**kwargs)
     elif db_type == "mysql":
@@ -100,7 +146,7 @@ def connect_to_test_db(db_type: str, creds: dict):
 
 
 @pytest.fixture
-def mock_db(request, postgresql):
+def mock_db(request, postgresql, mysql):
 
     # returns a database instance rather than an engine
     db_type = request.param
@@ -118,16 +164,7 @@ def mock_db(request, postgresql):
             db_instance = connect_to_test_db("postgres", creds_dict)
             return db_instance
         case "mysql":
-            pass  # Find mysql alternative
-            # creds_dict = {
-            #     "host": postgresql.info.host,
-            #     "drivername": "postgresql+psycopg2",
-            #     "database": postgresql.info.dbname,
-            #     "username": postgresql.info.user,
-            #     "password": "",  # Not required for pytest-postgresql
-            #     "port": postgresql.info.port,
-            # }
-            db_instance = connect_to_test_db("mysql", creds_dict)
+            db_instance = connect_to_test_db("mysql", mysql)
 
     return db_instance
 
