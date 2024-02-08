@@ -47,4 +47,4 @@ class CreatePageRequest(BaseModel):
 
 
 class RenamePageRequest(BaseModel):
-    new_page_name: str
+    new_page_label: str
