@@ -8,10 +8,12 @@ WORKDIR /app
 
 # Copy the current directory contents into the container at /app
 ADD worker/. .
-ADD dropbase/. dropbase/.
-RUN pip install -e dropbase/.
 
 # Install packages
 ADD requirements-worker.txt requirements-worker.txt
 RUN pip install -r requirements-worker.txt
 RUN pip install -r requirements-custom.txt
+
+# install dropbase package
+ADD dropbase/. dropbase/.
+RUN pip install -e dropbase/.

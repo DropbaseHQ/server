@@ -79,7 +79,8 @@ def rename_file(req: RenameFile):
     if os.path.exists(file_path):
         os.rename(file_path, new_path)
 
-    rename_function_in_file(file_path=new_path, old_name=req.old_name, new_name=req.new_name)
+    if file_ext == ".py":
+        rename_function_in_file(file_path=new_path, old_name=req.old_name, new_name=req.new_name)
 
     # update properties.json
     properties = read_page_properties(req.app_name, req.page_name)
