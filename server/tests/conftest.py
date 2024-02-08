@@ -16,6 +16,7 @@ from server.controllers.properties import read_page_properties, update_propertie
 from server.main import app
 from server.requests.dropbase_router import get_dropbase_router
 from server.tests.constants import (
+    DEMO_INIT_MYSQL_PATH,
     DEMO_INIT_SQL_PATH,
     TEMPDIR_PATH,
     TEST_APP_NAME,
@@ -26,7 +27,7 @@ from server.tests.mocks.dropbase_router_mocker import DropbaseRouterMocker
 from server.tests.templates import get_test_data_fetcher, get_test_ui
 
 
-@pytest.fixture()
+@pytest.fixture(scope="session")
 def mysql():
     # Start MySQL container
     container_id = (
@@ -40,7 +41,7 @@ def mysql():
                 "-e",
                 "MYSQL_DATABASE=test_db",
                 "-p",
-                "3308:3306",
+                "3309:3306",
                 "mysql:8.0",
             ]
         )
@@ -48,26 +49,26 @@ def mysql():
         .strip()
     )
 
-    # Wait for MySQL to be up and running
-    time.sleep(10)  # Adjust as necessary
+    try:
+        # Wait for MySQL to be up and running
+        time.sleep(10)  # Adjust as necessary
 
-    db_config = {
-        "drivername": "mysql+pymysql",
-        "host": "localhost",
-        "user": "root",
-        "password": "password",
-        "db": "test_db",
-        "port": 3306,
-    }
+        db_config = {
+            "host": "localhost",
+            "user": "root",
+            "password": "password",
+            "database": "test_db",
+            "port": 3309,
+        }
 
-    # Optional: Load test data into MySQL
-    load_test_db("mysql", **db_config)
+        # Optional: Load test data into MySQL
+        load_test_db("mysql", **db_config)
 
-    yield db_config
-
-    # Teardown: Stop MySQL container
-    subprocess.check_call(["docker", "stop", container_id])
-    subprocess.check_call(["docker", "rm", container_id])
+        yield db_config
+    finally:
+        # Teardown: Stop MySQL container
+        subprocess.check_call(["docker", "stop", container_id])
+        subprocess.check_call(["docker", "rm", container_id])
 
 
 # Setup pytest-postgresql db with test data
@@ -79,8 +80,12 @@ def load_test_db(db_type="postgres", **kwargs):
     else:
         raise ValueError(f"Unsupported database type: {db_type}")
 
-    with open(DEMO_INIT_SQL_PATH, "r") as rf:
-        init_sql = rf.read()
+    if db_type == "postgres":
+        with open(DEMO_INIT_SQL_PATH, "r") as rf:
+            init_sql = rf.read()
+    else:
+        with open(DEMO_INIT_MYSQL_PATH, "r") as rf:
+            init_sql = rf.read()
 
     with conn.cursor() as cur:
         if db_type == "mysql":
@@ -142,6 +147,11 @@ def connect_to_test_db(db_type: str, creds: dict):
         case "pg":
             return PostgresDatabase(creds, schema="public")
         case "mysql":
+            if "user" in creds:
+                creds["username"] = creds["user"]
+                creds["drivername"] = "mysql+pymysql"
+                del creds["user"]
+
             return MySqlDatabase(creds)
 
 
