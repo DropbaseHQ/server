@@ -132,9 +132,15 @@ def apply_filters(
                     continue
 
             filter_values[filter_value_name] = filter.value
-            filters_list.append(
-                f'user_query."{filter.column_name}" {filter.condition} :{filter_value_name}'
-            )
+
+            if filter.column_type == "text":
+                filters_list.append(
+                    f'LOWER(user_query."{filter.column_name}") {filter.condition} LOWER(:{filter_value_name})'
+                )
+            else:
+                filters_list.append(
+                    f'user_query."{filter.column_name}" {filter.condition} :{filter_value_name}'
+                )
 
         filter_sql += " AND ".join(filters_list)
     filter_sql += "\n"
