@@ -8,6 +8,7 @@ import pymysql
 import pytest
 import pytest_postgresql.factories
 from fastapi.testclient import TestClient
+from pytest_mysql import factories
 
 from server.auth.dependency import EnforceUserAppPermissions
 from server.controllers.databases.mysql import MySqlDatabase
@@ -25,50 +26,6 @@ from server.tests.constants import (
 )
 from server.tests.mocks.dropbase_router_mocker import DropbaseRouterMocker
 from server.tests.templates import get_test_data_fetcher, get_test_ui
-
-
-@pytest.fixture(scope="session")
-def mysql():
-    # Start MySQL container
-    container_id = (
-        subprocess.check_output(
-            [
-                "docker",
-                "run",
-                "-d",
-                "-e",
-                "MYSQL_ROOT_PASSWORD=password",
-                "-e",
-                "MYSQL_DATABASE=test_db",
-                "-p",
-                "3309:3306",
-                "mysql:8.0",
-            ]
-        )
-        .decode()
-        .strip()
-    )
-
-    try:
-        # Wait for MySQL to be up and running
-        time.sleep(10)  # Adjust as necessary
-
-        db_config = {
-            "host": "localhost",
-            "user": "root",
-            "password": "password",
-            "database": "test_db",
-            "port": 3309,
-        }
-
-        # Optional: Load test data into MySQL
-        load_test_db("mysql", **db_config)
-
-        yield db_config
-    finally:
-        # Teardown: Stop MySQL container
-        subprocess.check_call(["docker", "stop", container_id])
-        subprocess.check_call(["docker", "rm", container_id])
 
 
 # Setup pytest-postgresql db with test data
@@ -100,6 +57,9 @@ def load_test_db(db_type="postgres", **kwargs):
 
 postgresql_proc = pytest_postgresql.factories.postgresql_proc(load=[load_test_db])
 postgresql = pytest_postgresql.factories.postgresql("postgresql_proc")
+
+mysql_proc = factories.mysql_proc(port=3307)
+mysql = factories.mysql("mysql_proc")
 
 
 @pytest.fixture(autouse=True)
@@ -147,17 +107,11 @@ def connect_to_test_db(db_type: str, creds: dict):
         case "pg":
             return PostgresDatabase(creds, schema="public")
         case "mysql":
-            if "user" in creds:
-                creds["username"] = creds["user"]
-                creds["drivername"] = "mysql+pymysql"
-                del creds["user"]
-
             return MySqlDatabase(creds)
 
 
 @pytest.fixture
 def mock_db(request, postgresql, mysql):
-
     # returns a database instance rather than an engine
     db_type = request.param
     creds_dict = {}
@@ -171,10 +125,26 @@ def mock_db(request, postgresql, mysql):
                 "password": "",  # Not required for pytest-postgresql
                 "port": postgresql.info.port,
             }
+
             db_instance = connect_to_test_db("postgres", creds_dict)
-            return db_instance
+
         case "mysql":
-            db_instance = connect_to_test_db("mysql", mysql)
+            creds_dict = {
+                "host": "localhost",
+                "database": "test",
+                "user": "root",
+                "password": "",
+                "port": 3307,
+            }
+
+            load_test_db("mysql", **creds_dict)
+
+            if "user" in creds_dict:
+                creds_dict["drivername"] = "mysql+pymysql"
+                creds_dict["username"] = creds_dict["user"]
+                del creds_dict["user"]
+
+            db_instance = connect_to_test_db("mysql", creds_dict)
 
     return db_instance
 
