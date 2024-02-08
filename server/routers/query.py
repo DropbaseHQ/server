@@ -3,15 +3,15 @@ import uuid
 
 from fastapi import APIRouter, BackgroundTasks, Depends, Response
 
+from dropbase.schemas.files import DataFile
+from dropbase.schemas.query import RunSQLRequestTask, RunSQLStringRequest
+from dropbase.schemas.run_python import QueryPythonRequest, RunPythonStringRequestNew
 from server.auth.dependency import EnforceUserAppPermissions
 from server.controllers.properties import read_page_properties
 from server.controllers.python_docker import run_container
 from server.controllers.redis import r
 from server.controllers.run_sql import run_sql_query, run_sql_query_from_string
 from server.controllers.utils import get_table_data_fetcher
-from server.schemas.files import DataFile
-from server.schemas.query import RunSQLRequestTask, RunSQLStringRequest
-from server.schemas.run_python import QueryPythonRequest, RunPythonStringRequestNew
 
 router = APIRouter(prefix="/query", tags=["query"], responses={404: {"description": "Not found"}})
 

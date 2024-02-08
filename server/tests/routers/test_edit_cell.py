@@ -1,5 +1,3 @@
-from sqlalchemy import text
-
 data = {
     # could be ignored, mocking in mock db
     "file": {"name": "demo_sql", "type": "sql", "source": "local", "depends_on": []},
@@ -7,6 +5,7 @@ data = {
         {
             "row": {"user_id": 1, "username": "John Doe", "email": "john.doe@example.com"},
             "column_name": "username",
+            "column_type": "VARCHAR(255)",
             "columns": [
                 {
                     "name": "user_id",

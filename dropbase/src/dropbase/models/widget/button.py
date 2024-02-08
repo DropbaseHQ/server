@@ -2,8 +2,8 @@ from typing import Annotated, List, Literal, Optional
 
 from pydantic import BaseModel
 
-from server.models.category import PropertyCategory
-from server.models.common import ComponentDisplayProperties
+from dropbase.models.category import PropertyCategory
+from dropbase.models.common import ComponentDisplayProperties
 
 
 class ButtonContextProperty(ComponentDisplayProperties):

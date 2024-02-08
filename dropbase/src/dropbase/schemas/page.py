@@ -2,19 +2,16 @@ from typing import List, Union
 
 from pydantic import BaseModel
 
-from server.models.table import (
-    PgColumnDefinedProperty,
-    PyColumnDefinedProperty,
-    TableDefinedProperty,
-)
-from server.models.widget import (
+from dropbase.models.table import PgColumnDefinedProperty, PyColumnDefinedProperty, TableDefinedProperty
+from dropbase.models.widget import (
+    BooleanDefinedProperty,
     ButtonDefinedProperty,
     InputDefinedProperty,
     SelectDefinedProperty,
     TextDefinedProperty,
     WidgetDefinedProperty,
 )
-from server.schemas.files import DataFile
+from dropbase.schemas.files import DataFile
 
 
 class WidgetProperties(WidgetDefinedProperty):
@@ -24,6 +21,7 @@ class WidgetProperties(WidgetDefinedProperty):
             SelectDefinedProperty,
             TextDefinedProperty,
             ButtonDefinedProperty,
+            BooleanDefinedProperty,
         ]
     ]
 

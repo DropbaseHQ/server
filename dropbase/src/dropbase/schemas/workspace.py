@@ -1,6 +1,8 @@
-from pydantic import BaseModel, Field
 from typing import Optional
-from server.constants import FILE_NAME_REGEX
+
+from pydantic import BaseModel, Field
+
+from dropbase.constants import FILE_NAME_REGEX
 
 
 class CreateAppRequest(BaseModel):

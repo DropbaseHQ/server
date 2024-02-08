@@ -1,7 +1,7 @@
 from pydantic import BaseModel
 
-from server.schemas.files import DataFile
-from server.schemas.table import FilterSort
+from dropbase.schemas.files import DataFile
+from dropbase.schemas.table import FilterSort
 
 
 class RunSQLStringRequest(BaseModel):

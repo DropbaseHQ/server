@@ -1,5 +1,7 @@
-from server.constants import WORKSPACE_SOURCES
-from server.controllers.databases.postgres import PostgresDatabase
+from dropbase.database.databases.postgres import PostgresDatabase
+from dropbase.database.sources import get_sources
+
+WORKSPACE_SOURCES = get_sources()
 
 
 def connect_to_user_db(name: str):

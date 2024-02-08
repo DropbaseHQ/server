@@ -6,8 +6,8 @@ import pytest
 import pytest_postgresql.factories
 from fastapi.testclient import TestClient
 
+from dropbase.database.databases.postgres import PostgresDatabase
 from server.auth.dependency import EnforceUserAppPermissions
-from server.controllers.databases.postgres import PostgresDatabase
 from server.controllers.properties import read_page_properties, update_properties
 from server.controllers.workspace import WorkspaceFolderController
 from server.main import app

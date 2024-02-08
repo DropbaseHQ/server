@@ -1,8 +1,8 @@
 from fastapi import APIRouter, Depends, HTTPException, Response
 
+from dropbase.schemas.files import CreateFile, DeleteFile, RenameFile, UpdateFile
 from server.auth.dependency import EnforceUserAppPermissions
 from server.controllers.files import create_file, delete_file, get_all_files, rename_file, update_file
-from server.schemas.files import CreateFile, DeleteFile, RenameFile, UpdateFile
 
 router = APIRouter(
     prefix="/files",

@@ -2,7 +2,7 @@ from typing import Annotated, Literal, Optional
 
 from pydantic import BaseModel
 
-from server.models.category import PropertyCategory
+from dropbase.models.category import PropertyCategory
 
 
 class WidgetContextProperty(BaseModel):

@@ -2,7 +2,7 @@ from typing import Any, Dict
 
 from pydantic import BaseModel
 
-from server.schemas.table import FilterSort, TableBase
+from dropbase.schemas.table import FilterSort, TableBase
 
 
 class QueryTablePayload(BaseModel):

@@ -1,9 +1,9 @@
-from server.schemas.table import TableFilter, TableSort
+from dropbase.schemas.table import TableFilter, TableSort
 
 
 def test_query_db(mocker, mock_db):
     # Arrange
-    mocker.patch("server.controllers.connect.connect_to_user_db", return_value=mock_db)
+    mocker.patch("dropbase.database.connect.connect_to_user_db", return_value=mock_db)
 
     # Act
     output = mock_db._run_query("select * from users;", {})

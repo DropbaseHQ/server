@@ -3,7 +3,7 @@ from typing import List, Optional
 
 from pydantic import BaseModel, Field
 
-from server.constants import FILE_NAME_REGEX
+from dropbase.constants import FILE_NAME_REGEX
 
 
 class TypeEnum(str, Enum):

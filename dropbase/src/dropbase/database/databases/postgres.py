@@ -5,12 +5,16 @@ from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.inspection import inspect
 from sqlalchemy.sql import text
 
-from server.controllers.database import Database
-from server.models.table.pg_column import PgColumnDefinedProperty
-from server.schemas.edit_cell import CellEdit
+from dropbase.database.database import Database
+from dropbase.models.table.pg_column import PgColumnDefinedProperty
+from dropbase.schemas.edit_cell import CellEdit
 
 
 class PostgresDatabase(Database):
+    def __init__(self, creds: dict, schema: str = "public"):
+        super().__init__(creds)
+        self.schema = schema
+
     def _get_connection_url(self, creds: dict):
         return URL.create(**creds)
 
@@ -42,7 +46,9 @@ class PostgresDatabase(Database):
         if values is None:
             values = {}
 
-        result = self.session.execute(text(sql), values)
+        with self.engine.connect() as conn:
+            result = conn.execute(text(sql), values)
+
         return [dict(row) for row in result.fetchall()]
 
     def insert(self, table: str, values: dict, auto_commit: bool = False):
@@ -66,6 +72,10 @@ class PostgresDatabase(Database):
         if auto_commit:
             self.commit()
         return res.rowcount
+
+    def query(self, sql: str):
+        result = self.session.execute(text(sql))
+        return [dict(row) for row in result.fetchall()]
 
     def filter_and_sort(
         self, table: str, filter_clauses: list, sort_by: str = None, ascending: bool = True
