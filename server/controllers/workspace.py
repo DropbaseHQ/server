@@ -248,18 +248,12 @@ class AppFolderController:
         if router:
             router.page.create_page(page_properties=create_page_payload)
 
-    def rename_page(self, old_page_name: str, new_page_name: str):
-        # rename page folder
-        old_page_folder_path = os.path.join(self.app_folder_path, old_page_name)
-        new_page_folder_path = os.path.join(self.app_folder_path, new_page_name)
-        os.rename(old_page_folder_path, new_page_folder_path)
-
+    def rename_page(self, old_page_name: str, new_page_label: str):
         # rename page in properties.json
         app_properties_data = self._get_app_properties_data()
         for page in app_properties_data["pages"]:
             if page["name"] == old_page_name:
-                page["name"] = new_page_name
-                page["label"] = new_page_name
+                page["label"] = new_page_label
                 break
 
         self._write_app_properties_data(app_properties_data)
@@ -285,10 +279,7 @@ class AppFolderController:
 
     def get_pages(self):
         if os.path.exists(os.path.join(self.app_folder_path, "properties.json")):
-            pages = []
-            for page in self._get_app_properties_data()["pages"]:
-                pages.append({"name": page["name"]})
-            return pages
+            return self._get_app_properties_data().get("pages", [])
 
         page_names = get_subdirectories(self.app_folder_path)
         pages = [{"name": page} for page in page_names]

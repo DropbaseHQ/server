@@ -13,7 +13,9 @@ from server.controllers.utils import check_if_object_exists, validate_column_nam
 from server.requests.dropbase_router import DropbaseRouter, get_dropbase_router
 from server.schemas.page import CreatePageRequest, PageProperties, RenamePageRequest
 
-router = APIRouter(prefix="/page", tags=["page"], responses={404: {"description": "Not found"}})
+router = APIRouter(
+    prefix="/page", tags=["page"], responses={404: {"description": "Not found"}}
+)
 
 
 @router.get(
@@ -74,7 +76,11 @@ def rename_page_req(
     response: Response,
 ):
     try:
-        return rename_page(app_name, page_name, request.new_page_name)
+        return rename_page(
+            app_name=app_name,
+            page_name=page_name,
+            new_page_label=request.new_page_label,
+        )
     except Exception as e:
         response.status_code = 500
         return {"error": str(e)}

@@ -29,7 +29,9 @@ def validate_property_names(properties: dict):
     for table in properties["tables"]:
         # Check for duplicate table names
         if table["name"] in table_names:
-            raise HTTPException(status_code=400, detail="A table with this name already exists")
+            raise HTTPException(
+                status_code=400, detail="A table with this name already exists"
+            )
 
         table_names.add(table["name"])
 
@@ -41,7 +43,9 @@ def validate_property_names(properties: dict):
     # validate component names
     for widget in properties["widgets"]:
         if widget["name"] in widget_names:
-            raise HTTPException(status_code=400, detail="A widget with this name already exists")
+            raise HTTPException(
+                status_code=400, detail="A widget with this name already exists"
+            )
 
         widget_names.add(widget["name"])
 
@@ -51,7 +55,9 @@ def validate_property_names(properties: dict):
         component_names = set()
         for component in widget.get("components"):
             if component["name"] in component_names:
-                raise HTTPException(status_code=400, detail="A component with this name already exists")
+                raise HTTPException(
+                    status_code=400, detail="A component with this name already exists"
+                )
 
             component_names.add(component["name"])
 
@@ -71,7 +77,9 @@ def get_page_state_context(app_name: str, page_name: str):
 def _dict_from_pydantic_model(model):
     data = {}
     for name, field in model.__fields__.items():
-        if isinstance(field.outer_type_, type) and issubclass(field.outer_type_, BaseModel):
+        if isinstance(field.outer_type_, type) and issubclass(
+            field.outer_type_, BaseModel
+        ):
             data[name] = _dict_from_pydantic_model(field.outer_type_)
         else:
             data[name] = field.default
@@ -88,11 +96,13 @@ def create_page(app_name: str, page_name: str, router: DropbaseRouter):
         raise HTTPException(status_code=500, detail="Unable to create page")
 
 
-def rename_page(app_name: str, page_name: str, new_page_name: str):
+def rename_page(app_name: str, page_name: str, new_page_label: str):
     r_path_to_workspace = os.path.join(os.path.dirname(__file__), "../../workspace")
     try:
         app_folder_controller = AppFolderController(app_name, r_path_to_workspace)
-        app_folder_controller.rename_page(old_page_name=page_name, new_page_name=new_page_name)
+        app_folder_controller.rename_page(
+            old_page_name=page_name, new_page_label=new_page_label
+        )
         return {"success": True}
     except Exception:
         raise HTTPException(status_code=500, detail="Unable to create rename page")
