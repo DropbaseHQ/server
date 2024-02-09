@@ -9,8 +9,8 @@ from io import StringIO
 
 import astor
 import pandas as pd
-import redis
-from dataframe import convert_df_to_resp_obj
+
+from dropbase.helpers.dataframe import convert_df_to_resp_obj
 
 
 def assign_last_expression(script: str) -> str:
@@ -56,17 +56,16 @@ except:
     return python_str
 
 
-if __name__ == "__main__":
-    r = redis.Redis(host="host.docker.internal", port=6379, db=0)
+def run(r, response):
 
     # get job id
     job_id = os.getenv("job_id")
     file_name = "f" + uuid.uuid4().hex + ".py"
 
+    # redirect stdout
     old_stdout = sys.stdout
     redirected_output = StringIO()
     sys.stdout = redirected_output
-    response = {"stdout": "", "traceback": "", "message": "", "type": "", "status_code": 202}
 
     try:
         state = json.loads(os.getenv("state") or "{}")
@@ -106,13 +105,8 @@ if __name__ == "__main__":
         response["message"] = str(e)
 
     finally:
-
-        # testing timeout
-        # import time
-        # time.sleep(10)
-
-        # remove temp file
         response["status_code"] = 200
+
         # get stdout
         response["stdout"] = redirected_output.getvalue()
         sys.stdout = old_stdout
