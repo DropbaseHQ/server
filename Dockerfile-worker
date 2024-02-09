@@ -11,8 +11,9 @@ ADD worker/. .
 
 # Install packages
 ADD requirements-worker.txt requirements-worker.txt
+ADD requirements-worker-custom.txt requirements-worker-custom.txt
 RUN pip install -r requirements-worker.txt
-RUN pip install -r requirements-custom.txt
+RUN pip install -r requirements-worker-custom.txt
 
 # install dropbase package
 ADD dropbase/. dropbase/.
