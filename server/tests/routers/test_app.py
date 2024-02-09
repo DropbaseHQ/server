@@ -145,7 +145,11 @@ def test_rename_app_req_error_duplicate_names(test_client, dropbase_router_mocke
 def test_rename_app_req(test_client):
     try:
         # Arrange
-        data = {"old_name": TEST_APP_NAME, "new_name": NEW_APP_NAME}
+        data = {
+            "old_name": TEST_APP_NAME,
+            "new_name": NEW_APP_NAME,
+            "app_id": "23ea28dc-4e2d-4d48-b15e-09b51f1a1c74",
+        }
 
         # Act
         res = test_client.put("/app/", json=data)

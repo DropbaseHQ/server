@@ -63,11 +63,11 @@ def rename_app_req(req: RenameAppRequest, response: Response):
         response.status_code = 400
         return {"message": "An app with this name already exists"}
 
-    # workspace_folder_path = os.path.join(os.path.dirname(__file__), "../../workspace")
-    # app_path = os.path.join(workspace_folder_path, req.old_name)
-    # new_path = os.path.join(workspace_folder_path, req.new_name)
-    # if os.path.exists(app_path):
-    #     os.rename(app_path, new_path)
+    workspace_folder_path = os.path.join(os.path.dirname(__file__), "../../workspace")
+    app_path = os.path.join(workspace_folder_path, req.old_name)
+    new_path = os.path.join(workspace_folder_path, req.new_name)
+    if os.path.exists(app_path):
+        os.rename(app_path, new_path)
     return {"success": True}
 
 
