@@ -36,6 +36,7 @@ async def run_function_req(req: RunFunction, response: Response, background_task
             "state": json.dumps(req.payload.state),
             "context": json.dumps(req.payload.context),
             "job_id": job_id,
+            "type": "python",
         }
         # start a job
         background_tasks.add_task(run_container, args)

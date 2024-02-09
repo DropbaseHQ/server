@@ -17,3 +17,5 @@ RUN pip install -r requirements-custom.txt
 # install dropbase package
 ADD dropbase/. dropbase/.
 RUN pip install -e dropbase/.
+
+CMD tail -f /dev/null
