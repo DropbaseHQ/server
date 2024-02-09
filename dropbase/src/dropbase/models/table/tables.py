@@ -3,6 +3,7 @@ from typing import Annotated, Any, List, Literal, Optional
 from pydantic import BaseModel
 
 from dropbase.models.category import PropertyCategory
+from dropbase.models.table.pg_column import PgColumnDefinedProperty
 
 
 class Filter(BaseModel):
@@ -34,6 +35,9 @@ class TableDefinedProperty(BaseModel):
 
     # data fetcher
     fetcher: Annotated[Optional[str], PropertyCategory.default]
+
+    # column props
+    column_props: Annotated[Optional[PgColumnDefinedProperty], PropertyCategory.default]
 
     # settings
     height: Annotated[Optional[str], PropertyCategory.default]
