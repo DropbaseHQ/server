@@ -1,5 +1,5 @@
+from dropbase.src.dropbase.database.databases.mysql import MySqlDatabase
 from server.constants import WORKSPACE_SOURCES
-from server.controllers.databases.mysql import MySqlDatabase
 from server.controllers.databases.postgres import PostgresDatabase
 
 

@@ -10,8 +10,8 @@ import pytest_postgresql.factories
 from fastapi.testclient import TestClient
 from pytest_mysql import factories
 
+from dropbase.src.dropbase.database.databases.mysql import MySqlDatabase
 from server.auth.dependency import EnforceUserAppPermissions
-from server.controllers.databases.mysql import MySqlDatabase
 from server.controllers.databases.postgres import PostgresDatabase
 from server.controllers.properties import read_page_properties, update_properties
 from server.main import app
