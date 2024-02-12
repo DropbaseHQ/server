@@ -160,3 +160,152 @@ class SnowflakeDatabase(Database):
                     }
                 gpt_schema["schema"][schema][table_name] = [column["name"] for column in columns]
         return db_schema, gpt_schema
+
+    def _get_column_names(self, user_sql: str) -> list[str]:
+        if user_sql == "":
+            return []
+        user_sql = user_sql.strip("\n ;")
+        user_sql = f"SELECT * FROM ({user_sql}) AS q LIMIT 1"
+        with self.engine.connect().execution_options(autocommit=True) as conn:
+            col_names = list(conn.execute(text(user_sql)).keys())
+        return col_names
+
+    def _validate_smart_cols(self, smart_cols: dict[str, dict], user_sql: str) -> list[str]:  # noqa
+        # Will delete any columns that are invalid from smart_cols
+        primary_keys = self._get_primary_keys(smart_cols)
+        validated = []
+        for col_name, col_data in smart_cols.items():
+            col_data = SnowflakeColumnDefinedProperty(**col_data)
+            pk_name = primary_keys.get(self._get_table_path(col_data))
+            if pk_name:
+                validation_sql = _get_fast_sql(
+                    user_sql,
+                    col_name,
+                    col_data.schema_name,
+                    col_data.table_name,
+                    col_data.column_name,
+                    pk_name,
+                )
+            else:
+                validation_sql = _get_slow_sql(
+                    user_sql,
+                    col_name,
+                    col_data.schema_name,
+                    col_data.table_name,
+                    col_data.column_name,
+                )
+            try:
+                with self.engine.connect().execution_options(autocommit=True) as conn:
+                    # On SQL programming error, we know that the smart cols are invalid,
+                    # no need to catch them
+                    res = conn.execute(text(validation_sql)).all()
+                    if res:
+                        validated.append(col_name)
+                if not res[0][0]:
+                    raise "Invalid column"
+            except (SQLAlchemyError):
+                continue
+        return validated
+
+    def _get_primary_keys(self, smart_cols: dict[str, dict]) -> dict[str, dict]:
+        primary_keys = {}
+        for col_data in smart_cols.values():
+            col_data = SnowflakeColumnDefinedProperty(**col_data)
+            if col_data.primary_key:
+                primary_keys[self._get_table_path(col_data)] = col_data.column_name
+        return primary_keys
+
+    def _get_table_path(self, col_data: SnowflakeColumnDefinedProperty) -> str:
+        return f"{col_data.schema_name}.{col_data.table_name}"
+
+    def _update_value(self, edit: CellEdit):
+        try:
+            columns_name = edit.column_name
+            # NOTE: client sends columns as a list of column objects. we need to convert it to a dict
+            columns_dict = {col.column_name: col for col in edit.columns}
+            column = columns_dict[columns_name]
+
+            if edit.column_type == "DATE" or edit.column_type == "TIMESTAMP":
+                # new_value will be epoch time in ms, convert it to sec first then create datetime
+                edit.new_value = datetime.fromtimestamp(edit.new_value // 1000, timezone.utc)
+
+            values = {
+                "new_value": edit.new_value,
+                "old_value": edit.old_value,
+            }
+            prim_key_list = []
+            edit_keys = column.edit_keys
+            for key in edit_keys:
+                pk_col = columns_dict[key]
+                prim_key_list.append(f"{pk_col.column_name} = :{pk_col.column_name}")
+                values[pk_col.column_name] = edit.row[pk_col.name]
+            prim_key_str = " AND ".join(prim_key_list)
+
+            sql = f"""UPDATE "{column.schema_name}"."{column.table_name}"
+            SET {column.column_name} = :new_value
+            WHERE {prim_key_str}"""
+
+            # TODO: add check for prev column value
+            # AND {column.column_name} = :old_value
+
+            with self.engine.connect() as conn:
+                result = conn.execute(text(sql), values)
+                conn.commit()
+                if result.rowcount == 0:
+                    raise Exception("No rows were updated")
+            return f"Updated {edit.column_name} from {edit.old_value} to {edit.new_value}", True
+        except Exception as e:
+            return (
+                f"Failed to update {edit.column_name} from {edit.old_value} to {edit.new_value}. Error: {str(e)}",  # noqa
+                False,
+            )
+
+    def _run_query(self, sql: str, values: dict):
+        with self.engine.connect().execution_options(autocommit=True) as conn:
+            res = conn.execute(text(sql), values).all()
+        return res
+
+
+# helper functions
+
+
+def _get_fast_sql(
+    user_sql: str,
+    name: str,
+    schema_name: str,
+    table_name: str,
+    column_name: str,
+    table_pk_name: str,
+) -> str:
+    # Query that results in [(1,)] if valid, [(0,)] if false
+    # NOTE: validate name of the column in user query (name) against column name in table (column_name)
+    return f"""
+    WITH uq as ({user_sql})
+    SELECT min(
+        CASE WHEN
+            t.{column_name} = uq.{name} or
+            t.{column_name} is null and uq.{name} is null
+        THEN 1 ELSE 0 END
+    ) as equal
+    FROM {schema_name}.{table_name} t
+    INNER join uq on t.{table_pk_name} = uq.{table_pk_name}
+    LIMIT 500;
+    """
+
+
+def _get_slow_sql(
+    user_sql: str,
+    name: str,
+    schema_name: str,
+    table_name: str,
+    column_name: str,
+) -> str:
+    # Query that results in [(True,)] if valid, [(False,)] if false
+    # NOTE: validate name of the column in user query (name) against column name in table (column_name)
+    # NOTE: limit user query to 500 rows to improve performance
+    return f"""
+    WITH uq as ({user_sql})
+    SELECT CASE WHEN count(t.{column_name}) = 0 THEN true ELSE false END
+    FROM {schema_name}.{table_name} t
+    WHERE t.{column_name} not in (select uq.{name} from uq LIMIT 500);
+    """
