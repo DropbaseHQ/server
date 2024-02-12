@@ -94,141 +94,10 @@ def get_resource_id_from_req_body(resource_id_accessor: str, request: Request):
     return None
 
 
-def check_user_app_permissions(
-    request: Request,
-    access_cookies: AccessCookies = Depends(get_access_cookies),
-    Authorize: AuthJWT = Depends(),
-):
-    verify_response = verify_user_access_token(request, Authorize)
-    if verify_response:
-        user_id = verify_response
-    if user_id is None:
-        raise Exception("No user id provided")
-
-    app_name = request.path_params.get("app_name")
-    if app_name is None:
-        app_name = get_resource_id_from_req_body("app_name", request)
-    if app_name is None:
-        raise Exception("No app name provided")
-
-    workspace_folder_controller = WorkspaceFolderController(
-        r_path_to_workspace=os.path.join(cwd, "workspace")
-    )
-    app_id = workspace_folder_controller.get_app_id(app_name=app_name)
-    if app_id is None:
-        raise Exception(f"App {app_name} either does not exist or has no id.")
-
-    workspace_id = request.headers.get("workspace-id")
-    if not workspace_id:
-        raise Exception("No workspace id provided")
-
-    user_app_permissions = permissions_registry.get_user_app_permissions(
-        app_id=app_id, user_id=user_id
-    )
-
-    if not user_app_permissions:
-        logger.info("FETCHING PERMISSIONS FROM DROPBASE API")
-        response = requests.post(
-            DROPBASE_API_URL + "/user/check_permission",
-            headers={"Authorization": f"Bearer {access_cookies.access_token_cookie}"},
-            json={"workspace_id": workspace_id, "app_id": app_id},
-        )
-        if response.status_code != 200:
-            raise Exception("Invalid access token")
-        workspace_permissions = response.json().get("workspace_permissions")
-        app_permissions = response.json().get("app_permissions")
-
-        permissions_registry.save_workspace_permissions(
-            user_id=user_id,
-            workspace_id=workspace_id,
-            permissions=workspace_permissions,
-        )
-        permissions_registry.save_app_permissions(
-            app_id=app_id, user_id=user_id, permissions=app_permissions
-        )
-
-    user_app_permissions = permissions_registry.get_user_app_permissions(
-        app_id=app_id, user_id=user_id
-    )
-    return user_app_permissions
-
-
-def check_user_permissions(
-    request: Request,
-    access_cookies: AccessCookies = Depends(get_access_cookies),
-    Authorize: AuthJWT = Depends(),
-    resource: str = None,
-):
-    verify_response = verify_user_access_token(request, Authorize)
-    if verify_response:
-        user_id = verify_response
-    if user_id is None:
-        raise Exception("No user id provided")
-
-    workspace_id = request.headers.get("workspace-id")
-    if not workspace_id:
-        raise Exception("No workspace id provided")
-
-    if resource is None:
-        logger.warning("No resource provided. Workspace assumed.")
-        resource = "workspace"
-
-    if resource == "workspace":
-        user_permissions = permissions_registry.get_user_workspace_permissions(
-            user_id=user_id, workspace_id=workspace_id
-        )
-    elif resource == "app":
-        app_name = request.path_params.get("app_name")
-        if app_name is None:
-            app_name = get_resource_id_from_req_body("app_name", request)
-        if app_name is None:
-            raise Exception("No app name provided")
-
-        workspace_folder_controller = WorkspaceFolderController(
-            r_path_to_workspace=os.path.join(cwd, "workspace")
-        )
-        app_id = workspace_folder_controller.get_app_id(app_name=app_name)
-        if app_id is None:
-            raise Exception(f"App {app_name} either does not exist or has no id.")
-
-        user_permissions = permissions_registry.get_user_app_permissions(
-            app_id=app_id, user_id=user_id
-        )
-
-    if not user_permissions:
-        logger.info("FETCHING PERMISSIONS FROM DROPBASE API")
-        response = requests.post(
-            DROPBASE_API_URL + "/user/check_permission",
-            headers={"Authorization": f"Bearer {access_cookies.access_token_cookie}"},
-            json={"workspace_id": workspace_id, "app_id": app_id},
-        )
-        if response.status_code != 200:
-            raise Exception("Invalid access token")
-        workspace_permissions = response.json().get("workspace_permissions")
-        app_permissions = response.json().get("app_permissions")
-
-        permissions_registry.save_workspace_permissions(
-            user_id=user_id,
-            workspace_id=workspace_id,
-            permissions=workspace_permissions,
-        )
-        permissions_registry.save_app_permissions(
-            app_id=app_id, user_id=user_id, permissions=app_permissions
-        )
-
-    if resource == "workspace":
-        user_permissions = permissions_registry.get_user_workspace_permissions(
-            user_id=user_id, workspace_id=workspace_id
-        )
-    elif resource == "app":
-        user_permissions = permissions_registry.get_user_app_permissions(
-            app_id=app_id, user_id=user_id
-        )
-
-    return user_permissions
-
-
 class CheckUserPermissions:
+    APP = "app"
+    WORKSPACE = "workspace"
+
     def __init__(self, action=str, resource: str = None):
         self.action = action
         self.resource = resource
@@ -251,11 +120,11 @@ class CheckUserPermissions:
     def _get_resource_permissions(
         self, request: Request, user_id: str, workspace_id: str
     ):
-        if self.resource == "workspace":
+        if self.resource == self.WORKSPACE:
             return permissions_registry.get_user_workspace_permissions(
                 user_id=user_id, workspace_id=workspace_id
             )
-        elif self.resource == "app":
+        elif self.resource == self.APP:
             app_id = self._get_app_id(request)
             return permissions_registry.get_user_app_permissions(
                 user_id=user_id, app_id=app_id
@@ -295,11 +164,11 @@ class CheckUserPermissions:
         )
 
     def _get_permissions(self, request: Request, user_id: str, workspace_id: str):
-        if self.resource == "workspace":
+        if self.resource == self.WORKSPACE:
             user_permissions = permissions_registry.get_user_workspace_permissions(
                 user_id=user_id, workspace_id=workspace_id
             )
-        elif self.resource == "app":
+        elif self.resource == self.APP:
             app_id = self._get_app_id(request)
             user_permissions = permissions_registry.get_user_app_permissions(
                 user_id=user_id, app_id=app_id
@@ -331,11 +200,13 @@ class CheckUserPermissions:
             request=request, user_id=user_id, workspace_id=workspace_id
         )
 
+        app_id = self._get_app_id(request)
         if not user_permissions:
             self._load_fresh_permissions(
                 access_cookies=access_cookies,
                 workspace_id=workspace_id,
                 user_id=user_id,
+                app_id=app_id,
             )
         final_user_permissions = self._get_permissions(
             request=request, user_id=user_id, workspace_id=workspace_id
@@ -365,35 +236,7 @@ class CheckUserPermissions:
 
     def __eq__(self, other):
         """Overrides the default implementation"""
-        if isinstance(other, EnforceUserAppPermissions):
-            return self.action == other.action
-        return False
+        if isinstance(other, CheckUserPermissions):
 
-
-class EnforceUserAppPermissions:
-    def __init__(self, action: str, resource: str = None):
-        self.action = action
-        self.resource = resource
-
-    def __call__(
-        self, user_app_permissions: dict = Depends(check_user_app_permissions)
-    ):
-        if self.action not in user_app_permissions or not user_app_permissions.get(
-            self.action
-        ):
-            raise HTTPException(
-                status_code=403,
-                detail="You do not have permission to perform this action",
-            )
-
-        return True
-
-    def __hash__(self):
-        # FIXME find something uniq and repeatable
-        return 1234
-
-    def __eq__(self, other):
-        """Overrides the default implementation"""
-        if isinstance(other, EnforceUserAppPermissions):
-            return self.action == other.action
+            return self.action == other.action and self.resource == other.resource
         return False
