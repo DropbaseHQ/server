@@ -18,7 +18,7 @@ def run_container(env_vars: dict, docker_script: str = "inside_docker"):
 
     # Run the Docker container with the mount
     client.containers.run(
-        "dropbase/worker:0.0.1",
+        "dropbase/worker:0.0.2",
         command=f"python {docker_script}.py",
         mounts=[mount1],
         environment=env_vars,  # pass environment variables here
