@@ -2,8 +2,6 @@ import os
 
 import docker
 
-from server.constants import cwd
-
 
 def run_container(env_vars: dict, docker_script: str = "inside_docker"):
 
@@ -14,13 +12,13 @@ def run_container(env_vars: dict, docker_script: str = "inside_docker"):
     config = {key: os.getenv(key) for key in os.environ.keys()}
     env_vars = {**env_vars, **config}
 
-    # mount workspace directory
-    workspace_dir = cwd + "/workspace"
+    # get absolute path of the workspace directory from the environment variable
+    workspace_dir = os.getenv("HOST_WORKSPACE_PATH") + "/workspace"
     mount1 = docker.types.Mount(target="/app/workspace", source=workspace_dir, type="bind")
 
     # Run the Docker container with the mount
     client.containers.run(
-        "worker",
+        "dropbase/worker:0.0.1",
         command=f"python {docker_script}.py",
         mounts=[mount1],
         environment=env_vars,  # pass environment variables here
