@@ -12,7 +12,7 @@ from server.auth.permissions_registry import permissions_registry
 from server.constants import DROPBASE_API_URL
 from server.requests.dropbase_router import AccessCookies, get_access_cookies
 from server.requests.dropbase_router import DropbaseRouter, get_dropbase_router
-from server.controllers.workspace import AppFolderController
+from server.controllers.workspace import WorkspaceFolderController
 
 
 cwd = os.getcwd()
@@ -58,7 +58,7 @@ def verify_server_access_token(
         status_code=401,
         detail="Invalid access token",
         headers={
-            "set-cookie": f"{WORKER_SL_TOKEN_NAME}={worker_sl_token}; Max-Age={max_age}; Path=/; HttpOnly;"  # noqa
+            "set-cookie": f"{WORKER_SL_TOKEN_NAME}={worker_sl_token}; Max-Age={max_age}; Path=/;"  # noqa
         },
     )
 
@@ -122,10 +122,10 @@ def check_user_app_permissions(
     if app_name is None:
         raise Exception("No app name provided")
 
-    app_folder_controller = AppFolderController(
-        app_name=app_name, r_path_to_workspace=os.path.join(cwd, "workspace")
+    workspace_folder_controller = WorkspaceFolderController(
+        r_path_to_workspace=os.path.join(cwd, "workspace")
     )
-    app_id = app_folder_controller.get_app_id(app_name)
+    app_id = workspace_folder_controller.get_app_id(app_name=app_name)
     if app_id is None:
         raise Exception(f"App {app_name} either does not exist or has no id.")
 

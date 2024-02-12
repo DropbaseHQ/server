@@ -19,6 +19,52 @@ PAGE_PROPERTIES_TEMPLATE = {
 }
 
 
+class WorkspaceFolderController:
+    def __init__(self, r_path_to_workspace: str):
+        self.r_path_to_workspace = r_path_to_workspace
+
+    def write_workspace_properties(self, workspace_properties: dict):
+        workspace_properties_path = os.path.join(
+            self.r_path_to_workspace, "properties.json"
+        )
+        with open(workspace_properties_path, "w") as file:
+            json.dump(workspace_properties, file, indent=2)
+
+    def get_workspace_properties(self):
+        if os.path.exists(os.path.join(self.r_path_to_workspace, "properties.json")):
+            with open(
+                os.path.join(self.r_path_to_workspace, "properties.json"), "r"
+            ) as file:
+
+                props = json.load(file)
+                return props.get("apps", [])
+
+        return None
+
+    def get_app(self, app_id: str):
+        workspace_data = self.get_workspace_properties()
+        for app in workspace_data:
+            if app.get("id") == app_id:
+                return app
+        return None
+
+    def get_app_id(self, app_name: str):
+        workspace_data = self.get_workspace_properties()
+        app_id = None
+        for app in workspace_data:
+            if app.get("name") == app_name:
+                app_id = app.get("id", None)
+                return app_id
+
+    def update_app_info(self, app_id: str, app_info: dict):
+        workspace_data = self.get_workspace_properties()
+        for app in workspace_data:
+            if app.get("id") == app_id:
+                app.update(app_info)
+                break
+        self.write_workspace_properties({"apps": workspace_data})
+
+
 class AppFolderController:
     def __init__(
         self,
@@ -195,18 +241,12 @@ class AppFolderController:
         if router:
             router.page.create_page(page_properties=create_page_payload)
 
-    def rename_page(self, old_page_name: str, new_page_name: str):
-        # rename page folder
-        old_page_folder_path = os.path.join(self.app_folder_path, old_page_name)
-        new_page_folder_path = os.path.join(self.app_folder_path, new_page_name)
-        os.rename(old_page_folder_path, new_page_folder_path)
-
+    def rename_page(self, old_page_name: str, new_page_label: str):
         # rename page in properties.json
         app_properties_data = self._get_app_properties_data()
         for page in app_properties_data["pages"]:
             if page["name"] == old_page_name:
-                page["name"] = new_page_name
-                page["label"] = new_page_name
+                page["label"] = new_page_label
                 break
 
         self._write_app_properties_data(app_properties_data)
@@ -232,10 +272,7 @@ class AppFolderController:
 
     def get_pages(self):
         if os.path.exists(os.path.join(self.app_folder_path, "properties.json")):
-            pages = []
-            for page in self._get_app_properties_data()["pages"]:
-                pages.append({"name": page["name"]})
-            return pages
+            return self._get_app_properties_data().get("pages", [])
 
         page_names = get_subdirectories(self.app_folder_path)
         pages = [{"name": page} for page in page_names]

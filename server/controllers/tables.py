@@ -1,11 +1,11 @@
-from server.controllers.connect import connect_to_user_db
+from dropbase.database.connect import connect_to_user_db
+from dropbase.schemas.files import DataFile
+from dropbase.schemas.table import ConvertTableRequest
 from server.controllers.page import get_page_state_context
 from server.controllers.properties import read_page_properties, update_properties
 from server.controllers.run_sql import get_sql_from_file, render_sql
 from server.controllers.utils import get_table_data_fetcher
 from server.requests.dropbase_router import DropbaseRouter
-from server.schemas.files import DataFile
-from server.schemas.table import ConvertTableRequest
 
 
 def convert_sql_table(req: ConvertTableRequest, router: DropbaseRouter):
