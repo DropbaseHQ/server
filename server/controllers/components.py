@@ -1,4 +1,5 @@
 from dropbase.models.table import PgColumnDefinedProperty, PyColumnDefinedProperty, TableDefinedProperty
+from dropbase.models.table.snowflake_column import SnowflakeColumnDefinedProperty
 from dropbase.models.widget import (
     BooleanDefinedProperty,
     ButtonDefinedProperty,
@@ -12,6 +13,7 @@ component_property_types = {
     "table": TableDefinedProperty,
     "pycolumn": PyColumnDefinedProperty,
     "pgcolumn": PgColumnDefinedProperty,
+    "snowflakecolumn": SnowflakeColumnDefinedProperty,
     "widget": WidgetDefinedProperty,
     "input": InputDefinedProperty,
     "button": ButtonDefinedProperty,

@@ -22,6 +22,10 @@ from dropbase.models import (
     TextDefinedProperty,
     WidgetContextProperty,
 )
+from dropbase.models.table.snowflake_column import (
+    SnowflakeColumnContextProperty,
+    SnowflakeColumnDefinedProperty,
+)
 
 component_name_to_models = {
     "button": ButtonDefinedProperty,
@@ -31,6 +35,7 @@ component_name_to_models = {
     "text": TextDefinedProperty,
     "py": PyColumnDefinedProperty,
     "pg": PgColumnDefinedProperty,
+    "snowflake": SnowflakeColumnDefinedProperty,
 }
 
 
