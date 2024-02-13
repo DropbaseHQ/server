@@ -58,7 +58,7 @@ def verify_server_access_token(access_token, Authorize: AuthJWT = Depends()):
         status_code=401,
         detail="Invalid access token",
         headers={
-            "set-cookie": f"{WORKER_SL_TOKEN_NAME}={worker_sl_token}; Max-Age={max_age}; Path=/; HttpOnly;"  # noqa
+            "set-cookie": f"{WORKER_SL_TOKEN_NAME}={worker_sl_token}; Max-Age={max_age}; Path=/;"  # noqa
         },
     )
 

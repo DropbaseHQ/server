@@ -1,7 +1,10 @@
 from fastapi import APIRouter, Depends, HTTPException, Response
 
 from dropbase.schemas.page import CreatePageRequest, PageProperties, RenamePageRequest
-from server.auth.dependency import EnforceUserAppPermissions
+from server.auth.dependency import (
+    EnforceUserAppPermissions,
+    check_user_app_permissions as get_permissions,
+)
 from server.controllers.page import (
     create_page,
     delete_page,
@@ -26,11 +29,12 @@ def get_state_context_req(
     app_name: str,
     page_name: str,
     response: Response,
+    permissions: dict = Depends(get_permissions),
 ):
     try:
         state_context = get_page_state_context(app_name, page_name)
         state_context["properties"] = read_page_properties(app_name, page_name)
-        return state_context
+        return {"state_context": state_context, "permissions": permissions}
     except Exception as e:
         response.status_code = 400
         return {"message": str(e)}
