@@ -11,7 +11,8 @@ class PgColumnContextProperty(ComponentDisplayProperties):
 
 class PgColumnDefinedProperty(BaseModel):
     name: str
-    column_type: Optional[str]
+    column_type: Literal["postgres"] = "postgres"
+    data_type: Optional[str]
     display_type: Optional[Literal["text", "integer", "float", "boolean", "datetime", "date", "time"]]
 
     schema_name: str = None

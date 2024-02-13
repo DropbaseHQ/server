@@ -27,7 +27,7 @@ def run_python_data_fetcher(app_name: str, page_name: str, file: dict, state: di
     function_name = get_function_by_name(app_name, page_name, file.get("name"))
     # call function
     df = function_name(**args)
-    return convert_df_to_resp_obj(df)
+    return convert_df_to_resp_obj(df, "python")
 
 
 # for ui functions
