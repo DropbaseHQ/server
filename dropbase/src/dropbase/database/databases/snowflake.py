@@ -241,9 +241,10 @@ class SnowflakeDatabase(Database):
                 values[pk_col.column_name] = edit.row[pk_col.name]
             prim_key_str = " AND ".join(prim_key_list)
 
-            sql = f"""UPDATE "{column.schema_name}"."{column.table_name}"
+            sql = f"""UPDATE {column.schema_name}.{column.table_name}
             SET {column.column_name} = :new_value
             WHERE {prim_key_str}"""
+            # Snowflake becomes case sensitive when quoted (does not auto-convert to capital)
 
             # TODO: add check for prev column value
             # AND {column.column_name} = :old_value
