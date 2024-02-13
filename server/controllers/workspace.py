@@ -121,11 +121,11 @@ class AppFolderController:
         self._write_app_properties_data(app_properties_data)
         return page_object
 
-    def _add_app_to_workspace_properties(self, app_name: str):
+    def _add_app_to_workspace_properties(self, app_name: str, app_label: str = None):
         workspace_properties = self._get_workspace_properties()
         app_object = {
             "name": app_name,
-            "label": app_name,
+            "label": app_label if app_label else app_name,
             "id": str(uuid.uuid4()),
         }
         if "apps" in workspace_properties:
@@ -137,14 +137,16 @@ class AppFolderController:
         return app_object
 
     def _create_default_workspace_files(
-        self, router: DropbaseRouter, workspace_id: str = None
+        self, router: DropbaseRouter, workspace_id: str = None, app_label: str = None
     ) -> str | None:
         try:
             # Create new app folder
             create_folder(path=self.app_folder_path)
             create_init_file(path=self.app_folder_path)
 
-            app_object = self._add_app_to_workspace_properties(self.app_name)
+            app_object = self._add_app_to_workspace_properties(
+                app_name=self.app_name, app_label=app_label
+            )
 
             new_app_properties = self._get_app_properties()
             create_file(
@@ -285,9 +287,16 @@ class AppFolderController:
         pages = [{"name": page} for page in page_names]
         return pages
 
-    def create_app(self, router: DropbaseRouter = None, workspace_id: str = None):
+    def create_app(
+        self,
+        app_label: str = None,
+        router: DropbaseRouter = None,
+        workspace_id: str = None,
+    ):
         self.create_workspace_properties()
-        self._create_default_workspace_files(router=router, workspace_id=workspace_id)
+        self._create_default_workspace_files(
+            router=router, workspace_id=workspace_id, app_label=app_label
+        )
 
         return {"success": True}
 
