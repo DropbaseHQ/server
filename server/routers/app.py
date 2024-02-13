@@ -40,7 +40,9 @@ def create_app_req(
         app_folder_controller = AppFolderController(
             app_name=req.app_name, r_path_to_workspace=r_path_to_workspace
         )
-        return app_folder_controller.create_app(router=router)
+        return app_folder_controller.create_app(
+            workspace_id=req.workspace_id, router=router, app_label=req.app_label
+        )
     except Exception as e:
         response.status_code = 500
         return {"error": str(e)}
@@ -50,7 +52,9 @@ def create_app_req(
 def rename_app_req(req: RenameAppRequest, response: Response):
     # assert page does not exist
     path_to_workspace = os.path.join(os.path.dirname(__file__), "../../workspace")
-    workspace_folder_controller = WorkspaceFolderController(r_path_to_workspace=path_to_workspace)
+    workspace_folder_controller = WorkspaceFolderController(
+        r_path_to_workspace=path_to_workspace
+    )
 
     target_app = workspace_folder_controller.get_app(app_id=req.app_id)
     if target_app is None:
