@@ -9,8 +9,7 @@ from fastapi_jwt_auth import AuthJWT, exceptions
 from pydantic import BaseModel
 
 from server.auth.permissions_registry import permissions_registry
-from server.constants import DROPBASE_API_URL
-from server.requests.dropbase_router import AccessCookies, get_access_cookies
+from server.requests.dropbase_router import get_server_access_header
 from server.requests.dropbase_router import DropbaseRouter, get_dropbase_router
 from server.controllers.workspace import WorkspaceFolderController
 
@@ -33,16 +32,6 @@ def get_config():
     return Settings()
 
 
-def verify_server_token(cookies: AccessCookies):
-    response = requests.post(
-        DROPBASE_API_URL + "/worker/verify_token",
-        cookies={"access_token_cookie": cookies.access_token_cookie},
-    )
-    if response.status_code != 200:
-        raise Exception("Invalid server token")
-    return response
-
-
 def verify_server_access_token(
     access_token, Authorize: AuthJWT, router: DropbaseRouter
 ):
@@ -63,14 +52,14 @@ def verify_server_access_token(
     )
 
 
-def verify_user_access_token(
+def verify_worker_access_token(
     request: Request, Authorize: AuthJWT, router: DropbaseRouter
 ):
-    server_access_cookies = get_access_cookies(request)
+    access_token = get_server_access_header(request)
 
     if not request.cookies.get("worker_sl_token"):
         verify_server_access_token(
-            access_token=server_access_cookies.access_token_cookie,
+            access_token=access_token,
             Authorize=Authorize,
             router=router,
         )
@@ -80,19 +69,17 @@ def verify_user_access_token(
             Authorize._verify_and_get_jwt_in_cookies("access", Authorize._request)
             worker_subject = Authorize.get_jwt_subject()
 
-            server_claims = jwt.decode(
-                server_access_cookies.access_token_cookie, verify=False
-            )
+            server_claims = jwt.decode(access_token, verify=False)
 
             if worker_subject != server_claims.get("user_id"):
                 verify_server_access_token(
-                    access_token=server_access_cookies.access_token_cookie,
+                    access_token=access_token,
                     Authorize=Authorize,
                     router=router,
                 )
             return worker_subject
         except exceptions.JWTDecodeError:
-            raise Exception("Invalid access token")
+            raise Exception("Worker token was found, but not able to be validated")
 
 
 def get_resource_id_from_req_body(resource_id_accessor: str, request: Request):
@@ -142,7 +129,7 @@ class CheckUserPermissions:
 
     def _load_fresh_permissions(
         self,
-        access_cookies: AccessCookies,
+        server_access_token: str,
         workspace_id: str,
         user_id: str,
         router: DropbaseRouter,
@@ -154,7 +141,7 @@ class CheckUserPermissions:
             payload["app_id"] = app_id
 
         response = router.auth.check_permissions(
-            app_id=app_id, access_token=access_cookies.access_token_cookie
+            app_id=app_id, access_token=server_access_token
         )
         if response.status_code == 401:
             dropbase_token = router.session.headers.get("dropbase-token")
@@ -201,11 +188,11 @@ class CheckUserPermissions:
     def __call__(
         self,
         request: Request,
-        access_cookies: AccessCookies = Depends(get_access_cookies),
+        server_access_token=Depends(get_server_access_header),
         Authorize: AuthJWT = Depends(),
         router: DropbaseRouter = Depends(get_dropbase_router),
     ):
-        verify_response = verify_user_access_token(
+        verify_response = verify_worker_access_token(
             request=request, Authorize=Authorize, router=router
         )
         if verify_response:
@@ -228,7 +215,7 @@ class CheckUserPermissions:
         app_id = self._get_app_id(request)
         if not user_permissions:
             self._load_fresh_permissions(
-                access_cookies=access_cookies,
+                server_access_token=server_access_token,
                 workspace_id=workspace_id,
                 user_id=user_id,
                 app_id=app_id,
