@@ -1,19 +1,13 @@
-from typing import Literal, Optional
+from typing import Literal
 
-from pydantic import BaseModel
-
-from dropbase.models.common import ComponentDisplayProperties
+from dropbase.models.common import BaseColumnDefinedProperty, ComponentDisplayProperties
 
 
 class PgColumnContextProperty(ComponentDisplayProperties):
     pass
 
 
-class PgColumnDefinedProperty(BaseModel):
-    name: str
-    column_type: Literal["postgres"] = "postgres"
-    data_type: Optional[str]
-    display_type: Optional[Literal["text", "integer", "float", "boolean", "datetime", "date", "time"]]
+class PgColumnDefinedProperty(BaseColumnDefinedProperty):
 
     schema_name: str = None
     table_name: str = None
@@ -26,6 +20,9 @@ class PgColumnDefinedProperty(BaseModel):
     unique: bool = False
 
     edit_keys: list = []
+
+    # internal
+    column_type: Literal["postgres"] = "postgres"
 
     # visibility
     hidden: bool = False

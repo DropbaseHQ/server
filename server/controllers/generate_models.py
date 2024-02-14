@@ -4,7 +4,7 @@ from pathlib import Path
 from datamodel_code_generator import generate
 from pydantic import BaseModel, Field, create_model
 
-from dropbase.models import (  # BooleanDefinedProperty,; ButtonDefinedProperty,; InputDefinedProperty,; PgColumnDefinedProperty,; PyColumnDefinedProperty,; SelectDefinedProperty,; TextDefinedProperty,; ButtonColumnDefinedProperty,
+from dropbase.models import (
     BooleanContextProperty,
     ButtonColumnContextProperty,
     ButtonContextProperty,
@@ -162,7 +162,7 @@ def get_widget_context(widgets_props):
 column_context_model_mapper = {
     "postgres": PgColumnContextProperty,
     "python": PyColumnContextProperty,
-    "button": ButtonColumnContextProperty,
+    "button_column": ButtonColumnContextProperty,
 }
 
 
