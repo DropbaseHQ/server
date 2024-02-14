@@ -15,14 +15,14 @@ class CurrencyType(BaseModel):
     precision: int
 
 
-class DatetimeType(BaseModel):
-    format: str
-    timezone: str
+class SelectType(BaseModel):
+    options: list
+    multiple: bool
 
 
 class DisplayTypeConfigurations(BaseModel):
     currency: Optional[CurrencyType]
-    datetime: Optional[DatetimeType]
+    select: Optional[SelectType]
 
 
 class DisplayType(str, Enum):
@@ -34,19 +34,20 @@ class DisplayType(str, Enum):
     date = "date"
     time = "time"
     currency = "currency"
+    select = "select"
 
 
 class BaseColumnDefinedProperty(BaseModel):
     name: str
     data_type: Optional[str]
     display_type: Optional[DisplayType]
-    configurations: Optional[Union[CurrencyType, DatetimeType]]
+    configurations: Optional[Union[CurrencyType, SelectType]]
 
     @root_validator
     def check_configurations(cls, values):
         display_type, configurations = values.get("display_type"), values.get("configurations")
         if display_type == DisplayType.currency and not isinstance(configurations, CurrencyType):
             raise ValueError("Configurations for 'currency' must be a CurrencyType instance")
-        if display_type == DisplayType.datetime and not isinstance(configurations, DatetimeType):
+        if display_type == DisplayType.select and not isinstance(configurations, SelectType):
             raise ValueError("configurations for 'datetime' must be a DatetimeType instance")
         return values
