@@ -56,7 +56,7 @@ def verify_server_access_token(
     max_age = 60 * 5
     raise HTTPException(
         status_code=401,
-        detail="Invalid access token",
+        detail="Issuing new worker token. Please try again.",
         headers={
             "set-cookie": f"{WORKER_SL_TOKEN_NAME}={worker_sl_token}; Max-Age={max_age}; Path=/;"  # noqa
         },
@@ -102,84 +102,143 @@ def get_resource_id_from_req_body(resource_id_accessor: str, request: Request):
     return None
 
 
-def check_user_app_permissions(
-    request: Request,
-    access_cookies: AccessCookies = Depends(get_access_cookies),
-    Authorize: AuthJWT = Depends(),
-    router: DropbaseRouter = Depends(get_dropbase_router),
-):
-    verify_response = verify_user_access_token(
-        request=request, Authorize=Authorize, router=router
-    )
-    if verify_response:
-        user_id = verify_response
-    if user_id is None:
-        raise Exception("No user id provided")
+class CheckUserPermissions:
+    APP = "app"
+    WORKSPACE = "workspace"
 
-    app_name = request.path_params.get("app_name")
-    if app_name is None:
-        app_name = get_resource_id_from_req_body("app_name", request)
-    if app_name is None:
-        raise Exception("No app name provided")
+    def __init__(self, action=str, resource: str = None):
+        self.action = action
+        self.resource = resource
 
-    workspace_folder_controller = WorkspaceFolderController(
-        r_path_to_workspace=os.path.join(cwd, "workspace")
-    )
-    app_id = workspace_folder_controller.get_app_id(app_name=app_name)
-    if app_id is None:
-        raise Exception(f"App {app_name} either does not exist or has no id.")
+    def _get_app_id(self, request: Request):
+        app_name = request.path_params.get("app_name")
+        if app_name is None:
+            app_name = get_resource_id_from_req_body("app_name", request)
+        if app_name is None:
+            raise Exception("No app name provided")
 
-    workspace_id = request.headers.get("workspace-id")
-    if not workspace_id:
-        raise Exception("No workspace id provided")
-
-    user_app_permissions = permissions_registry.get_user_app_permissions(
-        app_id=app_id, user_id=user_id
-    )
-
-    if not user_app_permissions:
-        logger.info("FETCHING PERMISSIONS FROM DROPBASE API")
-        response: requests.Response = router.auth.check_permissions(
-            app_id=app_id,
-            access_token=access_cookies.access_token_cookie,
+        workspace_folder_controller = WorkspaceFolderController(
+            r_path_to_workspace=os.path.join(cwd, "workspace")
         )
+        app_id = workspace_folder_controller.get_app_id(app_name=app_name)
+        if app_id is None:
+            raise Exception(f"App {app_name} either does not exist or has no id.")
+        return app_id
 
-        if response.status_code == 401:
-            logger.warning(
-                "Dropbase Token: ", router.session.headers.get("dropbase-token")
+    def _get_resource_permissions(
+        self, request: Request, user_id: str, workspace_id: str
+    ):
+        if self.resource == self.WORKSPACE:
+            return permissions_registry.get_user_workspace_permissions(
+                user_id=user_id, workspace_id=workspace_id
             )
-            logger.warning("Request headers", response.request.headers)
-            logger.warning("Invalid access token", response.text)
-            raise Exception("Invalid access token")
+        elif self.resource == self.APP:
+            app_id = self._get_app_id(request)
+            return permissions_registry.get_user_app_permissions(
+                user_id=user_id, app_id=app_id
+            )
+        else:
+            raise Exception("No resource provided")
+
+    def _load_fresh_permissions(
+        self,
+        access_cookies: AccessCookies,
+        workspace_id: str,
+        user_id: str,
+        router: DropbaseRouter,
+        app_id: str = None,
+    ):
+        logger.info("FETCHING PERMISSIONS FROM DROPBASE API")
+        payload = {"workspace_id": workspace_id}
+        if app_id:
+            payload["app_id"] = app_id
+
+        response = router.auth.check_permissions(
+            app_id=app_id, access_token=access_cookies.access_token_cookie
+        )
+        if response.status_code == 401:
+            dropbase_token = router.session.headers.get("dropbase-token")
+            logger.warning(f"Dropbase Token: {dropbase_token}")
+            headers = response.request.headers
+            logger.warning(f"Request headers: {headers}")
+
+            raise Exception(f"Details: {response.json()}")
 
         if response.status_code != 200:
             logger.warning(
                 "Dropbase Token: ", router.session.headers.get("dropbase-token")
             )
-            logger.warning("Request headers", response.request.headers)
-            logger.warning(
-                f"Could not fetch permissions from dropbase API: {response.text}"
-            )
-            raise Exception("Could not fetch permissions from dropbase API")
+            headers = response.request.headers
+            logger.warning(f"Request headers: {headers}")
 
-        permissions_registry.save_permissions(
-            app_id=app_id, user_id=user_id, permissions=response.json()
+            raise Exception("Unable to fetch permissions from Dropbase API")
+
+        workspace_permissions = response.json().get("workspace_permissions")
+        app_permissions = response.json().get("app_permissions")
+
+        permissions_registry.save_workspace_permissions(
+            user_id=user_id,
+            workspace_id=workspace_id,
+            permissions=workspace_permissions,
+        )
+        permissions_registry.save_app_permissions(
+            app_id=app_id, user_id=user_id, permissions=app_permissions
         )
 
-    user_app_permissions = permissions_registry.get_user_app_permissions(
-        app_id=app_id, user_id=user_id
-    )
-    return user_app_permissions
+    def _get_permissions(self, request: Request, user_id: str, workspace_id: str):
+        if self.resource == self.WORKSPACE:
+            user_permissions = permissions_registry.get_user_workspace_permissions(
+                user_id=user_id, workspace_id=workspace_id
+            )
+        elif self.resource == self.APP:
+            app_id = self._get_app_id(request)
+            user_permissions = permissions_registry.get_user_app_permissions(
+                user_id=user_id, app_id=app_id
+            )
 
-
-class EnforceUserAppPermissions:
-    def __init__(self, action: str):
-        self.action = action
+        return user_permissions
 
     def __call__(
-        self, user_app_permissions: dict = Depends(check_user_app_permissions)
+        self,
+        request: Request,
+        access_cookies: AccessCookies = Depends(get_access_cookies),
+        Authorize: AuthJWT = Depends(),
+        router: DropbaseRouter = Depends(get_dropbase_router),
     ):
-        if self.action not in user_app_permissions or not user_app_permissions.get(
+        verify_response = verify_user_access_token(
+            request=request, Authorize=Authorize, router=router
+        )
+        if verify_response:
+            user_id = verify_response
+        if user_id is None:
+            raise Exception("No user id provided")
+
+        workspace_id = request.headers.get("workspace-id")
+        if not workspace_id:
+            raise Exception("No workspace id provided")
+
+        if self.resource is None:
+            logger.warning("No resource provided. Workspace assumed.")
+            self.resource = "workspace"
+
+        user_permissions = self._get_resource_permissions(
+            request=request, user_id=user_id, workspace_id=workspace_id
+        )
+
+        app_id = self._get_app_id(request)
+        if not user_permissions:
+            self._load_fresh_permissions(
+                access_cookies=access_cookies,
+                workspace_id=workspace_id,
+                user_id=user_id,
+                app_id=app_id,
+                router=router,
+            )
+        final_user_permissions = self._get_permissions(
+            request=request, user_id=user_id, workspace_id=workspace_id
+        )
+
+        if self.action not in final_user_permissions or not final_user_permissions.get(
             self.action
         ):
             raise HTTPException(
@@ -187,14 +246,23 @@ class EnforceUserAppPermissions:
                 detail="You do not have permission to perform this action",
             )
 
-        return True
+        return final_user_permissions
 
+    # The below two methods are used for testing purposes
+    # Since this class is a dependency, we need to override it when testing
+    # However, since it is not a function, but a class with which we pass arguments to,
+    # it will not work with the dependency_overrides parameter in the test client.
+    # The dependency needs to be hashable to be recognized properly by dependency_overrides.
+    # This is why we have to override the __hash__ and __eq__ methods.
+
+    # Solution from: https://github.com/tiangolo/fastapi/discussions/6834
     def __hash__(self):
         # FIXME find something uniq and repeatable
         return 1234
 
     def __eq__(self, other):
         """Overrides the default implementation"""
-        if isinstance(other, EnforceUserAppPermissions):
-            return self.action == other.action
+        if isinstance(other, CheckUserPermissions):
+
+            return self.action == other.action and self.resource == other.resource
         return False

@@ -1,3 +1,6 @@
+import logging
+import json
+from requests import Response
 from typing import Optional
 
 from fastapi import Request
@@ -12,6 +15,8 @@ from .page import PageRouter
 from .auth import AuthRouter
 
 base_url = DROPBASE_API_URL + "/worker/"
+
+logger = logging.getLogger(__name__)
 
 
 class DropbaseRouter:
@@ -33,6 +38,8 @@ class DropbaseRouter:
                 "refresh_token_cookie"
             ]
 
+        self.session.hooks["response"].append(self._response_interceptor)
+
         if not DROPBASE_TOKEN:
             raise Exception("No dropbase token found!")
 
@@ -45,6 +52,12 @@ class DropbaseRouter:
         self.page = PageRouter(session=self.session)
         self.auth = AuthRouter(session=self.session)
 
+    def _response_interceptor(self, response: Response, *args, **kwargs):
+        if response.status_code == 401:
+            logger.warning(
+                f"Unable to authorize with server. Details: {response.json()}"
+            )
+
 
 class AccessCookies(BaseModel):
     access_token_cookie: str
@@ -55,10 +68,8 @@ def get_access_cookies(request: Request):
     access_token_header = request.cookies.get("access_token_cookie")
     if not access_token_header and "access-token" in request.headers:
         access_token_header = request.headers.get("access-token")
-    # refresh_token_header = request.cookies.get("refresh_token_cookie")
     return AccessCookies(
         access_token_cookie=access_token_header,
-        # refresh_token_cookie=refresh_token_header,
     )
 
 
