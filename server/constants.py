@@ -19,4 +19,4 @@ WORKSPACE_SOURCES = get_sources()
 
 WORKER_VERSION = "0.2.3"
 WORKER_IMAGE_VERSION = "0.0.2"
-DOCKER_ENV = False
+REDIS_HOST = os.environ.get("REDIS_HOST") or "host.docker.internal"

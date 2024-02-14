@@ -1,9 +1,5 @@
 #!/bin/bash
 
-# set -o allexport
-# source .env
-# set +o allexport
-
 if [[ $1 == 's' ]]; then
     # docker build -f Dockerfile-worker -t worker .
     # pip install -U -e dropbase/.
@@ -13,7 +9,6 @@ elif [[ $1 == 'l' ]]; then
 else
     echo "Invalid argument, please use 's' for server and 'l' for lsp."
 fi
-
 
 # unset DROPBASE_TOKEN DROPBASE_API_URL STRIPE_KEY AWS_ACCESS_KEY AWS_SECRET_KEY HOST_WORKSPACE_PATH \
 # TASK_TIMEOUT PEOPLEDATALABS_KEY pypy_username pypi_token \
