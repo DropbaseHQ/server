@@ -1,14 +1,17 @@
 from sqlalchemy.engine import URL, reflection
 from sqlalchemy.exc import SQLAlchemyError
-from sqlalchemy.inspection import inspect
 from sqlalchemy.sql import text
 
-from server.controllers.database import Database
-from server.models.table.mysql_column import MySqlColumnDefinedProperty
-from server.schemas.edit_cell import CellEdit
+from dropbase.database.database import Database
+from dropbase.models.table.mysql_column import MySqlColumnDefinedProperty
+from dropbase.schemas.edit_cell import CellEdit
 
 
 class MySqlDatabase(Database):
+    def __init__(self, creds: dict, schema: str = "public"):
+        super().__init__(creds)
+        self.db_type = "mysql"
+
     def _get_connection_url(self, creds: dict):
         return URL.create(**creds)
 

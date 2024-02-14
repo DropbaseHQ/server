@@ -1,7 +1,5 @@
 import shutil
-import subprocess
 import tempfile
-import time
 
 import psycopg2
 import pymysql
@@ -10,10 +8,11 @@ import pytest_postgresql.factories
 from fastapi.testclient import TestClient
 from pytest_mysql import factories
 
-from dropbase.src.dropbase.database.databases.mysql import MySqlDatabase
+from dropbase.database.databases.mysql import MySqlDatabase
+from dropbase.database.databases.postgres import PostgresDatabase
 from server.auth.dependency import EnforceUserAppPermissions
-from server.controllers.databases.postgres import PostgresDatabase
 from server.controllers.properties import read_page_properties, update_properties
+from server.controllers.workspace import WorkspaceFolderController
 from server.main import app
 from server.requests.dropbase_router import get_dropbase_router
 from server.tests.constants import (
@@ -62,7 +61,7 @@ mysql_proc = factories.mysql_proc(port=3307)
 mysql = factories.mysql("mysql_proc")
 
 
-@pytest.fixture(autouse=True)
+@pytest.fixture(scope="module", autouse=True)
 def test_workspace():
     # used by all tests, so autouse=True
     with tempfile.TemporaryDirectory() as workspace_backup_path:
@@ -184,3 +183,16 @@ def pytest_sessionfinish():
     import shutil
 
     shutil.rmtree(WORKSPACE_PATH.joinpath("dropbase_test_app"))
+    # Workspace properties is still written to the non test workspace
+    # Its easier to clean it up here
+    workspace_folder_controller = WorkspaceFolderController(r_path_to_workspace=WORKSPACE_PATH)
+    apps = workspace_folder_controller.get_workspace_properties()
+    for app in apps:  # noqa
+        if app["name"] == TEST_APP_NAME:
+            apps.remove(app)
+
+    workspace_folder_controller.write_workspace_properties(
+        {
+            "apps": apps,
+        }
+    )

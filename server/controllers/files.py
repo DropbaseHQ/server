@@ -4,10 +4,11 @@ import re
 
 from fastapi import HTTPException
 
-from server.constants import FILE_NAME_REGEX, cwd
+from dropbase.constants import FILE_NAME_REGEX
+from dropbase.schemas.files import CreateFile, DeleteFile, RenameFile, UpdateFile
+from server.constants import cwd
 from server.controllers.properties import read_page_properties, update_properties
 from server.controllers.utils import get_depend_table_names, rename_function_in_file
-from server.schemas.files import CreateFile, DeleteFile, RenameFile, UpdateFile
 
 
 def create_file(req: CreateFile):
@@ -78,7 +79,8 @@ def rename_file(req: RenameFile):
     if os.path.exists(file_path):
         os.rename(file_path, new_path)
 
-    rename_function_in_file(file_path=new_path, old_name=req.old_name, new_name=req.new_name)
+    if file_ext == ".py":
+        rename_function_in_file(file_path=new_path, old_name=req.old_name, new_name=req.new_name)
 
     # update properties.json
     properties = read_page_properties(req.app_name, req.page_name)

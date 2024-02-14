@@ -1,6 +1,6 @@
 from fastapi import APIRouter
 
-from server.controllers.sources import get_sources
+from dropbase.database.sources import get_sources
 
 router = APIRouter(
     prefix="/sources",

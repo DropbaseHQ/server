@@ -1,6 +1,9 @@
 import os
 import shutil
 
+import pytest
+
+from server.controllers.workspace import WorkspaceFolderController
 from server.tests.constants import TEST_APP_NAME, WORKSPACE_PATH
 
 NEW_APP_NAME = "test_create_app"
@@ -119,6 +122,9 @@ def test_create_app_req_error_illegal_name_url_path(test_client, dropbase_router
     )
 
 
+@pytest.mark.skip(
+    reason="Rename endpoint no longer renames app_name, only label. Label is not used in the file system."
+)
 def test_rename_app_req_error_duplicate_names(test_client, dropbase_router_mocker):
     # Arrange
     data = {"app_name": NEW_APP_NAME, "workspace_id": TEST_WORKSPACE_ID}
@@ -145,19 +151,27 @@ def test_rename_app_req_error_duplicate_names(test_client, dropbase_router_mocke
 def test_rename_app_req(test_client):
     try:
         # Arrange
-        data = {
-            "old_name": TEST_APP_NAME,
-            "new_name": NEW_APP_NAME,
-            "app_id": "23ea28dc-4e2d-4d48-b15e-09b51f1a1c74",
-        }
+        workspace_folder_controller = WorkspaceFolderController(r_path_to_workspace=WORKSPACE_PATH)
+        app_id = workspace_folder_controller.get_app_id(app_name=TEST_APP_NAME)
+        data = {"app_id": app_id, "new_label": NEW_APP_NAME}
 
         # Act
         res = test_client.put("/app/", json=data)
 
+        apps = workspace_folder_controller.get_workspace_properties()
+
+        app_still_has_old_name = False
+        app_has_new_label = False
+        for app in apps:
+            if app.get("id") == app_id:
+                app_still_has_old_name = app.get("name") == TEST_APP_NAME
+                app_has_new_label = app.get("label") == NEW_APP_NAME
+
         # Assert
         assert res.status_code == 200
-        assert not check_directory_structure(f"workspace/{TEST_APP_NAME}/page1")
-        assert check_directory_structure(f"workspace/{NEW_APP_NAME}/page1")
+        assert check_directory_structure(f"workspace/{TEST_APP_NAME}/page1")
+        assert app_still_has_old_name
+        assert app_has_new_label
     finally:
         shutil.rmtree(WORKSPACE_PATH.joinpath(NEW_APP_NAME), ignore_errors=True)
 
