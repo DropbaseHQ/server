@@ -28,7 +28,7 @@ def get_state_context_req(
     app_name: str,
     page_name: str,
     response: Response,
-    permissions: dict = Depends(get_permissions),
+    permissions: dict = Depends(CheckUserPermissions(action="use", resource="app")),
 ):
     try:
         state_context = get_page_state_context(app_name, page_name)

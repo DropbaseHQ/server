@@ -145,6 +145,7 @@ class CheckUserPermissions:
         access_cookies: AccessCookies,
         workspace_id: str,
         user_id: str,
+        router: DropbaseRouter,
         app_id: str = None,
     ):
         logger.info("FETCHING PERMISSIONS FROM DROPBASE API")
@@ -152,10 +153,8 @@ class CheckUserPermissions:
         if app_id:
             payload["app_id"] = app_id
 
-        response = requests.post(
-            DROPBASE_API_URL + "/user/check_permission",
-            headers={"Authorization": f"Bearer {access_cookies.access_token_cookie}"},
-            json=payload,
+        response = router.auth.check_permissions(
+            app_id=app_id, access_token=access_cookies.access_token_cookie
         )
 
         if response.status_code == 401:
@@ -165,6 +164,15 @@ class CheckUserPermissions:
             logger.warning("Request headers", response.request.headers)
             logger.warning("Invalid access token", response.text)
             raise Exception("Invalid access token")
+
+        if response.status_code != 200:
+            logger.warning(
+                "Dropbase Token: ", router.session.headers.get("dropbase-token")
+            )
+            logger.warning("Request headers", response.request.headers)
+            logger.warning("Invalid access token", response.text)
+            raise Exception("Unable to fetch permissions from Dropbase API")
+
         workspace_permissions = response.json().get("workspace_permissions")
         app_permissions = response.json().get("app_permissions")
 
@@ -195,8 +203,11 @@ class CheckUserPermissions:
         request: Request,
         access_cookies: AccessCookies = Depends(get_access_cookies),
         Authorize: AuthJWT = Depends(),
+        router: DropbaseRouter = Depends(get_dropbase_router),
     ):
-        verify_response = verify_user_access_token(request, Authorize)
+        verify_response = verify_user_access_token(
+            request=request, Authorize=Authorize, router=router
+        )
         if verify_response:
             user_id = verify_response
         if user_id is None:
@@ -221,6 +232,7 @@ class CheckUserPermissions:
                 workspace_id=workspace_id,
                 user_id=user_id,
                 app_id=app_id,
+                router=router,
             )
         final_user_permissions = self._get_permissions(
             request=request, user_id=user_id, workspace_id=workspace_id
