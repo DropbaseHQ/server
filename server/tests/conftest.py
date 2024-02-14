@@ -4,9 +4,12 @@ import tempfile
 import psycopg2
 import pytest
 import pytest_postgresql.factories
+import snowflake.connector
 from fastapi.testclient import TestClient
+from snowflake.connector import DictCursor
 
 from dropbase.database.databases.postgres import PostgresDatabase
+from dropbase.database.databases.snowflake import SnowflakeDatabase
 from server.auth.dependency import EnforceUserAppPermissions
 from server.controllers.properties import read_page_properties, update_properties
 from server.controllers.workspace import WorkspaceFolderController
@@ -14,6 +17,7 @@ from server.main import app
 from server.requests.dropbase_router import get_dropbase_router
 from server.tests.constants import (
     DEMO_INIT_SQL_PATH,
+    SNOWFLAKE_TEST_CONNECTION_PARAMS,
     TEMPDIR_PATH,
     TEST_APP_NAME,
     TEST_PAGE_NAME,
@@ -24,10 +28,20 @@ from server.tests.templates import get_test_data_fetcher, get_test_ui
 
 
 # Setup pytest-postgresql db with test data
-def load_test_db(**kwargs):
-    conn = psycopg2.connect(**kwargs)
-    with open(DEMO_INIT_SQL_PATH, "r") as rf:
-        init_sql = rf.read()
+def load_test_db(db_type="postgres", **kwargs):
+    if db_type == "postgres":
+        conn = psycopg2.connect(**kwargs)
+    elif db_type == "snowflake":
+        conn = snowflake.connector.connect(**kwargs)
+    else:
+        raise ValueError(f"Unsupported database type: {db_type}")
+
+    if db_type == "postgres":
+        with open(DEMO_INIT_SQL_PATH, "r") as rf:
+            init_sql = rf.read()
+    elif db_type == "snowflake":
+        with open(DEMO_INIT_SQL_PATH, "r") as rf:  # Replace this with snowflake path
+            init_sql = rf.read()
     with conn.cursor() as cur:
         cur.execute(init_sql)
         conn.commit()
@@ -35,6 +49,23 @@ def load_test_db(**kwargs):
 
 postgresql_proc = pytest_postgresql.factories.postgresql_proc(load=[load_test_db])
 postgresql = pytest_postgresql.factories.postgresql("postgresql_proc")
+
+
+@pytest.fixture(scope="session")
+def snowflake_db():
+    # Connect to Snowflake
+    conn = snowflake.connector.connect(**SNOWFLAKE_TEST_CONNECTION_PARAMS)
+
+    # Create a new database for testing and use it
+    test_db_name = "test_db"
+    conn.cursor().execute(f"CREATE DATABASE IF NOT EXISTS {test_db_name}")
+    conn.cursor().execute(f"USE DATABASE {test_db_name}")
+
+    yield conn  # This allows the test to run with the connection
+
+    # Tear down: drop the database after tests are done
+    conn.cursor().execute(f"DROP DATABASE IF EXISTS {test_db_name}")
+    conn.close()
 
 
 @pytest.fixture(scope="module", autouse=True)
@@ -55,12 +86,12 @@ def test_client():
     def override_check_user_app_permissions():
         return {"use": True, "edit": True, "own": True}
 
-    app.dependency_overrides[EnforceUserAppPermissions(action="edit")] = (
-        override_check_user_app_permissions
-    )
-    app.dependency_overrides[EnforceUserAppPermissions(action="use")] = (
-        override_check_user_app_permissions
-    )
+    app.dependency_overrides[
+        EnforceUserAppPermissions(action="edit")
+    ] = override_check_user_app_permissions
+    app.dependency_overrides[
+        EnforceUserAppPermissions(action="use")
+    ] = override_check_user_app_permissions
     return TestClient(app)
 
 
@@ -68,9 +99,7 @@ def test_client():
 def dropbase_router_mocker():
     mocker = DropbaseRouterMocker()
     # app.dependency_overrides uses function as a key. part of fastapi
-    app.dependency_overrides[get_dropbase_router] = (
-        lambda: mocker.get_mock_dropbase_router()
-    )
+    app.dependency_overrides[get_dropbase_router] = lambda: mocker.get_mock_dropbase_router()
     yield mocker
     # delete get_dropbase_router from dependency overwrite once test is done
     del app.dependency_overrides[get_dropbase_router]
@@ -83,31 +112,51 @@ def connect_to_test_db(db_type: str, creds: dict):
             return PostgresDatabase(creds)
         case "pg":
             return PostgresDatabase(creds)
+        case "snowflake":
+            return SnowflakeDatabase(creds)
 
 
 @pytest.fixture
-def mock_db(postgresql):
-    # returns a database instance rather than an engine
-    pg_creds_dict = {
-        "host": postgresql.info.host,
-        "drivername": "postgresql+psycopg2",
-        "database": postgresql.info.dbname,
-        "username": postgresql.info.user,
-        "password": "",  # Not required for pytest-postgresql
-        "port": postgresql.info.port,
-    }
+def mock_db(request, postgresql):
+    db_type = request.param
+    creds_dict = {}
+    match db_type:
+        case "postgres":
+            creds_dict = {
+                "host": postgresql.info.host,
+                "drivername": "postgresql+psycopg2",
+                "database": postgresql.info.dbname,
+                "username": postgresql.info.user,
+                "password": "",  # Not required for pytest-postgresql
+                "port": postgresql.info.port,
+            }
 
-    db_instance = connect_to_test_db("postgres", pg_creds_dict)
+            db_instance = connect_to_test_db("postgres", creds_dict)
+
+        case "snowflake":
+            creds_dict = {
+                "host": "localhost",
+                "database": "test",
+                "user": "root",
+                "password": "",
+                "port": 3307,
+            }
+
+            # We need to create TestDB
+            load_test_db("snowflake", **creds_dict)
+
+            if "user" in creds_dict:
+                creds_dict["drivername"] = "snowflake"
+                creds_dict["username"] = creds_dict["user"]
+                del creds_dict["user"]
+
+            db_instance = connect_to_test_db("snowflake", creds_dict)
 
     return db_instance
 
 
 def pytest_sessionstart():
-    from server.controllers.workspace import (
-        AppFolderController,
-        create_file,
-        create_folder,
-    )
+    from server.controllers.workspace import AppFolderController, create_file, create_folder
 
     create_folder(TEMPDIR_PATH)
 
@@ -143,13 +192,11 @@ def pytest_sessionfinish():
     shutil.rmtree(WORKSPACE_PATH.joinpath("dropbase_test_app"))
     # Workspace properties is still written to the non test workspace
     # Its easier to clean it up here
-    workspace_folder_controller = WorkspaceFolderController(
-        r_path_to_workspace=WORKSPACE_PATH
-    )
+    workspace_folder_controller = WorkspaceFolderController(r_path_to_workspace=WORKSPACE_PATH)
     apps = workspace_folder_controller.get_workspace_properties()
-    for app in apps:
-        if app["name"] == TEST_APP_NAME:
-            apps.remove(app)
+    for one_app in apps:  # this loop variable overshadows the app import
+        if one_app["name"] == TEST_APP_NAME:
+            apps.remove(one_app)
 
     workspace_folder_controller.write_workspace_properties(
         {
