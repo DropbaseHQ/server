@@ -139,12 +139,28 @@ def check_user_app_permissions(
 
     if not user_app_permissions:
         logger.info("FETCHING PERMISSIONS FROM DROPBASE API")
-        response = router.auth.check_permissions(
+        response: requests.Response = router.auth.check_permissions(
             app_id=app_id,
             access_token=access_cookies.access_token_cookie,
         )
-        if response.status_code != 200:
+
+        if response.status_code == 401:
+            logger.warning(
+                "Dropbase Token: ", router.session.headers.get("dropbase-token")
+            )
+            logger.warning("Request headers", response.request.headers)
+            logger.warning("Invalid access token", response.text)
             raise Exception("Invalid access token")
+
+        if response.status_code != 200:
+            logger.warning(
+                "Dropbase Token: ", router.session.headers.get("dropbase-token")
+            )
+            logger.warning("Request headers", response.request.headers)
+            logger.warning(
+                f"Could not fetch permissions from dropbase API: {response.text}"
+            )
+            raise Exception("Could not fetch permissions from dropbase API")
 
         permissions_registry.save_permissions(
             app_id=app_id, user_id=user_id, permissions=response.json()
