@@ -17,7 +17,9 @@ from server.main import app
 from server.requests.dropbase_router import get_dropbase_router
 from server.tests.constants import (
     DEMO_INIT_SQL_PATH,
+    DEMO_SNOWFLAKE_INIT_SQL_PATH,
     SNOWFLAKE_TEST_CONNECTION_PARAMS,
+    SNOWFLAKE_TEST_CREDS,
     TEMPDIR_PATH,
     TEST_APP_NAME,
     TEST_PAGE_NAME,
@@ -40,10 +42,16 @@ def load_test_db(db_type="postgres", **kwargs):
         with open(DEMO_INIT_SQL_PATH, "r") as rf:
             init_sql = rf.read()
     elif db_type == "snowflake":
-        with open(DEMO_INIT_SQL_PATH, "r") as rf:  # Replace this with snowflake path
+        with open(DEMO_SNOWFLAKE_INIT_SQL_PATH, "r") as rf:  # Replace this with snowflake path
             init_sql = rf.read()
     with conn.cursor() as cur:
-        cur.execute(init_sql)
+        if db_type == "snowflake":
+            # MySQL might require splitting and executing each statement separately
+            for statement in init_sql.split(";"):
+                if statement.strip():
+                    cur.execute(statement)
+        else:
+            cur.execute(init_sql)
         conn.commit()
 
 
@@ -117,7 +125,7 @@ def connect_to_test_db(db_type: str, creds: dict):
 
 
 @pytest.fixture
-def mock_db(request, postgresql):
+def mock_db(request, postgresql, snowflake_db):
     db_type = request.param
     creds_dict = {}
     match db_type:
@@ -134,21 +142,9 @@ def mock_db(request, postgresql):
             db_instance = connect_to_test_db("postgres", creds_dict)
 
         case "snowflake":
-            creds_dict = {
-                "host": "localhost",
-                "database": "test",
-                "user": "root",
-                "password": "",
-                "port": 3307,
-            }
-
             # We need to create TestDB
-            load_test_db("snowflake", **creds_dict)
-
-            if "user" in creds_dict:
-                creds_dict["drivername"] = "snowflake"
-                creds_dict["username"] = creds_dict["user"]
-                del creds_dict["user"]
+            load_test_db("snowflake", **SNOWFLAKE_TEST_CONNECTION_PARAMS)
+            creds_dict = SNOWFLAKE_TEST_CREDS
 
             db_instance = connect_to_test_db("snowflake", creds_dict)
 

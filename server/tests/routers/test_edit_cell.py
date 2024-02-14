@@ -1,3 +1,5 @@
+import pytest
+
 data = {
     # could be ignored, mocking in mock db
     "file": {"name": "demo_sql", "type": "sql", "source": "local", "depends_on": []},
@@ -63,6 +65,7 @@ data = {
 }
 
 
+@pytest.mark.parametrize("mock_db", ["postgres", "snowflake"], indirect=True)
 def test_edit_cell(test_client, mocker, mock_db):
     # Arrange
     mocker.patch("server.controllers.edit_cell.connect_to_user_db", return_value=mock_db)
@@ -75,6 +78,7 @@ def test_edit_cell(test_client, mocker, mock_db):
     assert res_data["result"] == ["Updated username from John Doe to Hello World"]
 
 
+@pytest.mark.parametrize("mock_db", ["postgres", "snowflake"], indirect=True)
 def test_edit_cell_db_execute_fail(test_client, mocker, mock_db):
     # Arrange
     mocker.patch("server.controllers.edit_cell.connect_to_user_db", return_value=mock_db)

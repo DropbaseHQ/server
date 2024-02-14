@@ -252,7 +252,7 @@ class SnowflakeDatabase(Database):
             with self.engine.connect() as conn:
                 result = conn.execute(text(sql), values)
                 conn.commit()
-                if result.rowcount == 0:
+                if result.rowcount == 0:  # I think this may not work as expected for snowflake
                     raise Exception("No rows were updated")
             return f"Updated {edit.column_name} from {edit.old_value} to {edit.new_value}", True
         except Exception as e:
