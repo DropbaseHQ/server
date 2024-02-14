@@ -1,10 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, Response
 
 from dropbase.schemas.page import CreatePageRequest, PageProperties, RenamePageRequest
-from server.auth.dependency import (
-    EnforceUserAppPermissions,
-    check_user_app_permissions as get_permissions,
-)
+from server.auth.dependency import CheckUserPermissions
 from server.controllers.page import (
     create_page,
     delete_page,
@@ -23,13 +20,15 @@ router = APIRouter(
 
 @router.get(
     "/{app_name}/{page_name}",
-    dependencies=[Depends(EnforceUserAppPermissions(action="use"))],
+    dependencies=[
+        Depends(CheckUserPermissions(action="use", resource=CheckUserPermissions.APP))
+    ],
 )
 def get_state_context_req(
     app_name: str,
     page_name: str,
     response: Response,
-    permissions: dict = Depends(get_permissions),
+    permissions: dict = Depends(CheckUserPermissions(action="use", resource="app")),
 ):
     try:
         state_context = get_page_state_context(app_name, page_name)
@@ -42,7 +41,9 @@ def get_state_context_req(
 
 @router.post(
     "/{app_name}",
-    dependencies=[Depends(EnforceUserAppPermissions(action="edit"))],
+    dependencies=[
+        Depends(CheckUserPermissions(action="edit", resource=CheckUserPermissions.APP))
+    ],
 )
 def create_page_req(
     app_name: str,
@@ -71,7 +72,9 @@ def create_page_req(
 
 @router.put(
     "/{app_name}/{page_name}",
-    dependencies=[Depends(EnforceUserAppPermissions(action="edit"))],
+    dependencies=[
+        Depends(CheckUserPermissions(action="edit", resource=CheckUserPermissions.APP))
+    ],
 )
 def rename_page_req(
     app_name: str,
@@ -92,7 +95,9 @@ def rename_page_req(
 
 @router.delete(
     "/{app_name}/{page_name}",
-    dependencies=[Depends(EnforceUserAppPermissions(action="edit"))],
+    dependencies=[
+        Depends(CheckUserPermissions(action="edit", resource=CheckUserPermissions.APP))
+    ],
 )
 def delete_page_req(
     app_name: str,
@@ -107,7 +112,12 @@ def delete_page_req(
         return {"error": str(e)}
 
 
-@router.post("/", dependencies=[Depends(EnforceUserAppPermissions(action="edit"))])
+@router.post(
+    "/",
+    dependencies=[
+        Depends(CheckUserPermissions(action="edit", resource=CheckUserPermissions.APP))
+    ],
+)
 def cud_page_props(req: PageProperties, response: Response):
     try:
         # update local json file
