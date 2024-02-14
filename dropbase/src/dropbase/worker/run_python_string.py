@@ -89,7 +89,7 @@ def run(r, response):
             response["context"] = result.dict()
             response["type"] = "context"
         elif isinstance(result, pd.DataFrame):
-            result = convert_df_to_resp_obj(result)
+            result = convert_df_to_resp_obj(result, "python")
             response["data"] = result["data"]
             response["columns"] = result["columns"]
             response["type"] = "table"

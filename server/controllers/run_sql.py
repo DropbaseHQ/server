@@ -27,7 +27,7 @@ def run_sql_query_from_string(req: RunSQLStringRequest, job_id: str):
         res = user_db._run_query(sql, {})
         # parse pandas response
         df = process_query_result(res)
-        res = convert_df_to_resp_obj(df)
+        res = convert_df_to_resp_obj(df, user_db.db_type)
         r.set(job_id, json.dumps(res))
 
         response["data"] = res["data"]
@@ -63,7 +63,7 @@ def run_sql_query(args: RunSQLRequestTask, job_id: str):
         res = user_db._run_query(filter_sql, filter_values)
         df = process_query_result(res)
 
-        res = convert_df_to_resp_obj(df)
+        res = convert_df_to_resp_obj(df, user_db.db_type)
         r.set(job_id, json.dumps(res))
         response["data"] = res["data"]
         response["columns"] = res["columns"]

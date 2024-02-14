@@ -18,6 +18,7 @@ from server.routers import (  # run_python_router,; run_sql_router,
     sources_router,
     tables_router,
     websocket_router,
+    workspace_router,
 )
 
 
@@ -70,6 +71,7 @@ app.include_router(edit_cell_router)
 app.include_router(health_router)
 app.include_router(page_router)
 app.include_router(websocket_router)
+app.include_router(workspace_router)
 
 
 # send health report to dropbase server

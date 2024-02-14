@@ -14,6 +14,7 @@ class PostgresDatabase(Database):
     def __init__(self, creds: dict, schema: str = "public"):
         super().__init__(creds)
         self.schema = schema
+        self.db_type = "postgres"
 
     def _get_connection_url(self, creds: dict):
         return URL.create(**creds)

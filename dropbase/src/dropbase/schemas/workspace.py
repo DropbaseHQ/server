@@ -6,6 +6,7 @@ from dropbase.constants import FILE_NAME_REGEX
 
 
 class CreateAppRequest(BaseModel):
+    app_label: str
     app_name: str
     workspace_id: str
 

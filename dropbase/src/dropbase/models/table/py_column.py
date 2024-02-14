@@ -11,7 +11,8 @@ class PyColumnContextProperty(ComponentDisplayProperties):
 
 class PyColumnDefinedProperty(BaseModel):
     name: str
-    column_type: Optional[str]
+    column_type: Literal["python"] = "python"
+    data_type: Optional[str]
     display_type: Optional[Literal["text", "integer", "float", "boolean", "datetime", "date", "time"]]
 
     # visibility

@@ -2,6 +2,8 @@ import os
 
 import docker
 
+from server.constants import WORKER_IMAGE_VERSION
+
 
 def run_container(env_vars: dict, docker_script: str = "inside_docker"):
 
@@ -18,11 +20,11 @@ def run_container(env_vars: dict, docker_script: str = "inside_docker"):
 
     # Run the Docker container with the mount
     client.containers.run(
-        "dropbase/worker:0.0.2",
+        f"dropbase/worker:{WORKER_IMAGE_VERSION}",
         command=f"python {docker_script}.py",
         mounts=[mount1],
-        environment=env_vars,  # pass environment variables here
+        environment=env_vars,
         detach=True,
-        working_dir="/app",  # set working directory as /app
+        working_dir="/app",
         auto_remove=True,
     )

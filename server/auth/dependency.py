@@ -11,6 +11,7 @@ from pydantic import BaseModel
 from server.auth.permissions_registry import permissions_registry
 from server.constants import DROPBASE_API_URL
 from server.requests.dropbase_router import AccessCookies, get_access_cookies
+from server.requests.dropbase_router import DropbaseRouter, get_dropbase_router
 from server.controllers.workspace import WorkspaceFolderController
 
 
@@ -42,12 +43,11 @@ def verify_server_token(cookies: AccessCookies):
     return response
 
 
-def verify_server_access_token(access_token, Authorize: AuthJWT = Depends()):
+def verify_server_access_token(
+    access_token, Authorize: AuthJWT, router: DropbaseRouter
+):
     logger.info("VERIFYING SERVER TOKEN")
-    verify_response = requests.post(
-        DROPBASE_API_URL + "/worker/verify_token",
-        headers={"Authorization": f"Bearer {access_token}"},
-    )
+    verify_response = router.auth.verify_identity_token(access_token)
     if verify_response.status_code != 200:
         raise HTTPException(status_code=401, detail="Invalid access token")
     worker_sl_token = Authorize.create_access_token(
@@ -58,16 +58,22 @@ def verify_server_access_token(access_token, Authorize: AuthJWT = Depends()):
         status_code=401,
         detail="Invalid access token",
         headers={
-            "set-cookie": f"{WORKER_SL_TOKEN_NAME}={worker_sl_token}; Max-Age={max_age}; Path=/; HttpOnly;"  # noqa
+            "set-cookie": f"{WORKER_SL_TOKEN_NAME}={worker_sl_token}; Max-Age={max_age}; Path=/;"  # noqa
         },
     )
 
 
-def verify_user_access_token(request: Request, Authorize: AuthJWT = Depends()):
+def verify_user_access_token(
+    request: Request, Authorize: AuthJWT, router: DropbaseRouter
+):
     server_access_cookies = get_access_cookies(request)
 
     if not request.cookies.get("worker_sl_token"):
-        verify_server_access_token(server_access_cookies.access_token_cookie, Authorize)
+        verify_server_access_token(
+            access_token=server_access_cookies.access_token_cookie,
+            Authorize=Authorize,
+            router=router,
+        )
     else:
         try:
             Authorize._access_cookie_key = WORKER_SL_TOKEN_NAME
@@ -80,7 +86,9 @@ def verify_user_access_token(request: Request, Authorize: AuthJWT = Depends()):
 
             if worker_subject != server_claims.get("user_id"):
                 verify_server_access_token(
-                    server_access_cookies.access_token_cookie, Authorize
+                    access_token=server_access_cookies.access_token_cookie,
+                    Authorize=Authorize,
+                    router=router,
                 )
             return worker_subject
         except exceptions.JWTDecodeError:
@@ -149,7 +157,13 @@ class CheckUserPermissions:
             headers={"Authorization": f"Bearer {access_cookies.access_token_cookie}"},
             json=payload,
         )
-        if response.status_code != 200:
+
+        if response.status_code == 401:
+            logger.warning(
+                "Dropbase Token: ", router.session.headers.get("dropbase-token")
+            )
+            logger.warning("Request headers", response.request.headers)
+            logger.warning("Invalid access token", response.text)
             raise Exception("Invalid access token")
         workspace_permissions = response.json().get("workspace_permissions")
         app_permissions = response.json().get("app_permissions")

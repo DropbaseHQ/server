@@ -8,7 +8,9 @@ from server.controllers.utils import check_if_object_exists, validate_column_nam
 from server.controllers.workspace import AppFolderController, WorkspaceFolderController
 from server.requests.dropbase_router import DropbaseRouter, get_dropbase_router
 
-router = APIRouter(prefix="/app", tags=["app"], responses={404: {"description": "Not found"}})
+router = APIRouter(
+    prefix="/app", tags=["app"], responses={404: {"description": "Not found"}}
+)
 
 
 @router.get("/list/")
@@ -24,7 +26,9 @@ def create_app_req(
 ):
     if not validate_column_name(req.app_name):
         response.status_code = 400
-        return {"message": "Invalid app name. Only alphanumeric characters and underscores are allowed"}
+        return {
+            "message": "Invalid app name. Only alphanumeric characters and underscores are allowed"
+        }
 
     # assert page does not exist
     if check_if_object_exists(f"workspace/{req.app_name}/"):
@@ -36,7 +40,7 @@ def create_app_req(
         app_folder_controller = AppFolderController(
             app_name=req.app_name, r_path_to_workspace=r_path_to_workspace
         )
-        return app_folder_controller.create_app(workspace_id=req.workspace_id, router=router)
+        return app_folder_controller.create_app(router=router, app_label=req.app_label)
     except Exception as e:
         response.status_code = 500
         return {"error": str(e)}
@@ -46,7 +50,9 @@ def create_app_req(
 def rename_app_req(req: RenameAppRequest, response: Response):
     # assert page does not exist
     path_to_workspace = os.path.join(os.path.dirname(__file__), "../../workspace")
-    workspace_folder_controller = WorkspaceFolderController(r_path_to_workspace=path_to_workspace)
+    workspace_folder_controller = WorkspaceFolderController(
+        r_path_to_workspace=path_to_workspace
+    )
 
     target_app = workspace_folder_controller.get_app(app_id=req.app_id)
     if target_app is None:
@@ -77,4 +83,6 @@ def delete_app_req(
 ):
     r_path_to_workspace = os.path.join(os.path.dirname(__file__), "../../workspace")
     app_folder_controller = AppFolderController(app_name, r_path_to_workspace)
-    return app_folder_controller.delete_app(app_name=app_name, response=response, router=router)
+    return app_folder_controller.delete_app(
+        app_name=app_name, response=response, router=router
+    )
