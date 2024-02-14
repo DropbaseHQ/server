@@ -40,6 +40,7 @@ def convert_sql_table(req: ConvertTableRequest, router: DropbaseRouter):
         # rename type to data_type
         for column in smart_cols.values():
             column["data_type"] = column.pop("type")
+            column["column_type"] = user_db.db_type
 
         # validate columns
         validated = user_db._validate_smart_cols(smart_cols, user_sql)
