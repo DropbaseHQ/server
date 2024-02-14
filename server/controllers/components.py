@@ -48,6 +48,7 @@ def reduce_method(a, b):
 
 def parse_prop(prop, key, model_schema):
 
+    # maybe we don't need this
     if "anyOf" in prop:
         prop["type"] = []
         for each_prop in prop["anyOf"]:
