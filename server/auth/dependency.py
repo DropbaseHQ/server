@@ -56,7 +56,7 @@ def verify_server_access_token(
     max_age = 60 * 5
     raise HTTPException(
         status_code=401,
-        detail="Invalid access token",
+        detail="Issuing new worker token. Please try again.",
         headers={
             "set-cookie": f"{WORKER_SL_TOKEN_NAME}={worker_sl_token}; Max-Age={max_age}; Path=/;"  # noqa
         },
@@ -156,21 +156,21 @@ class CheckUserPermissions:
         response = router.auth.check_permissions(
             app_id=app_id, access_token=access_cookies.access_token_cookie
         )
-
         if response.status_code == 401:
-            logger.warning(
-                "Dropbase Token: ", router.session.headers.get("dropbase-token")
-            )
-            logger.warning("Request headers", response.request.headers)
-            logger.warning("Invalid access token", response.text)
-            raise Exception("Invalid access token")
+            dropbase_token = router.session.headers.get("dropbase-token")
+            logger.warning(f"Dropbase Token: {dropbase_token}")
+            headers = response.request.headers
+            logger.warning(f"Request headers: {headers}")
+
+            raise Exception(f"Details: {response.json()}")
 
         if response.status_code != 200:
             logger.warning(
                 "Dropbase Token: ", router.session.headers.get("dropbase-token")
             )
-            logger.warning("Request headers", response.request.headers)
-            logger.warning("Invalid access token", response.text)
+            headers = response.request.headers
+            logger.warning(f"Request headers: {headers}")
+
             raise Exception("Unable to fetch permissions from Dropbase API")
 
         workspace_permissions = response.json().get("workspace_permissions")
