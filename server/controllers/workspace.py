@@ -24,17 +24,13 @@ class WorkspaceFolderController:
         self.r_path_to_workspace = r_path_to_workspace
 
     def write_workspace_properties(self, workspace_properties: dict):
-        workspace_properties_path = os.path.join(
-            self.r_path_to_workspace, "properties.json"
-        )
+        workspace_properties_path = os.path.join(self.r_path_to_workspace, "properties.json")
         with open(workspace_properties_path, "w") as file:
             json.dump(workspace_properties, file, indent=2)
 
     def get_workspace_properties(self):
         if os.path.exists(os.path.join(self.r_path_to_workspace, "properties.json")):
-            with open(
-                os.path.join(self.r_path_to_workspace, "properties.json"), "r"
-            ) as file:
+            with open(os.path.join(self.r_path_to_workspace, "properties.json"), "r") as file:
 
                 props = json.load(file)
                 return props.get("apps", [])
@@ -43,6 +39,7 @@ class WorkspaceFolderController:
 
     def get_app(self, app_id: str):
         workspace_data = self.get_workspace_properties()
+
         for app in workspace_data:
             if app.get("id") == app_id:
                 return app
@@ -90,18 +87,14 @@ class AppFolderController:
             json.dump(app_properties_data, file, indent=2)
 
     def _get_workspace_properties(self):
-        workspace_properties_path = os.path.join(
-            self.r_path_to_workspace, "properties.json"
-        )
+        workspace_properties_path = os.path.join(self.r_path_to_workspace, "properties.json")
         if not os.path.exists(workspace_properties_path):
             return None
         with open(workspace_properties_path, "r") as file:
             return json.load(file)
 
     def _write_workspace_properties(self, workspace_properties: dict):
-        workspace_properties_path = os.path.join(
-            self.r_path_to_workspace, "properties.json"
-        )
+        workspace_properties_path = os.path.join(self.r_path_to_workspace, "properties.json")
         with open(workspace_properties_path, "w") as file:
             json.dump(workspace_properties, file, indent=2)
 
@@ -184,9 +177,7 @@ class AppFolderController:
         created_app_names = get_subdirectories(self.r_path_to_workspace)
         app_info = []
         for app_name in created_app_names:
-            app_properties = os.path.join(
-                self.r_path_to_workspace, app_name, "properties.json"
-            )
+            app_properties = os.path.join(self.r_path_to_workspace, app_name, "properties.json")
             if not os.path.exists(app_properties):
                 app_info.append({"name": app_name, "label": app_name, "id": None})
                 continue

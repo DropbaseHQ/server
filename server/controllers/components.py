@@ -32,7 +32,7 @@ component_property_types = {
 }
 
 
-def get_component_properties(compnent_type: str):
+def get_component_properties(compnent_type: str):  # this needs to be modified to support mysql
     response = {}
     if compnent_type == "all":
         for key, value in component_property_types.items():

@@ -1,8 +1,10 @@
 import os
 import shutil
+
 import pytest
-from server.tests.constants import TEST_APP_NAME, WORKSPACE_PATH
+
 from server.controllers.workspace import WorkspaceFolderController
+from server.tests.constants import TEST_APP_NAME, WORKSPACE_PATH
 
 NEW_APP_NAME = "test_create_app"
 OLD_APP_NAME = "test_create_app_2"
@@ -129,7 +131,11 @@ def test_rename_app_req_error_duplicate_names(test_client, dropbase_router_mocke
     create_app = test_client.post("/app/", json=data)
 
     # Act
-    req = {"old_name": OLD_APP_NAME, "new_name": NEW_APP_NAME}
+    req = {
+        "old_name": OLD_APP_NAME,
+        "new_name": NEW_APP_NAME,
+        "app_id": "23ea28dc-4e2d-4d48-b15e-09b51f1a1c74",
+    }
 
     dropbase_router_mocker.patch("app", "create_app", side_effect=lambda *args, **kwargs: None)
     res = test_client.put("/app/", json=req)
@@ -145,9 +151,7 @@ def test_rename_app_req_error_duplicate_names(test_client, dropbase_router_mocke
 def test_rename_app_req(test_client):
     try:
         # Arrange
-        workspace_folder_controller = WorkspaceFolderController(
-            r_path_to_workspace=WORKSPACE_PATH
-        )
+        workspace_folder_controller = WorkspaceFolderController(r_path_to_workspace=WORKSPACE_PATH)
         app_id = workspace_folder_controller.get_app_id(app_name=TEST_APP_NAME)
         data = {"app_id": app_id, "new_label": NEW_APP_NAME}
 
