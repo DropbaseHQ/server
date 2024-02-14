@@ -1,6 +1,7 @@
 import operator
 from functools import reduce
 
+from dropbase.models.common import DisplayTypeConfigurations
 from dropbase.models.table import (
     ButtonColumnDefinedProperty,
     PgColumnDefinedProperty,
@@ -27,6 +28,7 @@ component_property_types = {
     "text": TextDefinedProperty,
     "select": SelectDefinedProperty,
     "boolean": BooleanDefinedProperty,
+    "display_type_configurations": DisplayTypeConfigurations,
 }
 
 

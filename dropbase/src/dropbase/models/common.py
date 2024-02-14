@@ -20,6 +20,11 @@ class DatetimeType(BaseModel):
     timezone: str
 
 
+class DisplayTypeConfigurations(BaseModel):
+    currency: Optional[CurrencyType]
+    datetime: Optional[DatetimeType]
+
+
 class DisplayType(str, Enum):
     text = "text"
     integer = "integer"
