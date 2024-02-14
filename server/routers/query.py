@@ -3,15 +3,15 @@ import uuid
 
 from fastapi import APIRouter, BackgroundTasks, Depends, Response
 
+from dropbase.schemas.files import DataFile
+from dropbase.schemas.query import RunSQLRequestTask, RunSQLStringRequest
+from dropbase.schemas.run_python import QueryPythonRequest, RunPythonStringRequestNew
 from server.auth.dependency import EnforceUserAppPermissions
 from server.controllers.properties import read_page_properties
 from server.controllers.python_docker import run_container
 from server.controllers.redis import r
 from server.controllers.run_sql import run_sql_query, run_sql_query_from_string
 from server.controllers.utils import get_table_data_fetcher
-from server.schemas.files import DataFile
-from server.schemas.query import RunSQLRequestTask, RunSQLStringRequest
-from server.schemas.run_python import QueryPythonRequest, RunPythonStringRequestNew
 
 router = APIRouter(prefix="/query", tags=["query"], responses={404: {"description": "Not found"}})
 
@@ -52,8 +52,9 @@ async def run_python_string_test(
         "state": json.dumps(req.state),
         "context": json.dumps(req.context),
         "job_id": job_id,
+        "type": "string",
     }
-    background_tasks.add_task(run_container, args, "inside_docker_string")
+    background_tasks.add_task(run_container, args)
 
     status_code = 202
     reponse_payload = {
@@ -77,7 +78,7 @@ async def start_docker(req: QueryPythonRequest, response: Response, background_t
     file = get_table_data_fetcher(properties["files"], req.table.fetcher)
     file = DataFile(**file)
     job_id = uuid.uuid4().hex
-    args = {"app_name": req.app_name, "page_name": req.page_name, "job_id": job_id}
+    args = {"app_name": req.app_name, "page_name": req.page_name, "job_id": job_id, "type": "file"}
     if file.type == "data_fetcher":
         # need to turn into json to pass to docker container as environment variables
         args["file"] = json.dumps(file.dict())

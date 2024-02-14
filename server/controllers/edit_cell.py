@@ -1,8 +1,8 @@
 from typing import List
 
-from server.controllers.connect import connect_to_user_db
-from server.schemas.edit_cell import CellEdit
-from server.schemas.files import DataFile
+from dropbase.database.connect import connect_to_user_db
+from dropbase.schemas.edit_cell import CellEdit
+from dropbase.schemas.files import DataFile
 
 
 def edit_cell(file: DataFile, edits: List[CellEdit]):

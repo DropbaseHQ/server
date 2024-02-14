@@ -1,5 +1,7 @@
-# Example Package
+# Dropbase Helper Library
 
-This is a simple example package. You can use
-[Github-flavored Markdown](https://guides.github.com/features/mastering-markdown/)
-to write your content.
+Helper package for Dropbase internal app builder.
+
+# About Dropbase
+
+Dropbase helps you build internal web apps with Python. The Dropbase self-hosted Worker securely interacts with your data within your own infra.

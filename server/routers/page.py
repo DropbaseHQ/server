@@ -1,6 +1,10 @@
 from fastapi import APIRouter, Depends, HTTPException, Response
 
-from server.auth.dependency import EnforceUserAppPermissions
+from dropbase.schemas.page import CreatePageRequest, PageProperties, RenamePageRequest
+from server.auth.dependency import (
+    EnforceUserAppPermissions,
+    check_user_app_permissions as get_permissions,
+)
 from server.controllers.page import (
     create_page,
     delete_page,
@@ -11,9 +15,10 @@ from server.controllers.page import (
 from server.controllers.properties import read_page_properties
 from server.controllers.utils import check_if_object_exists, validate_column_name
 from server.requests.dropbase_router import DropbaseRouter, get_dropbase_router
-from server.schemas.page import CreatePageRequest, PageProperties, RenamePageRequest
 
-router = APIRouter(prefix="/page", tags=["page"], responses={404: {"description": "Not found"}})
+router = APIRouter(
+    prefix="/page", tags=["page"], responses={404: {"description": "Not found"}}
+)
 
 
 @router.get(
@@ -24,11 +29,12 @@ def get_state_context_req(
     app_name: str,
     page_name: str,
     response: Response,
+    permissions: dict = Depends(get_permissions),
 ):
     try:
         state_context = get_page_state_context(app_name, page_name)
         state_context["properties"] = read_page_properties(app_name, page_name)
-        return state_context
+        return {"state_context": state_context, "permissions": permissions}
     except Exception as e:
         response.status_code = 400
         return {"message": str(e)}
@@ -74,7 +80,11 @@ def rename_page_req(
     response: Response,
 ):
     try:
-        return rename_page(app_name, page_name, request.new_page_name)
+        return rename_page(
+            app_name=app_name,
+            page_name=page_name,
+            new_page_label=request.new_page_label,
+        )
     except Exception as e:
         response.status_code = 500
         return {"error": str(e)}

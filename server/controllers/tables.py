@@ -1,11 +1,11 @@
-from server.controllers.connect import connect_to_user_db
+from dropbase.database.connect import connect_to_user_db
+from dropbase.schemas.files import DataFile
+from dropbase.schemas.table import ConvertTableRequest
 from server.controllers.page import get_page_state_context
 from server.controllers.properties import read_page_properties, update_properties
 from server.controllers.run_sql import get_sql_from_file, render_sql
 from server.controllers.utils import get_table_data_fetcher
 from server.requests.dropbase_router import DropbaseRouter
-from server.schemas.files import DataFile
-from server.schemas.table import ConvertTableRequest
 
 
 def convert_sql_table(req: ConvertTableRequest, router: DropbaseRouter):
@@ -36,19 +36,19 @@ def convert_sql_table(req: ConvertTableRequest, router: DropbaseRouter):
         if resp.status_code != 200:
             return resp.text
         smart_cols = resp.json().get("columns")
-        # NOTE: columns type in smart_cols dict (from chatgpt) is called type.
-        # do not confuse it with column_type, which we use internally
+        # NOTE: columns type in smart_cols dict (from chatgpt) is called type
 
-        # rename type to column_type
+        # rename type to data_type
         for column in smart_cols.values():
-            column["column_type"] = column.pop("type")
+            column["data_type"] = column.pop("type")
+            column["column_type"] = user_db.db_type
 
         # validate columns
         validated = user_db._validate_smart_cols(smart_cols, user_sql)
         column_props = [value for name, value in smart_cols.items() if name in validated]
 
         for column in column_props:
-            column["display_type"] = user_db._detect_col_display_type(column["column_type"].lower())
+            column["display_type"] = user_db._detect_col_display_type(column["data_type"].lower())
 
         for table in properties["tables"]:
             if table["name"] == req.table.name:
