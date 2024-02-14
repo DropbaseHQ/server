@@ -12,7 +12,7 @@ class ButtonColumnContextProperty(ComponentDisplayProperties):
 
 class ButtonColumnDefinedProperty(BaseModel):
     name: Annotated[str, PropertyCategory.default]
-    column_type: Literal["button"] = "button"
+    column_type: Literal["button_column"] = "button_column"
 
     label: Annotated[str, PropertyCategory.default]
     color: Annotated[

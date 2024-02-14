@@ -1,3 +1,6 @@
+import operator
+from functools import reduce
+
 from dropbase.models.table import (
     ButtonColumnDefinedProperty,
     PgColumnDefinedProperty,
@@ -15,6 +18,7 @@ from dropbase.models.widget import (
 
 component_property_types = {
     "table": TableDefinedProperty,
+    "button_column": ButtonColumnDefinedProperty,
     "pycolumn": PyColumnDefinedProperty,
     "pgcolumn": PgColumnDefinedProperty,
     "widget": WidgetDefinedProperty,
@@ -36,15 +40,12 @@ def get_component_properties(compnent_type: str):
     return response
 
 
-import operator
-from functools import reduce
-
-
 def reduce_method(a, b):
     return reduce(operator.getitem, a, b)
 
 
 def parse_prop(prop, key, model_schema):
+
     if "anyOf" in prop:
         prop["type"] = []
         for each_prop in prop["anyOf"]:
@@ -63,6 +64,8 @@ def parse_prop(prop, key, model_schema):
 
     if "enum" in prop:
         prop["type"] = "select"
+
+    prop["name"] = key
     return prop
 
 
@@ -73,7 +76,6 @@ def get_class_properties(pydantic_model):
     obj_props = []
     for key in model_props.keys():
         prop = model_props[key]
-        prop["name"] = key
         prop = parse_prop(prop, key, model_schema)
         obj_props.append(prop)
 
