@@ -12,12 +12,12 @@ class ComponentDisplayProperties(BaseModel):
 
 class CurrencyType(BaseModel):
     symbol: str
-    precision: int
+    precision: Optional[int]
 
 
 class SelectType(BaseModel):
     options: list
-    multiple: bool
+    multiple: Optional[bool]
 
 
 class DisplayTypeConfigurations(BaseModel):
