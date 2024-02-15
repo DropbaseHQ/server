@@ -2,13 +2,15 @@ import ast
 import glob
 import os
 import re
+import shutil
+from uuid import uuid4
 
 from fastapi import HTTPException
 
 from dropbase.constants import FILE_NAME_REGEX
 from dropbase.schemas.files import CreateFile, DeleteFile, RenameFile, UpdateFile
 from server.constants import cwd
-from server.controllers.properties import read_page_properties, update_properties
+from server.controllers.properties import read_page_properties, write_page_properties
 
 
 class FileController:
@@ -21,6 +23,18 @@ class FileController:
         self.file_path = None
         self.new_name = None
         self.new_path = None
+        # create a backup of the page directory
+        self.page_dir_path = f"workspace/{self.app_name}/{self.page_name}"
+        self.page_dir_path_backup = f"{self.page_dir_path}_{uuid4().hex}"
+        shutil.copytree(self.page_dir_path, self.page_dir_path_backup)
+
+    def _revert_backup(self):
+        shutil.rmtree(self.page_dir_path)
+        os.rename(self.page_dir_path_backup, self.page_dir_path)
+
+    def _delete_backup(self):
+        if os.path.isdir(self.page_dir_path_backup):
+            shutil.rmtree(self.page_dir_path_backup)
 
     def get_all_files(self):
         try:
@@ -37,9 +51,13 @@ class FileController:
             sql_files = glob.glob(os.path.join(dir_path, "*.sql"))
             return {"files": py_files + sql_files}
         except HTTPException as e:
+            self._revert_backup()
             raise e
         except Exception as e:
+            self._revert_backup()
             raise HTTPException(status_code=500, detail=str(e))
+        finally:
+            self._delete_backup()
 
     def create_file(self, req: CreateFile):
         try:
@@ -50,7 +68,7 @@ class FileController:
             self._check_for_duplicate_file_names(req.name)
 
             # update file content
-            boilerplate_code = self.compose_boilerplate_code(req)
+            boilerplate_code = compose_boilerplate_code(req)
             self._write_file(boilerplate_code)
 
             # update properties file
@@ -63,9 +81,13 @@ class FileController:
 
             return {"status": "success"}
         except HTTPException as e:
+            self._revert_backup()
             raise e
         except Exception as e:
+            self._revert_backup()
             raise HTTPException(status_code=500, detail=str(e))
+        finally:
+            self._delete_backup()
 
     def rename_file(self, req: RenameFile):
         try:
@@ -94,9 +116,13 @@ class FileController:
 
             return {"status": "success"}
         except HTTPException as e:
+            self._revert_backup()
             raise e
         except Exception as e:
+            self._revert_backup()
             raise HTTPException(status_code=500, detail=str(e))
+        finally:
+            self._delete_backup()
 
     def update_file(self, req: UpdateFile):
         try:
@@ -120,12 +146,16 @@ class FileController:
                     break
 
             # update properties file
-            self._update_properties(update_modes=False)
+            self._update_properties()
             return {"status": "success"}
         except HTTPException as e:
+            self._revert_backup()
             raise e
         except Exception as e:
+            self._revert_backup()
             raise HTTPException(status_code=500, detail=str(e))
+        finally:
+            self._delete_backup()
 
     def delete_file(self, req: DeleteFile):
         try:
@@ -143,12 +173,16 @@ class FileController:
                     break
 
             # update properties file
-            self._update_properties(update_modes=False)
+            self._update_properties()
             return {"status": "success"}
         except HTTPException as e:
+            self._revert_backup()
             raise e
         except Exception as e:
+            self._revert_backup()
             raise HTTPException(status_code=500, detail=str(e))
+        finally:
+            self._delete_backup()
 
     def _set_file_name(self, file_name: str, file_type: str, new: bool = False):
         self.file_ext = ".sql" if file_type == "sql" else ".py"
@@ -171,8 +205,8 @@ class FileController:
         with open(self.file_path, "w") as f:
             f.write(code)
 
-    def _update_properties(self, update_modes=False):
-        update_properties(self.app_name, self.page_name, self.properties, update_modes=update_modes)
+    def _update_properties(self):
+        write_page_properties(self.app_name, self.page_name, self.properties)
 
     def _rename_function_in_file(self):
         # get file mame without extension
@@ -210,25 +244,26 @@ class FileController:
         matches = pattern.findall(user_sql)
         return list(set(matches))
 
-    def compose_boilerplate_code(self, req: CreateFile):
-        if req.type == "ui":
-            return f"""from workspace.{req.app_name}.{req.page_name} import Context, State\n\n
-    def {req.name}(state: State, context: Context) -> Context:
-        context.widgets.widget1.message = "Hello World"
-        return context
-    """
-        elif req.type == "data_fetcher":
-            return f"""from workspace.{req.app_name}.{req.page_name} import State
-    import pandas as pd\n\n
-    def {req.name}(state: State) -> pd.DataFrame:
-        df = pd.DataFrame()
-        return df
-    """
-        elif req.type == "python":
-            return """
-    def function():
-    print("This is a generic Python function")
 
-    """
-        else:
-            return ""
+def compose_boilerplate_code(req: CreateFile):
+    if req.type == "ui":
+        return f"""from workspace.{req.app_name}.{req.page_name} import Context, State\n\n
+def {req.name}(state: State, context: Context) -> Context:
+    context.widgets.widget1.message = "Hello World"
+    return context
+"""
+    elif req.type == "data_fetcher":
+        return f"""from workspace.{req.app_name}.{req.page_name} import State
+import pandas as pd\n\n
+def {req.name}(state: State) -> pd.DataFrame:
+    df = pd.DataFrame()
+    return df
+"""
+    elif req.type == "python":
+        return """
+def function():
+print("This is a generic Python function")
+
+"""
+    else:
+        return ""
