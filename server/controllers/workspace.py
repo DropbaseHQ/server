@@ -202,6 +202,7 @@ class AppFolderController:
         app_folder_path: str = None,
         page_name: str = None,
     ):
+
         app_folder_path = app_folder_path or self.app_folder_path
         page_name = page_name or self.page_name
 
@@ -233,6 +234,7 @@ class AppFolderController:
             "app_id": app_id,
             **page_object,
         }
+
         if router:
             router.page.create_page(page_properties=create_page_payload)
 

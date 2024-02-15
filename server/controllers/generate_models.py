@@ -4,7 +4,6 @@ from pathlib import Path
 from datamodel_code_generator import generate
 from pydantic import BaseModel, Field, create_model
 
-
 from dropbase.models.table import TableContextProperty
 from dropbase.models.table.button_column import ButtonColumnContextProperty
 from dropbase.models.table.mysql_column import MySqlColumnContextProperty
@@ -15,6 +14,9 @@ from dropbase.models.widget import (
     ButtonContextProperty,
     InputContextProperty,
     SelectContextProperty,
+    TextContextProperty,
+    WidgetContextProperty,
+)
 
 
 def column_state_type_mapper(state_type: str):
