@@ -67,6 +67,10 @@ class MySqlDatabase(Database):
             self.commit()
         return res.rowcount
 
+    def query(self, sql: str):
+        result = self.session.execute(text(sql))
+        return [dict(row) for row in result.fetchall()]
+
     def filter_and_sort(
         self, table: str, filter_clauses: list, sort_by: str = None, ascending: bool = True
     ):
