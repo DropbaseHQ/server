@@ -10,6 +10,12 @@ class SelectContextProperty(ComponentDisplayProperties):
     pass
 
 
+# TODO: join this with on select
+class OnChange(BaseModel):
+    type: Literal["widget", "function"] = "function"
+    value: str
+
+
 class SelectDefinedProperty(BaseModel):
     label: Annotated[str, PropertyCategory.default]
     name: Annotated[str, PropertyCategory.default]
@@ -18,7 +24,7 @@ class SelectDefinedProperty(BaseModel):
     default: Annotated[Optional[Any], PropertyCategory.other]
 
     # events
-    on_change: Annotated[Optional[str], PropertyCategory.events]
+    on_change: Annotated[Optional[OnChange], PropertyCategory.events]
 
     # display_rules
     display_rules: Annotated[Optional[List[dict]], PropertyCategory.display_rules]
