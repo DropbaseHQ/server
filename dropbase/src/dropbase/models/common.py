@@ -12,7 +12,7 @@ class ComponentDisplayProperties(BaseModel):
 
 class CurrencyType(BaseModel):
     symbol: str
-    precision: Optional[int]
+    # precision: Optional[int]
 
 
 class SelectType(BaseModel):
