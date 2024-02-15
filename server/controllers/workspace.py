@@ -6,6 +6,7 @@ import uuid
 from fastapi import HTTPException, Response
 
 from server.controllers.generate_models import create_state_context_files
+from server.controllers.utils import check_if_object_exists, validate_column_name
 from server.requests.dropbase_router import DropbaseRouter
 
 APP_PROPERTIES_TEMPLATE = {
@@ -24,17 +25,13 @@ class WorkspaceFolderController:
         self.r_path_to_workspace = r_path_to_workspace
 
     def write_workspace_properties(self, workspace_properties: dict):
-        workspace_properties_path = os.path.join(
-            self.r_path_to_workspace, "properties.json"
-        )
+        workspace_properties_path = os.path.join(self.r_path_to_workspace, "properties.json")
         with open(workspace_properties_path, "w") as file:
             json.dump(workspace_properties, file, indent=2)
 
     def get_workspace_properties(self):
         if os.path.exists(os.path.join(self.r_path_to_workspace, "properties.json")):
-            with open(
-                os.path.join(self.r_path_to_workspace, "properties.json"), "r"
-            ) as file:
+            with open(os.path.join(self.r_path_to_workspace, "properties.json"), "r") as file:
 
                 props = json.load(file)
                 return props.get("apps", [])
@@ -90,18 +87,14 @@ class AppFolderController:
             json.dump(app_properties_data, file, indent=2)
 
     def _get_workspace_properties(self):
-        workspace_properties_path = os.path.join(
-            self.r_path_to_workspace, "properties.json"
-        )
+        workspace_properties_path = os.path.join(self.r_path_to_workspace, "properties.json")
         if not os.path.exists(workspace_properties_path):
             return None
         with open(workspace_properties_path, "r") as file:
             return json.load(file)
 
     def _write_workspace_properties(self, workspace_properties: dict):
-        workspace_properties_path = os.path.join(
-            self.r_path_to_workspace, "properties.json"
-        )
+        workspace_properties_path = os.path.join(self.r_path_to_workspace, "properties.json")
         with open(workspace_properties_path, "w") as file:
             json.dump(workspace_properties, file, indent=2)
 
@@ -184,9 +177,7 @@ class AppFolderController:
         created_app_names = get_subdirectories(self.r_path_to_workspace)
         app_info = []
         for app_name in created_app_names:
-            app_properties = os.path.join(
-                self.r_path_to_workspace, app_name, "properties.json"
-            )
+            app_properties = os.path.join(self.r_path_to_workspace, app_name, "properties.json")
             if not os.path.exists(app_properties):
                 app_info.append({"name": app_name, "label": app_name, "id": None})
                 continue
@@ -213,6 +204,19 @@ class AppFolderController:
     ):
         app_folder_path = app_folder_path or self.app_folder_path
         page_name = page_name or self.page_name
+
+        if not validate_column_name(page_name):
+            raise HTTPException(
+                status_code=400,
+                detail="Invalid page name. Only alphanumeric characters and underscores are allowed",
+            )
+
+        if check_if_object_exists(os.path.join(app_folder_path, page_name)):
+            raise HTTPException(
+                status_code=400,
+                detail="Invalid page name. Only alphanumeric characters and underscores are allowed",
+            )
+        # TODO: check label is unique
 
         # Create new page folder with __init__.py
         page_folder_path = os.path.join(app_folder_path, page_name)
@@ -245,25 +249,36 @@ class AppFolderController:
         if router:
             router.page.create_page(page_properties=create_page_payload)
 
-    def rename_page(self, old_page_name: str, new_page_label: str):
+        return {"message": "Page created"}
+
+    def rename_page(self, page_name: str, new_page_label: str):
         # rename page in properties.json
         app_properties_data = self._get_app_properties_data()
         for page in app_properties_data["pages"]:
-            if page["name"] == old_page_name:
+            if page["name"] == page_name:
                 page["label"] = new_page_label
                 break
 
         self._write_app_properties_data(app_properties_data)
+        return {"message": "Page renamed"}
 
     def delete_page(self, page_name: str, router: DropbaseRouter):
-        page_folder_path = os.path.join(self.app_folder_path, page_name)
-        shutil.rmtree(page_folder_path)
 
-        # remove page from properties.json
+        # check properties.json first
         app_properties_data = self._get_app_properties_data()
         if not app_properties_data:
             return
 
+        if len(app_properties_data["pages"]) == 1:
+            raise HTTPException(
+                status_code=400, detail="Cannot delete the only page in the app. Delete the app instead."
+            )
+
+        # delete page folder
+        page_folder_path = os.path.join(self.app_folder_path, page_name)
+        shutil.rmtree(page_folder_path)
+
+        # delete page from properties.json
         page_id = None
         for page in app_properties_data["pages"]:
             if page["name"] == page_name:
@@ -273,6 +288,8 @@ class AppFolderController:
 
         self._write_app_properties_data(app_properties_data)
         router.page.delete_page(page_id=page_id)
+
+        return {"message": "Page deleted"}
 
     def get_pages(self):
         if os.path.exists(os.path.join(self.app_folder_path, "properties.json")):
