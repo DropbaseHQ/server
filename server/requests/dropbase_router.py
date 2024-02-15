@@ -1,18 +1,15 @@
 import logging
-import json
-from requests import Response
-from typing import Optional
 
 from fastapi import Request
-from pydantic import BaseModel
+from requests import Response
 
 from server.constants import DROPBASE_API_URL, DROPBASE_TOKEN
 
+from .app import AppRouter
+from .auth import AuthRouter
 from .main_request import DropbaseSession
 from .misc import MiscRouter
-from .app import AppRouter
 from .page import PageRouter
-from .auth import AuthRouter
 
 base_url = DROPBASE_API_URL + "/worker/"
 
@@ -44,13 +41,11 @@ class DropbaseRouter:
 
     def _response_interceptor(self, response: Response, *args, **kwargs):
         if response.status_code == 401:
-            logger.warning(
-                f"Unable to authorize with server. Details: {response.json()}"
-            )
+            logger.warning(f"Unable to authorize with server. Details: {response.json()}")
 
 
 def get_server_access_header(request: Request):
-    if not "access-token" in request.headers:
+    if "access-token" not in request.headers:
         raise Exception("No server access token found")
     access_token_header = request.headers.get("access-token")
     return access_token_header

@@ -22,65 +22,24 @@ class FileController:
         self.new_name = None
         self.new_path = None
 
-    def _set_file_name(self, file_name: str, file_type: str, new: bool = False):
-        self.file_ext = ".sql" if file_type == "sql" else ".py"
-        file_name = file_name
-        file_path = (
-            cwd + f"/workspace/{self.app_name}/{self.page_name}/scripts/{file_name + self.file_ext}"
-        )  # noqa
-        if new:
-            self.new_name = file_name
-            self.new_path = file_path
-        else:
-            self.file_name = file_name
-            self.file_path = file_path
-
-    def _get_file_path(self, file_name: str, file_type: str):
-        file_ext = ".sql" if file_type == "sql" else ".py"
-        return cwd + f"/workspace/{self.app_name}/{self.page_name}/scripts/{file_name}{file_ext}"
-
-    def _write_file(self, code: str):
-        with open(self.file_path, "w") as f:
-            f.write(code)
-
-    def _update_properties(self, update_modes=False):
-        update_properties(self.app_name, self.page_name, self.properties, update_modes=update_modes)
-
-    def _rename_function_in_file(self):
-        # get file mame without extension
-        old_name = self.file_name
-        new_name = self.new_name
-
-        with open(self.new_path, "r") as file:
-            file_content = file.read()
-        tree = ast.parse(file_content)
-
-        # rename function name in file
-        class FunctionRenamer(ast.NodeTransformer):
-            def visit_FunctionDef(self, node):
-                if node.name == old_name:
-                    node.name = new_name
-                return node
-
-        tree = FunctionRenamer().visit(tree)
-        new_code = ast.unparse(tree)
-
-        with open(self.new_path, "w") as file:
-            file.write(new_code)
-
-    def _check_for_duplicate_file_names(self, file_name: str):
-        file_names = [file["name"] for file in self.properties["files"]]
-        if file_name in file_names:
-            raise HTTPException(status_code=400, detail="File with the same name already exists")
-
-    def _check_file_exists(self):
-        if not os.path.exists(self.file_path):
-            raise HTTPException(status_code=400, detail="The file does not exist")
-
-    def _get_depend_table_names(self, user_sql: str):
-        pattern = re.compile(r"\{\{state\.tables\.(\w+)\.\w+\}\}")
-        matches = pattern.findall(user_sql)
-        return list(set(matches))
+    def get_all_files(self):
+        try:
+            if not (
+                re.match(FILE_NAME_REGEX, self.app_name) and re.match(FILE_NAME_REGEX, self.page_name)
+            ):  # noqa
+                raise HTTPException(
+                    status_code=400,
+                    detail="No files found. Please check if the app name and page name are valid.",
+                )
+            dir_path = cwd + f"/workspace/{self.app_name}/{self.page_name}/scripts"
+            py_files = glob.glob(os.path.join(dir_path, "*.py"))
+            py_files = [file for file in py_files if not file.endswith("__init__.py")]
+            sql_files = glob.glob(os.path.join(dir_path, "*.sql"))
+            return {"files": py_files + sql_files}
+        except HTTPException as e:
+            raise e
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=str(e))
 
     def create_file(self, req: CreateFile):
         try:
@@ -91,7 +50,7 @@ class FileController:
             self._check_for_duplicate_file_names(req.name)
 
             # update file content
-            boilerplate_code = compose_boilerplate_code(req)
+            boilerplate_code = self.compose_boilerplate_code(req)
             self._write_file(boilerplate_code)
 
             # update properties file
@@ -169,92 +128,107 @@ class FileController:
             raise HTTPException(status_code=500, detail=str(e))
 
     def delete_file(self, req: DeleteFile):
-        return delete_file(req)
+        try:
+            # set file paths
+            self._set_file_name(req.file_name, req.type)
+            # check if file exists
+            self._check_file_exists()
+            # delete file
+            os.remove(self.file_path)
 
-    def get_all_files(self):
-        return get_all_files(self.app_name, self.page_name)
+            # remove file from properties
+            for file in self.properties["files"]:
+                if file["name"] == self.file_name:
+                    self.properties["files"].remove(file)
+                    break
 
+            # update properties file
+            self._update_properties(update_modes=False)
+            return {"status": "success"}
+        except HTTPException as e:
+            raise e
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=str(e))
 
-def compose_boilerplate_code(req: CreateFile):
-    if req.type == "ui":
-        return f"""from workspace.{req.app_name}.{req.page_name} import Context, State\n\n
-def {req.name}(state: State, context: Context) -> Context:
-    context.widgets.widget1.message = "Hello World"
-    return context
-"""
-    elif req.type == "data_fetcher":
-        return f"""from workspace.{req.app_name}.{req.page_name} import State
-import pandas as pd\n\n
-def {req.name}(state: State) -> pd.DataFrame:
-    df = pd.DataFrame()
-    return df
-"""
-    elif req.type == "python":
-        return """
-def function():
-  print("This is a generic Python function")
+    def _set_file_name(self, file_name: str, file_type: str, new: bool = False):
+        self.file_ext = ".sql" if file_type == "sql" else ".py"
+        file_name = file_name
+        file_path = (
+            cwd + f"/workspace/{self.app_name}/{self.page_name}/scripts/{file_name + self.file_ext}"
+        )
+        if new:
+            self.new_name = file_name
+            self.new_path = file_path
+        else:
+            self.file_name = file_name
+            self.file_path = file_path
 
-"""
-    else:
-        return ""
+    def _get_file_path(self, file_name: str, file_type: str):
+        file_ext = ".sql" if file_type == "sql" else ".py"
+        return cwd + f"/workspace/{self.app_name}/{self.page_name}/scripts/{file_name}{file_ext}"
 
+    def _write_file(self, code: str):
+        with open(self.file_path, "w") as f:
+            f.write(code)
 
-def delete_file(req: DeleteFile):
-    try:
-        function_name = req.file_name[:-4] if req.type == "sql" else req.file_name[:-3]
-        path = cwd + f"/workspace/{req.app_name}/{req.page_name}/scripts/{req.file_name}"
-        if not os.path.exists(path):
-            raise Exception("The file does not exist")
+    def _update_properties(self, update_modes=False):
+        update_properties(self.app_name, self.page_name, self.properties, update_modes=update_modes)
 
-        os.remove(path)
+    def _rename_function_in_file(self):
+        # get file mame without extension
+        old_name = self.file_name
+        new_name = self.new_name
 
-        properties = read_page_properties(req.app_name, req.page_name)
+        with open(self.new_path, "r") as file:
+            file_content = file.read()
+        tree = ast.parse(file_content)
 
-        for file in properties["files"]:
-            if file["name"] == function_name:
-                properties["files"].remove(file)
-                break
+        # rename function name in file
+        class FunctionRenamer(ast.NodeTransformer):
+            def visit_FunctionDef(self, node):
+                if node.name == old_name:
+                    node.name = new_name
+                return node
 
-        # update properties file
-        update_properties(req.app_name, req.page_name, properties, update_modes=False)
+        tree = FunctionRenamer().visit(tree)
+        new_code = ast.unparse(tree)
 
-        return {"status": "success"}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        with open(self.new_path, "w") as file:
+            file.write(new_code)
 
+    def _check_for_duplicate_file_names(self, file_name: str):
+        file_names = [file["name"] for file in self.properties["files"]]
+        if file_name in file_names:
+            raise HTTPException(status_code=400, detail="File with the same name already exists")
 
-def get_all_files(app_name: str, page_name: str):
-    try:
-        if not (re.match(FILE_NAME_REGEX, app_name) and re.match(FILE_NAME_REGEX, page_name)):
-            raise Exception("No files found. Please check if the app name and page name are valid.")
-        dir_path = cwd + f"/workspace/{app_name}/{page_name}/scripts"
-        py_files = glob.glob(os.path.join(dir_path, "*.py"))
-        py_files = [file for file in py_files if not file.endswith("__init__.py")]
-        sql_files = glob.glob(os.path.join(dir_path, "*.sql"))
-        return {"files": py_files + sql_files}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+    def _check_file_exists(self):
+        if not os.path.exists(self.file_path):
+            raise HTTPException(status_code=400, detail="The file does not exist")
 
+    def _get_depend_table_names(self, user_sql: str):
+        pattern = re.compile(r"\{\{state\.tables\.(\w+)\.\w+\}\}")
+        matches = pattern.findall(user_sql)
+        return list(set(matches))
 
-def rename_function_in_file(
-    file_path: str,
-    old_name: str,
-    new_name: str,
-):
-    with open(file_path, "r") as file:
-        file_content = file.read()
+    def compose_boilerplate_code(self, req: CreateFile):
+        if req.type == "ui":
+            return f"""from workspace.{req.app_name}.{req.page_name} import Context, State\n\n
+    def {req.name}(state: State, context: Context) -> Context:
+        context.widgets.widget1.message = "Hello World"
+        return context
+    """
+        elif req.type == "data_fetcher":
+            return f"""from workspace.{req.app_name}.{req.page_name} import State
+    import pandas as pd\n\n
+    def {req.name}(state: State) -> pd.DataFrame:
+        df = pd.DataFrame()
+        return df
+    """
+        elif req.type == "python":
+            return """
+    def function():
+    print("This is a generic Python function")
 
-    tree = ast.parse(file_content)
-
-    class FunctionRenamer(ast.NodeTransformer):
-        def visit_FunctionDef(self, node):
-            if node.name == old_name:
-                node.name = new_name
-            return node
-
-    tree = FunctionRenamer().visit(tree)
-
-    new_code = ast.unparse(tree)
-
-    with open(file_path, "w") as file:
-        file.write(new_code)
+    """
+        else:
+            return ""

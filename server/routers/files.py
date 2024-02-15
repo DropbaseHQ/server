@@ -1,12 +1,8 @@
-from fastapi import APIRouter, Depends, Response
+from fastapi import APIRouter, Depends
 
 from dropbase.schemas.files import CreateFile, DeleteFile, RenameFile, UpdateFile
 from server.auth.dependency import CheckUserPermissions
-from server.controllers.files import (  # create_file,; rename_file,; update_file,
-    FileController,
-    delete_file,
-    get_all_files,
-)
+from server.controllers.files import FileController
 
 router = APIRouter(
     prefix="/files",
@@ -35,10 +31,12 @@ def update_file_req(function_name: str, req: UpdateFile):
 
 
 @router.delete("/")
-def delete_file_req(req: DeleteFile, response: Response):
-    return delete_file(req)
+def delete_file_req(req: DeleteFile):
+    file = FileController(req.app_name, req.page_name)
+    return file.delete_file(req)
 
 
 @router.get("/all/{app_name}/{page_name}/")
-def get_all_files_req(app_name: str, page_name: str, response: Response):
-    return get_all_files(app_name, page_name)
+def get_all_files_req(app_name: str, page_name: str):
+    file = FileController(app_name, page_name)
+    return file.get_all_files()
