@@ -48,6 +48,7 @@ class PageProperties(BaseModel):
 
 
 class CreatePageRequest(BaseModel):
+    app_name: str
     page_name: str
 
 
