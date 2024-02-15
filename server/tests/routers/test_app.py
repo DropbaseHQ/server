@@ -60,7 +60,7 @@ def test_create_app_req_error_duplicate_names(test_client, dropbase_router_mocke
     assert create_first_app.status_code == 200
     assert res.status_code != 200
 
-    assert res_data["message"] == "An app with this name already exists"
+    assert res_data["detail"] == "An app with this name already exists"
 
 
 def test_create_app_req_error_illegal_name_space_between(test_client, dropbase_router_mocker):
@@ -78,7 +78,7 @@ def test_create_app_req_error_illegal_name_space_between(test_client, dropbase_r
     assert not check_directory_structure("workspace/My New App/page1")
 
     assert (
-        res_data["message"]
+        res_data["detail"]
         == "Invalid app name. Only alphanumeric characters and underscores are allowed"
     )
 
@@ -98,7 +98,7 @@ def test_create_app_req_error_illegal_name_special_characters(test_client, dropb
     assert not check_directory_structure("workspace/My_New_App/page1")
 
     assert (
-        res_data["message"]
+        res_data["detail"]
         == "Invalid app name. Only alphanumeric characters and underscores are allowed"
     )
 
@@ -118,7 +118,7 @@ def test_create_app_req_error_illegal_name_url_path(test_client, dropbase_router
     assert not check_directory_structure("workspace/../../my_app/page1")
 
     assert (
-        res_data["message"]
+        res_data["detail"]
         == "Invalid app name. Only alphanumeric characters and underscores are allowed"
     )
 
