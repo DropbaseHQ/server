@@ -1,68 +1,42 @@
-from fastapi import APIRouter, Depends, HTTPException, Response
+from fastapi import APIRouter, Depends
 
 from dropbase.schemas.files import CreateFile, DeleteFile, RenameFile, UpdateFile
 from server.auth.dependency import CheckUserPermissions
-from server.controllers.files import (
-    create_file,
-    delete_file,
-    get_all_files,
-    rename_file,
-    update_file,
-)
+from server.controllers.files import FileController
 
 router = APIRouter(
     prefix="/files",
     tags=["files"],
     responses={404: {"description": "Not found"}},
-    dependencies=[
-        Depends(CheckUserPermissions(action="edit", resource=CheckUserPermissions.APP))
-    ],
+    dependencies=[Depends(CheckUserPermissions(action="edit", resource=CheckUserPermissions.APP))],
 )
 
 
 @router.post("/")
-def create_file_req(req: CreateFile, resp: Response):
-    try:
-        return create_file(req)
-    except HTTPException as e:
-        resp.status_code = e.status_code
-        return {"message": str(e.detail)}
-    except Exception as e:
-        resp.status_code = 400
-        return {"message": str(e)}
+def create_file_req(req: CreateFile):
+    file = FileController(req.app_name, req.page_name)
+    return file.create_file(req)
 
 
 @router.put("/rename")
-def rename_file_req(req: RenameFile, response: Response):
-    try:
-        return rename_file(req)
-    except Exception as e:
-        response.status_code = 400
-        return {"message": str(e)}
+def rename_file_req(req: RenameFile):
+    file = FileController(req.app_name, req.page_name)
+    return file.rename_file(req)
 
 
 @router.put("/{function_name}")
-def update_file_req(function_name: str, req: UpdateFile, response: Response):
-    try:
-        return update_file(function_name, req)
-    except Exception as e:
-        response.status_code = 400
-        return {"message": str(e)}
+def update_file_req(function_name: str, req: UpdateFile):
+    file = FileController(req.app_name, req.page_name)
+    return file.update_file(req)
 
 
 @router.delete("/")
-def delete_file_req(req: DeleteFile, response: Response):
-    try:
-        delete_file(req)
-    except Exception as e:
-        response.status_code = 400
-        return {"message": str(e)}
+def delete_file_req(req: DeleteFile):
+    file = FileController(req.app_name, req.page_name)
+    return file.delete_file(req)
 
 
 @router.get("/all/{app_name}/{page_name}/")
-def get_all_files_req(app_name: str, page_name: str, response: Response):
-    try:
-        return get_all_files(app_name, page_name)
-    except Exception as e:
-        response.status_code = 400
-        return {"message": str(e)}
+def get_all_files_req(app_name: str, page_name: str):
+    file = FileController(app_name, page_name)
+    return file.get_all_files()
