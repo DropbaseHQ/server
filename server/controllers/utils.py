@@ -57,12 +57,6 @@ def check_if_object_exists(path: str):
     return Path(path).exists()
 
 
-def get_depend_table_names(user_sql: str):
-    pattern = re.compile(r"\{\{state\.tables\.(\w+)\.\w+\}\}")
-    matches = pattern.findall(user_sql)
-    return list(set(matches))
-
-
 def process_query_result(res) -> pd.DataFrame:
     df = pd.DataFrame(res)
     df = clean_df(df)

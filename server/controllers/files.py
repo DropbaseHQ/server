@@ -9,7 +9,6 @@ from dropbase.constants import FILE_NAME_REGEX
 from dropbase.schemas.files import CreateFile, DeleteFile, RenameFile, UpdateFile
 from server.constants import cwd
 from server.controllers.properties import read_page_properties, update_properties
-from server.controllers.utils import get_depend_table_names
 
 
 class FileController:
@@ -41,7 +40,7 @@ class FileController:
         return cwd + f"/workspace/{self.app_name}/{self.page_name}/scripts/{file_name}{file_ext}"
 
     def _write_file(self, code: str):
-        with open(self.file_path, "a") as f:
+        with open(self.file_path, "w") as f:
             f.write(code)
 
     def _update_properties(self, update_modes=False):
@@ -74,6 +73,15 @@ class FileController:
         if file_name in file_names:
             raise HTTPException(status_code=400, detail="File with the same name already exists")
 
+    def _check_file_exists(self):
+        if not os.path.exists(self.file_path):
+            raise HTTPException(status_code=400, detail="The file does not exist")
+
+    def _get_depend_table_names(self, user_sql: str):
+        pattern = re.compile(r"\{\{state\.tables\.(\w+)\.\w+\}\}")
+        matches = pattern.findall(user_sql)
+        return list(set(matches))
+
     def create_file(self, req: CreateFile):
         try:
             # set file paths
@@ -101,13 +109,11 @@ class FileController:
             raise HTTPException(status_code=500, detail=str(e))
 
     def rename_file(self, req: RenameFile):
-        print("in rename!")
         try:
             self._set_file_name(req.old_name, req.type)
 
             # if file does not exist, exit
-            if not os.path.exists(self.file_path):
-                raise HTTPException(status_code=400, detail="The file does not exist")
+            self._check_file_exists()
 
             # Check new name is not duplicate
             self._check_for_duplicate_file_names(req.new_name)
@@ -133,48 +139,40 @@ class FileController:
         except Exception as e:
             raise HTTPException(status_code=500, detail=str(e))
 
-    def update_file(self, function_name: str, req: UpdateFile):
-        return update_file(function_name, req)
+    def update_file(self, req: UpdateFile):
+        try:
+            # set file paths
+            self._set_file_name(req.file_name, req.type)
+            self._check_file_exists()
+            # update file content
+            self._write_file(req.code)
+
+            # get depends on tables
+            depends_on = req.depends_on if req.depends_on else []
+            if req.type == "sql":
+                depends_on = self._get_depend_table_names(user_sql=req.code)
+
+            # update file property in properties.json
+            for file in self.properties["files"]:
+                if file["name"] == req.file_name:
+                    file["source"] = req.source
+                    file["type"] = req.type
+                    file["depends_on"] = depends_on
+                    break
+
+            # update properties file
+            self._update_properties(update_modes=False)
+            return {"status": "success"}
+        except HTTPException as e:
+            raise e
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=str(e))
 
     def delete_file(self, req: DeleteFile):
         return delete_file(req)
 
     def get_all_files(self):
         return get_all_files(self.app_name, self.page_name)
-
-
-def rename_file(req: RenameFile):
-    try:
-        file_ext = ".sql" if req.type == "sql" else ".py"
-        file_name = req.old_name + file_ext
-        file_path = cwd + f"/workspace/{req.app_name}/{req.page_name}/scripts/{file_name}"
-
-        # if file does not exist, exit
-        if not os.path.exists(file_path):
-            raise Exception("The file does not exist")
-
-        new_file_name = req.new_name + file_ext
-        new_path = cwd + f"/workspace/{req.app_name}/{req.page_name}/scripts/{new_file_name}"
-        if os.path.exists(file_path):
-            os.rename(file_path, new_path)
-
-        if file_ext == ".py":
-            rename_function_in_file(file_path=new_path, old_name=req.old_name, new_name=req.new_name)
-
-        # update properties.json
-        properties = read_page_properties(req.app_name, req.page_name)
-
-        for file in properties["files"]:
-            if file["name"] == req.old_name:
-                file["name"] = req.new_name
-                break
-
-        # update properties file
-        update_properties(req.app_name, req.page_name, properties, update_modes=False)
-
-        return {"status": "success"}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
 
 
 def compose_boilerplate_code(req: CreateFile):
@@ -199,40 +197,6 @@ def function():
 """
     else:
         return ""
-
-
-def update_file(function_name: str, req: UpdateFile):
-    try:
-        file_extension = ".sql" if req.type == "sql" else ".py"
-        file_name = function_name + file_extension
-
-        # update file content
-        file_path = cwd + f"/workspace/{req.app_name}/{req.page_name}/scripts/{file_name}"
-        with open(file_path, "w") as f:
-            f.write(req.code)
-
-        # update properties.json
-        properties = read_page_properties(req.app_name, req.page_name)
-
-        depends_on = req.depends_on if req.depends_on else []
-        if req.type == "sql":
-            # update depends on flags in properties.json
-            depends_on = get_depend_table_names(user_sql=req.code)
-
-        # update file property in properties.json
-        for file in properties["files"]:
-            if file["name"] == function_name:
-                file["source"] = req.source
-                file["type"] = req.type
-                file["depends_on"] = depends_on
-                break
-
-        # update properties file
-        update_properties(req.app_name, req.page_name, properties, update_modes=False)
-
-        return {"status": "success"}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
 
 
 def delete_file(req: DeleteFile):
