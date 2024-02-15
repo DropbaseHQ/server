@@ -62,10 +62,7 @@ postgresql = pytest_postgresql.factories.postgresql("postgresql_proc")
 @pytest.fixture(scope="session")
 def snowflake_db():
     # Connect to Snowflake
-    print("CONNECTING")
-    print(SNOWFLAKE_TEST_CONNECTION_PARAMS)
     conn = snowflake.connector.connect(**SNOWFLAKE_TEST_CONNECTION_PARAMS)
-    print("CONNECTED")
 
     # Create a new database for testing and use it
     test_db_name = "test_db"
