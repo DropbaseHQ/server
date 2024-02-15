@@ -1,33 +1,8 @@
-import ast
 import importlib
 import re
 from pathlib import Path
 
 import pandas as pd
-
-
-def rename_function_in_file(
-    file_path: str,
-    old_name: str,
-    new_name: str,
-):
-    with open(file_path, "r") as file:
-        file_content = file.read()
-
-    tree = ast.parse(file_content)
-
-    class FunctionRenamer(ast.NodeTransformer):
-        def visit_FunctionDef(self, node):
-            if node.name == old_name:
-                node.name = new_name
-            return node
-
-    tree = FunctionRenamer().visit(tree)
-
-    new_code = ast.unparse(tree)
-
-    with open(file_path, "w") as file:
-        file.write(new_code)
 
 
 def get_function_by_name(app_name: str, page_name: str, function_name: str):

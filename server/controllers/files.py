@@ -1,3 +1,4 @@
+import ast
 import glob
 import os
 import re
@@ -8,37 +9,172 @@ from dropbase.constants import FILE_NAME_REGEX
 from dropbase.schemas.files import CreateFile, DeleteFile, RenameFile, UpdateFile
 from server.constants import cwd
 from server.controllers.properties import read_page_properties, update_properties
-from server.controllers.utils import get_depend_table_names, rename_function_in_file
+from server.controllers.utils import get_depend_table_names
 
 
-def create_file(req: CreateFile):
-    # create file in a local workspace
-    file_name = req.name + ".sql" if req.type == "sql" else req.name + ".py"
-    path = cwd + f"/workspace/{req.app_name}/{req.page_name}/scripts/{file_name}"
-    boilerplate_code = compose_boilerplate_code(req)
+class FileController:
+    def __init__(self, app_name: str, page_name: str):
+        self.app_name = app_name
+        self.page_name = page_name
+        self.properties = read_page_properties(app_name, page_name)
+        self.file_ext = None
+        self.file_name = None
+        self.file_path = None
+        self.new_name = None
+        self.new_path = None
 
-    with open(path, "a") as f:
-        f.write(boilerplate_code)
+    def _set_file_name(self, file_name: str, file_type: str, new: bool = False):
+        self.file_ext = ".sql" if file_type == "sql" else ".py"
+        file_name = file_name
+        file_path = (
+            cwd + f"/workspace/{self.app_name}/{self.page_name}/scripts/{file_name + self.file_ext}"
+        )  # noqa
+        if new:
+            self.new_name = file_name
+            self.new_path = file_path
+        else:
+            self.file_name = file_name
+            self.file_path = file_path
 
-    # update properties.json
-    properties = read_page_properties(req.app_name, req.page_name)
-    properties["files"].append(
-        {"name": req.name, "type": req.type, "source": req.source, "depends_on": []}
-    )
+    def _get_file_path(self, file_name: str, file_type: str):
+        file_ext = ".sql" if file_type == "sql" else ".py"
+        return cwd + f"/workspace/{self.app_name}/{self.page_name}/scripts/{file_name}{file_ext}"
 
-    file_names = set()
+    def _write_file(self, code: str):
+        with open(self.file_path, "a") as f:
+            f.write(code)
 
-    # Check for duplicate file names in properties
-    for file in properties["files"]:
-        if file["name"] in file_names:
+    def _update_properties(self, update_modes=False):
+        update_properties(self.app_name, self.page_name, self.properties, update_modes=update_modes)
+
+    def _rename_function_in_file(self):
+        # get file mame without extension
+        old_name = self.file_name
+        new_name = self.new_name
+
+        with open(self.new_path, "r") as file:
+            file_content = file.read()
+        tree = ast.parse(file_content)
+
+        # rename function name in file
+        class FunctionRenamer(ast.NodeTransformer):
+            def visit_FunctionDef(self, node):
+                if node.name == old_name:
+                    node.name = new_name
+                return node
+
+        tree = FunctionRenamer().visit(tree)
+        new_code = ast.unparse(tree)
+
+        with open(self.new_path, "w") as file:
+            file.write(new_code)
+
+    def _check_for_duplicate_file_names(self, file_name: str):
+        file_names = [file["name"] for file in self.properties["files"]]
+        if file_name in file_names:
             raise HTTPException(status_code=400, detail="File with the same name already exists")
 
-        file_names.add(file["name"])
+    def create_file(self, req: CreateFile):
+        try:
+            # set file paths
+            self._set_file_name(req.name, req.type)
 
-    # update properties file
-    update_properties(req.app_name, req.page_name, properties, update_modes=False)
+            # Check for duplicate file names in properties
+            self._check_for_duplicate_file_names(req.name)
 
-    return {"status": "success"}
+            # update file content
+            boilerplate_code = compose_boilerplate_code(req)
+            self._write_file(boilerplate_code)
+
+            # update properties file
+            self.properties["files"].append(
+                {"name": req.name, "type": req.type, "source": req.source, "depends_on": []}
+            )
+
+            # update properties file
+            self._update_properties()
+
+            return {"status": "success"}
+        except HTTPException as e:
+            raise e
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=str(e))
+
+    def rename_file(self, req: RenameFile):
+        print("in rename!")
+        try:
+            self._set_file_name(req.old_name, req.type)
+
+            # if file does not exist, exit
+            if not os.path.exists(self.file_path):
+                raise HTTPException(status_code=400, detail="The file does not exist")
+
+            # Check new name is not duplicate
+            self._check_for_duplicate_file_names(req.new_name)
+
+            self._set_file_name(req.new_name, req.type, new=True)
+            if os.path.exists(self.file_path):
+                os.rename(self.file_path, self.new_path)
+
+            if self.file_ext == ".py":
+                self._rename_function_in_file()
+
+            for file in self.properties["files"]:
+                if file["name"] == self.file_name:
+                    file["name"] = self.new_name
+                    break
+
+            # update properties file
+            self._update_properties()
+
+            return {"status": "success"}
+        except HTTPException as e:
+            raise e
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=str(e))
+
+    def update_file(self, function_name: str, req: UpdateFile):
+        return update_file(function_name, req)
+
+    def delete_file(self, req: DeleteFile):
+        return delete_file(req)
+
+    def get_all_files(self):
+        return get_all_files(self.app_name, self.page_name)
+
+
+def rename_file(req: RenameFile):
+    try:
+        file_ext = ".sql" if req.type == "sql" else ".py"
+        file_name = req.old_name + file_ext
+        file_path = cwd + f"/workspace/{req.app_name}/{req.page_name}/scripts/{file_name}"
+
+        # if file does not exist, exit
+        if not os.path.exists(file_path):
+            raise Exception("The file does not exist")
+
+        new_file_name = req.new_name + file_ext
+        new_path = cwd + f"/workspace/{req.app_name}/{req.page_name}/scripts/{new_file_name}"
+        if os.path.exists(file_path):
+            os.rename(file_path, new_path)
+
+        if file_ext == ".py":
+            rename_function_in_file(file_path=new_path, old_name=req.old_name, new_name=req.new_name)
+
+        # update properties.json
+        properties = read_page_properties(req.app_name, req.page_name)
+
+        for file in properties["files"]:
+            if file["name"] == req.old_name:
+                file["name"] = req.new_name
+                break
+
+        # update properties file
+        update_properties(req.app_name, req.page_name, properties, update_modes=False)
+
+        return {"status": "success"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 def compose_boilerplate_code(req: CreateFile):
@@ -65,94 +201,96 @@ def function():
         return ""
 
 
-def rename_file(req: RenameFile):
-    file_ext = ".sql" if req.type == "sql" else ".py"
-    file_name = req.old_name + file_ext
-    file_path = cwd + f"/workspace/{req.app_name}/{req.page_name}/scripts/{file_name}"
-
-    # if file does not exist, exit
-    if not os.path.exists(file_path):
-        raise Exception("The file does not exist")
-
-    new_file_name = req.new_name + file_ext
-    new_path = cwd + f"/workspace/{req.app_name}/{req.page_name}/scripts/{new_file_name}"
-    if os.path.exists(file_path):
-        os.rename(file_path, new_path)
-
-    if file_ext == ".py":
-        rename_function_in_file(file_path=new_path, old_name=req.old_name, new_name=req.new_name)
-
-    # update properties.json
-    properties = read_page_properties(req.app_name, req.page_name)
-
-    for file in properties["files"]:
-        if file["name"] == req.old_name:
-            file["name"] = req.new_name
-            break
-
-    # update properties file
-    update_properties(req.app_name, req.page_name, properties, update_modes=False)
-
-    return {"status": "success"}
-
-
 def update_file(function_name: str, req: UpdateFile):
-    file_extension = ".sql" if req.type == "sql" else ".py"
-    file_name = function_name + file_extension
+    try:
+        file_extension = ".sql" if req.type == "sql" else ".py"
+        file_name = function_name + file_extension
 
-    # update file content
-    file_path = cwd + f"/workspace/{req.app_name}/{req.page_name}/scripts/{file_name}"
-    with open(file_path, "w") as f:
-        f.write(req.code)
+        # update file content
+        file_path = cwd + f"/workspace/{req.app_name}/{req.page_name}/scripts/{file_name}"
+        with open(file_path, "w") as f:
+            f.write(req.code)
 
-    # update properties.json
-    properties = read_page_properties(req.app_name, req.page_name)
+        # update properties.json
+        properties = read_page_properties(req.app_name, req.page_name)
 
-    depends_on = req.depends_on if req.depends_on else []
-    if req.type == "sql":
-        # update depends on flags in properties.json
-        depends_on = get_depend_table_names(user_sql=req.code)
+        depends_on = req.depends_on if req.depends_on else []
+        if req.type == "sql":
+            # update depends on flags in properties.json
+            depends_on = get_depend_table_names(user_sql=req.code)
 
-    # update file property in properties.json
-    for file in properties["files"]:
-        if file["name"] == function_name:
-            file["source"] = req.source
-            file["type"] = req.type
-            file["depends_on"] = depends_on
-            break
+        # update file property in properties.json
+        for file in properties["files"]:
+            if file["name"] == function_name:
+                file["source"] = req.source
+                file["type"] = req.type
+                file["depends_on"] = depends_on
+                break
 
-    # update properties file
-    update_properties(req.app_name, req.page_name, properties, update_modes=False)
+        # update properties file
+        update_properties(req.app_name, req.page_name, properties, update_modes=False)
 
-    return {"status": "success"}
+        return {"status": "success"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 def delete_file(req: DeleteFile):
-    function_name = req.file_name[:-4] if req.type == "sql" else req.file_name[:-3]
-    path = cwd + f"/workspace/{req.app_name}/{req.page_name}/scripts/{req.file_name}"
-    if not os.path.exists(path):
-        raise Exception("The file does not exist")
+    try:
+        function_name = req.file_name[:-4] if req.type == "sql" else req.file_name[:-3]
+        path = cwd + f"/workspace/{req.app_name}/{req.page_name}/scripts/{req.file_name}"
+        if not os.path.exists(path):
+            raise Exception("The file does not exist")
 
-    os.remove(path)
+        os.remove(path)
 
-    properties = read_page_properties(req.app_name, req.page_name)
+        properties = read_page_properties(req.app_name, req.page_name)
 
-    for file in properties["files"]:
-        if file["name"] == function_name:
-            properties["files"].remove(file)
-            break
+        for file in properties["files"]:
+            if file["name"] == function_name:
+                properties["files"].remove(file)
+                break
 
-    # update properties file
-    update_properties(req.app_name, req.page_name, properties, update_modes=False)
+        # update properties file
+        update_properties(req.app_name, req.page_name, properties, update_modes=False)
 
-    return {"status": "success"}
+        return {"status": "success"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 def get_all_files(app_name: str, page_name: str):
-    if not (re.match(FILE_NAME_REGEX, app_name) and re.match(FILE_NAME_REGEX, page_name)):
-        raise Exception("No files found. Please check if the app name and page name are valid.")
-    dir_path = cwd + f"/workspace/{app_name}/{page_name}/scripts"
-    py_files = glob.glob(os.path.join(dir_path, "*.py"))
-    py_files = [file for file in py_files if not file.endswith("__init__.py")]
-    sql_files = glob.glob(os.path.join(dir_path, "*.sql"))
-    return {"files": py_files + sql_files}
+    try:
+        if not (re.match(FILE_NAME_REGEX, app_name) and re.match(FILE_NAME_REGEX, page_name)):
+            raise Exception("No files found. Please check if the app name and page name are valid.")
+        dir_path = cwd + f"/workspace/{app_name}/{page_name}/scripts"
+        py_files = glob.glob(os.path.join(dir_path, "*.py"))
+        py_files = [file for file in py_files if not file.endswith("__init__.py")]
+        sql_files = glob.glob(os.path.join(dir_path, "*.sql"))
+        return {"files": py_files + sql_files}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+def rename_function_in_file(
+    file_path: str,
+    old_name: str,
+    new_name: str,
+):
+    with open(file_path, "r") as file:
+        file_content = file.read()
+
+    tree = ast.parse(file_content)
+
+    class FunctionRenamer(ast.NodeTransformer):
+        def visit_FunctionDef(self, node):
+            if node.name == old_name:
+                node.name = new_name
+            return node
+
+    tree = FunctionRenamer().visit(tree)
+
+    new_code = ast.unparse(tree)
+
+    with open(file_path, "w") as file:
+        file.write(new_code)
