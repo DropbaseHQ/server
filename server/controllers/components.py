@@ -1,4 +1,13 @@
-from dropbase.models.table import PgColumnDefinedProperty, PyColumnDefinedProperty, TableDefinedProperty
+import operator
+from functools import reduce
+
+from dropbase.models.common import DisplayTypeConfigurations
+from dropbase.models.table import (
+    ButtonColumnDefinedProperty,
+    PgColumnDefinedProperty,
+    PyColumnDefinedProperty,
+    TableDefinedProperty,
+)
 from dropbase.models.table.snowflake_column import SnowflakeColumnDefinedProperty
 from dropbase.models.widget import (
     BooleanDefinedProperty,
@@ -11,6 +20,7 @@ from dropbase.models.widget import (
 
 component_property_types = {
     "table": TableDefinedProperty,
+    "button_column": ButtonColumnDefinedProperty,
     "pycolumn": PyColumnDefinedProperty,
     "pgcolumn": PgColumnDefinedProperty,
     "snowflakecolumn": SnowflakeColumnDefinedProperty,
@@ -20,6 +30,7 @@ component_property_types = {
     "text": TextDefinedProperty,
     "select": SelectDefinedProperty,
     "boolean": BooleanDefinedProperty,
+    "display_type_configurations": DisplayTypeConfigurations,
 }
 
 
@@ -33,6 +44,36 @@ def get_component_properties(compnent_type: str):
     return response
 
 
+def reduce_method(a, b):
+    return reduce(operator.getitem, a, b)
+
+
+def parse_prop(prop, key, model_schema):
+
+    # maybe we don't need this
+    if "anyOf" in prop:
+        prop["type"] = []
+        for each_prop in prop["anyOf"]:
+            prop["type"].append(parse_prop(each_prop, key, model_schema))
+        prop.pop("anyOf")
+    if "$ref" in prop:
+        path = prop["$ref"][2:].split("/")
+        prop = reduce_method(path, model_schema)
+
+    if key in model_schema.get("required", []):
+        prop["required"] = True
+
+    if "description" in prop:
+        prop["type"] = prop["description"]
+        prop.pop("description")
+
+    if "enum" in prop:
+        prop["type"] = "select"
+
+    prop["name"] = key
+    return prop
+
+
 def get_class_properties(pydantic_model):
     model_schema = pydantic_model.schema()
     model_props = model_schema.get("properties")
@@ -40,17 +81,7 @@ def get_class_properties(pydantic_model):
     obj_props = []
     for key in model_props.keys():
         prop = model_props[key]
-        prop["name"] = key
-
-        if key in model_schema.get("required", []):
-            prop["required"] = True
-
-        if "description" in prop:
-            prop["type"] = prop["description"]
-            prop.pop("description")
-
-        if "enum" in prop:
-            prop["type"] = "select"
+        prop = parse_prop(prop, key, model_schema)
         obj_props.append(prop)
 
     return obj_props

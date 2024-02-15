@@ -6,37 +6,20 @@ from pydantic import BaseModel, Field, create_model
 
 from dropbase.models import (
     BooleanContextProperty,
-    BooleanDefinedProperty,
+    ButtonColumnContextProperty,
     ButtonContextProperty,
-    ButtonDefinedProperty,
     InputContextProperty,
-    InputDefinedProperty,
     PgColumnContextProperty,
-    PgColumnDefinedProperty,
     PyColumnContextProperty,
-    PyColumnDefinedProperty,
     SelectContextProperty,
-    SelectDefinedProperty,
     TableContextProperty,
     TextContextProperty,
-    TextDefinedProperty,
     WidgetContextProperty,
 )
 from dropbase.models.table.snowflake_column import (
     SnowflakeColumnContextProperty,
     SnowflakeColumnDefinedProperty,
 )
-
-component_name_to_models = {
-    "button": ButtonDefinedProperty,
-    "input": InputDefinedProperty,
-    "select": SelectDefinedProperty,
-    "boolean": BooleanDefinedProperty,
-    "text": TextDefinedProperty,
-    "py": PyColumnDefinedProperty,
-    "pg": PgColumnDefinedProperty,
-    "snowflake": SnowflakeColumnDefinedProperty,
-}
 
 
 def column_state_type_mapper(state_type: str):
@@ -109,15 +92,14 @@ def get_tables_state_class(tables_props):
 
         columns_props = {}
         for column in table_columns:
+            if not column.get("display_type"):
+                continue
 
             column_name = column["name"]
-            column_type = column_state_type_mapper(column.get("display_type"))
+            state_type = column_state_type_mapper(column.get("display_type"))
 
             # state is pulled from ComponentDefined class
-            columns_props[column_name] = (
-                column_type,
-                Field(default=None),
-            )
+            columns_props[column_name] = (state_type, Field(default=None))
 
         table_class_name = table_name.capitalize() + "State"
         locals()[table_class_name] = create_model(table_class_name, **columns_props)
@@ -145,8 +127,6 @@ context_model_mapper = {
     "input": InputContextProperty,
     "select": SelectContextProperty,
     "text": TextContextProperty,
-    "sql": PgColumnContextProperty,
-    "python": PyColumnContextProperty,
 }
 
 
@@ -183,6 +163,13 @@ def get_widget_context(widgets_props):
     return create_model("WidgetsContext", **widgets_context)
 
 
+column_context_model_mapper = {
+    "postgres": PgColumnContextProperty,
+    "python": PyColumnContextProperty,
+    "button_column": ButtonColumnContextProperty,
+}
+
+
 def get_table_context(tables_props):
     tables_context = {}
     for table_data in tables_props:
@@ -193,10 +180,7 @@ def get_table_context(tables_props):
         # create columns contexts
         columns_props = {}
         for column in table_columns:
-
-            # NOTE: column type is inferred from table type. we might need to change this later
-            column_type = table_data.get("type")
-            BaseProperty = context_model_mapper.get(column_type)
+            BaseProperty = column_context_model_mapper.get(column.get("column_type"))
             # create column context class
             columns_props[column["name"]] = (BaseProperty, ...)
 

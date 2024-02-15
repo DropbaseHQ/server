@@ -1,18 +1,15 @@
-from typing import Literal, Optional
+from typing import Literal
 
-from pydantic import BaseModel
-
-from dropbase.models.common import ComponentDisplayProperties
+from dropbase.models.common import BaseColumnDefinedProperty, ComponentDisplayProperties
 
 
 class PyColumnContextProperty(ComponentDisplayProperties):
     pass
 
 
-class PyColumnDefinedProperty(BaseModel):
-    name: str
-    column_type: Optional[str]
-    display_type: Optional[Literal["text", "integer", "float", "boolean", "datetime", "date", "time"]]
+class PyColumnDefinedProperty(BaseColumnDefinedProperty):
+    # internal
+    column_type: Literal["python"] = "python"
 
     # visibility
     hidden: bool = False

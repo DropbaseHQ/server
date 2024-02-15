@@ -73,5 +73,7 @@ def test_run_query_python(test_client):
     assert res.status_code == 200
     res_data = res.json()
     assert res_data["type"] == "table"
-    assert res_data["columns"] == [{"name": "x", "column_type": "int64", "display_type": "integer"}]
+    assert res_data["columns"] == [
+        {"name": "x", "column_type": "python", "data_type": "int64", "display_type": "integer"}
+    ]
     assert res_data["data"] == [[1]]

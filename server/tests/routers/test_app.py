@@ -1,9 +1,12 @@
 import os
 import shutil
-import pytest
-from server.tests.constants import TEST_APP_NAME, WORKSPACE_PATH
-from server.controllers.workspace import WorkspaceFolderController
 
+import pytest
+
+from server.controllers.workspace import WorkspaceFolderController
+from server.tests.constants import TEST_APP_NAME, WORKSPACE_PATH
+
+NEW_APP_LABEL = "Test create app"
 NEW_APP_NAME = "test_create_app"
 OLD_APP_NAME = "test_create_app_2"
 TEST_WORKSPACE_ID = "test_workspace"
@@ -29,7 +32,7 @@ def check_directory_structure(path):
 def test_create_app_req(test_client, dropbase_router_mocker):
     try:
         # Arrange
-        data = {"app_name": NEW_APP_NAME, "workspace_id": TEST_WORKSPACE_ID}
+        data = {"app_label": NEW_APP_LABEL, "app_name": NEW_APP_NAME, "workspace_id": TEST_WORKSPACE_ID}
 
         # Act
         dropbase_router_mocker.patch("app", "create_app", side_effect=lambda *args, **kwargs: None)
@@ -44,7 +47,7 @@ def test_create_app_req(test_client, dropbase_router_mocker):
 
 def test_create_app_req_error_duplicate_names(test_client, dropbase_router_mocker):
     # Arrange
-    data = {"app_name": NEW_APP_NAME, "workspace_id": TEST_WORKSPACE_ID}
+    data = {"app_label": NEW_APP_LABEL, "app_name": NEW_APP_NAME, "workspace_id": TEST_WORKSPACE_ID}
 
     # Act
     dropbase_router_mocker.patch("app", "create_app", side_effect=lambda *args, **kwargs: None)
@@ -62,7 +65,7 @@ def test_create_app_req_error_duplicate_names(test_client, dropbase_router_mocke
 
 def test_create_app_req_error_illegal_name_space_between(test_client, dropbase_router_mocker):
     # Arrange
-    data = {"app_name": "My New App", "workspace_id": TEST_WORKSPACE_ID}
+    data = {"app_label": NEW_APP_LABEL, "app_name": "My New App", "workspace_id": TEST_WORKSPACE_ID}
 
     # Act
     dropbase_router_mocker.patch("app", "create_app", side_effect=lambda *args, **kwargs: None)
@@ -82,7 +85,7 @@ def test_create_app_req_error_illegal_name_space_between(test_client, dropbase_r
 
 def test_create_app_req_error_illegal_name_special_characters(test_client, dropbase_router_mocker):
     # Arrange
-    data = {"app_name": "My_New_App!", "workspace_id": TEST_WORKSPACE_ID}
+    data = {"app_label": NEW_APP_LABEL, "app_name": "My_New_App!", "workspace_id": TEST_WORKSPACE_ID}
 
     # Act
     dropbase_router_mocker.patch("app", "create_app", side_effect=lambda *args, **kwargs: None)
@@ -102,7 +105,7 @@ def test_create_app_req_error_illegal_name_special_characters(test_client, dropb
 
 def test_create_app_req_error_illegal_name_url_path(test_client, dropbase_router_mocker):
     # Arrange
-    data = {"app_name": "../../my_app", "workspace_id": TEST_WORKSPACE_ID}
+    data = {"app_label": NEW_APP_LABEL, "app_name": "../../my_app", "workspace_id": TEST_WORKSPACE_ID}
 
     # Act
     dropbase_router_mocker.patch("app", "create_app", side_effect=lambda *args, **kwargs: None)
@@ -145,9 +148,7 @@ def test_rename_app_req_error_duplicate_names(test_client, dropbase_router_mocke
 def test_rename_app_req(test_client):
     try:
         # Arrange
-        workspace_folder_controller = WorkspaceFolderController(
-            r_path_to_workspace=WORKSPACE_PATH
-        )
+        workspace_folder_controller = WorkspaceFolderController(r_path_to_workspace=WORKSPACE_PATH)
         app_id = workspace_folder_controller.get_app_id(app_name=TEST_APP_NAME)
         data = {"app_id": app_id, "new_label": NEW_APP_NAME}
 

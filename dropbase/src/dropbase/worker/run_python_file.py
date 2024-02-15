@@ -3,7 +3,11 @@ import json
 import os
 import traceback
 
+from dotenv import load_dotenv
+
 from dropbase.helpers.dataframe import convert_df_to_resp_obj
+
+load_dotenv()
 
 
 def get_function_by_name(app_name: str, page_name: str, function_name: str):
@@ -27,7 +31,7 @@ def run_python_data_fetcher(app_name: str, page_name: str, file: dict, state: di
     function_name = get_function_by_name(app_name, page_name, file.get("name"))
     # call function
     df = function_name(**args)
-    return convert_df_to_resp_obj(df)
+    return convert_df_to_resp_obj(df, "python")
 
 
 # for ui functions

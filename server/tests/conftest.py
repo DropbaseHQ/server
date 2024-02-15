@@ -10,7 +10,7 @@ from snowflake.connector import DictCursor
 
 from dropbase.database.databases.postgres import PostgresDatabase
 from dropbase.database.databases.snowflake import SnowflakeDatabase
-from server.auth.dependency import EnforceUserAppPermissions
+from server.auth.dependency import CheckUserPermissions
 from server.controllers.properties import read_page_properties, update_properties
 from server.controllers.workspace import WorkspaceFolderController
 from server.main import app
@@ -62,7 +62,10 @@ postgresql = pytest_postgresql.factories.postgresql("postgresql_proc")
 @pytest.fixture(scope="session")
 def snowflake_db():
     # Connect to Snowflake
+    print("CONNECTING")
+    print(SNOWFLAKE_TEST_CONNECTION_PARAMS)
     conn = snowflake.connector.connect(**SNOWFLAKE_TEST_CONNECTION_PARAMS)
+    print("CONNECTED")
 
     # Create a new database for testing and use it
     test_db_name = "test_db"
@@ -97,11 +100,13 @@ def test_client():
     def override_check_user_app_permissions():
         return {"use": True, "edit": True, "own": True}
 
+    app.dependency_overrides[CheckUserPermissions(action="edit")] = override_check_user_app_permissions
+    app.dependency_overrides[CheckUserPermissions(action="use")] = override_check_user_app_permissions
     app.dependency_overrides[
-        EnforceUserAppPermissions(action="edit")
+        CheckUserPermissions(action="edit", resource=CheckUserPermissions.APP)
     ] = override_check_user_app_permissions
     app.dependency_overrides[
-        EnforceUserAppPermissions(action="use")
+        CheckUserPermissions(action="use", resource=CheckUserPermissions.APP)
     ] = override_check_user_app_permissions
     return TestClient(app)
 
@@ -145,7 +150,6 @@ def mock_db(request, postgresql, snowflake_db):
             db_instance = connect_to_test_db("postgres", creds_dict)
 
         case "snowflake":
-            # We need to create TestDB
             load_test_db("snowflake", **SNOWFLAKE_TEST_CONNECTION_PARAMS)
             creds_dict = SNOWFLAKE_TEST_CREDS
 

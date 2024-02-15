@@ -14,6 +14,7 @@ class PostgresDatabase(Database):
     def __init__(self, creds: dict, schema: str = "public"):
         super().__init__(creds)
         self.schema = schema
+        self.db_type = "postgres"
 
     def _get_connection_url(self, creds: dict):
         return URL.create(**creds)
@@ -216,7 +217,7 @@ class PostgresDatabase(Database):
             columns_dict = {col.column_name: col for col in edit.columns}
             column = columns_dict[columns_name]
 
-            if edit.column_type == "DATE" or edit.column_type == "TIMESTAMP":
+            if edit.data_type == "DATE" or edit.data_type == "TIMESTAMP":
                 # new_value will be epoch time in ms, convert it to sec first then create datetime
                 edit.new_value = datetime.fromtimestamp(edit.new_value // 1000, timezone.utc)
 

@@ -15,7 +15,7 @@ class CellProps(BaseModel):
 
 class CellEdit(BaseModel):
     column_name: str
-    column_type: str
+    data_type: str
     old_value: Any
     new_value: Any
     row: dict
