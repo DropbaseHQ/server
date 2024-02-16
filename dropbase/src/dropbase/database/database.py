@@ -63,10 +63,6 @@ class Database(ABC):
         pass
 
     @abstractmethod
-    def execute_custom_query(self, sql: str, values: dict = None):
-        pass
-
-    @abstractmethod
     def _get_db_schema(self):
         pass
 
