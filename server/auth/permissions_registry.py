@@ -1,8 +1,9 @@
 from uuid import UUID
+from server.constants import CUSTOM_PERMISSIONS_EXPIRY_TIME
 import time
 
-
-PERMISSISONS_EXPIRY_TIME = 60  # 1 minute
+print("CUSTOM_PERMISSIONS_EXPIRY_TIME", CUSTOM_PERMISSIONS_EXPIRY_TIME)
+PERMISSISONS_EXPIRY_TIME = int(CUSTOM_PERMISSIONS_EXPIRY_TIME) or 60  # 1 minute
 
 
 class RegistryResources:
