@@ -1,9 +1,9 @@
-from uuid import UUID
-from server.constants import CUSTOM_PERMISSIONS_EXPIRY_TIME
 import time
+from uuid import UUID
 
-print("CUSTOM_PERMISSIONS_EXPIRY_TIME", CUSTOM_PERMISSIONS_EXPIRY_TIME)
-PERMISSISONS_EXPIRY_TIME = int(CUSTOM_PERMISSIONS_EXPIRY_TIME) or 60  # 1 minute
+from server.constants import CUSTOM_PERMISSIONS_EXPIRY_TIME
+
+PERMISSISONS_EXPIRY_TIME = int(CUSTOM_PERMISSIONS_EXPIRY_TIME)
 
 
 class RegistryResources:
@@ -20,9 +20,7 @@ class PermissionsRegistry:
 
     def _check_workspace_expiry(self, user_id: UUID, workspace_id: UUID):
         if (
-            self._registry[user_id][RegistryResources.WORKSPACE][workspace_id][
-                "expiry_time"
-            ]
+            self._registry[user_id][RegistryResources.WORKSPACE][workspace_id]["expiry_time"]
             < time.time()
         ):
             del self._registry[user_id][RegistryResources.WORKSPACE][workspace_id]
@@ -30,18 +28,13 @@ class PermissionsRegistry:
         return True
 
     def _check_app_expiry(self, user_id: UUID, app_id: UUID):
-        if (
-            self._registry[user_id][RegistryResources.APP][app_id]["expiry_time"]
-            < time.time()
-        ):
+        if self._registry[user_id][RegistryResources.APP][app_id]["expiry_time"] < time.time():
             print("EXPIRED")
             del self._registry[user_id]["apps"][app_id]
             return False
         return True
 
-    def save_workspace_permissions(
-        self, user_id: UUID, workspace_id: UUID, permissions: list
-    ):
+    def save_workspace_permissions(self, user_id: UUID, workspace_id: UUID, permissions: list):
         if user_id not in self._registry:
             self._registry[user_id] = {
                 RegistryResources.WORKSPACE: {},
@@ -94,12 +87,7 @@ class PermissionsRegistry:
             return {}
         if not self._check_app_expiry(user_id, app_id):
             return {}
-        return (
-            self._registry.get(user_id)
-            .get(RegistryResources.APP)
-            .get(app_id)
-            .get("permissions")
-        )
+        return self._registry.get(user_id).get(RegistryResources.APP).get(app_id).get("permissions")
 
 
 permissions_registry = PermissionsRegistry()
