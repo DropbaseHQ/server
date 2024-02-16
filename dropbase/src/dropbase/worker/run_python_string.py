@@ -9,8 +9,11 @@ from io import StringIO
 
 import astor
 import pandas as pd
+from dotenv import load_dotenv
 
 from dropbase.helpers.dataframe import convert_df_to_resp_obj
+
+load_dotenv()
 
 
 def assign_last_expression(script: str) -> str:

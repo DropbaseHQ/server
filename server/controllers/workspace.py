@@ -3,9 +3,10 @@ import os
 import shutil
 import uuid
 
-from fastapi import HTTPException, Response
+from fastapi import HTTPException
 
 from server.controllers.generate_models import create_state_context_files
+from server.controllers.utils import check_if_object_exists, validate_column_name
 from server.requests.dropbase_router import DropbaseRouter
 
 APP_PROPERTIES_TEMPLATE = {
@@ -53,7 +54,14 @@ class WorkspaceFolderController:
                 app_id = app.get("id", None)
                 return app_id
 
-    def update_app_info(self, app_id: str, app_info: dict):
+    def update_app_info(self, app_id: str, new_label: str):
+        target_app = self.get_app(app_id=app_id)
+        if target_app is None:
+            raise HTTPException(
+                status_code=400, detail="App does not exist, or id does not exist for this app."
+            )
+
+        app_info = {**target_app, "label": new_label}
         workspace_data = self.get_workspace_properties()
         for app in workspace_data:
             if app.get("id") == app_id:
@@ -206,6 +214,19 @@ class AppFolderController:
         app_folder_path = app_folder_path or self.app_folder_path
         page_name = page_name or self.page_name
 
+        if not validate_column_name(page_name):
+            raise HTTPException(
+                status_code=400,
+                detail="Invalid page name. Only alphanumeric characters and underscores are allowed",
+            )
+
+        if check_if_object_exists(os.path.join(app_folder_path, page_name)):
+            raise HTTPException(
+                status_code=400,
+                detail="Invalid page name. Only alphanumeric characters and underscores are allowed",
+            )
+        # TODO: check label is unique
+
         # Create new page folder with __init__.py
         page_folder_path = os.path.join(app_folder_path, page_name)
 
@@ -238,25 +259,36 @@ class AppFolderController:
         if router:
             router.page.create_page(page_properties=create_page_payload)
 
-    def rename_page(self, old_page_name: str, new_page_label: str):
+        return {"message": "Page created"}
+
+    def rename_page(self, page_name: str, new_page_label: str):
         # rename page in properties.json
         app_properties_data = self._get_app_properties_data()
         for page in app_properties_data["pages"]:
-            if page["name"] == old_page_name:
+            if page["name"] == page_name:
                 page["label"] = new_page_label
                 break
 
         self._write_app_properties_data(app_properties_data)
+        return {"message": "Page renamed"}
 
     def delete_page(self, page_name: str, router: DropbaseRouter):
-        page_folder_path = os.path.join(self.app_folder_path, page_name)
-        shutil.rmtree(page_folder_path)
 
-        # remove page from properties.json
+        # check properties.json first
         app_properties_data = self._get_app_properties_data()
         if not app_properties_data:
             return
 
+        if len(app_properties_data["pages"]) == 1:
+            raise HTTPException(
+                status_code=400, detail="Cannot delete the only page in the app. Delete the app instead."
+            )
+
+        # delete page folder
+        page_folder_path = os.path.join(self.app_folder_path, page_name)
+        shutil.rmtree(page_folder_path)
+
+        # delete page from properties.json
         page_id = None
         for page in app_properties_data["pages"]:
             if page["name"] == page_name:
@@ -267,6 +299,8 @@ class AppFolderController:
         self._write_app_properties_data(app_properties_data)
         router.page.delete_page(page_id=page_id)
 
+        return {"message": "Page deleted"}
+
     def get_pages(self):
         if os.path.exists(os.path.join(self.app_folder_path, "properties.json")):
             return self._get_app_properties_data().get("pages", [])
@@ -275,17 +309,24 @@ class AppFolderController:
         pages = [{"name": page} for page in page_names]
         return pages
 
-    def create_app(
-        self,
-        app_label: str = None,
-        router: DropbaseRouter = None,
-    ):
+    def create_app(self, app_label: str = None, router: DropbaseRouter = None):
+        if not validate_column_name(self.app_name):
+            raise HTTPException(
+                status_code=400,
+                detail="Invalid app name. Only alphanumeric characters and underscores are allowed",
+            )
+
+        if check_if_object_exists(self.app_folder_path):
+            raise HTTPException(status_code=400, detail="An app with this name already exists")
+
+        # TODO: assert app name is unique
+
         self.create_workspace_properties()
         self._create_default_workspace_files(router=router, app_label=app_label)
 
         return {"success": True}
 
-    def delete_app(self, app_name: str, response: Response, router: DropbaseRouter):
+    def delete_app(self, app_name: str, router: DropbaseRouter):
         app_path = os.path.join(self.r_path_to_workspace, app_name)
         if os.path.exists(app_path):
             shutil.rmtree(app_path)
@@ -302,13 +343,10 @@ class AppFolderController:
                     break
 
             self._write_workspace_properties(workspace_properties)
-
             router.app.delete_app(app_id=app_id)
-
             return {"message": "App deleted"}
         else:
-            response.status_code = 400
-            return {"message": "App does not exist"}
+            raise HTTPException(status_code=400, detail="App does not exist")
 
 
 INIT_CODE = """

@@ -6,17 +6,24 @@ from fastapi import APIRouter, BackgroundTasks, Depends, Response
 from dropbase.schemas.files import DataFile
 from dropbase.schemas.query import RunSQLRequestTask, RunSQLStringRequest
 from dropbase.schemas.run_python import QueryPythonRequest, RunPythonStringRequestNew
-from server.auth.dependency import EnforceUserAppPermissions
+from server.auth.dependency import CheckUserPermissions
 from server.controllers.properties import read_page_properties
 from server.controllers.python_docker import run_container
 from server.controllers.redis import r
 from server.controllers.run_sql import run_sql_query, run_sql_query_from_string
 from server.controllers.utils import get_table_data_fetcher
 
-router = APIRouter(prefix="/query", tags=["query"], responses={404: {"description": "Not found"}})
+router = APIRouter(
+    prefix="/query", tags=["query"], responses={404: {"description": "Not found"}}
+)
 
 
-@router.post("/sql_string/", dependencies=[Depends(EnforceUserAppPermissions(action="use"))])
+@router.post(
+    "/sql_string/",
+    dependencies=[
+        Depends(CheckUserPermissions(action="use", resource=CheckUserPermissions.APP))
+    ],
+)
 async def run_sql_from_string_req(
     request: RunSQLStringRequest, response: Response, background_tasks: BackgroundTasks
 ):
@@ -73,12 +80,19 @@ async def run_python_string_test(
 
 
 @router.post("/")
-async def start_docker(req: QueryPythonRequest, response: Response, background_tasks: BackgroundTasks):
+async def start_docker(
+    req: QueryPythonRequest, response: Response, background_tasks: BackgroundTasks
+):
     properties = read_page_properties(req.app_name, req.page_name)
     file = get_table_data_fetcher(properties["files"], req.table.fetcher)
     file = DataFile(**file)
     job_id = uuid.uuid4().hex
-    args = {"app_name": req.app_name, "page_name": req.page_name, "job_id": job_id, "type": "file"}
+    args = {
+        "app_name": req.app_name,
+        "page_name": req.page_name,
+        "job_id": job_id,
+        "type": "file",
+    }
     if file.type == "data_fetcher":
         # need to turn into json to pass to docker container as environment variables
         args["file"] = json.dumps(file.dict())

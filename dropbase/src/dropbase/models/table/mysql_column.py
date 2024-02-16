@@ -2,10 +2,10 @@ from typing import Literal, Optional
 
 from pydantic import BaseModel
 
-from server.models.common import ComponentDisplayProperties
+# from server.models.common import ComponentDisplayProperties
 
 
-class MySqlColumnContextProperty(ComponentDisplayProperties):
+class MySqlColumnContextProperty(BaseModel):
     pass
 
 

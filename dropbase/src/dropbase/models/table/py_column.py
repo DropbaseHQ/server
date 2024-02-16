@@ -1,15 +1,13 @@
 from typing import Literal
 
-from pydantic import BaseModel
-
-from dropbase.models.common import ComponentDisplayProperties
+from dropbase.models.common import BaseColumnDefinedProperty, ComponentDisplayProperties
 
 
 class PyColumnContextProperty(ComponentDisplayProperties):
     pass
 
 
-class PyColumnDefinedProperty(BaseModel):
+class PyColumnDefinedProperty(BaseColumnDefinedProperty):
     # internal
     column_type: Literal["python"] = "python"
 

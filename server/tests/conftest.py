@@ -8,10 +8,9 @@ import pytest_postgresql.factories
 from fastapi.testclient import TestClient
 from pytest_mysql import factories
 
-
 from dropbase.database.databases.mysql import MySqlDatabase
 from dropbase.database.databases.postgres import PostgresDatabase
-from server.auth.dependency import EnforceUserAppPermissions
+from server.auth.dependency import CheckUserPermissions
 from server.controllers.properties import read_page_properties, update_properties
 from server.controllers.workspace import WorkspaceFolderController
 from server.main import app
@@ -80,12 +79,14 @@ def test_client():
     def override_check_user_app_permissions():
         return {"use": True, "edit": True, "own": True}
 
-    app.dependency_overrides[EnforceUserAppPermissions(action="edit")] = (
-        override_check_user_app_permissions
-    )
-    app.dependency_overrides[EnforceUserAppPermissions(action="use")] = (
-        override_check_user_app_permissions
-    )
+    app.dependency_overrides[CheckUserPermissions(action="edit")] = override_check_user_app_permissions
+    app.dependency_overrides[CheckUserPermissions(action="use")] = override_check_user_app_permissions
+    app.dependency_overrides[
+        CheckUserPermissions(action="edit", resource=CheckUserPermissions.APP)
+    ] = override_check_user_app_permissions
+    app.dependency_overrides[
+        CheckUserPermissions(action="use", resource=CheckUserPermissions.APP)
+    ] = override_check_user_app_permissions
     return TestClient(app)
 
 
@@ -93,9 +94,7 @@ def test_client():
 def dropbase_router_mocker():
     mocker = DropbaseRouterMocker()
     # app.dependency_overrides uses function as a key. part of fastapi
-    app.dependency_overrides[get_dropbase_router] = (
-        lambda: mocker.get_mock_dropbase_router()
-    )
+    app.dependency_overrides[get_dropbase_router] = lambda: mocker.get_mock_dropbase_router()
     yield mocker
     # delete get_dropbase_router from dependency overwrite once test is done
     del app.dependency_overrides[get_dropbase_router]
@@ -152,11 +151,7 @@ def mock_db(request, postgresql, mysql):
 
 
 def pytest_sessionstart():
-    from server.controllers.workspace import (
-        AppFolderController,
-        create_file,
-        create_folder,
-    )
+    from server.controllers.workspace import AppFolderController, create_file, create_folder
 
     create_folder(TEMPDIR_PATH)
 
@@ -194,9 +189,9 @@ def pytest_sessionfinish():
     # Its easier to clean it up here
     workspace_folder_controller = WorkspaceFolderController(r_path_to_workspace=WORKSPACE_PATH)
     apps = workspace_folder_controller.get_workspace_properties()
-    for app in apps:
-        if app["name"] == TEST_APP_NAME:
-            apps.remove(app)
+    for one_app in apps:
+        if one_app["name"] == TEST_APP_NAME:
+            apps.remove(one_app)
 
     workspace_folder_controller.write_workspace_properties(
         {

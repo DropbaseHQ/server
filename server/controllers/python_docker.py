@@ -1,8 +1,11 @@
 import os
 
 import docker
+from dotenv import load_dotenv
 
 from server.constants import WORKER_IMAGE_VERSION
+
+load_dotenv()
 
 
 def run_container(env_vars: dict, docker_script: str = "inside_docker"):
