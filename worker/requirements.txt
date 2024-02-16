@@ -6,5 +6,5 @@ redis==5.0.1
 sqlalchemy==1.4.46
 psycopg2-binary==2.9.9
 pydantic==1.10.13
-dropbase==0.0.4
+dropbase==0.0.5
 python-dotenv==1.0.0
