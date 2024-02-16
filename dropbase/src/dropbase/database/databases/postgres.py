@@ -78,6 +78,9 @@ class PostgresDatabase(Database):
         result = self.session.execute(text(sql))
         return [dict(row) for row in result.fetchall()]
 
+    def execute(self):
+        self.commit()
+
     def filter_and_sort(
         self, table: str, filter_clauses: list, sort_by: str = None, ascending: bool = True
     ):

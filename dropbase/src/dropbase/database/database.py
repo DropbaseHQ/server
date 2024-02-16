@@ -53,6 +53,10 @@ class Database(ABC):
         pass
 
     @abstractmethod
+    def execute(self):
+        pass
+
+    @abstractmethod
     def filter_and_sort(
         self, table: str, filter_clauses: list, sort_by: str = None, ascending: bool = True
     ):
