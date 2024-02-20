@@ -76,8 +76,12 @@ def compare_values(target_value: Any, operator: str, rule_value: Any, target_typ
         return target_value == rule_value
     elif operator == "gt":
         return target_value > rule_value
+    elif operator == "gte":
+        return target_value >= rule_value
     elif operator == "lt":
         return target_value < rule_value
+    elif operator == "lte":
+        return target_value <= rule_value
     elif operator == "not_equals":
         return target_value != rule_value
     elif operator == "exists":
@@ -132,7 +136,9 @@ def display_rule(state, context, rules: DisplayRules):
                 component_visible = rule_applies
 
         # the resulting state of the component is defined by the final rule resulting condition
-        set_by_path(context, f"{component_display_rules.component}.visible", component_visible)
+        set_by_path(
+            context, f"{component_display_rules.component}.visible", component_visible
+        )
 
     return context.dict()
 
