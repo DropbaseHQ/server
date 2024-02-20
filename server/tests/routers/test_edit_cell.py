@@ -1,5 +1,3 @@
-from sqlalchemy import text
-
 data = {
     # could be ignored, mocking in mock db
     "file": {"name": "demo_sql", "type": "sql", "source": "local", "depends_on": []},
@@ -7,16 +5,17 @@ data = {
         {
             "row": {"user_id": 1, "username": "John Doe", "email": "john.doe@example.com"},
             "column_name": "username",
+            "data_type": "VARCHAR(255)",
             "columns": [
                 {
                     "name": "user_id",
-                    "column_type": "INTEGER",
+                    "data_type": "INTEGER",
                     "display_type": "integer",
                     "unique": False,
                     "default": "nextval('\"public\".users_user_id_seq'::regclass)",
                     "visible": True,
                     "editable": False,
-                    "edit_keys": [],
+                    "edit_keys": ["user_id"],
                     "table_name": "users",
                     "column_name": "user_id",
                     "foreign_key": False,
@@ -26,7 +25,7 @@ data = {
                 },
                 {
                     "name": "username",
-                    "column_type": "VARCHAR(255)",
+                    "data_type": "VARCHAR(255)",
                     "display_type": "text",
                     "unique": False,
                     "default": None,
@@ -42,7 +41,7 @@ data = {
                 },
                 {
                     "name": "email",
-                    "column_type": "VARCHAR(255)",
+                    "data_type": "VARCHAR(255)",
                     "display_type": "text",
                     "unique": False,
                     "default": None,
@@ -70,10 +69,10 @@ def test_edit_cell(test_client, mocker, mock_db):
 
     # Act
     res = test_client.post("/edit_cell/edit_sql_table/", json=data)
+    res_data = res.json()
 
-    with mock_db.connect() as conn:
-        res = conn.execute(text("SELECT username FROM users where user_id = 1")).one()
-        assert res[0] == "Hello World"  # Assert
+    assert res.status_code == 200
+    assert res_data["result"] == ["Updated username from John Doe to Hello World"]
 
 
 def test_edit_cell_db_execute_fail(test_client, mocker, mock_db):
@@ -83,6 +82,10 @@ def test_edit_cell_db_execute_fail(test_client, mocker, mock_db):
     # Act
     data["edits"][0]["row"] = {"user_id": 77, "username": "John Doe", "email": "john.doe@example.com"}
     res = test_client.post("/edit_cell/edit_sql_table/", json=data)
+    res_data = res.json()
 
     # Assert
     assert res.status_code != 200
+    assert res_data["result"] == [
+        "Failed to update username from John Doe to Hello World. Error: No rows were updated"
+    ]

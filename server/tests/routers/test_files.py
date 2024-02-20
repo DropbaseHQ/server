@@ -83,7 +83,7 @@ def test_create_file_req_error_duplicate_names(test_client):
     assert create_first_file.status_code == 200
     assert res.status_code != 200
 
-    assert res_data["message"] == "File with the same name already exists"
+    assert res_data["detail"] == "File with the same name already exists"
 
 
 def test_create_file_req_error_illegal_name_space_between(test_client):
@@ -178,7 +178,7 @@ def test_delete_file_req(test_client):
     data = {
         "app_name": TEST_APP_NAME,
         "page_name": TEST_PAGE_NAME,
-        "file_name": "test_ui.py",
+        "file_name": "test_ui",
         "type": "ui",
     }
 

@@ -1,12 +1,11 @@
+from dropbase.database.connect import connect_to_user_db
+from dropbase.schemas.files import DataFile
+from dropbase.schemas.table import ConvertTableRequest
 from server.controllers.page import get_page_state_context
 from server.controllers.properties import read_page_properties, update_properties
 from server.controllers.run_sql import get_sql_from_file, render_sql
-from server.controllers.source import get_db_schema
-from server.controllers.utils import connect_to_user_db, get_column_names, get_table_data_fetcher
-from server.controllers.validation import validate_smart_cols
+from server.controllers.utils import get_table_data_fetcher
 from server.requests.dropbase_router import DropbaseRouter
-from server.schemas.files import DataFile
-from server.schemas.table import ConvertTableRequest
 
 
 def convert_sql_table(req: ConvertTableRequest, router: DropbaseRouter):
@@ -16,13 +15,13 @@ def convert_sql_table(req: ConvertTableRequest, router: DropbaseRouter):
         file = get_table_data_fetcher(properties["files"], req.table.fetcher)
         file = DataFile(**file)
 
-        user_db_engine = connect_to_user_db(file.source)
-        db_schema, gpt_schema = get_db_schema(user_db_engine)
+        user_db = connect_to_user_db(file.source)
+        db_schema, gpt_schema = user_db._get_db_schema()
 
         # get columns
         user_sql = get_sql_from_file(req.app_name, req.page_name, file.name)
         user_sql = render_sql(user_sql, req.state)
-        column_names = get_column_names(user_db_engine, user_sql)
+        column_names = user_db._get_column_names(user_sql)
 
         # get columns from file
         get_smart_table_payload = {
@@ -36,19 +35,19 @@ def convert_sql_table(req: ConvertTableRequest, router: DropbaseRouter):
         if resp.status_code != 200:
             return resp.text
         smart_cols = resp.json().get("columns")
-        # NOTE: columns type in smart_cols dict (from chatgpt) is called type.
-        # do not confuse it with column_type, which we use internally
+        # NOTE: columns type in smart_cols dict (from chatgpt) is called type
 
-        # rename type to column_type
+        # rename type to data_type
         for column in smart_cols.values():
-            column["column_type"] = column.pop("type")
+            column["data_type"] = column.pop("type")
+            column["column_type"] = user_db.db_type
 
         # validate columns
-        validated = validate_smart_cols(user_db_engine, smart_cols, user_sql)
+        validated = user_db._validate_smart_cols(smart_cols, user_sql)
         column_props = [value for name, value in smart_cols.items() if name in validated]
 
         for column in column_props:
-            column["display_type"] = detect_col_type(column["column_type"])
+            column["display_type"] = user_db._detect_col_display_type(column["data_type"].lower())
 
         for table in properties["tables"]:
             if table["name"] == req.table.name:
@@ -63,17 +62,3 @@ def convert_sql_table(req: ConvertTableRequest, router: DropbaseRouter):
 
     except Exception as e:
         return str(e), 500
-
-
-# TODO: duplicate, move to utils
-def detect_col_type(col_type):
-    if "float" in col_type:
-        return "float"
-    elif "int" in col_type:
-        return "integer"
-    elif "date" in col_type:
-        return "datetime"
-    elif "bool" in col_type:
-        return "boolean"
-    else:
-        return "text"

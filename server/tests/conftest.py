@@ -5,10 +5,11 @@ import psycopg2
 import pytest
 import pytest_postgresql.factories
 from fastapi.testclient import TestClient
-from sqlalchemy import create_engine
-from sqlalchemy.pool import NullPool
 
+from dropbase.database.databases.postgres import PostgresDatabase
+from server.auth.dependency import CheckUserPermissions
 from server.controllers.properties import read_page_properties, update_properties
+from server.controllers.workspace import WorkspaceFolderController
 from server.main import app
 from server.requests.dropbase_router import get_dropbase_router
 from server.tests.constants import (
@@ -36,7 +37,7 @@ postgresql_proc = pytest_postgresql.factories.postgresql_proc(load=[load_test_db
 postgresql = pytest_postgresql.factories.postgresql("postgresql_proc")
 
 
-@pytest.fixture(autouse=True)
+@pytest.fixture(scope="module", autouse=True)
 def test_workspace():
     # used by all tests, so autouse=True
     with tempfile.TemporaryDirectory() as workspace_backup_path:
@@ -51,6 +52,21 @@ def test_workspace():
 
 @pytest.fixture(scope="session")
 def test_client():
+    def override_check_user_app_permissions():
+        return {"use": True, "edit": True, "own": True}
+
+    app.dependency_overrides[CheckUserPermissions(action="edit")] = (
+        override_check_user_app_permissions
+    )
+    app.dependency_overrides[CheckUserPermissions(action="use")] = (
+        override_check_user_app_permissions
+    )
+    app.dependency_overrides[
+        CheckUserPermissions(action="edit", resource=CheckUserPermissions.APP)
+    ] = override_check_user_app_permissions
+    app.dependency_overrides[
+        CheckUserPermissions(action="use", resource=CheckUserPermissions.APP)
+    ] = override_check_user_app_permissions
     return TestClient(app)
 
 
@@ -58,23 +74,38 @@ def test_client():
 def dropbase_router_mocker():
     mocker = DropbaseRouterMocker()
     # app.dependency_overrides uses function as a key. part of fastapi
-    app.dependency_overrides[
-        get_dropbase_router
-    ] = lambda: mocker.get_mock_dropbase_router()
+    app.dependency_overrides[get_dropbase_router] = (
+        lambda: mocker.get_mock_dropbase_router()
+    )
     yield mocker
     # delete get_dropbase_router from dependency overwrite once test is done
     del app.dependency_overrides[get_dropbase_router]
 
 
+def connect_to_test_db(db_type: str, creds: dict):
+    # utility function to assist in creating the db instance
+    match db_type:
+        case "postgres":
+            return PostgresDatabase(creds)
+        case "pg":
+            return PostgresDatabase(creds)
+
+
 @pytest.fixture
 def mock_db(postgresql):
-    connection = "postgresql+psycopg2://{user}:@{host}:{port}/{dbname}".format(
-        user=postgresql.info.user,
-        host=postgresql.info.host,
-        port=postgresql.info.port,
-        dbname=postgresql.info.dbname,
-    )
-    return create_engine(connection, echo=False, poolclass=NullPool)
+    # returns a database instance rather than an engine
+    pg_creds_dict = {
+        "host": postgresql.info.host,
+        "drivername": "postgresql+psycopg2",
+        "database": postgresql.info.dbname,
+        "username": postgresql.info.user,
+        "password": "",  # Not required for pytest-postgresql
+        "port": postgresql.info.port,
+    }
+
+    db_instance = connect_to_test_db("postgres", pg_creds_dict)
+
+    return db_instance
 
 
 def pytest_sessionstart():
@@ -116,3 +147,18 @@ def pytest_sessionfinish():
     import shutil
 
     shutil.rmtree(WORKSPACE_PATH.joinpath("dropbase_test_app"))
+    # Workspace properties is still written to the non test workspace
+    # Its easier to clean it up here
+    workspace_folder_controller = WorkspaceFolderController(
+        r_path_to_workspace=WORKSPACE_PATH
+    )
+    apps = workspace_folder_controller.get_workspace_properties()
+    for app in apps:
+        if app["name"] == TEST_APP_NAME:
+            apps.remove(app)
+
+    workspace_folder_controller.write_workspace_properties(
+        {
+            "apps": apps,
+        }
+    )

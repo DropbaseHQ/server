@@ -2,37 +2,68 @@ import json
 import traceback
 from typing import List
 
-import pandas as pd
 from jinja2 import Environment
-from sqlalchemy import text
 
-from server.constants import DATA_PREVIEW_SIZE, cwd
-from server.controllers.dataframe import convert_df_to_resp_obj
+from dropbase.database.connect import connect_to_user_db
+from dropbase.helpers.dataframe import convert_df_to_resp_obj
+from dropbase.schemas.query import RunSQLRequestTask, RunSQLStringRequest
+from dropbase.schemas.table import FilterSort, TableFilter, TablePagination, TableSort
+from server.constants import cwd
 from server.controllers.python_subprocess import format_process_result, run_process_task_unwrap
 from server.controllers.redis import r
-from server.controllers.utils import connect_to_user_db, process_query_result
-from server.schemas.query import RunSQLRequest
-from server.schemas.table import FilterSort, TableFilter, TablePagination, TableSort
+from server.controllers.utils import process_query_result
 
 
-def run_sql_query(args: dict):
+def run_sql_query_from_string(req: RunSQLStringRequest, job_id: str):
+    response = {"stdout": "", "traceback": "", "message": "", "type": "", "status_code": 202}
+    try:
+        verify_state(req.app_name, req.page_name, req.state)
+        # connect to user db
+        user_db = connect_to_user_db(req.source)
+        # prepare sql
+        sql = clean_sql(req.file_content)
+        sql = render_sql(sql, req.state)
+        # query db
+        res = user_db._run_query(sql, {})
+        # parse pandas response
+        df = process_query_result(res)
+        res = convert_df_to_resp_obj(df, user_db.db_type)
+        r.set(job_id, json.dumps(res))
 
-    app_name = args.get("app_name")
-    page_name = args.get("page_name")
-    file = args.get("file")
-    state = args.get("state")
-    filter_sort = args.get("filter_sort")
-    job_id = args.get("job_id")
+        response["data"] = res["data"]
+        response["columns"] = res["columns"]
+        response["message"] = "job completed"
+        response["type"] = "table"
+
+        response["status_code"] = 200
+        return {"message": "success"}
+    except Exception as e:
+        response["traceback"] = traceback.format_exc()
+        response["message"] = str(e)
+        response["type"] = "error"
+
+        response["status_code"] = 200
+    finally:
+        # pass
+        r.set(job_id, json.dumps(response))
+
+
+def run_sql_query(args: RunSQLRequestTask, job_id: str):
 
     response = {"stdout": "", "traceback": "", "message": "", "type": "", "status_code": 202}
 
     try:
-        verify_state(app_name, page_name, state)
+        verify_state(args.app_name, args.page_name, args.state)
+        user_db = connect_to_user_db(args.file.source)
+        # get query from file
+        file_sql = get_sql_from_file(args.app_name, args.page_name, args.file.name)
+        # get get query string and values for sqlalchemy query
+        filter_sql, filter_values = prepare_sql(file_sql, args.state, args.filter_sort)
+        # query user db
+        res = user_db._run_query(filter_sql, filter_values)
+        df = process_query_result(res)
 
-        sql = get_sql_from_file(app_name, page_name, file.name)
-        df = run_df_query(sql, file.source, state, filter_sort)
-
-        res = convert_df_to_resp_obj(df)
+        res = convert_df_to_resp_obj(df, user_db.db_type)
         r.set(job_id, json.dumps(res))
         response["data"] = res["data"]
         response["columns"] = res["columns"]
@@ -53,50 +84,13 @@ def run_sql_query(args: dict):
         r.set(job_id, json.dumps(response))
 
 
-def run_sql_query_from_string(req: RunSQLRequest, job_id: str):
-    response = {"stdout": "", "traceback": "", "message": "", "type": "", "status_code": 202}
-    try:
-        verify_state(req.app_name, req.page_name, req.state)
-        df = run_df_query(req.file_content, req.source, req.state)
-        res = convert_df_to_resp_obj(df)
-        # r.set(job_id, json.dumps(res))
-
-        response["data"] = res["data"]
-        response["columns"] = res["columns"]
-        response["message"] = "job completed"
-        response["type"] = "table"
-
-        response["status_code"] = 200
-    except Exception as e:
-        response["traceback"] = traceback.format_exc()
-        response["message"] = str(e)
-        response["type"] = "error"
-
-        response["status_code"] = 200
-    finally:
-        # pass
-        r.set(job_id, json.dumps(response))
-
-
-def run_df_query(
-    user_sql: str,
-    source: str,
-    state: dict,
-    filter_sort: FilterSort = FilterSort(
-        filters=[], sorts=[], pagination=TablePagination(page=0, page_size=DATA_PREVIEW_SIZE)
-    ),
-) -> pd.DataFrame:
-    filter_sql, filter_values = prepare_sql(user_sql, state, filter_sort)
-    res = query_db(filter_sql, filter_values, source)
-    return process_query_result(res)
-
-
 def prepare_sql(user_sql: str, state: dict, filter_sort: FilterSort):
     sql = clean_sql(user_sql)
     sql = render_sql(sql, state)
     return apply_filters(sql, filter_sort.filters, filter_sort.sorts, filter_sort.pagination)
 
 
+# NOTE: this might need to move to db classes, not all sqls have the same end of line characters
 def clean_sql(sql):
     return sql.strip("\n ;")
 
@@ -112,13 +106,6 @@ def get_sql_from_file(app_name: str, page_name: str, file_name: str) -> str:
     with open(path, "r") as sql_file:
         sql = sql_file.read()
     return sql
-
-
-def query_db(sql, values, source_name):
-    user_db_engine = connect_to_user_db(source_name)
-    with user_db_engine.connect().execution_options(autocommit=True) as conn:
-        res = conn.execute(text(sql), values).all()
-    return res
 
 
 def apply_filters(

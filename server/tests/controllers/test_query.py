@@ -1,17 +1,15 @@
-from server.schemas.table import TableFilter, TableSort
+from dropbase.schemas.table import TableFilter, TableSort
 
 
 def test_query_db(mocker, mock_db):
     # Arrange
-    mocker.patch("server.controllers.run_sql.connect_to_user_db", return_value=mock_db)
-
-    # from sqlalchemy import text
-    from server.controllers.run_sql import query_db
+    mocker.patch("dropbase.database.connect.connect_to_user_db", return_value=mock_db)
 
     # Act
-    output = query_db("select * from users;", {}, "mock_source")
+    output = mock_db._run_query("select * from users;", {})
 
     # Assert
+    # TODO: improve assertions
     assert len(output) > 0
     assert len(output[0]) > 0
 
@@ -32,7 +30,7 @@ def test_apply_filters():
     filter = filters[0]
     assert (
         filter_sql
-        == f'WITH user_query as ({table_sql}) SELECT * FROM user_query\nWHERE \nuser_query."{filter.column_name}" {filter.condition} :{filter.column_name}_filter\n\n'
+        == f'WITH user_query as ({table_sql}) SELECT * FROM user_query\nWHERE \nuser_query."{filter.column_name}" {filter.condition} :{filter.column_name}_filter\n\n'  # noqa
     )
     assert filter_values == {f"{filter.column_name}_filter": "Charlie Brown"}
 
@@ -52,5 +50,5 @@ def test_apply_sorts():
     sort = sorts[0]
     assert (
         filter_sql
-        == f'WITH user_query as ({table_sql}) SELECT * FROM user_query\n\nORDER BY \nuser_query."{sort.column_name}" {sort.value}\n'
+        == f'WITH user_query as ({table_sql}) SELECT * FROM user_query\n\nORDER BY \nuser_query."{sort.column_name}" {sort.value}\n'  # noqa
     )

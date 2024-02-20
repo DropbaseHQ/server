@@ -1,7 +1,9 @@
-from fastapi import APIRouter, WebSocket
-from server.controllers.display_rules import run_display_rule
-from server.constants import DROPBASE_API_URL
 import requests
+from fastapi import APIRouter, WebSocket
+
+from server.constants import DROPBASE_API_URL
+from server.controllers.display_rules import run_display_rule
+from server.constants import DROPBASE_TOKEN
 
 router = APIRouter()
 
@@ -15,10 +17,13 @@ async def websocket_endpoint(websocket: WebSocket):
         # ======== AUTHENTICATION ======== #
         if not hasattr(websocket, "authenticated") or not websocket.authenticated:
             if data["type"] == "auth":
-                access_token = data["access_token"]
+                access_token = data.get("access_token")
                 response = requests.post(
                     DROPBASE_API_URL + "/worker/verify_token",
-                    cookies={"access_token_cookie": access_token},
+                    headers={
+                        "Authorization": f"Bearer {access_token}",
+                        "dropbase-token": DROPBASE_TOKEN,
+                    },
                 )
                 if response.status_code == 200:
                     setattr(websocket, "authenticated", True)

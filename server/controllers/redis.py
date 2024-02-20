@@ -1,3 +1,5 @@
 import redis
 
-r = redis.Redis(host="localhost", port=6379, db=0)
+from server.constants import REDIS_HOST
+
+r = redis.Redis(host=REDIS_HOST, port=6379, db=0)

@@ -6,19 +6,15 @@ from server.routers.function import router as function_router
 from server.routers.health import router as health_router
 from server.routers.page import router as page_router
 from server.routers.query import router as query_router
-
-# from server.routers.run_python import router as run_python_router
-# from server.routers.run_sql import router as run_sql_router
 from server.routers.sources import router as sources_router
 from server.routers.tables import router as tables_router
 from server.routers.websocket import router as websocket_router
+from server.routers.workspace import router as workspace_router
 
 __all__ = [
     "files_router",
     "function_router",
     "query_router",
-    # "run_python_router",
-    # "run_sql_router",
     "sources_router",
     "tables_router",
     "app_router",
@@ -27,4 +23,5 @@ __all__ = [
     "health_router",
     "page_router",
     "websocket_router",
+    "workspace_router",
 ]
