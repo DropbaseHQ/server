@@ -10,6 +10,12 @@ class ButtonColumnContextProperty(ComponentDisplayProperties):
     pass
 
 
+# TODO: group with others
+class OnSelect(BaseModel):
+    type: Literal["widget", "function"] = "function"
+    value: str
+
+
 class ButtonColumnDefinedProperty(BaseModel):
     name: Annotated[str, PropertyCategory.default]
     column_type: Literal["button_column"] = "button_column"
@@ -34,4 +40,4 @@ class ButtonColumnDefinedProperty(BaseModel):
     ]
 
     # events
-    on_click: Annotated[Optional[str], PropertyCategory.events]
+    on_click: Annotated[Optional[OnSelect], PropertyCategory.events]
