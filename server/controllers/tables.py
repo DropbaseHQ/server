@@ -33,7 +33,7 @@ def convert_sql_table(req: ConvertTableRequest, router: DropbaseRouter):
 
         resp = router.misc.get_smart_columns(get_smart_table_payload)
         if resp.status_code != 200:
-            return resp.text
+            return resp
         smart_cols = resp.json().get("columns")
         # NOTE: columns type in smart_cols dict (from chatgpt) is called type
 
