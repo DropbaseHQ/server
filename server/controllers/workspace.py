@@ -105,12 +105,12 @@ class AppFolderController:
         with open(workspace_properties_path, "w") as file:
             json.dump(workspace_properties, file, indent=2)
 
-    def _add_page_to_app_properties(self, page_name: str):
+    def _add_page_to_app_properties(self, page_name: str, page_label: str):
         app_properties_data = self._get_app_properties_data()
 
         page_object = {
             "name": page_name,
-            "label": page_name,
+            "label": page_label,
             "id": str(uuid.uuid4()),
         }
         if "pages" in app_properties_data:
@@ -208,6 +208,7 @@ class AppFolderController:
         router: DropbaseRouter = None,
         app_folder_path: str = None,
         page_name: str = None,
+        page_label: str = None,
     ):
         app_folder_path = app_folder_path or self.app_folder_path
         page_name = page_name or self.page_name
@@ -247,7 +248,7 @@ class AppFolderController:
         create_init_file(path=scripts_folder_path, init_code="")
 
         create_state_context_files(self.app_name, page_name, self.page_properties)
-        page_object = self._add_page_to_app_properties(page_name)
+        page_object = self._add_page_to_app_properties(page_name, page_label)
         app_id = self.get_app_id(self.app_name)
         create_page_payload = {
             "app_id": app_id,
