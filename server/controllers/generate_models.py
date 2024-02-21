@@ -16,10 +16,7 @@ from dropbase.models import (
     TextContextProperty,
     WidgetContextProperty,
 )
-from dropbase.models.table.snowflake_column import (
-    SnowflakeColumnContextProperty,
-    SnowflakeColumnDefinedProperty,
-)
+from dropbase.models.table.snowflake_column import SnowflakeColumnContextProperty
 
 
 def column_state_type_mapper(state_type: str):
@@ -165,6 +162,7 @@ def get_widget_context(widgets_props):
 
 column_context_model_mapper = {
     "postgres": PgColumnContextProperty,
+    "snowflake": SnowflakeColumnContextProperty,
     "python": PyColumnContextProperty,
     "button_column": ButtonColumnContextProperty,
 }

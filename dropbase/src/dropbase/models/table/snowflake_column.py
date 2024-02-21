@@ -2,17 +2,14 @@ from typing import Literal, Optional
 
 from pydantic import BaseModel
 
-from dropbase.models.common import ComponentDisplayProperties
+from dropbase.models.common import BaseColumnDefinedProperty, ComponentDisplayProperties
 
 
 class SnowflakeColumnContextProperty(ComponentDisplayProperties):
     pass
 
 
-class SnowflakeColumnDefinedProperty(BaseModel):
-    name: str
-    column_type: Optional[str]
-    display_type: Optional[Literal["text", "integer", "float", "boolean", "datetime", "date", "time"]]
+class SnowflakeColumnDefinedProperty(BaseColumnDefinedProperty):
 
     schema_name: str = None
     table_name: str = None
@@ -25,6 +22,9 @@ class SnowflakeColumnDefinedProperty(BaseModel):
     unique: bool = False
 
     edit_keys: list = []
+
+    # internal
+    column_type: Literal["snowflake"] = "snowflake"
 
     # visibility
     hidden: bool = False

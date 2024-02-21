@@ -8,6 +8,7 @@ from dropbase.models.table import (
     PyColumnDefinedProperty,
     TableDefinedProperty,
 )
+from dropbase.models.table.snowflake_column import SnowflakeColumnDefinedProperty
 from dropbase.models.widget import (
     BooleanDefinedProperty,
     ButtonDefinedProperty,
@@ -32,7 +33,14 @@ class WidgetProperties(WidgetDefinedProperty):
 
 
 class TableProperties(TableDefinedProperty):
-    columns: List[Union[PgColumnDefinedProperty, PyColumnDefinedProperty, ButtonColumnDefinedProperty]]
+    columns: List[
+        Union[
+            PgColumnDefinedProperty,
+            SnowflakeColumnDefinedProperty,
+            PyColumnDefinedProperty,
+            ButtonColumnDefinedProperty,
+        ]
+    ]
 
 
 class Properties(BaseModel):
