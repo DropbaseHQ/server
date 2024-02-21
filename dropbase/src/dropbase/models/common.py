@@ -1,7 +1,9 @@
 from enum import Enum
-from typing import Optional, Union
+from typing import Annotated, Optional, Union
 
 from pydantic import BaseModel, root_validator
+
+from dropbase.models.category import PropertyCategory
 
 
 class ComponentDisplayProperties(BaseModel):
@@ -38,10 +40,10 @@ class DisplayType(str, Enum):
 
 
 class BaseColumnDefinedProperty(BaseModel):
-    name: str
-    data_type: Optional[str]
-    display_type: Optional[DisplayType]
-    configurations: Optional[Union[CurrencyType, SelectType]]
+    name: Annotated[str, PropertyCategory.default]
+    data_type: Annotated[Optional[str], PropertyCategory.default]
+    display_type: Annotated[Optional[DisplayType], PropertyCategory.default]
+    configurations: Annotated[Optional[Union[CurrencyType, SelectType]], PropertyCategory.default]
 
     @root_validator
     def check_configurations(cls, values):
