@@ -1,13 +1,13 @@
 -- Create Users table
 CREATE TABLE IF NOT EXISTS users (
-    user_id INTEGER AUTOINCREMENT PRIMARY KEY,
+    user_id INTEGER PRIMARY KEY AUTOINCREMENT,
     username VARCHAR(255) NOT NULL,
     email VARCHAR(255) NOT NULL
 );
 
 -- Create Orders table
 CREATE TABLE IF NOT EXISTS orders (
-    order_id INTEGER AUTOINCREMENT PRIMARY KEY,
+    order_id INTEGER PRIMARY KEY AUTOINCREMENT,
     user_id INTEGER NOT NULL,
     product_name VARCHAR(255) NOT NULL,
     quantity INTEGER NOT NULL,

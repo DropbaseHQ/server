@@ -6,7 +6,7 @@ import psycopg2
 import pytest
 import pytest_postgresql.factories
 from fastapi.testclient import TestClient
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, text
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 
@@ -42,7 +42,7 @@ def load_test_db(db_type="postgres", **kwargs):
         with open(DEMO_INIT_SQL_PATH, "r") as rf:
             init_sql = rf.read()
     elif db_type == "sqlite":
-        with open(DEMO_SQLITE_INIT_SQL_PATH, "r") as rf:  # Replace this with snowflake path
+        with open(DEMO_SQLITE_INIT_SQL_PATH, "r") as rf:  # Replace this with sqlite path
             init_sql = rf.read()
 
     if db_type == "sqlite":
@@ -62,11 +62,14 @@ def load_test_db(db_type="postgres", **kwargs):
 @pytest.fixture(scope="session")
 def sqlite_db():
     engine = create_engine("sqlite:///:memory:", connect_args={"check_same_thread": False})
-    TestSession = sessionmaker(autocommit=False, autoflush=False, bind=engine)
-    Base = declarative_base()
-    Base.metadata.create_all(bind=engine)
 
-    return TestSession()
+    # Execute SQL script to create tables
+    with open(DEMO_SQLITE_INIT_SQL_PATH, "r") as sql_file:
+        init_sql = sql_file.read()
+        with engine.begin() as connection:
+            for statement in init_sql.split(";"):
+                if statement.strip():
+                    connection.execute(statement)
 
 
 postgresql_proc = pytest_postgresql.factories.postgresql_proc(load=[load_test_db])
@@ -120,11 +123,11 @@ def connect_to_test_db(db_type: str, creds: dict):
         case "pg":
             return PostgresDatabase(creds)
         case "sqlite":
-            return SqliteDatabase(creds)
+            return SqliteDatabase(creds, testing=True)
 
 
 @pytest.fixture
-def mock_db(request, postgresql, sqlite_db):
+def mock_db(request, postgresql):
     db_type = request.param
     creds_dict = {}
     # returns a database instance rather than an engine
@@ -142,10 +145,18 @@ def mock_db(request, postgresql, sqlite_db):
 
             db_instance = connect_to_test_db("postgres", pg_creds_dict)
         case "sqlite":
-            creds_dict = {"database": ":memory:"}
-            load_test_db("sqlite", **creds_dict)
+            # creds_dict = {"database": ":memory:"}
+            # load_test_db("sqlite", **creds_dict)
 
-            db_instance = connect_to_test_db("snowflake", creds_dict)
+            creds_dict = {"drivername": "sqlite", "host": ":memory:"}
+
+            db_instance = connect_to_test_db("sqlite", creds_dict)
+
+            with open(DEMO_SQLITE_INIT_SQL_PATH, "r") as sql_file:
+                init_sql = sql_file.read()
+                for statement in init_sql.split(";"):
+                    if statement.strip():
+                        db_instance.execute_custom_query(statement)
 
     return db_instance
 

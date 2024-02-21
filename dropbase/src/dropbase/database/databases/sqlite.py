@@ -8,12 +8,16 @@ from dropbase.schemas.edit_cell import CellEdit
 
 
 class SqliteDatabase(Database):
-    def __init__(self, creds: dict, schema: str = "public"):
+    def __init__(self, creds: dict, schema: str = "public", testing: bool = False):
         super().__init__(creds)
         self.db_type = "sqlite"
+        self.testing = testing
 
     def _get_connection_url(self, creds: dict):
-        return f"{creds.get('drivername')}:///{creds.get('host')}"
+        if self.testing:
+            return f"{creds.get('drivername')}:///{creds.get('host')}?cache=shared&mode=memory&uri=true"
+        else:
+            return f"{creds.get('drivername')}:///{creds.get('host')}"
 
     def update(self, table: str, keys: dict, values: dict, auto_commit: bool = False):
         value_keys = list(values.keys())
@@ -86,7 +90,7 @@ class SqliteDatabase(Database):
 
     def execute_custom_query(self, sql: str, values: dict = None):
         result = self.session.execute(text(sql), values if values else {})
-        return [dict(row) for row in result.fetchall()]
+        return result.rowcount
 
     def _get_db_schema(self):
         # # TODO: cache this, takes a while
