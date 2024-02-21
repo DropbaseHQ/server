@@ -112,7 +112,7 @@ class FileController:
                     break
 
             # update properties file
-            self._update_properties()
+            self._update_properties(mode="rename")
 
             return {"status": "success"}
         except HTTPException as e:
@@ -173,7 +173,7 @@ class FileController:
                     break
 
             # update properties file
-            self._update_properties()
+            self._update_properties(mode="delete")
             return {"status": "success"}
         except HTTPException as e:
             self._revert_backup()
@@ -205,7 +205,17 @@ class FileController:
         with open(self.file_path, "w") as f:
             f.write(code)
 
-    def _update_properties(self):
+    def _update_properties(self, mode: str = "update"):
+        if mode == "rename":
+            # find old file name in table fetcher in properties and update it
+            for table in self.properties["tables"]:
+                if table["fetcher"] == self.file_name:
+                    table["fetcher"] = self.new_name
+        elif mode == "delete":
+            # find file name in table fetcher in properties and delete it
+            for table in self.properties["tables"]:
+                if table["fetcher"] == self.file_name:
+                    table["fetcher"] = ""
         write_page_properties(self.app_name, self.page_name, self.properties)
 
     def _rename_function_in_file(self):
