@@ -19,6 +19,7 @@ from server.main import app
 from server.requests.dropbase_router import get_dropbase_router
 from server.tests.constants import (
     DEMO_INIT_SQL_PATH,
+    DEMO_SQLITE_INIT_SQL_PATH,
     TEMPDIR_PATH,
     TEST_APP_NAME,
     TEST_PAGE_NAME,
@@ -40,23 +41,25 @@ def load_test_db(db_type="postgres", **kwargs):
     if db_type == "postgres":
         with open(DEMO_INIT_SQL_PATH, "r") as rf:
             init_sql = rf.read()
-    elif db_type == "snowflake":
-        with open(DEMO_INIT_SQL_PATH, "r") as rf:  # Replace this with snowflake path
+    elif db_type == "sqlite":
+        with open(DEMO_SQLITE_INIT_SQL_PATH, "r") as rf:  # Replace this with snowflake path
             init_sql = rf.read()
 
-    with conn.cursor() as cur:
-        cur.execute(init_sql)
-        if db_type == "sqlite":
-            # Sqlite might require splitting and executing each statement separately
-            for statement in init_sql.split(";"):
-                if statement.strip():
-                    cur.execute(statement)
-        else:
-            cur.execute(init_sql)
-        conn.commit()
+    if db_type == "sqlite":
+        cur = conn.cursor()  # Can't use with statement in sqlite
+        for statement in init_sql.split(";"):
+            if statement.strip():
+                cur.execute(statement)
+        conn.commit()  # Commit after executing all statements
+        cur.close()
+    else:
+        if db_type == "postgres":
+            with conn.cursor() as cur:
+                cur.execute(init_sql)
+                conn.commit()
 
 
-@pytest.fixture
+@pytest.fixture(scope="session")
 def sqlite_db():
     engine = create_engine("sqlite:///:memory:", connect_args={"check_same_thread": False})
     TestSession = sessionmaker(autocommit=False, autoflush=False, bind=engine)
@@ -139,8 +142,8 @@ def mock_db(request, postgresql, sqlite_db):
 
             db_instance = connect_to_test_db("postgres", pg_creds_dict)
         case "sqlite":
-            load_test_db("snowflake", ":memory:")
-            creds_dict = ":memory:"
+            creds_dict = {"database": ":memory:"}
+            load_test_db("sqlite", **creds_dict)
 
             db_instance = connect_to_test_db("snowflake", creds_dict)
 
