@@ -1,15 +1,13 @@
 from typing import Literal, Optional
 
-from pydantic import BaseModel
-
-# from server.models.common import ComponentDisplayProperties
+from dropbase.models.common import BaseColumnDefinedProperty, ComponentDisplayProperties
 
 
-class MySqlColumnContextProperty(BaseModel):
+class MySqlColumnContextProperty(ComponentDisplayProperties):
     pass
 
 
-class MySqlColumnDefinedProperty(BaseModel):
+class MySqlColumnDefinedProperty(BaseColumnDefinedProperty):
     name: str
     column_type: Optional[str]
     display_type: Optional[

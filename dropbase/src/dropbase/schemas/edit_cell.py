@@ -15,7 +15,7 @@ class CellProps(BaseModel):
 
 class CellEdit(BaseModel):
     column_name: str
-    data_type: str = "VARCHAR"  # pushed a temporary solution that sets a default value so no validation error is thrown
+    data_type: str
     old_value: Any
     new_value: Any
     row: dict
