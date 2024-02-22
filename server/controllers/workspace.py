@@ -77,6 +77,7 @@ class AppFolderController:
     ):
         self.app_name = app_name
         self.page_name = "page1"
+        self.page_label = "Page1"
         self.r_path_to_workspace = r_path_to_workspace
         self.app_folder_path = os.path.join(self.r_path_to_workspace, self.app_name)
         self.page_properties = PAGE_PROPERTIES_TEMPLATE
@@ -212,6 +213,7 @@ class AppFolderController:
     ):
         app_folder_path = app_folder_path or self.app_folder_path
         page_name = page_name or self.page_name
+        page_label = page_label or self.page_label
 
         if not validate_column_name(page_name):
             raise HTTPException(
