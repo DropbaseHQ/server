@@ -45,18 +45,17 @@ def load_test_db(db_type="postgres", **kwargs):
         with open(DEMO_SQLITE_INIT_SQL_PATH, "r") as rf:  # Replace this with sqlite path
             init_sql = rf.read()
 
-    if db_type == "sqlite":
+    if db_type == "postgres":
+        with conn.cursor() as cur:
+            cur.execute(init_sql)
+            conn.commit()
+    elif db_type == "sqlite":
         cur = conn.cursor()  # Can't use with statement in sqlite
         for statement in init_sql.split(";"):
             if statement.strip():
                 cur.execute(statement)
         conn.commit()  # Commit after executing all statements
         cur.close()
-    else:
-        if db_type == "postgres":
-            with conn.cursor() as cur:
-                cur.execute(init_sql)
-                conn.commit()
 
 
 @pytest.fixture(scope="session")
