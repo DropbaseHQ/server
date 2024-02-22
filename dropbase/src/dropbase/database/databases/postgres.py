@@ -78,6 +78,15 @@ class PostgresDatabase(Database):
         result = self.session.execute(text(sql))
         return [dict(row) for row in result.fetchall()]
 
+    def execute(self, sql: str):
+        try:
+            result = self.session.execute(text(sql))
+            self.commit()
+            return {"success": True, "rows_affected": result.rowcount}
+        except SQLAlchemyError as e:
+            self.session.rollback()  # Roll back the session on error.
+            return {"success": False, "error": str(e)}
+
     def filter_and_sort(
         self, table: str, filter_clauses: list, sort_by: str = None, ascending: bool = True
     ):
@@ -87,10 +96,6 @@ class PostgresDatabase(Database):
         if sort_by:
             sql += f" ORDER BY {sort_by} {'ASC' if ascending else 'DESC'}"
         result = self.session.execute(text(sql))
-        return [dict(row) for row in result.fetchall()]
-
-    def execute_custom_query(self, sql: str, values: dict = None):
-        result = self.session.execute(text(sql), values if values else {})
         return [dict(row) for row in result.fetchall()]
 
     def _get_db_schema(self):

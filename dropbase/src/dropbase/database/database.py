@@ -53,13 +53,13 @@ class Database(ABC):
         pass
 
     @abstractmethod
-    def filter_and_sort(
-        self, table: str, filter_clauses: list, sort_by: str = None, ascending: bool = True
-    ):
+    def execute(self):
         pass
 
     @abstractmethod
-    def execute_custom_query(self, sql: str, values: dict = None):
+    def filter_and_sort(
+        self, table: str, filter_clauses: list, sort_by: str = None, ascending: bool = True
+    ):
         pass
 
     @abstractmethod
