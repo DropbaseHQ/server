@@ -1,3 +1,5 @@
+import time
+
 from fastapi import HTTPException
 from pydantic import BaseModel
 
@@ -12,8 +14,16 @@ def get_state_context(app_name, page_name, permissions):
         state_context = get_page_state_context(app_name, page_name)
         state_context["properties"] = read_page_properties(app_name, page_name)
         return {"state_context": state_context, "permissions": permissions}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+    except Exception:
+        # in cases where there are some hanging files/dirs from update properties step
+        # wait for a second for files to clear up and try again
+        try:
+            time.sleep(1)
+            state_context = get_page_state_context(app_name, page_name)
+            state_context["properties"] = read_page_properties(app_name, page_name)
+            return {"state_context": state_context, "permissions": permissions}
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=str(e))
 
 
 def update_page_properties(req: PageProperties):
