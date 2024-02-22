@@ -46,8 +46,10 @@ def test_create_component_req_text(test_client):
         }
     )
 
+    headers = {"access-token": "mock access token"}
+
     # Act
-    res = test_client.post("/page", json=data)
+    res = test_client.put("/page", json=data, headers=headers)
     res_data = res.json()
 
     # Assert
@@ -79,8 +81,10 @@ def test_create_component_req_select(test_client):
         }
     )
 
+    headers = {"access-token": "mock access token"}
+
     # Act
-    res = test_client.post("/page", json=data)
+    res = test_client.put("/page", json=data, headers=headers)
     res_data = res.json()
 
     # Assert
@@ -112,8 +116,10 @@ def test_create_component_req_input(test_client):
         }
     )
 
+    headers = {"access-token": "mock access token"}
+
     # Act
-    res = test_client.post("/page", json=data)
+    res = test_client.put("/page", json=data, headers=headers)
     res_data = res.json()
 
     # Assert
@@ -145,8 +151,10 @@ def test_create_component_req_button(test_client):
         }
     )
 
+    headers = {"access-token": "mock access token"}
+
     # Act
-    res = test_client.post("/page", json=data)
+    res = test_client.put("/page", json=data, headers=headers)
     res_data = res.json()
 
     # Assert
@@ -178,13 +186,16 @@ def test_create_component_req_error_duplicate_names(test_client):
         }
     )
 
-    res = test_client.post("/page", json=data)
+    headers = {"access-token": "mock access token"}
+
+    # Act
+    res = test_client.put("/page", json=data, headers=headers)
     res_data = res.json()
 
     # Assert
     assert res.status_code != 200
 
-    assert res_data["message"] == "A component with this name already exists"
+    assert res_data["detail"] == "A component with this name already exists"
 
 
 def test_create_component_req_error_illegal_name_space_between(test_client):
@@ -201,8 +212,10 @@ def test_create_component_req_error_illegal_name_space_between(test_client):
         }
     )
 
+    headers = {"access-token": "mock access token"}
+
     # Act
-    res = test_client.post("/page", json=data)
+    res = test_client.put("/page", json=data, headers=headers)
     res_data = res.json()
 
     # Assert
@@ -210,7 +223,7 @@ def test_create_component_req_error_illegal_name_space_between(test_client):
 
     assert not verify_object_in_state_context("Widget1ComponentsContext", "button 2", True)
 
-    assert res_data["message"] == "Invalid component names present in the table"
+    assert res_data["detail"] == "Invalid component names present in the table"
 
 
 def test_create_component_req_error_illegal_name_special_characters(test_client):
@@ -227,8 +240,10 @@ def test_create_component_req_error_illegal_name_special_characters(test_client)
         }
     )
 
+    headers = {"access-token": "mock access token"}
+
     # Act
-    res = test_client.post("/page", json=data)
+    res = test_client.put("/page", json=data, headers=headers)
     res_data = res.json()
 
     # Assert
@@ -236,7 +251,7 @@ def test_create_component_req_error_illegal_name_special_characters(test_client)
 
     assert not verify_object_in_state_context("Widget1ComponentsContext", "button_2!", True)
 
-    assert res_data["message"] == "Invalid component names present in the table"
+    assert res_data["detail"] == "Invalid component names present in the table"
 
 
 def test_create_component_req_error_illegal_name_url_path(test_client):
@@ -253,8 +268,10 @@ def test_create_component_req_error_illegal_name_url_path(test_client):
         }
     )
 
+    headers = {"access-token": "mock access token"}
+
     # Act
-    res = test_client.post("/page", json=data)
+    res = test_client.put("/page", json=data, headers=headers)
     res_data = res.json()
 
     # Assert
@@ -262,7 +279,7 @@ def test_create_component_req_error_illegal_name_url_path(test_client):
 
     assert not verify_object_in_state_context("Widget1ComponentsContext", "../../button2", True)
 
-    assert res_data["message"] == "Invalid component names present in the table"
+    assert res_data["detail"] == "Invalid component names present in the table"
 
 
 def test_update_component_req(test_client):
@@ -279,9 +296,13 @@ def test_update_component_req(test_client):
         }
     )
 
+    headers = {"access-token": "mock access token"}
+
     # Act
-    res = test_client.post("/page", json=data)
+    res = test_client.put("/page", json=data, headers=headers)
     res_data = res.json()
+
+    print(res_data)
 
     # Assert
     assert isinstance(
@@ -302,8 +323,10 @@ def test_delete_component_req(test_client):
     # Arrange
     data = copy.deepcopy(base_data)
 
+    headers = {"access-token": "mock access token"}
+
     # Act
-    res = test_client.post("/page", json=data)
+    res = test_client.put("/page", json=data, headers=headers)
 
     # Assert
     assert res.status_code == 200

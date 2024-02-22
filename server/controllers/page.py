@@ -69,7 +69,7 @@ def validate_property_names(properties: dict):
         component_names = set()
         for component in widget.get("components"):
             if component["name"] in component_names:
-                raise HTTPException(status_code=400, detail="A component with this name already exists")
+                raise Exception("A component with this name already exists")
 
             component_names.add(component["name"])
 
