@@ -1,3 +1,7 @@
+import pytest
+
+
+@pytest.mark.parametrize("mock_db", ["postgres", "sqlite"], indirect=True)
 def test_run_sql_string(mocker, test_client, mock_db):
     # Arrange
 
@@ -26,6 +30,7 @@ def test_run_sql_string(mocker, test_client, mock_db):
     res = test_client.get(f"/query/status/{job_id}")
     assert res.status_code == 200
     res_data = res.json()
+
     assert res_data["type"] == "table"
     assert isinstance(res_data["data"], list)
     assert isinstance(res_data["columns"], list)

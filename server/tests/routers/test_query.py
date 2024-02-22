@@ -1,5 +1,7 @@
 import copy
 
+import pytest
+
 base_data = {
     "app_name": "dropbase_test_app",
     "page_name": "page1",
@@ -23,6 +25,7 @@ base_data = {
 }
 
 
+@pytest.mark.parametrize("mock_db", ["postgres", "sqlite"], indirect=True)
 def test_run_query_sql(test_client, mocker, mock_db):
     # Arrange
     data = copy.deepcopy(base_data)

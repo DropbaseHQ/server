@@ -16,6 +16,7 @@ from dropbase.models import (
     TextContextProperty,
     WidgetContextProperty,
 )
+from dropbase.models.table.sqlite_column import SqliteColumnContextProperty
 
 
 def column_state_type_mapper(state_type: str):
@@ -161,6 +162,7 @@ def get_widget_context(widgets_props):
 
 column_context_model_mapper = {
     "postgres": PgColumnContextProperty,
+    "sqlite": SqliteColumnContextProperty,
     "python": PyColumnContextProperty,
     "button_column": ButtonColumnContextProperty,
 }
