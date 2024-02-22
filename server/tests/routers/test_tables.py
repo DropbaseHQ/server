@@ -23,8 +23,10 @@ def test_create_table_req(test_client):
         {"name": "table2", "label": "Table 2", "type": "sql", "columns": []}
     )
 
+    headers = {"access-token": "mock access token"}
+
     # Act
-    res = test_client.post("/page", json=data)
+    res = test_client.put("/page", json=data, headers=headers)
     res_data = res.json()
 
     # Assert
@@ -47,13 +49,16 @@ def test_create_table_req_error_duplicate_names(test_client):
         {"name": "table1", "label": "Table 1", "type": "sql", "columns": []}
     )
 
-    res = test_client.post("/page", json=data)
+    headers = {"access-token": "mock access token"}
+
+    # Act
+    res = test_client.put("/page", json=data, headers=headers)
     res_data = res.json()
 
     # Assert
     assert res.status_code != 200
 
-    assert res_data["message"] == "A table with this name already exists"
+    assert res_data["detail"] == "A table with this name already exists"
 
 
 def test_create_table_req_error_illegal_name_space_between(test_client):
@@ -63,8 +68,10 @@ def test_create_table_req_error_illegal_name_space_between(test_client):
         {"name": "table 2", "label": "Table 2", "type": "sql", "columns": []}
     )
 
+    headers = {"access-token": "mock access token"}
+
     # Act
-    res = test_client.post("/page", json=data)
+    res = test_client.put("/page", json=data, headers=headers)
     res_data = res.json()
 
     # Assert
@@ -72,7 +79,7 @@ def test_create_table_req_error_illegal_name_space_between(test_client):
 
     assert not verify_object_in_state_context("TablesState", "table 2")
 
-    assert res_data["message"] == "Invalid table names present in the table"
+    assert res_data["detail"] == "Invalid table names present in the table"
 
 
 def test_create_table_req_error_illegal_name_special_characters(test_client):
@@ -82,8 +89,10 @@ def test_create_table_req_error_illegal_name_special_characters(test_client):
         {"name": "table_2!", "label": "Table 2", "type": "sql", "columns": []}
     )
 
+    headers = {"access-token": "mock access token"}
+
     # Act
-    res = test_client.post("/page", json=data)
+    res = test_client.put("/page", json=data, headers=headers)
     res_data = res.json()
 
     # Assert
@@ -91,7 +100,7 @@ def test_create_table_req_error_illegal_name_special_characters(test_client):
 
     assert not verify_object_in_state_context("TablesState", "table_2!")
 
-    assert res_data["message"] == "Invalid table names present in the table"
+    assert res_data["detail"] == "Invalid table names present in the table"
 
 
 def test_create_table_req_error_illegal_name_url_path(test_client):
@@ -101,8 +110,10 @@ def test_create_table_req_error_illegal_name_url_path(test_client):
         {"name": "../../table2", "label": "Table 2", "type": "sql", "columns": []}
     )
 
+    headers = {"access-token": "mock access token"}
+
     # Act
-    res = test_client.post("/page", json=data)
+    res = test_client.put("/page", json=data, headers=headers)
     res_data = res.json()
 
     # Assert
@@ -110,7 +121,7 @@ def test_create_table_req_error_illegal_name_url_path(test_client):
 
     assert not verify_object_in_state_context("TablesState", "../../table 2")
 
-    assert res_data["message"] == "Invalid table names present in the table"
+    assert res_data["detail"] == "Invalid table names present in the table"
 
 
 def test_update_table_req_file_changed(test_client):
@@ -125,8 +136,10 @@ def test_update_table_req_file_changed(test_client):
         }
     )
 
+    headers = {"access-token": "mock access token"}
+
     # Act
-    res = test_client.post("/page", json=data)
+    res = test_client.put("/page", json=data, headers=headers)
     res_data = res.json()
 
     # Assert
@@ -146,8 +159,10 @@ def test_delete_table_req(test_client):
     # Arrange
     data = copy.deepcopy(base_data)
 
+    headers = {"access-token": "mock access token"}
+
     # Act
-    res = test_client.post("/page", json=data)
+    res = test_client.put("/page", json=data, headers=headers)
 
     # Assert
     assert res.status_code == 200

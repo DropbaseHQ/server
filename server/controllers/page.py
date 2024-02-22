@@ -47,7 +47,7 @@ def validate_property_names(properties: dict):
     for table in properties["tables"]:
         # Check for duplicate table names
         if table["name"] in table_names:
-            raise HTTPException(status_code=400, detail="A table with this name already exists")
+            raise Exception("A table with this name already exists")
 
         table_names.add(table["name"])
 
@@ -59,7 +59,7 @@ def validate_property_names(properties: dict):
     # validate component names
     for widget in properties["widgets"]:
         if widget["name"] in widget_names:
-            raise HTTPException(status_code=400, detail="A widget with this name already exists")
+            raise Exception("A widget with this name already exists")
 
         widget_names.add(widget["name"])
 
