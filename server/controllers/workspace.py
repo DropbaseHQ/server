@@ -224,9 +224,16 @@ class AppFolderController:
         if check_if_object_exists(os.path.join(app_folder_path, page_name)):
             raise HTTPException(
                 status_code=400,
-                detail="Invalid page name. Only alphanumeric characters and underscores are allowed",
+                detail="Another page with the same name already exists",
             )
-        # TODO: check label is unique
+
+        existing_page_labels = [p["label"] for p in self.get_pages()]
+
+        if page_label in existing_page_labels:
+            raise HTTPException(
+                status_code=400,
+                detail="Another page with the same label already exists",
+            )
 
         # Create new page folder with __init__.py
         page_folder_path = os.path.join(app_folder_path, page_name)
@@ -262,6 +269,14 @@ class AppFolderController:
         return {"message": "Page created"}
 
     def rename_page(self, page_name: str, new_page_label: str):
+        existing_page_labels = [p["label"] for p in self.get_pages()]
+
+        if new_page_label in existing_page_labels:
+            raise HTTPException(
+                status_code=400,
+                detail="Another page with the same label already exists",
+            )
+
         # rename page in properties.json
         app_properties_data = self._get_app_properties_data()
         for page in app_properties_data["pages"]:
@@ -319,7 +334,10 @@ class AppFolderController:
         if check_if_object_exists(self.app_folder_path):
             raise HTTPException(status_code=400, detail="An app with this name already exists")
 
-        # TODO: assert app name is unique
+        existing_app_labels = [a["label"] for a in self._get_workspace_properties()["apps"]]
+
+        if app_label in existing_app_labels:
+            raise HTTPException(status_code=400, detail="An app with this label already exists")
 
         self.create_workspace_properties()
         self._create_default_workspace_files(router=router, app_label=app_label)
