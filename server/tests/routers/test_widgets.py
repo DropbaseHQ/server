@@ -37,8 +37,10 @@ def test_create_widget_req(test_client):
         }
     )
 
+    headers = {"access-token": "mock access token"}
+
     # Act
-    res = test_client.post("/page", json=data)
+    res = test_client.put("/page", json=data, headers=headers)
     res_data = res.json()
 
     # Assert
@@ -68,13 +70,16 @@ def test_create_widget_req_error_duplicate_names(test_client):
         }
     )
 
-    res = test_client.post("/page", json=data)
+    headers = {"access-token": "mock access token"}
+
+    # Act
+    res = test_client.put("/page", json=data, headers=headers)
     res_data = res.json()
 
     # Assert
     assert res.status_code != 200
 
-    assert res_data["message"] == "A widget with this name already exists"
+    assert res_data["detail"] == "A widget with this name already exists"
 
 
 def test_create_widget_req_error_illegal_name_space_between(test_client):
@@ -91,8 +96,10 @@ def test_create_widget_req_error_illegal_name_space_between(test_client):
         }
     )
 
+    headers = {"access-token": "mock access token"}
+
     # Act
-    res = test_client.post("/page", json=data)
+    res = test_client.put("/page", json=data, headers=headers)
     res_data = res.json()
 
     # Assert
@@ -101,7 +108,7 @@ def test_create_widget_req_error_illegal_name_space_between(test_client):
     assert not verify_object_in_state_context("WidgetsState", "widget 2")
     assert not verify_object_in_state_context("WidgetsContext", "widget 2", True)
 
-    assert res_data["message"] == "Invalid widget names present in the table"
+    assert res_data["detail"] == "Invalid widget names present in the table"
 
 
 def test_create_widget_req_error_illegal_name_special_characters(test_client):
@@ -118,8 +125,10 @@ def test_create_widget_req_error_illegal_name_special_characters(test_client):
         }
     )
 
+    headers = {"access-token": "mock access token"}
+
     # Act
-    res = test_client.post("/page", json=data)
+    res = test_client.put("/page", json=data, headers=headers)
     res_data = res.json()
 
     # Assert
@@ -128,7 +137,7 @@ def test_create_widget_req_error_illegal_name_special_characters(test_client):
     assert not verify_object_in_state_context("WidgetsState", "widget_2!")
     assert not verify_object_in_state_context("WidgetsContext", "widget_2!", True)
 
-    assert res_data["message"] == "Invalid widget names present in the table"
+    assert res_data["detail"] == "Invalid widget names present in the table"
 
 
 def test_create_widget_req_error_illegal_name_url_path(test_client):
@@ -145,8 +154,10 @@ def test_create_widget_req_error_illegal_name_url_path(test_client):
         }
     )
 
+    headers = {"access-token": "mock access token"}
+
     # Act
-    res = test_client.post("/page", json=data)
+    res = test_client.put("/page", json=data, headers=headers)
     res_data = res.json()
 
     # Assert
@@ -155,7 +166,7 @@ def test_create_widget_req_error_illegal_name_url_path(test_client):
     assert not verify_object_in_state_context("WidgetsState", "../../widget2!")
     assert not verify_object_in_state_context("WidgetsContext", "../../", True)
 
-    assert res_data["message"] == "Invalid widget names present in the table"
+    assert res_data["detail"] == "Invalid widget names present in the table"
 
 
 def test_update_widget_req(test_client):
@@ -172,8 +183,10 @@ def test_update_widget_req(test_client):
         }
     )
 
+    headers = {"access-token": "mock access token"}
+
     # Act
-    res = test_client.post("/page", json=data)
+    res = test_client.put("/page", json=data, headers=headers)
     res_data = res.json()
 
     # Assert
@@ -193,8 +206,10 @@ def test_delete_widget_req(test_client):
     # Arrange
     data = copy.deepcopy(base_data)
 
+    headers = {"access-token": "mock access token"}
+
     # Act
-    res = test_client.post("/page", json=data)
+    res = test_client.put("/page", json=data, headers=headers)
 
     # Assert
     assert res.status_code == 200
