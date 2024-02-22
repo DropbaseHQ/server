@@ -60,6 +60,11 @@ class WorkspaceFolderController:
                 status_code=400, detail="App does not exist, or id does not exist for this app."
             )
 
+        existing_app_labels = [a["label"] for a in self.get_workspace_properties()]
+
+        if new_label in existing_app_labels:
+            raise HTTPException(status_code=400, detail="An app with this label already exists")
+
         app_info = {**target_app, "label": new_label}
         workspace_data = self.get_workspace_properties()
         for app in workspace_data:
