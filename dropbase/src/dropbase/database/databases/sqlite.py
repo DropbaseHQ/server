@@ -8,16 +8,12 @@ from dropbase.schemas.edit_cell import CellEdit
 
 
 class SqliteDatabase(Database):
-    def __init__(self, creds: dict, schema: str = "public", testing: bool = False):
+    def __init__(self, creds: dict, schema: str = "public"):
         super().__init__(creds)
         self.db_type = "sqlite"
-        self.testing = testing
 
     def _get_connection_url(self, creds: dict):
-        if self.testing:
-            return f"{creds.get('drivername')}:///{creds.get('host')}?cache=shared&mode=memory&uri=true"
-        else:
-            return f"{creds.get('drivername')}:///{creds.get('host')}"
+        return f"{creds.get('drivername')}:///{creds.get('host')}"
 
     def update(self, table: str, keys: dict, values: dict, auto_commit: bool = False):
         value_keys = list(values.keys())
