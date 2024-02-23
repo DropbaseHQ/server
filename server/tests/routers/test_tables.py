@@ -16,7 +16,10 @@ base_data = {
 }
 
 
-def test_create_table_req(test_client):
+def test_create_table_req(test_client, dropbase_router_mocker):
+    dropbase_router_mocker.patch(
+        "auth", "get_user_permissions", side_effect=lambda *args, **kwargs: {}
+    )
     # Arrange
     data = copy.deepcopy(base_data)
     data["properties"]["tables"].append(
@@ -40,7 +43,10 @@ def test_create_table_req(test_client):
     assert verify_property_exists("tables[1].name", "table2")
 
 
-def test_create_table_req_error_duplicate_names(test_client):
+def test_create_table_req_error_duplicate_names(test_client, dropbase_router_mocker):
+    dropbase_router_mocker.patch(
+        "auth", "get_user_permissions", side_effect=lambda *args, **kwargs: {}
+    )
     # Arrange
     data = copy.deepcopy(base_data)
     data["properties"]["tables"].append(
@@ -56,7 +62,12 @@ def test_create_table_req_error_duplicate_names(test_client):
     assert res_data["message"] == "A table with this name already exists"
 
 
-def test_create_table_req_error_illegal_name_space_between(test_client):
+def test_create_table_req_error_illegal_name_space_between(
+    test_client, dropbase_router_mocker
+):
+    dropbase_router_mocker.patch(
+        "auth", "get_user_permissions", side_effect=lambda *args, **kwargs: {}
+    )
     # Arrange
     data = copy.deepcopy(base_data)
     data["properties"]["tables"].append(
@@ -75,7 +86,12 @@ def test_create_table_req_error_illegal_name_space_between(test_client):
     assert res_data["message"] == "Invalid table names present in the table"
 
 
-def test_create_table_req_error_illegal_name_special_characters(test_client):
+def test_create_table_req_error_illegal_name_special_characters(
+    test_client, dropbase_router_mocker
+):
+    dropbase_router_mocker.patch(
+        "auth", "get_user_permissions", side_effect=lambda *args, **kwargs: {}
+    )
     # Arrange
     data = copy.deepcopy(base_data)
     data["properties"]["tables"].append(
@@ -94,7 +110,12 @@ def test_create_table_req_error_illegal_name_special_characters(test_client):
     assert res_data["message"] == "Invalid table names present in the table"
 
 
-def test_create_table_req_error_illegal_name_url_path(test_client):
+def test_create_table_req_error_illegal_name_url_path(
+    test_client, dropbase_router_mocker
+):
+    dropbase_router_mocker.patch(
+        "auth", "get_user_permissions", side_effect=lambda *args, **kwargs: {}
+    )
     # Arrange
     data = copy.deepcopy(base_data)
     data["properties"]["tables"].append(
@@ -113,7 +134,10 @@ def test_create_table_req_error_illegal_name_url_path(test_client):
     assert res_data["message"] == "Invalid table names present in the table"
 
 
-def test_update_table_req_file_changed(test_client):
+def test_update_table_req_file_changed(test_client, dropbase_router_mocker):
+    dropbase_router_mocker.patch(
+        "auth", "get_user_permissions", side_effect=lambda *args, **kwargs: {}
+    )
     # Arrange
     data = copy.deepcopy(base_data)
     data["properties"]["tables"].append(
@@ -142,7 +166,10 @@ def test_update_table_req_file_changed(test_client):
     assert verify_property_exists("tables[1].name", "table3")
 
 
-def test_delete_table_req(test_client):
+def test_delete_table_req(test_client, dropbase_router_mocker):
+    dropbase_router_mocker.patch(
+        "auth", "get_user_permissions", side_effect=lambda *args, **kwargs: {}
+    )
     # Arrange
     data = copy.deepcopy(base_data)
 
