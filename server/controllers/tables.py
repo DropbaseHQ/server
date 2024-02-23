@@ -1,6 +1,6 @@
-from dropbase.database.connect import connect_to_user_db
+from dropbase.database.connect import connect_to_user_db, get_sources
 from dropbase.schemas.files import DataFile
-from dropbase.schemas.table import ConvertTableRequest
+from dropbase.schemas.table import ConvertTableRequest, GetDbTypeRequest
 from server.controllers.page import get_page_state_context
 from server.controllers.properties import read_page_properties, update_properties
 from server.controllers.run_sql import get_sql_from_file, render_sql
@@ -61,5 +61,20 @@ def convert_sql_table(req: ConvertTableRequest, router: DropbaseRouter):
         # get new steate and context
         return get_page_state_context(req.app_name, req.page_name), 200
 
+    except Exception as e:
+        return str(e), 500
+
+
+def get_database_type_from_source(req: GetDbTypeRequest) -> str:
+    try:
+        WORKSPACE_SOURCES = get_sources()
+        source = req.source
+
+        if source in WORKSPACE_SOURCES:
+            source_info = WORKSPACE_SOURCES[source]
+            print(source_info)
+            source_type = source_info["type"]
+
+        return source_type
     except Exception as e:
         return str(e), 500

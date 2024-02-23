@@ -45,3 +45,7 @@ class CommitTableColumnsRequest(BaseModel):
     page_name: str = Field(regex=FILE_NAME_REGEX)
     table: TableBase
     columns: List[dict]
+
+
+class GetDbTypeRequest(BaseModel):
+    source: str
