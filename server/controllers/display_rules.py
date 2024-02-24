@@ -1,3 +1,4 @@
+import logging
 from datetime import datetime
 from functools import reduce
 from typing import Any
@@ -7,6 +8,8 @@ from dateutil.parser import parse
 from dropbase.schemas.display_rules import DisplayRules
 from server.controllers.properties import read_page_properties
 from server.controllers.utils import get_state_context_model
+
+logger = logging.getLogger(__name__)
 
 
 def get_by_path(root, items):
@@ -68,9 +71,10 @@ def coerce_to_target_type(target_type: str, value: Any):
 
 # helper function to compare values with operators
 def compare_values(target_value: Any, operator: str, rule_value: Any, target_type: str):
+    try:
 
-    target_value = coerce_to_target_type(target_type, target_value)
-    rule_value = coerce_to_target_type(target_type, rule_value)
+        target_value = coerce_to_target_type(target_type, target_value)
+        rule_value = coerce_to_target_type(target_type, rule_value)
 
     if operator == "equals":
         return target_value == rule_value
@@ -160,14 +164,18 @@ def get_display_rules_from_comp_props(component_props):
 
 
 def run_display_rule(app_name: str, page_name: str, state: dict, context: dict):
-    State = get_state_context_model(app_name, page_name, "state")
-    Context = get_state_context_model(app_name, page_name, "context")
+    try:
+        State = get_state_context_model(app_name, page_name, "state")
+        Context = get_state_context_model(app_name, page_name, "context")
 
-    state = State(**state)
-    context = Context(**context)
+        state = State(**state)
+        context = Context(**context)
 
-    properties = read_page_properties(app_name, page_name)
-    display_rules = get_display_rules_from_comp_props(properties)
+        properties = read_page_properties(app_name, page_name)
+        display_rules = get_display_rules_from_comp_props(properties)
 
-    rules = DisplayRules(display_rules=display_rules)
-    return display_rule(state, context, rules)
+        rules = DisplayRules(display_rules=display_rules)
+        return display_rule(state, context, rules)
+    except Exception as e:
+        logger.error(f"Error running display rule: {e}")
+        return context
