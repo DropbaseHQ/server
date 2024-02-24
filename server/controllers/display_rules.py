@@ -64,6 +64,15 @@ def coerce_to_target_type(target_type: str, value: Any):
         case "text":
             value = str(value)
             return value
+        case "boolean":
+            if isinstance(value, bool):
+                return value
+            if value.lower() == "true":
+                value = True
+            elif value.lower() == "false":
+                value = False
+            return value
+
         case _:
             value = str(value)
             return value
