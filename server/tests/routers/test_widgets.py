@@ -23,7 +23,10 @@ base_data = {
 }
 
 
-def test_create_widget_req(test_client):
+def test_create_widget_req(test_client, dropbase_router_mocker):
+    dropbase_router_mocker.patch(
+        "auth", "get_user_permissions", side_effect=lambda *args, **kwargs: {}
+    )
     # Arrange
     data = copy.deepcopy(base_data)
     data["properties"]["widgets"].append(
@@ -54,7 +57,10 @@ def test_create_widget_req(test_client):
     assert verify_property_exists("widgets[1].name", "widget2")
 
 
-def test_create_widget_req_error_duplicate_names(test_client):
+def test_create_widget_req_error_duplicate_names(test_client, dropbase_router_mocker):
+    dropbase_router_mocker.patch(
+        "auth", "get_user_permissions", side_effect=lambda *args, **kwargs: {}
+    )
     # Arrange
     data = copy.deepcopy(base_data)
     data["properties"]["widgets"].append(
@@ -77,7 +83,12 @@ def test_create_widget_req_error_duplicate_names(test_client):
     assert res_data["message"] == "A widget with this name already exists"
 
 
-def test_create_widget_req_error_illegal_name_space_between(test_client):
+def test_create_widget_req_error_illegal_name_space_between(
+    test_client, dropbase_router_mocker
+):
+    dropbase_router_mocker.patch(
+        "auth", "get_user_permissions", side_effect=lambda *args, **kwargs: {}
+    )
     # Arrange
     data = copy.deepcopy(base_data)
     data["properties"]["widgets"].append(
@@ -104,7 +115,12 @@ def test_create_widget_req_error_illegal_name_space_between(test_client):
     assert res_data["message"] == "Invalid widget names present in the table"
 
 
-def test_create_widget_req_error_illegal_name_special_characters(test_client):
+def test_create_widget_req_error_illegal_name_special_characters(
+    test_client, dropbase_router_mocker
+):
+    dropbase_router_mocker.patch(
+        "auth", "get_user_permissions", side_effect=lambda *args, **kwargs: {}
+    )
     # Arrange
     data = copy.deepcopy(base_data)
     data["properties"]["widgets"].append(
@@ -131,7 +147,12 @@ def test_create_widget_req_error_illegal_name_special_characters(test_client):
     assert res_data["message"] == "Invalid widget names present in the table"
 
 
-def test_create_widget_req_error_illegal_name_url_path(test_client):
+def test_create_widget_req_error_illegal_name_url_path(
+    test_client, dropbase_router_mocker
+):
+    dropbase_router_mocker.patch(
+        "auth", "get_user_permissions", side_effect=lambda *args, **kwargs: {}
+    )
     # Arrange
     data = copy.deepcopy(base_data)
     data["properties"]["widgets"].append(
@@ -158,7 +179,10 @@ def test_create_widget_req_error_illegal_name_url_path(test_client):
     assert res_data["message"] == "Invalid widget names present in the table"
 
 
-def test_update_widget_req(test_client):
+def test_update_widget_req(test_client, dropbase_router_mocker):
+    dropbase_router_mocker.patch(
+        "auth", "get_user_permissions", side_effect=lambda *args, **kwargs: {}
+    )
     # Arrange
     data = copy.deepcopy(base_data)
     data["properties"]["widgets"].append(
@@ -189,7 +213,10 @@ def test_update_widget_req(test_client):
     assert verify_property_exists("widgets[1].name", "widget3")
 
 
-def test_delete_widget_req(test_client):
+def test_delete_widget_req(test_client, dropbase_router_mocker):
+    dropbase_router_mocker.patch(
+        "auth", "get_user_permissions", side_effect=lambda *args, **kwargs: {}
+    )
     # Arrange
     data = copy.deepcopy(base_data)
 

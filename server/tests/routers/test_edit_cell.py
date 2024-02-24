@@ -5,11 +5,11 @@ data = {
         {
             "row": {"user_id": 1, "username": "John Doe", "email": "john.doe@example.com"},
             "column_name": "username",
-            "column_type": "VARCHAR(255)",
+            "data_type": "VARCHAR(255)",
             "columns": [
                 {
                     "name": "user_id",
-                    "column_type": "INTEGER",
+                    "data_type": "INTEGER",
                     "display_type": "integer",
                     "unique": False,
                     "default": "nextval('\"public\".users_user_id_seq'::regclass)",
@@ -25,7 +25,7 @@ data = {
                 },
                 {
                     "name": "username",
-                    "column_type": "VARCHAR(255)",
+                    "data_type": "VARCHAR(255)",
                     "display_type": "text",
                     "unique": False,
                     "default": None,
@@ -41,7 +41,7 @@ data = {
                 },
                 {
                     "name": "email",
-                    "column_type": "VARCHAR(255)",
+                    "data_type": "VARCHAR(255)",
                     "display_type": "text",
                     "unique": False,
                     "default": None,

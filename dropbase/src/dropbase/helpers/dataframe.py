@@ -5,14 +5,14 @@ import pandas as pd
 INFER_TYPE_SAMPLE_SIZE = 50
 
 
-def convert_df_to_resp_obj(df: pd.DataFrame) -> dict:
+def convert_df_to_resp_obj(df: pd.DataFrame, column_type: str) -> dict:
     values = json.loads(df.to_json(orient="split", default_handler=str))
     values["data"] = flatten_json(values["data"])
 
     if len(df) > INFER_TYPE_SAMPLE_SIZE:
         df = df.sample(INFER_TYPE_SAMPLE_SIZE)
 
-    columns = get_column_types(df)
+    columns = get_column_types(df, column_type)
     values["columns"] = columns
     return values
 
@@ -30,12 +30,17 @@ def flatten_json(json_data):
     return data
 
 
-def get_column_types(df):
+def get_column_types(df, column_type: str):
     columns = []
     for col, dtype in df.dtypes.to_dict().items():
         col_type = str(dtype).lower()
         columns.append(
-            {"name": col, "column_type": str(dtype), "display_type": detect_col_type(col_type)}
+            {
+                "name": col,
+                "column_type": column_type,
+                "data_type": str(dtype),
+                "display_type": detect_col_type(col_type),
+            }
         )
     return columns
 

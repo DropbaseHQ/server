@@ -14,6 +14,7 @@ class PostgresDatabase(Database):
     def __init__(self, creds: dict, schema: str = "public"):
         super().__init__(creds)
         self.schema = schema
+        self.db_type = "postgres"
 
     def _get_connection_url(self, creds: dict):
         return URL.create(**creds)
@@ -77,6 +78,15 @@ class PostgresDatabase(Database):
         result = self.session.execute(text(sql))
         return [dict(row) for row in result.fetchall()]
 
+    def execute(self, sql: str):
+        try:
+            result = self.session.execute(text(sql))
+            self.commit()
+            return {"success": True, "rows_affected": result.rowcount}
+        except SQLAlchemyError as e:
+            self.session.rollback()  # Roll back the session on error.
+            return {"success": False, "error": str(e)}
+
     def filter_and_sort(
         self, table: str, filter_clauses: list, sort_by: str = None, ascending: bool = True
     ):
@@ -86,10 +96,6 @@ class PostgresDatabase(Database):
         if sort_by:
             sql += f" ORDER BY {sort_by} {'ASC' if ascending else 'DESC'}"
         result = self.session.execute(text(sql))
-        return [dict(row) for row in result.fetchall()]
-
-    def execute_custom_query(self, sql: str, values: dict = None):
-        result = self.session.execute(text(sql), values if values else {})
         return [dict(row) for row in result.fetchall()]
 
     def _get_db_schema(self):
@@ -216,7 +222,7 @@ class PostgresDatabase(Database):
             columns_dict = {col.column_name: col for col in edit.columns}
             column = columns_dict[columns_name]
 
-            if edit.column_type == "DATE" or edit.column_type == "TIMESTAMP":
+            if edit.data_type == "DATE" or edit.data_type == "TIMESTAMP":
                 # new_value will be epoch time in ms, convert it to sec first then create datetime
                 edit.new_value = datetime.fromtimestamp(edit.new_value // 1000, timezone.utc)
 

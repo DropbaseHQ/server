@@ -5,10 +5,10 @@ from typing import List
 from jinja2 import Environment
 
 from dropbase.database.connect import connect_to_user_db
+from dropbase.helpers.dataframe import convert_df_to_resp_obj
 from dropbase.schemas.query import RunSQLRequestTask, RunSQLStringRequest
 from dropbase.schemas.table import FilterSort, TableFilter, TablePagination, TableSort
 from server.constants import cwd
-from server.controllers.dataframe import convert_df_to_resp_obj
 from server.controllers.python_subprocess import format_process_result, run_process_task_unwrap
 from server.controllers.redis import r
 from server.controllers.utils import process_query_result
@@ -27,7 +27,7 @@ def run_sql_query_from_string(req: RunSQLStringRequest, job_id: str):
         res = user_db._run_query(sql, {})
         # parse pandas response
         df = process_query_result(res)
-        res = convert_df_to_resp_obj(df)
+        res = convert_df_to_resp_obj(df, user_db.db_type)
         r.set(job_id, json.dumps(res))
 
         response["data"] = res["data"]
@@ -63,7 +63,7 @@ def run_sql_query(args: RunSQLRequestTask, job_id: str):
         res = user_db._run_query(filter_sql, filter_values)
         df = process_query_result(res)
 
-        res = convert_df_to_resp_obj(df)
+        res = convert_df_to_resp_obj(df, user_db.db_type)
         r.set(job_id, json.dumps(res))
         response["data"] = res["data"]
         response["columns"] = res["columns"]
