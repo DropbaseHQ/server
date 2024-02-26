@@ -6,18 +6,27 @@ from sqlalchemy.inspection import inspect
 from sqlalchemy.sql import text
 
 from dropbase.database.database import Database
-from dropbase.models.table.pg_column import PgColumnDefinedProperty
+from dropbase.models.table.snowflake_column import SnowflakeColumnDefinedProperty
 from dropbase.schemas.edit_cell import CellEdit
 
 
-class PostgresDatabase(Database):
+class SnowflakeDatabase(Database):
     def __init__(self, creds: dict, schema: str = "public"):
         super().__init__(creds)
         self.schema = schema
-        self.db_type = "postgres"
+        self.db_type = "snowflake"
 
     def _get_connection_url(self, creds: dict):
-        return URL.create(**creds)
+        query = {}
+        for key in ["warehouse", "role", "dbschema"]:
+            if key in creds:
+                # If the key is 'dbschema', change it to 'schema' when adding to the query dictionary
+                if key == "dbschema":
+                    query["schema"] = creds.pop(key)
+                else:
+                    query[key] = creds.pop(key)
+
+        return URL.create(query=query, **creds)
 
     # Removed commit, rollback, etc as abstract method, add back if necessary
     def update(self, table: str, keys: dict, values: dict, auto_commit: bool = True):
@@ -31,7 +40,7 @@ class PostgresDatabase(Database):
             where_claw = f"WHERE ({', '.join(key_keys)}) = (:{', :'.join(key_keys)})"
         else:
             where_claw = f"WHERE {key_keys[0]} = :{key_keys[0]}"
-        sql = f"""UPDATE {self.schema}.{table}\n{set_claw}\n{where_claw} RETURNING *;"""
+        sql = f"""UPDATE {self.schema}.{table}\n{set_claw}\n{where_claw} RETURNING *;"""  # Snowflake supports the returning clause
         values.update(keys)
         result = self.session.execute(text(sql), values)
         if auto_commit:
@@ -40,7 +49,7 @@ class PostgresDatabase(Database):
 
     def select(self, table: str, where_clause: str = None, values: dict = None):
         if where_clause:
-            sql = f"""SELECT * FROM {self.schema}.{table} WHERE {where_clause};"""
+            sql = f"""SELECT * FROM {self.schema}.{table} WHERE {where_clause};"""  # The overall architecture of Snowflake is DB -> Schema -> Table (same as Postgres)
         else:
             sql = f"""SELECT * FROM {self.schema}.{table};"""
 
@@ -73,6 +82,10 @@ class PostgresDatabase(Database):
         if auto_commit:
             self.commit()
         return res.rowcount
+
+    def query(self, sql: str):
+        result = self.session.execute(text(sql))
+        return [dict(row) for row in result.fetchall()]
 
     def execute(self, sql: str):
         try:
@@ -168,7 +181,7 @@ class PostgresDatabase(Database):
         primary_keys = self._get_primary_keys(smart_cols)
         validated = []
         for col_name, col_data in smart_cols.items():
-            col_data = PgColumnDefinedProperty(**col_data)
+            col_data = SnowflakeColumnDefinedProperty(**col_data)
             pk_name = primary_keys.get(self._get_table_path(col_data))
             if pk_name:
                 validation_sql = _get_fast_sql(
@@ -203,12 +216,12 @@ class PostgresDatabase(Database):
     def _get_primary_keys(self, smart_cols: dict[str, dict]) -> dict[str, dict]:
         primary_keys = {}
         for col_data in smart_cols.values():
-            col_data = PgColumnDefinedProperty(**col_data)
+            col_data = SnowflakeColumnDefinedProperty(**col_data)
             if col_data.primary_key:
                 primary_keys[self._get_table_path(col_data)] = col_data.column_name
         return primary_keys
 
-    def _get_table_path(self, col_data: PgColumnDefinedProperty) -> str:
+    def _get_table_path(self, col_data: SnowflakeColumnDefinedProperty) -> str:
         return f"{col_data.schema_name}.{col_data.table_name}"
 
     def _update_value(self, edit: CellEdit):
@@ -234,9 +247,10 @@ class PostgresDatabase(Database):
                 values[pk_col.column_name] = edit.row[pk_col.name]
             prim_key_str = " AND ".join(prim_key_list)
 
-            sql = f"""UPDATE "{column.schema_name}"."{column.table_name}"
+            sql = f"""UPDATE {column.schema_name}.{column.table_name}
             SET {column.column_name} = :new_value
             WHERE {prim_key_str}"""
+            # Snowflake becomes case sensitive when quoted (does not auto-convert to capital)
 
             # TODO: add check for prev column value
             # AND {column.column_name} = :old_value
@@ -244,7 +258,7 @@ class PostgresDatabase(Database):
             with self.engine.connect() as conn:
                 result = conn.execute(text(sql), values)
                 conn.commit()
-                if result.rowcount == 0:
+                if result.rowcount == 0:  # I think this may not work as expected for snowflake
                     raise Exception("No rows were updated")
             return f"Updated {edit.column_name} from {edit.old_value} to {edit.new_value}", True
         except Exception as e:

@@ -1,5 +1,6 @@
 from dropbase.database.databases.mysql import MySqlDatabase
 from dropbase.database.databases.postgres import PostgresDatabase
+from dropbase.database.databases.snowflake import SnowflakeDatabase
 from dropbase.database.sources import get_sources
 
 WORKSPACE_SOURCES = get_sources()
@@ -18,5 +19,7 @@ def connect_to_user_db(name: str):
             return PostgresDatabase(creds_fields.dict(), schema=schema_name)
         case "mysql":
             return MySqlDatabase(creds_fields.dict())
+        case "snowflake":
+            return SnowflakeDatabase(creds_fields.dict())
         case _:
             raise Exception(f"Database type {creds_fields.get('type')} not supported")

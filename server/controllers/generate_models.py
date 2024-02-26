@@ -9,6 +9,7 @@ from dropbase.models.table.button_column import ButtonColumnContextProperty
 from dropbase.models.table.mysql_column import MySqlColumnContextProperty
 from dropbase.models.table.pg_column import PgColumnContextProperty
 from dropbase.models.table.py_column import PyColumnContextProperty
+from dropbase.models.table.snowflake_column import SnowflakeColumnContextProperty
 from dropbase.models.widget import (
     BooleanContextProperty,
     ButtonContextProperty,
@@ -163,6 +164,7 @@ def get_widget_context(widgets_props):
 column_context_model_mapper = {
     "postgres": PgColumnContextProperty,
     "mysql": MySqlColumnContextProperty,
+    "snowflake": SnowflakeColumnContextProperty,
     "python": PyColumnContextProperty,
     "button_column": ButtonColumnContextProperty,
 }
