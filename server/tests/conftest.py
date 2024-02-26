@@ -1,4 +1,5 @@
 import shutil
+import sqlite3
 import tempfile
 
 import psycopg2
@@ -12,6 +13,7 @@ from pytest_mysql import factories
 from dropbase.database.databases.mysql import MySqlDatabase
 from dropbase.database.databases.postgres import PostgresDatabase
 from dropbase.database.databases.snowflake import SnowflakeDatabase
+from dropbase.database.databases.sqlite import SqliteDatabase
 from server.auth.dependency import CheckUserPermissions
 from server.controllers.properties import read_page_properties, update_properties
 from server.controllers.workspace import WorkspaceFolderController
@@ -21,6 +23,7 @@ from server.tests.constants import (
     DEMO_INIT_MYSQL_PATH,
     DEMO_INIT_SQL_PATH,
     DEMO_SNOWFLAKE_INIT_SQL_PATH,
+    DEMO_SQLITE_INIT_SQL_PATH,
     SNOWFLAKE_TEST_CONNECTION_PARAMS,
     SNOWFLAKE_TEST_CREDS,
     TEMPDIR_PATH,
@@ -31,11 +34,16 @@ from server.tests.constants import (
 from server.tests.mocks.dropbase_router_mocker import DropbaseRouterMocker
 from server.tests.templates import get_test_data_fetcher, get_test_ui
 
+# from sqlalchemy import create_engine, text
+# from sqlalchemy.ext.declarative import declarative_base
+# from sqlalchemy.orm import sessionmaker
 
-# Setup pytest-postgresql db with test data
+
 def load_test_db(db_type="postgres", **kwargs):
     if db_type == "postgres":
         conn = psycopg2.connect(**kwargs)
+    elif db_type == "sqlite":
+        conn = sqlite3.connect(**kwargs)
     elif db_type == "mysql":
         conn = pymysql.connect(**kwargs)
     elif db_type == "snowflake":
@@ -45,6 +53,9 @@ def load_test_db(db_type="postgres", **kwargs):
 
     if db_type == "postgres":
         with open(DEMO_INIT_SQL_PATH, "r") as rf:
+            init_sql = rf.read()
+    elif db_type == "sqlite":
+        with open(DEMO_SQLITE_INIT_SQL_PATH, "r") as rf:  # Replace this with sqlite path
             init_sql = rf.read()
     elif db_type == "mysql":
         with open(DEMO_INIT_MYSQL_PATH, "r") as rf:
@@ -59,9 +70,18 @@ def load_test_db(db_type="postgres", **kwargs):
             for statement in init_sql.split(";"):
                 if statement.strip():
                     cur.execute(statement)
+        elif db_type == "sqlite":
+            for statement in init_sql.split(";"):
+                if statement.strip():
+                    cur.execute(statement)
         else:
             cur.execute(init_sql)
         conn.commit()
+
+
+@pytest.fixture(scope="session")
+def sqlite_db():
+    sqlite3.connect("data.db")
 
 
 postgresql_proc = pytest_postgresql.factories.postgresql_proc(load=[load_test_db])
@@ -139,10 +159,10 @@ def connect_to_test_db(db_type: str, creds: dict):
             return PostgresDatabase(creds, schema="public")
         case "snowflake":
             return SnowflakeDatabase(creds)
-        case "snowflake":
-            return SnowflakeDatabase(creds)
         case "mysql":
             return MySqlDatabase(creds)
+        case "sqlite":
+            return SqliteDatabase(creds)
 
 
 @pytest.fixture
@@ -184,6 +204,13 @@ def mock_db(request, postgresql, snowflake_db):
             creds_dict = SNOWFLAKE_TEST_CREDS
 
             db_instance = connect_to_test_db("snowflake", creds_dict)
+        case "sqlite":
+            creds_dict = {"database": "data.db"}
+            load_test_db("sqlite", **creds_dict)
+
+            creds_dict = {"drivername": "sqlite", "host": "data.db"}
+
+            db_instance = connect_to_test_db("sqlite", creds_dict)
 
     return db_instance
 

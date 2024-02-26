@@ -10,6 +10,7 @@ from dropbase.models.table.mysql_column import MySqlColumnContextProperty
 from dropbase.models.table.pg_column import PgColumnContextProperty
 from dropbase.models.table.py_column import PyColumnContextProperty
 from dropbase.models.table.snowflake_column import SnowflakeColumnContextProperty
+from dropbase.models.table.sqlite_column import SqliteColumnContextProperty
 from dropbase.models.widget import (
     BooleanContextProperty,
     ButtonContextProperty,
@@ -165,6 +166,7 @@ column_context_model_mapper = {
     "postgres": PgColumnContextProperty,
     "mysql": MySqlColumnContextProperty,
     "snowflake": SnowflakeColumnContextProperty,
+    "sqlite": SqliteColumnContextProperty,
     "python": PyColumnContextProperty,
     "button_column": ButtonColumnContextProperty,
 }

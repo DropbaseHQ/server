@@ -25,7 +25,7 @@ base_data = {
 }
 
 
-@pytest.mark.parametrize("mock_db", ["postgres", "mysql", "snowflake"], indirect=True)
+@pytest.mark.parametrize("mock_db", ["postgres", "mysql", "snowflake", "sqlite"], indirect=True)
 def test_run_query_sql(test_client, mocker, mock_db):
     # Arrange
     data = copy.deepcopy(base_data)

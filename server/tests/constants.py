@@ -34,3 +34,5 @@ SNOWFLAKE_TEST_CREDS = {
     "warehouse": os.getenv("SNOWFLAKE_TEST_WAREHOUSE"),
     "role": os.getenv("SNOWFLAKE_TEST_ROLE"),
 }
+DEMO_INIT_SQL_PATH = ROOT_PATH.joinpath("demo/init.sql")
+DEMO_SQLITE_INIT_SQL_PATH = ROOT_PATH.joinpath("demo/init_sqlite.sql")
