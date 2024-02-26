@@ -1,13 +1,11 @@
 import json
 import traceback
-from typing import List
 
 from jinja2 import Environment
 
 from dropbase.database.connect import connect_to_user_db
 from dropbase.helpers.dataframe import convert_df_to_resp_obj
 from dropbase.schemas.query import RunSQLRequestTask, RunSQLStringRequest
-from dropbase.schemas.table import FilterSort, TableFilter, TablePagination, TableSort
 from server.constants import cwd
 from server.controllers.python_subprocess import format_process_result, run_process_task_unwrap
 from server.controllers.redis import r

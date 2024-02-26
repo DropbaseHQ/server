@@ -76,6 +76,10 @@ class PostgresDatabase(Database):
             self.commit()
         return res.rowcount
 
+    def query(self, sql: str):
+        result = self.session.execute(text(sql))
+        return [dict(row) for row in result.fetchall()]
+
     def execute(self, sql: str):
         try:
             result = self.session.execute(text(sql))
