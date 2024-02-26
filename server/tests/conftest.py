@@ -73,6 +73,16 @@ postgresql = pytest_postgresql.factories.postgresql("postgresql_proc")
 mysql_proc = factories.mysql_proc(port=3307)
 mysql = factories.mysql("mysql_proc")
 
+# @pytest.fixture(scope='session')
+# def mysql_proc(port=3307):
+#     mysql_proc = factories.mysql_proc(port=port)
+#     yield mysql_proc
+
+# @pytest.fixture(scope='session')
+# def mysql(mysql_proc):
+#     db = factories.mysql('mysql_proc')
+#     return db
+
 
 @pytest.fixture(scope="session")
 def snowflake_db():
@@ -149,7 +159,7 @@ def connect_to_test_db(db_type: str, creds: dict):
 
 
 @pytest.fixture
-def mock_db(request, postgresql, snowflake_db):
+def mock_db(request, postgresql, mysql, snowflake_db):
     db_type = request.param
     creds_dict = {}
     match db_type:
