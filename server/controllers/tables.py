@@ -63,18 +63,3 @@ def convert_sql_table(req: ConvertTableRequest, router: DropbaseRouter):
 
     except Exception as e:
         return str(e), 500
-
-
-def get_database_type_from_source(req: GetDbTypeRequest) -> str:
-    try:
-        WORKSPACE_SOURCES = get_sources()
-        source = req.source
-
-        if source in WORKSPACE_SOURCES:
-            source_info = WORKSPACE_SOURCES[source]
-            print(source_info)
-            source_type = source_info["type"]
-
-        return source_type
-    except Exception as e:
-        return str(e), 500
