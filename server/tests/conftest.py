@@ -55,7 +55,10 @@ def load_test_db(db_type="postgres", **kwargs):
 
     with conn.cursor() as cur:
         if db_type == "mysql":
-            # MySQL might require splitting and executing each statement separately
+            for statement in init_sql.split(";"):
+                if statement.strip():
+                    cur.execute(statement)
+        if db_type == "snowflake":
             for statement in init_sql.split(";"):
                 if statement.strip():
                     cur.execute(statement)
