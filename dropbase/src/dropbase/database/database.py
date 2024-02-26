@@ -53,7 +53,7 @@ class Database(ABC):
         pass
 
     @abstractmethod
-    def execute(self):
+    def execute(self, sql: str, values: dict = None):
         pass
 
     @abstractmethod
