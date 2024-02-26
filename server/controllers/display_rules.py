@@ -82,6 +82,9 @@ def coerce_to_target_type(target_type: str, value: Any):
 def compare_values(target_value: Any, operator: str, rule_value: Any, target_type: str):
     try:
 
+        if target_value is None and operator in ["gt", "gte", "lt", "lte"]:
+            return False
+
         target_value = coerce_to_target_type(target_type, target_value)
         rule_value = coerce_to_target_type(target_type, rule_value)
 
@@ -128,7 +131,6 @@ def display_rule(state, context, rules: DisplayRules):
                     break
 
             # get the relevant value from the state based on the target
-
             target_value = get_by_path(state, rule.target)
             target_type = None
             if hasattr(rule, "target_type"):
@@ -151,7 +153,9 @@ def display_rule(state, context, rules: DisplayRules):
                 component_visible = rule_applies
 
         # the resulting state of the component is defined by the final rule resulting condition
-        set_by_path(context, f"{component_display_rules.component}.visible", component_visible)
+        set_by_path(
+            context, f"{component_display_rules.component}.visible", component_visible
+        )
 
     return context.dict()
 
