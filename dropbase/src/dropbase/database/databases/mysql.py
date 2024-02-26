@@ -1,3 +1,5 @@
+from typing import List
+
 from sqlalchemy.engine import URL, reflection
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.sql import text
@@ -5,6 +7,7 @@ from sqlalchemy.sql import text
 from dropbase.database.database import Database
 from dropbase.models.table.mysql_column import MySqlColumnDefinedProperty
 from dropbase.schemas.edit_cell import CellEdit
+from dropbase.schemas.table import TableFilter, TablePagination, TableSort
 
 
 class MySqlDatabase(Database):
@@ -254,6 +257,58 @@ class MySqlDatabase(Database):
         with self.engine.connect().execution_options(autocommit=True) as conn:
             res = conn.execute(text(sql), values).all()
         return res
+
+    def _apply_filters(
+        self,
+        table_sql: str,
+        filters: List[TableFilter],
+        sorts: List[TableSort],
+        pagination: TablePagination = {},
+    ):
+        # clean sql
+        table_sql = table_sql.strip("\n ;")
+        filter_sql = f"""WITH user_query as ({table_sql}) SELECT * FROM user_query\n"""
+
+        # apply filters
+        filter_values = {}
+        if filters:
+            filter_sql += "WHERE \n"
+
+            filters_list = []
+            for filter in filters:
+                filter_value_name = f"{filter.column_name}_filter"
+                match filter.condition:
+                    case "like":
+                        filter.value = f"%{filter.value}%"
+                    case "is null" | "is not null":
+                        # handle unary operators
+                        filters_list.append(f"user_query.`{filter.column_name}` {filter.condition}")
+                        continue
+
+                filter_values[filter_value_name] = filter.value
+                filters_list.append(
+                    f"user_query.`{filter.column_name}` {filter.condition} :{filter_value_name}"
+                )
+
+            filter_sql += " AND ".join(filters_list)
+        filter_sql += "\n"
+
+        # apply sorts
+        if sorts:
+            filter_sql += "ORDER BY \n"
+            sort_list = []
+            for sort in sorts:
+                sort_list.append(f"user_query.`{sort.column_name}` {sort.value}")
+
+            filter_sql += ", ".join(sort_list)
+        filter_sql += "\n"
+
+        if pagination:
+            filter_sql += (
+                f"LIMIT {pagination.page_size + 1} OFFSET {pagination.page * pagination.page_size}"
+            )
+
+        return filter_sql, filter_values
 
 
 # helper functions --> if these helper functions are compatible with mysql maybe move it to utils?
