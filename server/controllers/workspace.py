@@ -40,6 +40,7 @@ class WorkspaceFolderController:
 
     def get_app(self, app_id: str):
         workspace_data = self.get_workspace_properties()
+
         for app in workspace_data:
             if app.get("id") == app_id:
                 return app
@@ -209,6 +210,7 @@ class AppFolderController:
         app_folder_path: str = None,
         page_name: str = None,
     ):
+
         app_folder_path = app_folder_path or self.app_folder_path
         page_name = page_name or self.page_name
 
@@ -253,6 +255,7 @@ class AppFolderController:
             "app_id": app_id,
             **page_object,
         }
+
         if router:
             router.page.create_page(page_properties=create_page_payload)
 

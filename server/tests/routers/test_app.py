@@ -132,7 +132,11 @@ def test_rename_app_req_error_duplicate_names(test_client, dropbase_router_mocke
     create_app = test_client.post("/app/", json=data)
 
     # Act
-    req = {"old_name": OLD_APP_NAME, "new_name": NEW_APP_NAME}
+    req = {
+        "old_name": OLD_APP_NAME,
+        "new_name": NEW_APP_NAME,
+        "app_id": "23ea28dc-4e2d-4d48-b15e-09b51f1a1c74",
+    }
 
     dropbase_router_mocker.patch("app", "create_app", side_effect=lambda *args, **kwargs: None)
     res = test_client.put("/app/", json=req)

@@ -8,6 +8,7 @@ from dropbase.models.table import (
     PyColumnDefinedProperty,
     TableDefinedProperty,
 )
+from dropbase.models.table.mysql_column import MySqlColumnDefinedProperty
 from dropbase.models.widget import (
     BooleanDefinedProperty,
     ButtonDefinedProperty,
@@ -22,6 +23,7 @@ component_property_types = {
     "button_column": ButtonColumnDefinedProperty,
     "pycolumn": PyColumnDefinedProperty,
     "pgcolumn": PgColumnDefinedProperty,
+    "mysqlcolumn": MySqlColumnDefinedProperty,
     "widget": WidgetDefinedProperty,
     "input": InputDefinedProperty,
     "button": ButtonDefinedProperty,
@@ -32,7 +34,7 @@ component_property_types = {
 }
 
 
-def get_component_properties(compnent_type: str):
+def get_component_properties(compnent_type: str):  # this needs to be modified to support mysql
     response = {}
     if compnent_type == "all":
         for key, value in component_property_types.items():
