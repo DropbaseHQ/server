@@ -85,22 +85,24 @@ def compare_values(target_value: Any, operator: str, rule_value: Any, target_typ
         target_value = coerce_to_target_type(target_type, target_value)
         rule_value = coerce_to_target_type(target_type, rule_value)
 
-    if operator == "equals":
-        return target_value == rule_value
-    elif operator == "gt":
-        return target_value > rule_value
-    elif operator == "gte":
-        return target_value >= rule_value
-    elif operator == "lt":
-        return target_value < rule_value
-    elif operator == "lte":
-        return target_value <= rule_value
-    elif operator == "not_equals":
-        return target_value != rule_value
-    elif operator == "exists":
-        return bool(target_value)
-    else:
-        return False
+        if operator == "equals":
+            return target_value == rule_value
+        elif operator == "gt":
+            return target_value > rule_value
+        elif operator == "gte":
+            return target_value >= rule_value
+        elif operator == "lt":
+            return target_value < rule_value
+        elif operator == "lte":
+            return target_value <= rule_value
+        elif operator == "not_equals":
+            return target_value != rule_value
+        elif operator == "exists":
+            return bool(target_value)
+        else:
+            return False
+    except Exception as e:
+        raise Exception(f"Error comparing values: {e}")
 
 
 def display_rule(state, context, rules: DisplayRules):
@@ -149,9 +151,7 @@ def display_rule(state, context, rules: DisplayRules):
                 component_visible = rule_applies
 
         # the resulting state of the component is defined by the final rule resulting condition
-        set_by_path(
-            context, f"{component_display_rules.component}.visible", component_visible
-        )
+        set_by_path(context, f"{component_display_rules.component}.visible", component_visible)
 
     return context.dict()
 
