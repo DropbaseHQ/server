@@ -1,9 +1,11 @@
 from abc import ABC, abstractmethod
+from typing import List
 
 from sqlalchemy.engine import create_engine
 from sqlalchemy.orm import scoped_session, sessionmaker
 
 from dropbase.schemas.edit_cell import CellEdit
+from dropbase.schemas.table import TableFilter, TablePagination, TableSort
 
 
 class Database(ABC):
@@ -80,6 +82,16 @@ class Database(ABC):
 
     @abstractmethod
     def _run_query(self, sql: str, values: dict):
+        pass
+
+    @abstractmethod
+    def _apply_filters(
+        self,
+        table_sql: str,
+        filters: List[TableFilter],
+        sorts: List[TableSort],
+        pagination: TablePagination = {},
+    ):
         pass
 
     def _detect_col_display_type(self, col_type: str):
