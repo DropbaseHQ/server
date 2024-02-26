@@ -15,7 +15,7 @@ class MySqlDatabase(Database):
     def _get_connection_url(self, creds: dict):
         return URL.create(**creds)
 
-    def update(self, table: str, keys: dict, values: dict, auto_commit: bool = False):
+    def update(self, table: str, keys: dict, values: dict, auto_commit: bool = True):
         value_keys = list(values.keys())
         if len(value_keys) > 1:
             set_claw = f"SET ({', '.join(value_keys)}) = (:{', :'.join(value_keys)})"
@@ -45,7 +45,7 @@ class MySqlDatabase(Database):
         result = self.session.execute(text(sql), values)
         return [dict(row) for row in result.fetchall()]
 
-    def insert(self, table: str, values: dict, auto_commit: bool = False):
+    def insert(self, table: str, values: dict, auto_commit: bool = True):
         keys = list(values.keys())
         sql = f"""INSERT INTO {table} ({', '.join(keys)})
        VALUES (:{', :'.join(keys)});"""
@@ -55,7 +55,7 @@ class MySqlDatabase(Database):
             self.commit()
         return {"id": last_inserted_id}
 
-    def delete(self, table: str, keys: dict, auto_commit: bool = False):
+    def delete(self, table: str, keys: dict, auto_commit: bool = True):
         key_keys = list(keys.keys())
         if len(key_keys) > 1:
             where_claw = f"WHERE ({', '.join(key_keys)}) = (:{', :'.join(key_keys)})"
@@ -81,7 +81,7 @@ class MySqlDatabase(Database):
             return {"success": False, "error": str(e)}
 
     def filter_and_sort(
-        self, table: str, filter_clauses: list, sort_by: str = None, ascending: bool = True
+        self, table: str, filter_clauses: list = None, sort_by: str = None, ascending: bool = True
     ):
         sql = f"""SELECT * FROM {table}"""
         if filter_clauses:

@@ -20,7 +20,7 @@ class PostgresDatabase(Database):
         return URL.create(**creds)
 
     # Removed commit, rollback, etc as abstract method, add back if necessary
-    def update(self, table: str, keys: dict, values: dict, auto_commit: bool = False):
+    def update(self, table: str, keys: dict, values: dict, auto_commit: bool = True):
         value_keys = list(values.keys())
         if len(value_keys) > 1:
             set_claw = f"SET ({', '.join(value_keys)}) = (:{', :'.join(value_keys)})"
@@ -52,7 +52,7 @@ class PostgresDatabase(Database):
 
         return [dict(row) for row in result.fetchall()]
 
-    def insert(self, table: str, values: dict, auto_commit: bool = False):
+    def insert(self, table: str, values: dict, auto_commit: bool = True):
         keys = list(values.keys())
         sql = f"""INSERT INTO {self.schema}.{table} ({', '.join(keys)})
        VALUES (:{', :'.join(keys)})
@@ -62,7 +62,7 @@ class PostgresDatabase(Database):
             self.commit()
         return dict(row.fetchone())
 
-    def delete(self, table: str, keys: dict, auto_commit: bool = False):
+    def delete(self, table: str, keys: dict, auto_commit: bool = True):
         key_keys = list(keys.keys())
         if len(key_keys) > 1:
             where_claw = f"WHERE ({', '.join(key_keys)}) = (:{', :'.join(key_keys)})"
@@ -88,7 +88,7 @@ class PostgresDatabase(Database):
             return {"success": False, "error": str(e)}
 
     def filter_and_sort(
-        self, table: str, filter_clauses: list, sort_by: str = None, ascending: bool = True
+        self, table: str, filter_clauses: list = None, sort_by: str = None, ascending: bool = True
     ):
         sql = f"""SELECT * FROM {self.schema}.{table}"""
         if filter_clauses:

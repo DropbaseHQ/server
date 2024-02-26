@@ -7,3 +7,4 @@ sqlalchemy==1.4.46
 psycopg2-binary==2.9.9
 pydantic==1.10.13
 python-dotenv==1.0.0
+PyMySQL==1.1.0
