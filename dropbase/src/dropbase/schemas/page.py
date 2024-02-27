@@ -10,6 +10,7 @@ from dropbase.models.table import (
 )
 from dropbase.models.table.mysql_column import MySqlColumnDefinedProperty
 from dropbase.models.table.snowflake_column import SnowflakeColumnDefinedProperty
+from dropbase.models.table.sqlite_column import SqliteColumnDefinedProperty
 from dropbase.models.widget import (
     BooleanDefinedProperty,
     ButtonDefinedProperty,
@@ -39,6 +40,7 @@ class TableProperties(TableDefinedProperty):
             PgColumnDefinedProperty,
             MySqlColumnDefinedProperty,
             SnowflakeColumnDefinedProperty,
+            SqliteColumnDefinedProperty,
             PyColumnDefinedProperty,
             ButtonColumnDefinedProperty,
         ]

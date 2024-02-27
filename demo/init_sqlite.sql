@@ -1,16 +1,16 @@
 -- Create Users table
 CREATE TABLE IF NOT EXISTS users (
-    user_id SERIAL PRIMARY KEY,
+    user_id INTEGER PRIMARY KEY AUTOINCREMENT,
     username VARCHAR(255) NOT NULL,
     email VARCHAR(255) NOT NULL
 );
 
 -- Create Orders table
 CREATE TABLE IF NOT EXISTS orders (
-    order_id SERIAL PRIMARY KEY,
-    user_id INT NOT NULL,
+    order_id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER NOT NULL,
     product_name VARCHAR(255) NOT NULL,
-    quantity INT NOT NULL,
+    quantity INTEGER NOT NULL,
     total_price DECIMAL(10, 2) NOT NULL,
     order_date DATE NOT NULL,
     FOREIGN KEY (user_id) REFERENCES users(user_id)
@@ -41,4 +41,3 @@ INSERT INTO orders (user_id, product_name, quantity, total_price, order_date) VA
     (6, 'External HDD', 1, 80.00, '2023-08-22'),
     (7, 'Camera', 1, 350.00, '2023-09-30'),
     (8, 'Smartphone', 1, 600.00, '2023-10-10');
-    

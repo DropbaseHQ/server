@@ -66,7 +66,7 @@ data = {
 }
 
 
-@pytest.mark.parametrize("mock_db", ["postgres", "mysql", "snowflake"], indirect=True)
+@pytest.mark.parametrize("mock_db", ["postgres", "mysql", "snowflake", "sqlite"], indirect=True)
 def test_edit_cell(test_client, mocker, mock_db):
     # Arrange
     mocker.patch("server.controllers.edit_cell.connect_to_user_db", return_value=mock_db)
@@ -79,7 +79,7 @@ def test_edit_cell(test_client, mocker, mock_db):
     assert res_data["result"] == ["Updated username from John Doe to Hello World"]
 
 
-@pytest.mark.parametrize("mock_db", ["postgres", "mysql", "snowflake"], indirect=True)
+@pytest.mark.parametrize("mock_db", ["postgres", "mysql", "snowflake", "sqlite"], indirect=True)
 def test_edit_cell_db_execute_fail(test_client, mocker, mock_db):
     # Arrange
     mocker.patch("server.controllers.edit_cell.connect_to_user_db", return_value=mock_db)
