@@ -1,4 +1,5 @@
 from datetime import datetime, timezone
+from typing import List
 
 from sqlalchemy.engine import URL
 from sqlalchemy.exc import SQLAlchemyError
@@ -8,18 +9,20 @@ from sqlalchemy.sql import text
 from dropbase.database.database import Database
 from dropbase.models.table.pg_column import PgColumnDefinedProperty
 from dropbase.schemas.edit_cell import CellEdit
+from dropbase.schemas.table import TableFilter, TablePagination, TableSort
 
 
 class PostgresDatabase(Database):
     def __init__(self, creds: dict, schema: str = "public"):
         super().__init__(creds)
         self.schema = schema
+        self.db_type = "postgres"
 
     def _get_connection_url(self, creds: dict):
         return URL.create(**creds)
 
     # Removed commit, rollback, etc as abstract method, add back if necessary
-    def update(self, table: str, keys: dict, values: dict, auto_commit: bool = False):
+    def update(self, table: str, keys: dict, values: dict, auto_commit: bool = True):
         value_keys = list(values.keys())
         if len(value_keys) > 1:
             set_claw = f"SET ({', '.join(value_keys)}) = (:{', :'.join(value_keys)})"
@@ -51,7 +54,7 @@ class PostgresDatabase(Database):
 
         return [dict(row) for row in result.fetchall()]
 
-    def insert(self, table: str, values: dict, auto_commit: bool = False):
+    def insert(self, table: str, values: dict, auto_commit: bool = True):
         keys = list(values.keys())
         sql = f"""INSERT INTO {self.schema}.{table} ({', '.join(keys)})
        VALUES (:{', :'.join(keys)})
@@ -61,7 +64,7 @@ class PostgresDatabase(Database):
             self.commit()
         return dict(row.fetchone())
 
-    def delete(self, table: str, keys: dict, auto_commit: bool = False):
+    def delete(self, table: str, keys: dict, auto_commit: bool = True):
         key_keys = list(keys.keys())
         if len(key_keys) > 1:
             where_claw = f"WHERE ({', '.join(key_keys)}) = (:{', :'.join(key_keys)})"
@@ -77,8 +80,17 @@ class PostgresDatabase(Database):
         result = self.session.execute(text(sql))
         return [dict(row) for row in result.fetchall()]
 
+    def execute(self, sql: str):
+        try:
+            result = self.session.execute(text(sql))
+            self.commit()
+            return {"success": True, "rows_affected": result.rowcount}
+        except SQLAlchemyError as e:
+            self.session.rollback()  # Roll back the session on error.
+            return {"success": False, "error": str(e)}
+
     def filter_and_sort(
-        self, table: str, filter_clauses: list, sort_by: str = None, ascending: bool = True
+        self, table: str, filter_clauses: list = None, sort_by: str = None, ascending: bool = True
     ):
         sql = f"""SELECT * FROM {self.schema}.{table}"""
         if filter_clauses:
@@ -86,10 +98,6 @@ class PostgresDatabase(Database):
         if sort_by:
             sql += f" ORDER BY {sort_by} {'ASC' if ascending else 'DESC'}"
         result = self.session.execute(text(sql))
-        return [dict(row) for row in result.fetchall()]
-
-    def execute_custom_query(self, sql: str, values: dict = None):
-        result = self.session.execute(text(sql), values if values else {})
         return [dict(row) for row in result.fetchall()]
 
     def _get_db_schema(self):
@@ -216,7 +224,7 @@ class PostgresDatabase(Database):
             columns_dict = {col.column_name: col for col in edit.columns}
             column = columns_dict[columns_name]
 
-            if edit.column_type == "DATE" or edit.column_type == "TIMESTAMP":
+            if edit.data_type == "DATE" or edit.data_type == "TIMESTAMP":
                 # new_value will be epoch time in ms, convert it to sec first then create datetime
                 edit.new_value = datetime.fromtimestamp(edit.new_value // 1000, timezone.utc)
 
@@ -255,6 +263,58 @@ class PostgresDatabase(Database):
         with self.engine.connect().execution_options(autocommit=True) as conn:
             res = conn.execute(text(sql), values).all()
         return res
+
+    def _apply_filters(
+        self,
+        table_sql: str,
+        filters: List[TableFilter],
+        sorts: List[TableSort],
+        pagination: TablePagination = {},
+    ):
+        # clean sql
+        table_sql = table_sql.strip("\n ;")
+        filter_sql = f"""WITH user_query as ({table_sql}) SELECT * FROM user_query\n"""
+
+        # apply filters
+        filter_values = {}
+        if filters:
+            filter_sql += "WHERE \n"
+
+            filters_list = []
+            for filter in filters:
+                filter_value_name = f"{filter.column_name}_filter"
+                match filter.condition:
+                    case "like":
+                        filter.value = f"%{filter.value}%"
+                    case "is null" | "is not null":
+                        # handle unary operators
+                        filters_list.append(f'user_query."{filter.column_name}" {filter.condition}')
+                        continue
+
+                filter_values[filter_value_name] = filter.value
+                filters_list.append(
+                    f'user_query."{filter.column_name}" {filter.condition} :{filter_value_name}'
+                )
+
+            filter_sql += " AND ".join(filters_list)
+        filter_sql += "\n"
+
+        # apply sorts
+        if sorts:
+            filter_sql += "ORDER BY \n"
+            sort_list = []
+            for sort in sorts:
+                sort_list.append(f'user_query."{sort.column_name}" {sort.value}')
+
+            filter_sql += ", ".join(sort_list)
+        filter_sql += "\n"
+
+        if pagination:
+            filter_sql += (
+                f"LIMIT {pagination.page_size + 1} OFFSET {pagination.page * pagination.page_size}"
+            )
+
+        return filter_sql, filter_values
 
 
 # helper functions

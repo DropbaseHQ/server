@@ -7,7 +7,7 @@ from dropbase.schemas.files import DataFile
 
 class CellProps(BaseModel):
     name: str
-    schema_name: str
+    schema_name: str = "public"
     table_name: str
     column_name: str
     edit_keys: List[str]
@@ -15,7 +15,7 @@ class CellProps(BaseModel):
 
 class CellEdit(BaseModel):
     column_name: str
-    column_type: str
+    data_type: str
     old_value: Any
     new_value: Any
     row: dict

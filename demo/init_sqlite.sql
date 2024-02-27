@@ -1,33 +1,33 @@
 -- Create Users table
 CREATE TABLE IF NOT EXISTS users (
-    user_id SERIAL PRIMARY KEY,
+    user_id INTEGER PRIMARY KEY AUTOINCREMENT,
     username VARCHAR(255) NOT NULL,
     email VARCHAR(255) NOT NULL
 );
 
 -- Create Orders table
 CREATE TABLE IF NOT EXISTS orders (
-    order_id SERIAL PRIMARY KEY,
-    user_id INT NOT NULL,
+    order_id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER NOT NULL,
     product_name VARCHAR(255) NOT NULL,
-    quantity INT NOT NULL,
+    quantity INTEGER NOT NULL,
     total_price DECIMAL(10, 2) NOT NULL,
     order_date DATE NOT NULL,
     FOREIGN KEY (user_id) REFERENCES users(user_id)
 );
 
 -- Insert data into Users table
-INSERT INTO users (user_id, username, email) VALUES
-    (1, 'John Doe', 'john.doe@example.com'),
-    (2, 'Jane Smith', 'jane.smith@example.com'),
-    (3, 'Bob Jones', 'bob.jones@example.com'),
-    (4, 'Alice Wonder', 'alice.wonder@example.com'),
-    (5, 'Charlie Brown', 'charlie.brown@example.com'),
-    (6, 'Diana Rogers', 'diana.rogers@example.com'),
-    (7, 'Edward White', 'edward.white@example.com'),
-    (8, 'Fiona Miller', 'fiona.miller@example.com'),
-    (9, 'George Smith', 'george.smith@example.com'),
-    (10, 'Helen Brown', 'helen.brown@example.com');
+INSERT INTO users (username, email) VALUES
+    ('John Doe', 'john.doe@example.com'),
+    ('Jane Smith', 'jane.smith@example.com'),
+    ('Bob Jones', 'bob.jones@example.com'),
+    ('Alice Wonder', 'alice.wonder@example.com'),
+    ('Charlie Brown', 'charlie.brown@example.com'),
+    ('Diana Rogers', 'diana.rogers@example.com'),
+    ('Edward White', 'edward.white@example.com'),
+    ('Fiona Miller', 'fiona.miller@example.com'),
+    ('George Smith', 'george.smith@example.com'),
+    ('Helen Brown', 'helen.brown@example.com');
 
 -- Insert data into Orders table
 INSERT INTO orders (user_id, product_name, quantity, total_price, order_date) VALUES
@@ -41,4 +41,3 @@ INSERT INTO orders (user_id, product_name, quantity, total_price, order_date) VA
     (6, 'External HDD', 1, 80.00, '2023-08-22'),
     (7, 'Camera', 1, 350.00, '2023-09-30'),
     (8, 'Smartphone', 1, 600.00, '2023-10-10');
-    

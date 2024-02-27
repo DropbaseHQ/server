@@ -1,10 +1,12 @@
 import asyncio
 import logging
+
 import requests
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 
+from demo.sqlite_demo_db import init_sqlite_db
 from server.constants import DROPBASE_API_URL, DROPBASE_TOKEN, WORKER_VERSION
 from server.routers import (  # run_python_router,; run_sql_router,
     app_router,
@@ -18,6 +20,7 @@ from server.routers import (  # run_python_router,; run_sql_router,
     sources_router,
     tables_router,
     websocket_router,
+    workspace_router,
 )
 
 
@@ -70,18 +73,17 @@ app.include_router(edit_cell_router)
 app.include_router(health_router)
 app.include_router(page_router)
 app.include_router(websocket_router)
+app.include_router(workspace_router)
 
 
 # send health report to dropbase server
 async def send_report_continuously():
     while True:
-        requests.get(
-            DROPBASE_API_URL
-            + f"/worker/worker_status/{DROPBASE_TOKEN}/{WORKER_VERSION}"
-        )
+        requests.get(DROPBASE_API_URL + f"/worker/worker_status/{DROPBASE_TOKEN}/{WORKER_VERSION}")
         await asyncio.sleep(300)
 
 
 @app.on_event("startup")
 async def startup_event():
+    init_sqlite_db()
     asyncio.create_task(send_report_continuously())

@@ -1,9 +1,13 @@
 import logging
 import os
 
+from dotenv import load_dotenv
 from pydantic import ValidationError
 
 from dropbase.schemas.database import MySQLCreds, PgCreds, SnowflakeCreds, SqliteCreds
+
+load_dotenv()
+
 
 db_type_to_class = {
     "postgres": PgCreds,
@@ -15,7 +19,7 @@ db_type_to_class = {
 
 
 def get_sources():
-    config = {key: os.getenv(key) for key in os.environ.keys()}
+    config = {key: os.environ.get(key) for key in os.environ.keys()}
     sources = {}
     for key, value in config.items():
         if key.startswith("SOURCE"):

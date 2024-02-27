@@ -2,7 +2,15 @@ from typing import List, Union
 
 from pydantic import BaseModel
 
-from dropbase.models.table import PgColumnDefinedProperty, PyColumnDefinedProperty, TableDefinedProperty
+from dropbase.models.table import (
+    ButtonColumnDefinedProperty,
+    PgColumnDefinedProperty,
+    PyColumnDefinedProperty,
+    TableDefinedProperty,
+)
+from dropbase.models.table.mysql_column import MySqlColumnDefinedProperty
+from dropbase.models.table.snowflake_column import SnowflakeColumnDefinedProperty
+from dropbase.models.table.sqlite_column import SqliteColumnDefinedProperty
 from dropbase.models.widget import (
     BooleanDefinedProperty,
     ButtonDefinedProperty,
@@ -27,7 +35,16 @@ class WidgetProperties(WidgetDefinedProperty):
 
 
 class TableProperties(TableDefinedProperty):
-    columns: List[Union[PgColumnDefinedProperty, PyColumnDefinedProperty]]
+    columns: List[
+        Union[
+            PgColumnDefinedProperty,
+            MySqlColumnDefinedProperty,
+            SnowflakeColumnDefinedProperty,
+            SqliteColumnDefinedProperty,
+            PyColumnDefinedProperty,
+            ButtonColumnDefinedProperty,
+        ]
+    ]
 
 
 class Properties(BaseModel):
@@ -43,7 +60,9 @@ class PageProperties(BaseModel):
 
 
 class CreatePageRequest(BaseModel):
+    app_name: str
     page_name: str
+    page_label: str
 
 
 class RenamePageRequest(BaseModel):

@@ -1,3 +1,4 @@
+import os
 from pathlib import Path
 
 TEST_APP_NAME = "dropbase_test_app"
@@ -6,4 +7,32 @@ TEST_PAGE_NAME = "page1"
 ROOT_PATH = Path(__file__).parent.parent.parent
 WORKSPACE_PATH = ROOT_PATH.joinpath("workspace")
 TEMPDIR_PATH = ROOT_PATH.joinpath(".temp")
+DEMO_INIT_SQL_PATH = ROOT_PATH.joinpath("demo/init_postgres.sql")
+DEMO_INIT_MYSQL_PATH = ROOT_PATH.joinpath("demo/init_mysql.sql")
+DEMO_SNOWFLAKE_INIT_SQL_PATH = ROOT_PATH.joinpath("demo/init_snowflake.sql")
+
+
+# why do we need this?
+SNOWFLAKE_TEST_CONNECTION_PARAMS = {
+    "account": os.getenv("SNOWFLAKE_TEST_HOST"),
+    "user": os.getenv("SNOWFLAKE_TEST_USERNAME"),
+    "password": os.getenv("SNOWFLAKE_TEST_PASSWORD"),
+    "database": os.getenv("SNOWFLAKE_TEST_DATABASE"),
+    "schema": os.getenv("SNOWFLAKE_TEST_DBSCHEMA"),
+    "warehouse": os.getenv("SNOWFLAKE_TEST_WAREHOUSE"),
+    "role": os.getenv("SNOWFLAKE_TEST_ROLE"),
+}
+
+
+SNOWFLAKE_TEST_CREDS = {
+    "drivername": "snowflake",
+    "host": os.getenv("SNOWFLAKE_TEST_HOST"),
+    "username": os.getenv("SNOWFLAKE_TEST_USERNAME"),
+    "password": os.getenv("SNOWFLAKE_TEST_PASSWORD"),
+    "database": os.getenv("SNOWFLAKE_TEST_DATABASE"),
+    "dbschema": os.getenv("SNOWFLAKE_TEST_DBSCHEMA"),
+    "warehouse": os.getenv("SNOWFLAKE_TEST_WAREHOUSE"),
+    "role": os.getenv("SNOWFLAKE_TEST_ROLE"),
+}
 DEMO_INIT_SQL_PATH = ROOT_PATH.joinpath("demo/init.sql")
+DEMO_SQLITE_INIT_SQL_PATH = ROOT_PATH.joinpath("demo/init_sqlite.sql")

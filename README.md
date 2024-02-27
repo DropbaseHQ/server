@@ -1,5 +1,11 @@
 # Deploy server and lsp to docker
 
+worker
+
+```
+docker buildx build --platform linux/amd64,linux/arm64 --push -t dropbase/worker:0.0.2 .
+```
+
 server
 
 ```
@@ -8,6 +14,15 @@ docker buildx build --platform linux/amd64,linux/arm64 --push -t dropbase/server
 docker build -t dropbase/server:0.0.2 -f Dockerfile-server .
 docker push dropbase/server:0.0.2
 ```
+
+worker
+
+```
+docker buildx build --platform linux/amd64,linux/arm64 --push -t dropbase/worker:0.0.1 .
+```
+
+locally
+`docker build -f Dockerfile-worker -t worker .`
 
 latest
 

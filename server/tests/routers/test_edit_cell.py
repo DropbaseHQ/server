@@ -1,3 +1,5 @@
+import pytest
+
 data = {
     # could be ignored, mocking in mock db
     "file": {"name": "demo_sql", "type": "sql", "source": "local", "depends_on": []},
@@ -5,11 +7,11 @@ data = {
         {
             "row": {"user_id": 1, "username": "John Doe", "email": "john.doe@example.com"},
             "column_name": "username",
-            "column_type": "VARCHAR(255)",
+            "data_type": "VARCHAR(255)",
             "columns": [
                 {
                     "name": "user_id",
-                    "column_type": "INTEGER",
+                    "data_type": "INTEGER",
                     "display_type": "integer",
                     "unique": False,
                     "default": "nextval('\"public\".users_user_id_seq'::regclass)",
@@ -25,7 +27,7 @@ data = {
                 },
                 {
                     "name": "username",
-                    "column_type": "VARCHAR(255)",
+                    "data_type": "VARCHAR(255)",
                     "display_type": "text",
                     "unique": False,
                     "default": None,
@@ -41,7 +43,7 @@ data = {
                 },
                 {
                     "name": "email",
-                    "column_type": "VARCHAR(255)",
+                    "data_type": "VARCHAR(255)",
                     "display_type": "text",
                     "unique": False,
                     "default": None,
@@ -56,6 +58,7 @@ data = {
                     "nullable": True,
                 },
             ],
+            "column_type": "INTEGER",
             "old_value": "John Doe",
             "new_value": "Hello World",
         }
@@ -63,11 +66,12 @@ data = {
 }
 
 
+@pytest.mark.parametrize("mock_db", ["postgres", "mysql", "snowflake", "sqlite"], indirect=True)
 def test_edit_cell(test_client, mocker, mock_db):
     # Arrange
     mocker.patch("server.controllers.edit_cell.connect_to_user_db", return_value=mock_db)
 
-    # Act
+    # Act)
     res = test_client.post("/edit_cell/edit_sql_table/", json=data)
     res_data = res.json()
 
@@ -75,6 +79,7 @@ def test_edit_cell(test_client, mocker, mock_db):
     assert res_data["result"] == ["Updated username from John Doe to Hello World"]
 
 
+@pytest.mark.parametrize("mock_db", ["postgres", "mysql", "snowflake", "sqlite"], indirect=True)
 def test_edit_cell_db_execute_fail(test_client, mocker, mock_db):
     # Arrange
     mocker.patch("server.controllers.edit_cell.connect_to_user_db", return_value=mock_db)

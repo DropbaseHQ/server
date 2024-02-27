@@ -1,14 +1,12 @@
 import json
 import traceback
-from typing import List
 
 from jinja2 import Environment
 
 from dropbase.database.connect import connect_to_user_db
+from dropbase.helpers.dataframe import convert_df_to_resp_obj
 from dropbase.schemas.query import RunSQLRequestTask, RunSQLStringRequest
-from dropbase.schemas.table import FilterSort, TableFilter, TablePagination, TableSort
 from server.constants import cwd
-from server.controllers.dataframe import convert_df_to_resp_obj
 from server.controllers.python_subprocess import format_process_result, run_process_task_unwrap
 from server.controllers.redis import r
 from server.controllers.utils import process_query_result
@@ -27,7 +25,7 @@ def run_sql_query_from_string(req: RunSQLStringRequest, job_id: str):
         res = user_db._run_query(sql, {})
         # parse pandas response
         df = process_query_result(res)
-        res = convert_df_to_resp_obj(df)
+        res = convert_df_to_resp_obj(df, user_db.db_type)
         r.set(job_id, json.dumps(res))
 
         response["data"] = res["data"]
@@ -58,12 +56,17 @@ def run_sql_query(args: RunSQLRequestTask, job_id: str):
         # get query from file
         file_sql = get_sql_from_file(args.app_name, args.page_name, args.file.name)
         # get get query string and values for sqlalchemy query
-        filter_sql, filter_values = prepare_sql(file_sql, args.state, args.filter_sort)
+        sql = clean_sql(file_sql)
+        sql = render_sql(sql, args.state)
+
+        filter_sql, filter_values = user_db._apply_filters(
+            sql, args.filter_sort.filters, args.filter_sort.sorts, args.filter_sort.pagination
+        )
         # query user db
         res = user_db._run_query(filter_sql, filter_values)
         df = process_query_result(res)
 
-        res = convert_df_to_resp_obj(df)
+        res = convert_df_to_resp_obj(df, user_db.db_type)
         r.set(job_id, json.dumps(res))
         response["data"] = res["data"]
         response["columns"] = res["columns"]
@@ -84,12 +87,6 @@ def run_sql_query(args: RunSQLRequestTask, job_id: str):
         r.set(job_id, json.dumps(response))
 
 
-def prepare_sql(user_sql: str, state: dict, filter_sort: FilterSort):
-    sql = clean_sql(user_sql)
-    sql = render_sql(sql, state)
-    return apply_filters(sql, filter_sort.filters, filter_sort.sorts, filter_sort.pagination)
-
-
 # NOTE: this might need to move to db classes, not all sqls have the same end of line characters
 def clean_sql(sql):
     return sql.strip("\n ;")
@@ -106,59 +103,6 @@ def get_sql_from_file(app_name: str, page_name: str, file_name: str) -> str:
     with open(path, "r") as sql_file:
         sql = sql_file.read()
     return sql
-
-
-def apply_filters(
-    table_sql: str, filters: List[TableFilter], sorts: List[TableSort], pagination: TablePagination = {}
-):
-    # clean sql
-    table_sql = table_sql.strip("\n ;")
-    filter_sql = f"""WITH user_query as ({table_sql}) SELECT * FROM user_query\n"""
-
-    # apply filters
-    filter_values = {}
-    if filters:
-        filter_sql += "WHERE \n"
-
-        filters_list = []
-        for filter in filters:
-            filter_value_name = f"{filter.column_name}_filter"
-            match filter.condition:
-                case "like":
-                    filter.value = f"%{filter.value}%"
-                case "is null" | "is not null":
-                    # handle unary operators
-                    filters_list.append(f'user_query."{filter.column_name}" {filter.condition}')
-                    continue
-
-            filter_values[filter_value_name] = filter.value
-
-            if filter.column_type == "text":
-                filters_list.append(
-                    f'LOWER(user_query."{filter.column_name}") {filter.condition} LOWER(:{filter_value_name})'
-                )
-            else:
-                filters_list.append(
-                    f'user_query."{filter.column_name}" {filter.condition} :{filter_value_name}'
-                )
-
-        filter_sql += " AND ".join(filters_list)
-    filter_sql += "\n"
-
-    # apply sorts
-    if sorts:
-        filter_sql += "ORDER BY \n"
-        sort_list = []
-        for sort in sorts:
-            sort_list.append(f'user_query."{sort.column_name}" {sort.value}')
-
-        filter_sql += ", ".join(sort_list)
-    filter_sql += "\n"
-
-    if pagination:
-        filter_sql += f"LIMIT {pagination.page_size + 1} OFFSET {pagination.page * pagination.page_size}"
-
-    return filter_sql, filter_values
 
 
 def verify_state(app_name: str, page_name: str, state: dict):
