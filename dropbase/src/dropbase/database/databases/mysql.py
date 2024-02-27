@@ -145,7 +145,7 @@ class MySqlDatabase(Database):
                     col_name = column["name"]
                     is_pk = col_name in primary_keys
                     db_schema[database][table_name][col_name] = {
-                        "schema_name": "public",
+                        "schema_name": database,
                         "table_name": table_name,
                         "column_name": col_name,
                         "type": str(column["type"]),
