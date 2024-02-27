@@ -22,6 +22,7 @@ class SelectDefinedProperty(BaseModel):
 
     options: Annotated[Optional[List[Dict]], PropertyCategory.default]
     default: Annotated[Optional[Any], PropertyCategory.other]
+    multiple: Annotated[Optional[bool], PropertyCategory.other] = False
 
     # events
     on_change: Annotated[Optional[OnChange], PropertyCategory.events]

@@ -16,6 +16,7 @@ def convert_sql_table(req: ConvertTableRequest, router: DropbaseRouter):
         file = DataFile(**file)
 
         user_db = connect_to_user_db(file.source)
+
         db_schema, gpt_schema = user_db._get_db_schema()
 
         # get columns

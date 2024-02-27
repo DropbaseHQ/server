@@ -8,6 +8,8 @@ from dropbase.models.table import (
     PyColumnDefinedProperty,
     TableDefinedProperty,
 )
+from dropbase.models.table.mysql_column import MySqlColumnDefinedProperty
+from dropbase.models.table.snowflake_column import SnowflakeColumnDefinedProperty
 from dropbase.models.table.sqlite_column import SqliteColumnDefinedProperty
 from dropbase.models.widget import (
     BooleanDefinedProperty,
@@ -36,6 +38,8 @@ class TableProperties(TableDefinedProperty):
     columns: List[
         Union[
             PgColumnDefinedProperty,
+            MySqlColumnDefinedProperty,
+            SnowflakeColumnDefinedProperty,
             SqliteColumnDefinedProperty,
             PyColumnDefinedProperty,
             ButtonColumnDefinedProperty,
@@ -58,6 +62,7 @@ class PageProperties(BaseModel):
 class CreatePageRequest(BaseModel):
     app_name: str
     page_name: str
+    page_label: str
 
 
 class RenamePageRequest(BaseModel):

@@ -17,6 +17,11 @@ def run_container(env_vars: dict, docker_script: str = "inside_docker"):
     config = {key: os.getenv(key) for key in os.environ.keys()}
     env_vars = {**env_vars, **config}
 
+    # replace localhost with host.docker.internal
+    for key, value in env_vars.items():
+        if value == "localhost":
+            env_vars[key] = "host.docker.internal"
+
     # get absolute path of the workspace directory from the environment variable
     workspace_dir = os.getenv("HOST_WORKSPACE_PATH") + "/workspace"
     mount1 = docker.types.Mount(target="/app/workspace", source=workspace_dir, type="bind")

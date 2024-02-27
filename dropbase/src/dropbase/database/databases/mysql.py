@@ -1,22 +1,22 @@
 from typing import List
 
-from sqlalchemy.engine import reflection
+from sqlalchemy.engine import URL, reflection
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.sql import text
 
 from dropbase.database.database import Database
-from dropbase.models.table.sqlite_column import SqliteColumnDefinedProperty
+from dropbase.models.table.mysql_column import MySqlColumnDefinedProperty
 from dropbase.schemas.edit_cell import CellEdit
 from dropbase.schemas.table import TableFilter, TablePagination, TableSort
 
 
-class SqliteDatabase(Database):
+class MySqlDatabase(Database):
     def __init__(self, creds: dict, schema: str = "public"):
         super().__init__(creds)
-        self.db_type = "sqlite"
+        self.db_type = "mysql"
 
     def _get_connection_url(self, creds: dict):
-        return f"{creds.get('drivername')}:///{creds.get('host')}"
+        return URL.create(**creds)
 
     def update(self, table: str, keys: dict, values: dict, auto_commit: bool = True):
         value_keys = list(values.keys())
@@ -29,14 +29,12 @@ class SqliteDatabase(Database):
             where_claw = f"WHERE ({', '.join(key_keys)}) = (:{', :'.join(key_keys)})"
         else:
             where_claw = f"WHERE {key_keys[0]} = :{key_keys[0]}"
-        sql = f"""UPDATE {table}\n{set_claw}\n{where_claw};"""  # Sqlite does not support RETURN keyword
+        sql = f"""UPDATE {table}\n{set_claw}\n{where_claw};"""  # MySQL does not support RETURN keyword
         values.update(keys)
         result = self.session.execute(text(sql), values)
         if auto_commit:
             self.commit()
-        return (
-            result.rowcount
-        )  # Sqlite doesn't support RETURNING *, so we can't directly return row data
+        return result.rowcount  # MySQL doesn't support RETURNING *, so we can't directly return row data
 
     def select(self, table: str, where_clause: str = None, values: dict = None):
         if where_clause:
@@ -96,12 +94,14 @@ class SqliteDatabase(Database):
         result = self.session.execute(text(sql))
         return [dict(row) for row in result.fetchall()]
 
+    # MySQL Compatible up to here
+
     def _get_db_schema(self):
         # # TODO: cache this, takes a while
         inspector = reflection.Inspector.from_engine(self.engine)
         databases = inspector.get_schema_names()
 
-        # In Sqlite, this returns a list of databases, rather than schemas in Postgres
+        # In MySql, this returns a list of databases, rather than schemas in Postgres
 
         db_schema = {}
         gpt_schema = {
@@ -112,7 +112,7 @@ class SqliteDatabase(Database):
         }
 
         for database in databases:
-            ignore_schemas = ["information_schema", "sqlite", "performance_schema", "sys"]
+            ignore_schemas = ["information_schema", "mysql", "performance_schema", "sys"]
             if database in ignore_schemas:
                 continue
 
@@ -174,7 +174,7 @@ class SqliteDatabase(Database):
         primary_keys = self._get_primary_keys(smart_cols)
         validated = []
         for col_name, col_data in smart_cols.items():
-            col_data = SqliteColumnDefinedProperty(**col_data)
+            col_data = MySqlColumnDefinedProperty(**col_data)
             pk_name = primary_keys.get(self._get_table_path(col_data))
             if pk_name:
                 validation_sql = _get_fast_sql(
@@ -207,12 +207,12 @@ class SqliteDatabase(Database):
     def _get_primary_keys(self, smart_cols: dict[str, dict]) -> dict[str, dict]:
         primary_keys = {}
         for col_data in smart_cols.values():
-            col_data = SqliteColumnDefinedProperty(**col_data)
+            col_data = MySqlColumnDefinedProperty(**col_data)
             if col_data.primary_key:
                 primary_keys[self._get_table_path(col_data)] = col_data.column_name
         return primary_keys
 
-    def _get_table_path(self, col_data: SqliteColumnDefinedProperty) -> str:
+    def _get_table_path(self, col_data: MySqlColumnDefinedProperty) -> str:
         return f"{col_data.table_name}"
 
     def _update_value(self, edit: CellEdit):
@@ -282,12 +282,12 @@ class SqliteDatabase(Database):
                         filter.value = f"%{filter.value}%"
                     case "is null" | "is not null":
                         # handle unary operators
-                        filters_list.append(f'user_query."{filter.column_name}" {filter.condition}')
+                        filters_list.append(f"user_query.`{filter.column_name}` {filter.condition}")
                         continue
 
                 filter_values[filter_value_name] = filter.value
                 filters_list.append(
-                    f'user_query."{filter.column_name}" {filter.condition} :{filter_value_name}'
+                    f"user_query.`{filter.column_name}` {filter.condition} :{filter_value_name}"
                 )
 
             filter_sql += " AND ".join(filters_list)
@@ -298,7 +298,7 @@ class SqliteDatabase(Database):
             filter_sql += "ORDER BY \n"
             sort_list = []
             for sort in sorts:
-                sort_list.append(f'user_query."{sort.column_name}" {sort.value}')
+                sort_list.append(f"user_query.`{sort.column_name}` {sort.value}")
 
             filter_sql += ", ".join(sort_list)
         filter_sql += "\n"
@@ -311,9 +311,9 @@ class SqliteDatabase(Database):
         return filter_sql, filter_values
 
 
-# helper functions --> if these helper functions are compatible with sqlite, mysql maybe move it to utils?
+# helper functions --> if these helper functions are compatible with mysql maybe move it to utils?
 
-
+# NOTE: Certain CTEs are not valid prior to MySQL 8.0.0
 def _get_fast_sql(
     user_sql: str,
     name: str,

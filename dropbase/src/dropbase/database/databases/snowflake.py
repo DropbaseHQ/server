@@ -1,23 +1,36 @@
+from datetime import datetime, timezone
 from typing import List
 
-from sqlalchemy.engine import reflection
+from sqlalchemy.engine import URL
 from sqlalchemy.exc import SQLAlchemyError
+from sqlalchemy.inspection import inspect
 from sqlalchemy.sql import text
 
 from dropbase.database.database import Database
-from dropbase.models.table.sqlite_column import SqliteColumnDefinedProperty
+from dropbase.models.table.snowflake_column import SnowflakeColumnDefinedProperty
 from dropbase.schemas.edit_cell import CellEdit
 from dropbase.schemas.table import TableFilter, TablePagination, TableSort
 
 
-class SqliteDatabase(Database):
+class SnowflakeDatabase(Database):
     def __init__(self, creds: dict, schema: str = "public"):
         super().__init__(creds)
-        self.db_type = "sqlite"
+        self.schema = schema
+        self.db_type = "snowflake"
 
     def _get_connection_url(self, creds: dict):
-        return f"{creds.get('drivername')}:///{creds.get('host')}"
+        query = {}
+        for key in ["warehouse", "role", "dbschema"]:
+            if key in creds:
+                # If the key is 'dbschema', change it to 'schema' when adding to the query dictionary
+                if key == "dbschema":
+                    query["schema"] = creds.pop(key)
+                else:
+                    query[key] = creds.pop(key)
 
+        return URL.create(query=query, **creds)
+
+    # Removed commit, rollback, etc as abstract method, add back if necessary
     def update(self, table: str, keys: dict, values: dict, auto_commit: bool = True):
         value_keys = list(values.keys())
         if len(value_keys) > 1:
@@ -29,36 +42,36 @@ class SqliteDatabase(Database):
             where_claw = f"WHERE ({', '.join(key_keys)}) = (:{', :'.join(key_keys)})"
         else:
             where_claw = f"WHERE {key_keys[0]} = :{key_keys[0]}"
-        sql = f"""UPDATE {table}\n{set_claw}\n{where_claw};"""  # Sqlite does not support RETURN keyword
+        sql = f"""UPDATE {self.schema}.{table}\n{set_claw}\n{where_claw} RETURNING *;"""  # Snowflake supports the returning clause
         values.update(keys)
         result = self.session.execute(text(sql), values)
         if auto_commit:
             self.commit()
-        return (
-            result.rowcount
-        )  # Sqlite doesn't support RETURNING *, so we can't directly return row data
+        return [dict(x) for x in result.fetchall()]
 
     def select(self, table: str, where_clause: str = None, values: dict = None):
         if where_clause:
-            sql = f"""SELECT * FROM {table} WHERE {where_clause};"""
+            sql = f"""SELECT * FROM {self.schema}.{table} WHERE {where_clause};"""  # The overall architecture of Snowflake is DB -> Schema -> Table (same as Postgres)
         else:
-            sql = f"""SELECT * FROM {table};"""
+            sql = f"""SELECT * FROM {self.schema}.{table};"""
 
         if values is None:
             values = {}
 
-        result = self.session.execute(text(sql), values)
+        with self.engine.connect() as conn:
+            result = conn.execute(text(sql), values)
+
         return [dict(row) for row in result.fetchall()]
 
     def insert(self, table: str, values: dict, auto_commit: bool = True):
         keys = list(values.keys())
-        sql = f"""INSERT INTO {table} ({', '.join(keys)})
-       VALUES (:{', :'.join(keys)});"""
+        sql = f"""INSERT INTO {self.schema}.{table} ({', '.join(keys)})
+       VALUES (:{', :'.join(keys)})
+       RETURNING *;"""
         row = self.session.execute(text(sql), values)
-        last_inserted_id = row.lastrowid
         if auto_commit:
             self.commit()
-        return {"id": last_inserted_id}
+        return dict(row.fetchone())
 
     def delete(self, table: str, keys: dict, auto_commit: bool = True):
         key_keys = list(keys.keys())
@@ -66,7 +79,7 @@ class SqliteDatabase(Database):
             where_claw = f"WHERE ({', '.join(key_keys)}) = (:{', :'.join(key_keys)})"
         else:
             where_claw = f"WHERE {key_keys[0]} = :{key_keys[0]}"
-        sql = f"""DELETE FROM {table}\n{where_claw};"""
+        sql = f"""DELETE FROM {self.schema}.{table}\n{where_claw};"""
         res = self.session.execute(text(sql), keys)
         if auto_commit:
             self.commit()
@@ -88,7 +101,7 @@ class SqliteDatabase(Database):
     def filter_and_sort(
         self, table: str, filter_clauses: list = None, sort_by: str = None, ascending: bool = True
     ):
-        sql = f"""SELECT * FROM {table}"""
+        sql = f"""SELECT * FROM {self.schema}.{table}"""
         if filter_clauses:
             sql += " WHERE " + " AND ".join(filter_clauses)
         if sort_by:
@@ -97,55 +110,52 @@ class SqliteDatabase(Database):
         return [dict(row) for row in result.fetchall()]
 
     def _get_db_schema(self):
-        # # TODO: cache this, takes a while
-        inspector = reflection.Inspector.from_engine(self.engine)
-        databases = inspector.get_schema_names()
-
-        # In Sqlite, this returns a list of databases, rather than schemas in Postgres
+        # TODO: cache this, takes a while
+        inspector = inspect(self.engine)
+        schemas = inspector.get_schema_names()
+        default_search_path = inspector.default_schema_name
 
         db_schema = {}
         gpt_schema = {
             "metadata": {
-                "default_schema": None,
+                "default_schema": default_search_path,
             },
             "schema": {},
         }
 
-        for database in databases:
-            ignore_schemas = ["information_schema", "sqlite", "performance_schema", "sys"]
-            if database in ignore_schemas:
+        for schema in schemas:
+            if schema == "information_schema":
                 continue
-
-            tables = inspector.get_table_names(schema=database)
-            gpt_schema["schema"][database] = {}
-            db_schema[database] = {}
+            tables = inspector.get_table_names(schema=schema)
+            gpt_schema["schema"][schema] = {}
+            db_schema[schema] = {}
 
             for table_name in tables:
-                columns = inspector.get_columns(table_name, schema=database)
+                columns = inspector.get_columns(table_name, schema=schema)
 
                 # get primary keys
-                primary_keys = inspector.get_pk_constraint(table_name, schema=database)[
+                primary_keys = inspector.get_pk_constraint(table_name, schema=schema)[
                     "constrained_columns"
                 ]  # noqa
 
                 # get foreign keys
-                fk_constraints = inspector.get_foreign_keys(table_name, schema=database)
+                fk_constraints = inspector.get_foreign_keys(table_name, schema=schema)
                 foreign_keys = []
                 for fk_constraint in fk_constraints:
                     foreign_keys.extend(fk_constraint["constrained_columns"])
 
                 # get unique columns
-                unique_constraints = inspector.get_unique_constraints(table_name, schema=database)
+                unique_constraints = inspector.get_unique_constraints(table_name, schema=schema)
                 unique_columns = []
                 for unique_constraint in unique_constraints:
                     unique_columns.extend(unique_constraint["column_names"])
 
-                db_schema[database][table_name] = {}
+                db_schema[schema][table_name] = {}
                 for column in columns:
                     col_name = column["name"]
                     is_pk = col_name in primary_keys
-                    db_schema[database][table_name][col_name] = {
-                        "schema_name": "public",
+                    db_schema[schema][table_name][col_name] = {
+                        "schema_name": schema,
                         "table_name": table_name,
                         "column_name": col_name,
                         "type": str(column["type"]),
@@ -156,8 +166,7 @@ class SqliteDatabase(Database):
                         "default": column["default"],
                         "edit_keys": primary_keys if not is_pk else [],
                     }
-                gpt_schema["schema"][database][table_name] = [column["name"] for column in columns]
-
+                gpt_schema["schema"][schema][table_name] = [column["name"] for column in columns]
         return db_schema, gpt_schema
 
     def _get_column_names(self, user_sql: str) -> list[str]:
@@ -174,12 +183,13 @@ class SqliteDatabase(Database):
         primary_keys = self._get_primary_keys(smart_cols)
         validated = []
         for col_name, col_data in smart_cols.items():
-            col_data = SqliteColumnDefinedProperty(**col_data)
+            col_data = SnowflakeColumnDefinedProperty(**col_data)
             pk_name = primary_keys.get(self._get_table_path(col_data))
             if pk_name:
                 validation_sql = _get_fast_sql(
                     user_sql,
                     col_name,
+                    col_data.schema_name,
                     col_data.table_name,
                     col_data.column_name,
                     pk_name,
@@ -188,6 +198,7 @@ class SqliteDatabase(Database):
                 validation_sql = _get_slow_sql(
                     user_sql,
                     col_name,
+                    col_data.schema_name,
                     col_data.table_name,
                     col_data.column_name,
                 )
@@ -207,13 +218,13 @@ class SqliteDatabase(Database):
     def _get_primary_keys(self, smart_cols: dict[str, dict]) -> dict[str, dict]:
         primary_keys = {}
         for col_data in smart_cols.values():
-            col_data = SqliteColumnDefinedProperty(**col_data)
+            col_data = SnowflakeColumnDefinedProperty(**col_data)
             if col_data.primary_key:
                 primary_keys[self._get_table_path(col_data)] = col_data.column_name
         return primary_keys
 
-    def _get_table_path(self, col_data: SqliteColumnDefinedProperty) -> str:
-        return f"{col_data.table_name}"
+    def _get_table_path(self, col_data: SnowflakeColumnDefinedProperty) -> str:
+        return f"{col_data.schema_name}.{col_data.table_name}"
 
     def _update_value(self, edit: CellEdit):
         try:
@@ -221,6 +232,10 @@ class SqliteDatabase(Database):
             # NOTE: client sends columns as a list of column objects. we need to convert it to a dict
             columns_dict = {col.column_name: col for col in edit.columns}
             column = columns_dict[columns_name]
+
+            if edit.data_type == "DATE" or edit.data_type == "TIMESTAMP":
+                # new_value will be epoch time in ms, convert it to sec first then create datetime
+                edit.new_value = datetime.fromtimestamp(edit.new_value // 1000, timezone.utc)
 
             values = {
                 "new_value": edit.new_value,
@@ -234,9 +249,10 @@ class SqliteDatabase(Database):
                 values[pk_col.column_name] = edit.row[pk_col.name]
             prim_key_str = " AND ".join(prim_key_list)
 
-            sql = f"""UPDATE `{column.table_name}`
+            sql = f"""UPDATE {column.schema_name}.{column.table_name}
             SET {column.column_name} = :new_value
             WHERE {prim_key_str}"""
+            # Snowflake becomes case sensitive when quoted (does not auto-convert to capital)
 
             # TODO: add check for prev column value
             # AND {column.column_name} = :old_value
@@ -244,7 +260,7 @@ class SqliteDatabase(Database):
             with self.engine.connect() as conn:
                 result = conn.execute(text(sql), values)
                 conn.commit()
-                if result.rowcount == 0:
+                if result.rowcount == 0:  # I think this may not work as expected for snowflake
                     raise Exception("No rows were updated")
             return f"Updated {edit.column_name} from {edit.old_value} to {edit.new_value}", True
         except Exception as e:
@@ -282,12 +298,12 @@ class SqliteDatabase(Database):
                         filter.value = f"%{filter.value}%"
                     case "is null" | "is not null":
                         # handle unary operators
-                        filters_list.append(f'user_query."{filter.column_name}" {filter.condition}')
+                        filters_list.append(f"user_query.{filter.column_name} {filter.condition}")
                         continue
 
                 filter_values[filter_value_name] = filter.value
                 filters_list.append(
-                    f'user_query."{filter.column_name}" {filter.condition} :{filter_value_name}'
+                    f"user_query.{filter.column_name} {filter.condition} :{filter_value_name}"
                 )
 
             filter_sql += " AND ".join(filters_list)
@@ -298,7 +314,7 @@ class SqliteDatabase(Database):
             filter_sql += "ORDER BY \n"
             sort_list = []
             for sort in sorts:
-                sort_list.append(f'user_query."{sort.column_name}" {sort.value}')
+                sort_list.append(f"user_query.{sort.column_name} {sort.value}")
 
             filter_sql += ", ".join(sort_list)
         filter_sql += "\n"
@@ -311,12 +327,13 @@ class SqliteDatabase(Database):
         return filter_sql, filter_values
 
 
-# helper functions --> if these helper functions are compatible with sqlite, mysql maybe move it to utils?
+# helper functions
 
 
 def _get_fast_sql(
     user_sql: str,
     name: str,
+    schema_name: str,
     table_name: str,
     column_name: str,
     table_pk_name: str,
@@ -331,7 +348,7 @@ def _get_fast_sql(
             t.{column_name} is null and uq.{name} is null
         THEN 1 ELSE 0 END
     ) as equal
-    FROM {table_name} t
+    FROM {schema_name}.{table_name} t
     INNER join uq on t.{table_pk_name} = uq.{table_pk_name}
     LIMIT 500;
     """
@@ -340,6 +357,7 @@ def _get_fast_sql(
 def _get_slow_sql(
     user_sql: str,
     name: str,
+    schema_name: str,
     table_name: str,
     column_name: str,
 ) -> str:
@@ -349,6 +367,6 @@ def _get_slow_sql(
     return f"""
     WITH uq as ({user_sql})
     SELECT CASE WHEN count(t.{column_name}) = 0 THEN true ELSE false END
-    FROM {table_name} t
+    FROM {schema_name}.{table_name} t
     WHERE t.{column_name} not in (select uq.{name} from uq LIMIT 500);
     """

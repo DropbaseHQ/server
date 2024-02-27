@@ -1,3 +1,4 @@
+import logging
 from datetime import datetime
 from functools import reduce
 from typing import Any
@@ -7,6 +8,8 @@ from dateutil.parser import parse
 from dropbase.schemas.display_rules import DisplayRules
 from server.controllers.properties import read_page_properties
 from server.controllers.utils import get_state_context_model
+
+logger = logging.getLogger(__name__)
 
 
 def get_by_path(root, items):
@@ -61,6 +64,15 @@ def coerce_to_target_type(target_type: str, value: Any):
         case "text":
             value = str(value)
             return value
+        case "boolean":
+            if isinstance(value, bool):
+                return value
+            if value.lower() == "true":
+                value = True
+            elif value.lower() == "false":
+                value = False
+            return value
+
         case _:
             value = str(value)
             return value
@@ -68,26 +80,32 @@ def coerce_to_target_type(target_type: str, value: Any):
 
 # helper function to compare values with operators
 def compare_values(target_value: Any, operator: str, rule_value: Any, target_type: str):
+    try:
 
-    target_value = coerce_to_target_type(target_type, target_value)
-    rule_value = coerce_to_target_type(target_type, rule_value)
+        if target_value is None and operator in ["gt", "gte", "lt", "lte"]:
+            return False
 
-    if operator == "equals":
-        return target_value == rule_value
-    elif operator == "gt":
-        return target_value > rule_value
-    elif operator == "gte":
-        return target_value >= rule_value
-    elif operator == "lt":
-        return target_value < rule_value
-    elif operator == "lte":
-        return target_value <= rule_value
-    elif operator == "not_equals":
-        return target_value != rule_value
-    elif operator == "exists":
-        return bool(target_value)
-    else:
-        return False
+        target_value = coerce_to_target_type(target_type, target_value)
+        rule_value = coerce_to_target_type(target_type, rule_value)
+
+        if operator == "equals":
+            return target_value == rule_value
+        elif operator == "gt":
+            return target_value > rule_value
+        elif operator == "gte":
+            return target_value >= rule_value
+        elif operator == "lt":
+            return target_value < rule_value
+        elif operator == "lte":
+            return target_value <= rule_value
+        elif operator == "not_equals":
+            return target_value != rule_value
+        elif operator == "exists":
+            return bool(target_value)
+        else:
+            return False
+    except Exception as e:
+        raise Exception(f"Error comparing values: {e}")
 
 
 def display_rule(state, context, rules: DisplayRules):
@@ -113,7 +131,6 @@ def display_rule(state, context, rules: DisplayRules):
                     break
 
             # get the relevant value from the state based on the target
-
             target_value = get_by_path(state, rule.target)
             target_type = None
             if hasattr(rule, "target_type"):
@@ -160,14 +177,18 @@ def get_display_rules_from_comp_props(component_props):
 
 
 def run_display_rule(app_name: str, page_name: str, state: dict, context: dict):
-    State = get_state_context_model(app_name, page_name, "state")
-    Context = get_state_context_model(app_name, page_name, "context")
+    try:
+        State = get_state_context_model(app_name, page_name, "state")
+        Context = get_state_context_model(app_name, page_name, "context")
 
-    state = State(**state)
-    context = Context(**context)
+        state = State(**state)
+        context = Context(**context)
 
-    properties = read_page_properties(app_name, page_name)
-    display_rules = get_display_rules_from_comp_props(properties)
+        properties = read_page_properties(app_name, page_name)
+        display_rules = get_display_rules_from_comp_props(properties)
 
-    rules = DisplayRules(display_rules=display_rules)
-    return display_rule(state, context, rules)
+        rules = DisplayRules(display_rules=display_rules)
+        return display_rule(state, context, rules)
+    except Exception as e:
+        logger.error(f"Error running display rule: {e}")
+        return context

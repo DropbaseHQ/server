@@ -1,7 +1,7 @@
 import pytest
 
 
-@pytest.mark.parametrize("mock_db", ["postgres", "sqlite"], indirect=True)
+@pytest.mark.parametrize("mock_db", ["postgres", "mysql", "snowflake", "sqlite"], indirect=True)
 def test_run_sql_string(mocker, test_client, mock_db):
     # Arrange
 
