@@ -18,7 +18,7 @@ logger = logging.getLogger(__name__)
 
 class DropbaseRouter:
     # TODO: review this. might not need a router class for just one call
-    def __init__(self, access_token: str):
+    def __init__(self, access_token):
         self.session = DropbaseSession(base_url=base_url)
 
         if not access_token:
@@ -45,6 +45,10 @@ class DropbaseRouter:
                 f"Unable to authorize with server. Details: {response.json()}"
             )
 
+    def set_access_token(self, access_token: str):
+        self.access_token = access_token
+        self.session.headers["Authorization"] = f"Bearer {access_token}"
+
 
 def get_server_access_header(request: Request):
     if "access-token" not in request.headers:
@@ -54,6 +58,7 @@ def get_server_access_header(request: Request):
 
 
 def get_dropbase_router(request: Request):
+
     access_token_header = None
     if "access-token" in request.headers:
         access_token_header = request.headers.get("access-token")
@@ -62,3 +67,17 @@ def get_dropbase_router(request: Request):
     return DropbaseRouter(
         access_token=access_token_header,
     )
+
+
+class WSDropbaseRouterGetter:
+    """
+    This class is used to create a new instance of DropbaseRouter for each websocket connection.
+    We could instantiate a DropbaseRouter directly in the websocket endpoint, but this would make it difficult to
+    mock the DropbaseRouter in tests.
+    """
+
+    def __init__(self, access_token: str):
+        self.access_token = access_token
+
+    def __call__(self):
+        return DropbaseRouter(access_token=self.access_token)

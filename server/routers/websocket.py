@@ -1,15 +1,21 @@
 import requests
-from fastapi import APIRouter, WebSocket
+from fastapi import APIRouter, WebSocket, Depends
 
 from server.constants import DROPBASE_API_URL
 from server.controllers.display_rules import run_display_rule
 from server.constants import DROPBASE_TOKEN
+from server.requests.dropbase_router import DropbaseRouter, WSDropbaseRouterGetter
 
 router = APIRouter()
 
+dropbase_router_factory = WSDropbaseRouterGetter(access_token="temp")
+
 
 @router.websocket("/ws")
-async def websocket_endpoint(websocket: WebSocket):
+async def websocket_endpoint(
+    websocket: WebSocket,
+    dropbase_router: DropbaseRouter = Depends(dropbase_router_factory),
+):
     await websocket.accept()
     while True:
         data = await websocket.receive_json()
@@ -18,13 +24,8 @@ async def websocket_endpoint(websocket: WebSocket):
         if not hasattr(websocket, "authenticated") or not websocket.authenticated:
             if data["type"] == "auth":
                 access_token = data.get("access_token")
-                response = requests.post(
-                    DROPBASE_API_URL + "/worker/verify_token",
-                    headers={
-                        "Authorization": f"Bearer {access_token}",
-                        "dropbase-token": DROPBASE_TOKEN,
-                    },
-                )
+                dropbase_router.set_access_token(access_token=access_token)
+                response = dropbase_router.auth.verify_identity_token(access_token)
                 if response.status_code == 200:
                     setattr(websocket, "authenticated", True)
                     await websocket.send_json({"authenticated": True})
