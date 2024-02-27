@@ -1,4 +1,4 @@
-from typing import Any, List
+from typing import Any, List, Optional
 
 from pydantic import BaseModel
 
@@ -7,7 +7,7 @@ from dropbase.schemas.files import DataFile
 
 class CellProps(BaseModel):
     name: str
-    schema_name: str = "public"
+    schema_name: Optional[str]
     table_name: str
     column_name: str
     edit_keys: List[str]
