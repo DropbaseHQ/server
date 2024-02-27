@@ -81,3 +81,22 @@ class WSDropbaseRouterGetter:
 
     def __call__(self):
         return DropbaseRouter(access_token=self.access_token)
+
+    # The below two methods are used for testing purposes
+    # Since this class is a dependency, we need to override it when testing
+    # However, since it is not a function, but a class with which we pass arguments to,
+    # it will not work with the dependency_overrides parameter in the test client.
+    # The dependency needs to be hashable to be recognized properly by dependency_overrides.
+    # This is why we have to override the __hash__ and __eq__ methods.
+
+    # Solution from: https://github.com/tiangolo/fastapi/discussions/6834
+    def __hash__(self):
+        # FIXME find something uniq and repeatable
+        return 2345
+
+    def __eq__(self, other):
+        """Overrides the default implementation"""
+        if isinstance(other, WSDropbaseRouterGetter):
+
+            return self.access_token == other.access_token
+        return False
