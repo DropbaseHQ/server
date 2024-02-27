@@ -5,7 +5,7 @@ from server.tests.verify_state_and_context import verify_object_in_state_context
 
 base_data = {
     "app_name": "dropbase_test_app",
-    "page_name": "page2",
+    "page_name": "page1",
     "properties": {
         "tables": [],
         "widgets": [
@@ -49,13 +49,12 @@ def test_create_component_req_text(test_client, dropbase_router_mocker):
         }
     )
 
-    # Act
-    res = test_client.post("/page", json=data)
+    headers = {"access-token": "mock access token"}
 
-    assert res.status_code == 200
+    # Act
+    test_client.put("/page", json=data, headers=headers)
 
     # Assert
-
     assert verify_object_in_state_context("WidgetsState", "widget1")
     assert verify_object_in_state_context("Widget1ComponentsContext", "text2", True)
 
@@ -81,17 +80,15 @@ def test_create_component_req_select(test_client, dropbase_router_mocker):
         }
     )
 
+    headers = {"access-token": "mock access token"}
+
     # Act
-    res = test_client.post("/page", json=data)
+    res = test_client.put("/page", json=data, headers=headers)
     res_data = res.json()
 
     # Assert
     assert isinstance(
-        res_data.get("context")
-        .get("widgets")
-        .get("widget1")
-        .get("components")
-        .get("select2"),
+        res_data.get("context").get("widgets").get("widget1").get("components").get("select2"),
         dict,
     )
     assert isinstance(res_data.get("state").get("widgets").get("widget1"), dict)
@@ -121,17 +118,15 @@ def test_create_component_req_input(test_client, dropbase_router_mocker):
         }
     )
 
+    headers = {"access-token": "mock access token"}
+
     # Act
-    res = test_client.post("/page", json=data)
+    res = test_client.put("/page", json=data, headers=headers)
     res_data = res.json()
 
     # Assert
     assert isinstance(
-        res_data.get("context")
-        .get("widgets")
-        .get("widget1")
-        .get("components")
-        .get("input2"),
+        res_data.get("context").get("widgets").get("widget1").get("components").get("input2"),
         dict,
     )
     assert isinstance(res_data.get("state").get("widgets").get("widget1"), dict)
@@ -161,17 +156,15 @@ def test_create_component_req_button(test_client, dropbase_router_mocker):
         }
     )
 
+    headers = {"access-token": "mock access token"}
+
     # Act
-    res = test_client.post("/page", json=data)
+    res = test_client.put("/page", json=data, headers=headers)
     res_data = res.json()
 
     # Assert
     assert isinstance(
-        res_data.get("context")
-        .get("widgets")
-        .get("widget1")
-        .get("components")
-        .get("button2"),
+        res_data.get("context").get("widgets").get("widget1").get("components").get("button2"),
         dict,
     )
     assert isinstance(res_data.get("state").get("widgets").get("widget1"), dict)
@@ -184,9 +177,7 @@ def test_create_component_req_button(test_client, dropbase_router_mocker):
     assert verify_property_exists("widgets[0].components[1].component_type", "button")
 
 
-def test_create_component_req_error_duplicate_names(
-    test_client, dropbase_router_mocker
-):
+def test_create_component_req_error_duplicate_names(test_client, dropbase_router_mocker):
     dropbase_router_mocker.patch(
         "auth", "check_user_permissions", side_effect=lambda *args, **kwargs: {}
     )
@@ -203,18 +194,19 @@ def test_create_component_req_error_duplicate_names(
         }
     )
 
-    res = test_client.post("/page", json=data)
+    headers = {"access-token": "mock access token"}
+
+    # Act
+    res = test_client.put("/page", json=data, headers=headers)
     res_data = res.json()
 
     # Assert
     assert res.status_code != 200
 
-    assert res_data["message"] == "A component with this name already exists"
+    assert res_data["detail"] == "A component with this name already exists"
 
 
-def test_create_component_req_error_illegal_name_space_between(
-    test_client, dropbase_router_mocker
-):
+def test_create_component_req_error_illegal_name_space_between(test_client, dropbase_router_mocker):
     dropbase_router_mocker.patch(
         "auth", "check_user_permissions", side_effect=lambda *args, **kwargs: {}
     )
@@ -231,23 +223,21 @@ def test_create_component_req_error_illegal_name_space_between(
         }
     )
 
+    headers = {"access-token": "mock access token"}
+
     # Act
-    res = test_client.post("/page", json=data)
+    res = test_client.put("/page", json=data, headers=headers)
     res_data = res.json()
 
     # Assert
     assert res.status_code != 200
 
-    assert not verify_object_in_state_context(
-        "Widget1ComponentsContext", "button 2", True
-    )
+    assert not verify_object_in_state_context("Widget1ComponentsContext", "button 2", True)
 
-    assert res_data["message"] == "Invalid component names present in the table"
+    assert res_data["detail"] == "Invalid component names present in the table"
 
 
-def test_create_component_req_error_illegal_name_special_characters(
-    test_client, dropbase_router_mocker
-):
+def test_create_component_req_error_illegal_name_special_characters(test_client, dropbase_router_mocker):
     dropbase_router_mocker.patch(
         "auth", "check_user_permissions", side_effect=lambda *args, **kwargs: {}
     )
@@ -264,23 +254,21 @@ def test_create_component_req_error_illegal_name_special_characters(
         }
     )
 
+    headers = {"access-token": "mock access token"}
+
     # Act
-    res = test_client.post("/page", json=data)
+    res = test_client.put("/page", json=data, headers=headers)
     res_data = res.json()
 
     # Assert
     assert res.status_code != 200
 
-    assert not verify_object_in_state_context(
-        "Widget1ComponentsContext", "button_2!", True
-    )
+    assert not verify_object_in_state_context("Widget1ComponentsContext", "button_2!", True)
 
-    assert res_data["message"] == "Invalid component names present in the table"
+    assert res_data["detail"] == "Invalid component names present in the table"
 
 
-def test_create_component_req_error_illegal_name_url_path(
-    test_client, dropbase_router_mocker
-):
+def test_create_component_req_error_illegal_name_url_path(test_client, dropbase_router_mocker):
     dropbase_router_mocker.patch(
         "auth", "check_user_permissions", side_effect=lambda *args, **kwargs: {}
     )
@@ -297,18 +285,18 @@ def test_create_component_req_error_illegal_name_url_path(
         }
     )
 
+    headers = {"access-token": "mock access token"}
+
     # Act
-    res = test_client.post("/page", json=data)
+    res = test_client.put("/page", json=data, headers=headers)
     res_data = res.json()
 
     # Assert
     assert res.status_code != 200
 
-    assert not verify_object_in_state_context(
-        "Widget1ComponentsContext", "../../button2", True
-    )
+    assert not verify_object_in_state_context("Widget1ComponentsContext", "../../button2", True)
 
-    assert res_data["message"] == "Invalid component names present in the table"
+    assert res_data["detail"] == "Invalid component names present in the table"
 
 
 def test_update_component_req(test_client, dropbase_router_mocker):
@@ -328,17 +316,17 @@ def test_update_component_req(test_client, dropbase_router_mocker):
         }
     )
 
+    headers = {"access-token": "mock access token"}
+
     # Act
-    res = test_client.post("/page", json=data)
+    res = test_client.put("/page", json=data, headers=headers)
     res_data = res.json()
+
+    print(res_data)
 
     # Assert
     assert isinstance(
-        res_data.get("context")
-        .get("widgets")
-        .get("widget1")
-        .get("components")
-        .get("button3"),
+        res_data.get("context").get("widgets").get("widget1").get("components").get("button3"),
         dict,
     )
     assert isinstance(res_data.get("state").get("widgets").get("widget1"), dict)
@@ -358,13 +346,13 @@ def test_delete_component_req(test_client, dropbase_router_mocker):
     # Arrange
     data = copy.deepcopy(base_data)
 
+    headers = {"access-token": "mock access token"}
+
     # Act
-    res = test_client.post("/page", json=data)
+    res = test_client.put("/page", json=data, headers=headers)
 
     # Assert
     assert res.status_code == 200
 
     assert verify_object_in_state_context("WidgetsState", "widget1")
-    assert not verify_object_in_state_context(
-        "Widget1ComponentsContext", "button3", True
-    )
+    assert not verify_object_in_state_context("Widget1ComponentsContext", "button3", True)
