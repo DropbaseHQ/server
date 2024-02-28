@@ -7,6 +7,7 @@ from dropbase.constants import FILE_NAME_REGEX
 
 class TableFilter(BaseModel):
     column_name: str
+    column_type: str
     condition: Literal["=", "!=", ">", "<", ">=", "<=", "like", "in", "is null", "is not null"]
     value: Any
 
