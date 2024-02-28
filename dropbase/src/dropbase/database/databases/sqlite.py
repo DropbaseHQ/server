@@ -11,7 +11,7 @@ from dropbase.schemas.table import TableFilter, TablePagination, TableSort
 
 
 class SqliteDatabase(Database):
-    def __init__(self, creds: dict, schema: str = "public"):
+    def __init__(self, creds: dict):
         super().__init__(creds)
         self.db_type = "sqlite"
 
@@ -108,7 +108,7 @@ class SqliteDatabase(Database):
             "metadata": {
                 "default_schema": None,
             },
-            "schema": {},
+            "database": {},
         }
 
         for database in databases:
@@ -117,7 +117,7 @@ class SqliteDatabase(Database):
                 continue
 
             tables = inspector.get_table_names(schema=database)
-            gpt_schema["schema"][database] = {}
+            gpt_schema["database"][database] = {}
             db_schema[database] = {}
 
             for table_name in tables:
@@ -145,7 +145,6 @@ class SqliteDatabase(Database):
                     col_name = column["name"]
                     is_pk = col_name in primary_keys
                     db_schema[database][table_name][col_name] = {
-                        "schema_name": "public",
                         "table_name": table_name,
                         "column_name": col_name,
                         "type": str(column["type"]),
@@ -156,7 +155,7 @@ class SqliteDatabase(Database):
                         "default": column["default"],
                         "edit_keys": primary_keys if not is_pk else [],
                     }
-                gpt_schema["schema"][database][table_name] = [column["name"] for column in columns]
+                gpt_schema["database"][database][table_name] = [column["name"] for column in columns]
 
         return db_schema, gpt_schema
 
