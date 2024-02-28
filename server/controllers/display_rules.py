@@ -58,7 +58,7 @@ def coerce_to_target_type(target_type: str, value: Any):
         case "float":
             value = float(value)
             return value
-        case "int":
+        case "integer":
             value = int(value)
             return value
         case "text":
