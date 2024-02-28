@@ -14,9 +14,6 @@ def connect_to_user_db(name: str):
     creds_dict = creds_fields.dict()
     schema_name = "public"
 
-    if "dbschema" in creds_dict:
-        schema_name = creds_dict["dbschema"].lower()
-
     match creds.get("type"):
         case "postgres":
             return PostgresDatabase(creds_dict, schema=schema_name)
