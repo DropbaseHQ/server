@@ -288,7 +288,7 @@ class SqliteDatabase(Database):
                 filter_values[filter_value_name] = filter.value
                 if filter.column_type == "text":
                     filters_list.append(
-                        f'LOWER(user_query."{filter.column_name}") {filter.condition} LOWER(:{filter_value_name})'
+                        f'LOWER(user_query."{filter.column_name}") {filter.condition} LOWER(:{filter_value_name})'  # noqa
                     )
                 else:
                     filters_list.append(
@@ -316,7 +316,8 @@ class SqliteDatabase(Database):
         return filter_sql, filter_values
 
 
-# helper functions --> if these helper functions are compatible with sqlite, mysql maybe move it to utils?
+# helper functions
+# if these helper functions are compatible with sqlite, mysql maybe move it to utils?
 
 
 def _get_fast_sql(
