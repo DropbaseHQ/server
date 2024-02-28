@@ -25,7 +25,10 @@ def get_sources():
         if key.startswith("SOURCE"):
             _, type, name, field = key.lower().split("_")
             if name in sources:
-                sources[name][field] = value
+                if field == "schema":
+                    sources[name]["dbschema"] = value
+                else:
+                    sources[name][field] = value
             else:
                 sources[name] = {field: value, "type": type}
 
