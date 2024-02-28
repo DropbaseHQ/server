@@ -34,34 +34,31 @@ from server.tests.constants import (
 from server.tests.mocks.dropbase_router_mocker import DropbaseRouterMocker
 from server.tests.templates import get_test_data_fetcher, get_test_ui
 
-# from sqlalchemy import create_engine, text
-# from sqlalchemy.ext.declarative import declarative_base
-# from sqlalchemy.orm import sessionmaker
 
-
+# Setup pytest-postgresql db with test data
 def load_test_db(db_type="postgres", **kwargs):
     if db_type == "postgres":
         conn = psycopg2.connect(**kwargs)
-    elif db_type == "sqlite":
-        conn = sqlite3.connect(**kwargs)
     elif db_type == "mysql":
         conn = pymysql.connect(**kwargs)
     elif db_type == "snowflake":
         conn = snowflake.connector.connect(**kwargs)
+    elif db_type == "sqlite":
+        conn = sqlite3.connect(**kwargs)
     else:
         raise ValueError(f"Unsupported database type: {db_type}")
 
     if db_type == "postgres":
         with open(DEMO_INIT_POSTGRESQL_PATH, "r") as rf:
             init_sql = rf.read()
-    elif db_type == "sqlite":
-        with open(DEMO_INIT_SQLITE_PATH, "r") as rf:  # Replace this with sqlite path
-            init_sql = rf.read()
-    elif db_type == "mysql":
-        with open(DEMO_INIT_MYSQL_PATH, "r") as rf:
-            init_sql = rf.read()
     elif db_type == "snowflake":
-        with open(DEMO_INIT_SNOWFLAKE_PATH, "r") as rf:  # Replace this with snowflake path
+        with open(DEMO_INIT_SNOWFLAKE_PATH, "r") as rf:
+            init_sql = rf.read()
+    elif db_type == "sqlite":
+        with open(DEMO_INIT_SQLITE_PATH, "r") as rf:
+            init_sql = rf.read()
+    else:
+        with open(DEMO_INIT_MYSQL_PATH, "r") as rf:
             init_sql = rf.read()
 
     if db_type == "sqlite":
@@ -72,25 +69,17 @@ def load_test_db(db_type="postgres", **kwargs):
     else:
         with conn.cursor() as cur:
             if db_type == "mysql":
+                # MySQL might require splitting and executing each statement separately
                 for statement in init_sql.split(";"):
                     if statement.strip():
                         cur.execute(statement)
-            if db_type == "snowflake":
-                for statement in init_sql.split(";"):
-                    if statement.strip():
-                        cur.execute(statement)
-            elif db_type == "sqlite":
+            elif db_type == "snowflake":
                 for statement in init_sql.split(";"):
                     if statement.strip():
                         cur.execute(statement)
             else:
                 cur.execute(init_sql)
-    conn.commit()
-
-
-@pytest.fixture(scope="session")
-def sqlite_db():
-    sqlite3.connect("data.db")
+            conn.commit()
 
 
 postgresql_proc = pytest_postgresql.factories.postgresql_proc(load=[load_test_db])
@@ -98,16 +87,6 @@ postgresql = pytest_postgresql.factories.postgresql("postgresql_proc")
 
 mysql_proc = factories.mysql_proc(port=3307)
 mysql = factories.mysql("mysql_proc")
-
-# @pytest.fixture(scope='session')
-# def mysql_proc(port=3307):
-#     mysql_proc = factories.mysql_proc(port=port)
-#     yield mysql_proc
-
-# @pytest.fixture(scope='session')
-# def mysql(mysql_proc):
-#     db = factories.mysql('mysql_proc')
-#     return db
 
 
 @pytest.fixture(scope="session")
@@ -128,6 +107,11 @@ def snowflake_db():
 
     conn.cursor().execute(f"DROP DATABASE IF EXISTS {test_db_name}")
     conn.close()
+
+
+@pytest.fixture(scope="session")
+def sqlite_db():
+    sqlite3.connect("data.db")
 
 
 @pytest.fixture(scope="module", autouse=True)
@@ -176,16 +160,17 @@ def connect_to_test_db(db_type: str, creds: dict):
             return PostgresDatabase(creds, schema="public")
         case "pg":
             return PostgresDatabase(creds, schema="public")
-        case "snowflake":
-            return SnowflakeDatabase(creds)
         case "mysql":
             return MySqlDatabase(creds)
+        case "snowflake":
+            return SnowflakeDatabase(creds)
         case "sqlite":
             return SqliteDatabase(creds)
 
 
 @pytest.fixture
-def mock_db(request, postgresql, snowflake_db, sqlite_db):
+def mock_db(request, postgresql, mysql, snowflake_db, sqlite_db):
+    # returns a database instance rather than an engine
     db_type = request.param
     creds_dict = {}
     match db_type:
@@ -218,6 +203,7 @@ def mock_db(request, postgresql, snowflake_db, sqlite_db):
                 del creds_dict["user"]
 
             db_instance = connect_to_test_db("mysql", creds_dict)
+
         case "snowflake":
             load_test_db("snowflake", **SNOWFLAKE_TEST_CONNECTION_PARAMS)
             creds_dict = SNOWFLAKE_TEST_CREDS
@@ -273,7 +259,7 @@ def pytest_sessionfinish():
     # Its easier to clean it up here
     workspace_folder_controller = WorkspaceFolderController(r_path_to_workspace=WORKSPACE_PATH)
     apps = workspace_folder_controller.get_workspace_properties()
-    for one_app in apps:  # this loop variable overshadows the app import
+    for one_app in apps:
         if one_app["name"] == TEST_APP_NAME:
             apps.remove(one_app)
 
