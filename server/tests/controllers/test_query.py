@@ -3,9 +3,7 @@ import pytest
 from dropbase.schemas.table import TableFilter, TableSort
 
 
-@pytest.mark.parametrize(
-    "mock_db", ["postgres", "mysql", "snowflake", "sqlite", "sqlite"], indirect=True
-)
+@pytest.mark.parametrize("mock_db", ["postgres", "mysql", "snowflake", "sqlite"], indirect=True)
 def test_query_db(mocker, mock_db):
     # Arrange
     mocker.patch("dropbase.database.connect.connect_to_user_db", return_value=mock_db)

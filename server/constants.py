@@ -19,7 +19,7 @@ WORKSPACE_SOURCES = get_sources()
 
 
 WORKER_VERSION = "0.2.6"
-WORKER_IMAGE_VERSION = "0.0.4"
+WORKER_IMAGE_VERSION = "latest"
 REDIS_HOST = os.environ.get("REDIS_HOST") or "host.docker.internal"
 
 CUSTOM_PERMISSIONS_EXPIRY_TIME = os.environ.get("PERMISSIONS_EXPIRY_TIME") or 60

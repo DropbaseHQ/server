@@ -294,7 +294,7 @@ class PostgresDatabase(Database):
                 filter_values[filter_value_name] = filter.value
                 if filter.column_type == "text":
                     filters_list.append(
-                        f'LOWER(user_query."{filter.column_name}") {filter.condition} LOWER(:{filter_value_name})'
+                        f'LOWER(user_query."{filter.column_name}") {filter.condition} LOWER(:{filter_value_name})'  # noqa
                     )
                 else:
                     filters_list.append(

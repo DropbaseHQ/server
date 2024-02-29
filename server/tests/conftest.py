@@ -10,7 +10,7 @@ from server.auth.dependency import CheckUserPermissions
 from server.controllers.properties import read_page_properties, update_properties
 from server.controllers.workspace import WorkspaceFolderController
 from server.main import app
-from server.requests.dropbase_router import get_dropbase_router, WSDropbaseRouterGetter
+from server.requests.dropbase_router import WSDropbaseRouterGetter, get_dropbase_router
 from server.tests.constants import (
     MYSQL_TEST_CONNECTION_PARAMS,
     MYSQL_TEST_CREDS,
@@ -23,7 +23,7 @@ from server.tests.constants import (
     TEST_PAGE_NAME,
     WORKSPACE_PATH,
 )
-from server.tests.databases import snowflake_db, sqlite_db
+from server.tests.databases import snowflake_db, sqlite_db  # NOTE: used by mock_db, do not remove
 from server.tests.mocks.dropbase_router_mocker import DropbaseRouterMocker
 from server.tests.templates import get_test_data_fetcher, get_test_ui
 from server.tests.utils import connect_to_test_db, load_test_db
@@ -53,12 +53,8 @@ def test_client():
     def override_check_user_app_permissions():
         return {"use": True, "edit": True, "own": True}
 
-    app.dependency_overrides[CheckUserPermissions(action="edit")] = (
-        override_check_user_app_permissions
-    )
-    app.dependency_overrides[CheckUserPermissions(action="use")] = (
-        override_check_user_app_permissions
-    )
+    app.dependency_overrides[CheckUserPermissions(action="edit")] = override_check_user_app_permissions
+    app.dependency_overrides[CheckUserPermissions(action="use")] = override_check_user_app_permissions
     app.dependency_overrides[
         CheckUserPermissions(action="edit", resource=CheckUserPermissions.APP)
     ] = override_check_user_app_permissions
@@ -72,19 +68,17 @@ def test_client():
 def dropbase_router_mocker():
     mocker = DropbaseRouterMocker()
     # app.dependency_overrides uses function as a key. part of fastapi
-    app.dependency_overrides[get_dropbase_router] = (
-        lambda: mocker.get_mock_dropbase_router()
-    )
-    app.dependency_overrides[WSDropbaseRouterGetter(access_token="temp")] = (
-        lambda: mocker.get_mock_dropbase_router()
-    )
+    app.dependency_overrides[get_dropbase_router] = lambda: mocker.get_mock_dropbase_router()
+    app.dependency_overrides[
+        WSDropbaseRouterGetter(access_token="temp")
+    ] = lambda: mocker.get_mock_dropbase_router()
     yield mocker
     # delete get_dropbase_router from dependency overwrite once test is done
     del app.dependency_overrides[get_dropbase_router]
 
 
 @pytest.fixture
-def mock_db(request, postgresql, mysql, snowflake_db, sqlite_db):
+def mock_db(request, postgresql, mysql, snowflake_db, sqlite_db):  # noqa
     # returns a database instance rather than an engine
     db_type = request.param
     creds_dict = {}
@@ -117,11 +111,7 @@ def mock_db(request, postgresql, mysql, snowflake_db, sqlite_db):
 
 
 def pytest_sessionstart():
-    from server.controllers.workspace import (
-        AppFolderController,
-        create_file,
-        create_folder,
-    )
+    from server.controllers.workspace import AppFolderController, create_file, create_folder
 
     create_folder(TEMPDIR_PATH)
 
@@ -157,9 +147,7 @@ def pytest_sessionfinish():
     shutil.rmtree(WORKSPACE_PATH.joinpath("dropbase_test_app"))
     # Workspace properties is still written to the non test workspace
     # Its easier to clean it up here
-    workspace_folder_controller = WorkspaceFolderController(
-        r_path_to_workspace=WORKSPACE_PATH
-    )
+    workspace_folder_controller = WorkspaceFolderController(r_path_to_workspace=WORKSPACE_PATH)
     apps = workspace_folder_controller.get_workspace_properties()
     for one_app in apps:
         if one_app["name"] == TEST_APP_NAME:
