@@ -7,7 +7,7 @@ from dropbase.schemas.files import DataFile
 
 class CellProps(BaseModel):
     name: str
-    schema_name: Optional[str] = "public"
+    schema_name: Optional[str]
     table_name: str
     column_name: str
     edit_keys: List[str]

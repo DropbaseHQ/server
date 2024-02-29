@@ -38,8 +38,8 @@ class TableProperties(TableDefinedProperty):
     columns: List[
         Union[
             PgColumnDefinedProperty,
-            MySqlColumnDefinedProperty,
             SnowflakeColumnDefinedProperty,
+            MySqlColumnDefinedProperty,
             SqliteColumnDefinedProperty,
             PyColumnDefinedProperty,
             ButtonColumnDefinedProperty,
