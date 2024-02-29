@@ -23,7 +23,7 @@ from server.tests.constants import (
     TEST_PAGE_NAME,
     WORKSPACE_PATH,
 )
-from server.tests.databases import snowflake_db, sqlite_db  # NOTE: used by mock_db, do not remove
+from server.tests.databases import snowflake_db, sqlite_db  # noqa NOTE: used by mock_db, do not remove
 from server.tests.mocks.dropbase_router_mocker import DropbaseRouterMocker
 from server.tests.templates import get_test_data_fetcher, get_test_ui
 from server.tests.utils import connect_to_test_db, load_test_db
