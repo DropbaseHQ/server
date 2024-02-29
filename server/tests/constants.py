@@ -35,7 +35,7 @@ SNOWFLAKE_TEST_CREDS = {
     "username": os.getenv("SNOWFLAKE_TEST_USERNAME"),
     "password": os.getenv("SNOWFLAKE_TEST_PASSWORD"),
     "database": os.getenv("SNOWFLAKE_TEST_DATABASE"),
-    "dbschema": os.getenv("SNOWFLAKE_TEST_DBSCHEMA"),
+    "dbschema": os.getenv("SNOWFLAKE_TEST_SCHEMA"),
     "warehouse": os.getenv("SNOWFLAKE_TEST_WAREHOUSE"),
     "role": os.getenv("SNOWFLAKE_TEST_ROLE"),
 }
@@ -46,7 +46,7 @@ SNOWFLAKE_TEST_CONNECTION_PARAMS = {
     "user": os.getenv("SNOWFLAKE_TEST_USERNAME"),
     "password": os.getenv("SNOWFLAKE_TEST_PASSWORD"),
     "database": os.getenv("SNOWFLAKE_TEST_DATABASE"),
-    "schema": os.getenv("SNOWFLAKE_TEST_DBSCHEMA"),
+    "schema": os.getenv("SNOWFLAKE_TEST_SCHEMA"),
     "warehouse": os.getenv("SNOWFLAKE_TEST_WAREHOUSE"),
     "role": os.getenv("SNOWFLAKE_TEST_ROLE"),
 }
