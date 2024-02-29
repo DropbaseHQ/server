@@ -7,21 +7,8 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 
+from server import routers
 from server.constants import CORS_ORIGINS, DROPBASE_API_URL, DROPBASE_TOKEN, WORKER_VERSION
-from server.routers import (
-    app_router,
-    component_router,
-    edit_cell_router,
-    files_router,
-    function_router,
-    health_router,
-    page_router,
-    query_router,
-    sources_router,
-    tables_router,
-    websocket_router,
-    workspace_router,
-)
 
 
 # to disable cache for static files
@@ -32,12 +19,9 @@ class NoCacheStaticFiles(StaticFiles):
         return response
 
 
-spam_urls = ["/health/"]
-
-
 class LogSpamFilter(logging.Filter):
     def filter(self, record):
-        for url in spam_urls:
+        for url in ["/health/"]:
             if url in record.args:
                 return False
         return True
@@ -60,20 +44,18 @@ app.add_middleware(
 # static file server for lsp
 app.mount("/workspace", NoCacheStaticFiles(directory="workspace"), name="workspace")
 # routes for resources
-app.include_router(query_router)
-app.include_router(function_router)
-app.include_router(files_router)
-app.include_router(sources_router)
-# app.include_router(run_sql_router)
-# app.include_router(run_python_router)
-app.include_router(tables_router)
-app.include_router(component_router)
-app.include_router(app_router)
-app.include_router(edit_cell_router)
-app.include_router(health_router)
-app.include_router(page_router)
-app.include_router(websocket_router)
-app.include_router(workspace_router)
+app.include_router(routers.query_router)
+app.include_router(routers.function_router)
+app.include_router(routers.files_router)
+app.include_router(routers.sources_router)
+app.include_router(routers.tables_router)
+app.include_router(routers.component_router)
+app.include_router(routers.app_router)
+app.include_router(routers.edit_cell_router)
+app.include_router(routers.health_router)
+app.include_router(routers.page_router)
+app.include_router(routers.websocket_router)
+app.include_router(routers.workspace_router)
 
 
 # send health report to dropbase server
