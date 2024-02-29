@@ -29,10 +29,10 @@ from server.tests.templates import get_test_data_fetcher, get_test_ui
 from server.tests.utils import connect_to_test_db, load_test_db
 
 postgresql_proc = pytest_postgresql.factories.postgresql_proc(load=[load_test_db])
-postgresql = pytest_postgresql.factories.postgresql("postgresql_proc")
+postgres_db = pytest_postgresql.factories.postgresql("postgresql_proc")
 
 mysql_proc = factories.mysql_proc(port=3307)
-mysql = factories.mysql("mysql_proc")
+mysql_db = factories.mysql("mysql_proc")
 
 
 @pytest.fixture(scope="module", autouse=True)
@@ -78,19 +78,19 @@ def dropbase_router_mocker():
 
 
 @pytest.fixture
-def mock_db(request, postgresql, mysql, snowflake_db, sqlite_db):  # noqa
+def mock_db(request, postgres_db, mysql_db, snowflake_db, sqlite_db):  # noqa
     # returns a database instance rather than an engine
     db_type = request.param
     creds_dict = {}
     match db_type:
         case "postgres":
             creds_dict = {
-                "host": postgresql.info.host,
+                "host": postgres_db.info.host,
                 "drivername": "postgresql+psycopg2",
-                "database": postgresql.info.dbname,
-                "username": postgresql.info.user,
+                "database": postgres_db.info.dbname,
+                "username": postgres_db.info.user,
                 "password": "",  # Not required for pytest-postgresql
-                "port": postgresql.info.port,
+                "port": postgres_db.info.port,
             }
 
             db_instance = connect_to_test_db("postgres", creds_dict)
