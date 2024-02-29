@@ -1,13 +1,12 @@
 import json
 import traceback
-from multiprocessing import Pipe, Process
 
 from jinja2 import Environment
 
 from dropbase.database.connect import connect_to_user_db
 from dropbase.helpers.dataframe import convert_df_to_resp_obj
 from dropbase.schemas.query import RunSQLRequestTask, RunSQLStringRequest
-from server.constants import TASK_TIMEOUT, cwd
+from server.constants import cwd
 from server.controllers.python_subprocess import format_process_result, verify_state_in_subprocess
 from server.controllers.redis import r
 from server.controllers.utils import process_query_result
@@ -107,21 +106,4 @@ def get_sql_from_file(app_name: str, page_name: str, file_name: str) -> str:
 
 
 def verify_state(app_name: str, page_name: str, state: dict):
-    parent_conn, child_conn = Pipe()
-
-    task = Process(
-        target=verify_state_in_subprocess,
-        args=(child_conn, app_name, page_name, state),
-    )
-
-    task.start()
-    task.join(timeout=int(TASK_TIMEOUT))
-
-    if task.is_alive():
-        task.terminate()
-        task.join()  # Join again after terminating to cleanup resources
-        return False
-
-    success = parent_conn.recv()
-
-    return success
+    return verify_state_in_subprocess(app_name, page_name, state)
