@@ -7,7 +7,7 @@ from dropbase.database.connect import connect_to_user_db
 from dropbase.helpers.dataframe import convert_df_to_resp_obj
 from dropbase.schemas.query import RunSQLRequestTask, RunSQLStringRequest
 from server.constants import cwd
-from server.controllers.python_subprocess import format_process_result, verify_state_in_subprocess
+from server.controllers.python_subprocess import format_process_result, verify_state_subprocess
 from server.controllers.redis import r
 from server.controllers.utils import process_query_result
 
@@ -106,4 +106,4 @@ def get_sql_from_file(app_name: str, page_name: str, file_name: str) -> str:
 
 
 def verify_state(app_name: str, page_name: str, state: dict):
-    return verify_state_in_subprocess(app_name, page_name, state)
+    return verify_state_subprocess(app_name, page_name, state)

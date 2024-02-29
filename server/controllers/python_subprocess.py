@@ -4,20 +4,14 @@ import sys
 from multiprocessing import Pipe, Process
 
 from server.constants import TASK_TIMEOUT, cwd
-from server.controllers.state import verify_state
+from server.controllers.utils import get_state
 
 
-def verify_state_in_subprocess(app_name, page_name, state):
-    """
-    for functions that are called internally by the controller,
-    where we don't need the status_code output.
-
-    throws exception instead.
-    """
+def verify_state_subprocess(app_name, page_name, state) -> bool:
     parent_conn, child_conn = Pipe()
 
     task = Process(
-        target=run_task,
+        target=_run_task,
         args=(child_conn, app_name, page_name, state),
     )
 
@@ -34,16 +28,16 @@ def verify_state_in_subprocess(app_name, page_name, state):
     return success
 
 
-def run_task(child_conn, app_name, page_name, state):
+def _run_task(child_conn, app_name, page_name, state):
     # Change the current working directory to root_directory
     os.chdir(cwd)
-    sys.path.append(cwd)  # Append your root directory to the Python import path
 
     importlib.invalidate_caches()
 
     try:
-        status_code = verify_state(app_name, page_name, state)
-        child_conn.send(status_code == 200)
+        sys.path.insert(0, cwd)
+        get_state(app_name, page_name, state)
+        child_conn.send(True)
 
     except Exception:
         child_conn.send(False)
