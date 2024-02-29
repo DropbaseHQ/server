@@ -71,7 +71,7 @@ def test_edit_cell(test_client, mocker, mock_db):
     # Arrange
     mocker.patch("server.controllers.edit_cell.connect_to_user_db", return_value=mock_db)
 
-    # Act)
+    # Act
     res = test_client.post("/edit_cell/edit_sql_table/", json=data)
     res_data = res.json()
 

@@ -47,6 +47,8 @@ def load_test_db(db_type="postgres", **kwargs):
         for statement in init_sql.split(";"):
             if statement.strip():
                 cur.execute(statement)
+                conn.commit()
+
     else:
         with conn.cursor() as cur:
             if db_type == "mysql":
