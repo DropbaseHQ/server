@@ -2,8 +2,6 @@ import copy
 
 import pytest
 
-from dropbase.schemas.table import TableFilter, TableSort
-
 base_data = {
     "app_name": "dropbase_test_app",
     "page_name": "page1",
