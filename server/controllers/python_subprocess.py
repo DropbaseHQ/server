@@ -9,12 +9,10 @@ from server.controllers.utils import get_state
 
 def verify_state_subprocess(app_name, page_name, state) -> bool:
     parent_conn, child_conn = Pipe()
-
     task = Process(
         target=_run_task,
         args=(child_conn, app_name, page_name, state),
     )
-
     task.start()
     task.join(timeout=int(TASK_TIMEOUT))
 
