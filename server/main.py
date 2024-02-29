@@ -1,12 +1,14 @@
 import asyncio
+import json
 import logging
+
 import requests
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 
-from server.constants import DROPBASE_API_URL, DROPBASE_TOKEN, WORKER_VERSION
-from server.routers import (  # run_python_router,; run_sql_router,
+from server.constants import CORS_ORIGINS, DROPBASE_API_URL, DROPBASE_TOKEN, WORKER_VERSION
+from server.routers import (
     app_router,
     component_router,
     edit_cell_router,
@@ -45,7 +47,7 @@ logger = logging.getLogger("uvicorn.access")
 logger.addFilter(LogSpamFilter())
 
 app = FastAPI()
-origins = ["http://localhost:3030", "http://www.localhost:3030"]
+origins = json.loads(CORS_ORIGINS)
 
 app.add_middleware(
     CORSMiddleware,
@@ -77,10 +79,7 @@ app.include_router(workspace_router)
 # send health report to dropbase server
 async def send_report_continuously():
     while True:
-        requests.get(
-            DROPBASE_API_URL
-            + f"/worker/worker_status/{DROPBASE_TOKEN}/{WORKER_VERSION}"
-        )
+        requests.get(DROPBASE_API_URL + f"/worker/worker_status/{DROPBASE_TOKEN}/{WORKER_VERSION}")
         await asyncio.sleep(300)
 
 

@@ -24,7 +24,9 @@ def get_st_cntxt(app_name: str, page_name: str, permissions: dict = get_page_per
 def create_page_req(request: CreatePageRequest, router: DropbaseRouter = Depends(get_dropbase_router)):
     r_path_to_workspace = os.path.join(os.path.dirname(__file__), "../../workspace")
     app_folder_controller = AppFolderController(request.app_name, r_path_to_workspace)
-    return app_folder_controller.create_page(router=router, page_name=request.page_name)
+    return app_folder_controller.create_page(
+        router=router, page_name=request.page_name, page_label=request.page_label
+    )
 
 
 @router.put("/{app_name}/{page_name}", dependencies=get_page_permissions("edit"))

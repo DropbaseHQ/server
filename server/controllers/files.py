@@ -209,12 +209,12 @@ class FileController:
         if mode == "rename":
             # find old file name in table fetcher in properties and update it
             for table in self.properties["tables"]:
-                if table["fetcher"] == self.file_name:
+                if table.get("fetcher") == self.file_name:
                     table["fetcher"] = self.new_name
         elif mode == "delete":
             # find file name in table fetcher in properties and delete it
             for table in self.properties["tables"]:
-                if table["fetcher"] == self.file_name:
+                if table.get("fetcher") == self.file_name:
                     table["fetcher"] = ""
         write_page_properties(self.app_name, self.page_name, self.properties)
 
