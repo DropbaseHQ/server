@@ -1,6 +1,7 @@
-from typing import Literal, Optional
+from typing import Annotated, Literal, Optional
 
-from dropbase.models.common import BaseColumnDefinedProperty, ComponentDisplayProperties
+from dropbase.models.category import PropertyCategory
+from dropbase.models.common import BaseColumnDefinedProperty, ColumnTypeEnum, ComponentDisplayProperties
 
 
 class MySqlColumnContextProperty(ComponentDisplayProperties):
@@ -9,7 +10,9 @@ class MySqlColumnContextProperty(ComponentDisplayProperties):
 
 class MySqlColumnDefinedProperty(BaseColumnDefinedProperty):
     name: str
-    column_type: Optional[str]
+    column_type: Annotated[
+        Literal[ColumnTypeEnum.MYSQL], PropertyCategory.internal
+    ] = ColumnTypeEnum.MYSQL
     display_type: Optional[
         Literal["text", "integer", "float", "boolean", "datetime", "date", "time", "set", "blob"]
     ]

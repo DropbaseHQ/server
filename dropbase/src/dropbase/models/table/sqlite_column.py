@@ -1,6 +1,7 @@
-from typing import Literal
+from typing import Annotated, Literal
 
-from dropbase.models.common import BaseColumnDefinedProperty, ComponentDisplayProperties
+from dropbase.models.category import PropertyCategory
+from dropbase.models.common import BaseColumnDefinedProperty, ColumnTypeEnum, ComponentDisplayProperties
 
 
 class SqliteColumnContextProperty(ComponentDisplayProperties):
@@ -22,7 +23,9 @@ class SqliteColumnDefinedProperty(BaseColumnDefinedProperty):
     edit_keys: list = []
 
     # internal
-    column_type: Literal["sqlite"] = "sqlite"
+    column_type: Annotated[
+        Literal[ColumnTypeEnum.SQLITE], PropertyCategory.internal
+    ] = ColumnTypeEnum.SQLITE
 
     # visibility
     hidden: bool = False

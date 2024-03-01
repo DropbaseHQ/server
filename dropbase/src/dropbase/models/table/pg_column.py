@@ -1,7 +1,7 @@
 from typing import Annotated, Literal
 
 from dropbase.models.category import PropertyCategory
-from dropbase.models.common import BaseColumnDefinedProperty, ComponentDisplayProperties
+from dropbase.models.common import BaseColumnDefinedProperty, ColumnTypeEnum, ComponentDisplayProperties
 
 
 class PgColumnContextProperty(ComponentDisplayProperties):
@@ -23,7 +23,7 @@ class PgColumnDefinedProperty(BaseColumnDefinedProperty):
     edit_keys: Annotated[list, PropertyCategory.internal] = []
 
     # internal
-    column_type: Annotated[Literal["postgres"], PropertyCategory.internal] = "postgres"
+    column_type: Annotated[Literal[ColumnTypeEnum.PG], PropertyCategory.internal] = ColumnTypeEnum.PG
 
     # visibility
     hidden: Annotated[bool, PropertyCategory.default] = False

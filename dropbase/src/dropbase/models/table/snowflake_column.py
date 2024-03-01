@@ -1,9 +1,7 @@
-from typing import Annotated, Literal, Optional
-
-from pydantic import BaseModel
+from typing import Annotated, Literal
 
 from dropbase.models.category import PropertyCategory
-from dropbase.models.common import BaseColumnDefinedProperty, ComponentDisplayProperties
+from dropbase.models.common import BaseColumnDefinedProperty, ColumnTypeEnum, ComponentDisplayProperties
 
 
 class SnowflakeColumnContextProperty(ComponentDisplayProperties):
@@ -25,7 +23,9 @@ class SnowflakeColumnDefinedProperty(BaseColumnDefinedProperty):
     edit_keys: Annotated[list, PropertyCategory.internal] = []
 
     # internal
-    column_type: Annotated[Literal["snowflake"], PropertyCategory.internal] = "snowflake"
+    column_type: Annotated[
+        Literal[ColumnTypeEnum.SNOWFLAKE], PropertyCategory.internal
+    ] = ColumnTypeEnum.SNOWFLAKE
 
     # visibility
     hidden: Annotated[bool, PropertyCategory.default] = False
