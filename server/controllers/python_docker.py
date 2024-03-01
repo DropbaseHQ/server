@@ -30,6 +30,7 @@ def run_container(env_vars: dict, docker_script: str = "inside_docker"):
         command=f"python {docker_script}.py",
         mounts=[mount1],
         environment=env_vars,
+        network="dropbase_default",
         detach=True,
         working_dir="/app",
         auto_remove=True,

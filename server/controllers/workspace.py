@@ -342,12 +342,12 @@ class AppFolderController:
         if check_if_object_exists(self.app_folder_path):
             raise HTTPException(status_code=400, detail="Another app with the same name already exists")
 
-        existing_app_labels = [a["label"] for a in self._get_workspace_properties()["apps"]]
+        self.create_workspace_properties()
 
+        existing_app_labels = [a["label"] for a in self._get_workspace_properties()["apps"]]
         if app_label in existing_app_labels:
             raise HTTPException(status_code=400, detail="Another app with the same label already exists")
 
-        self.create_workspace_properties()
         self._create_default_workspace_files(router=router, app_label=app_label)
 
         return {"success": True}
