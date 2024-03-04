@@ -20,6 +20,11 @@ class SelectDefinedProperty(BaseModel):
     label: Annotated[str, PropertyCategory.default]
     name: Annotated[str, PropertyCategory.default]
 
+    data_type: Annotated[
+        Optional[Literal["string", "integer", "float", "boolean", "string_array"]],
+        PropertyCategory.default,
+    ] = "string"
+
     options: Annotated[Optional[List[Dict]], PropertyCategory.default]
     default: Annotated[Optional[Any], PropertyCategory.other]
     multiple: Annotated[Optional[bool], PropertyCategory.other] = False
