@@ -45,19 +45,43 @@ def test_create_app_req(test_client, dropbase_router_mocker):
         shutil.rmtree(WORKSPACE_PATH.joinpath(NEW_APP_NAME), ignore_errors=True)
 
 
-def test_create_app_req_error_duplicate_names(test_client, dropbase_router_mocker):
+def test_create_app_req_error_duplicate_labels(test_client, dropbase_router_mocker):
     # Arrange
-    data = {"app_label": NEW_APP_LABEL, "app_name": NEW_APP_NAME, "workspace_id": TEST_WORKSPACE_ID}
+    data = {
+        "app_label": NEW_APP_LABEL,
+        "app_name": "a_different_name",
+        "workspace_id": TEST_WORKSPACE_ID,
+    }
 
     # Act
     dropbase_router_mocker.patch("app", "create_app", side_effect=lambda *args, **kwargs: None)
-    create_first_app = test_client.post("/app/", json=data)
+    test_client.post("/app/", json=data)
 
     res = test_client.post("/app/", json=data)
     res_data = res.json()
 
     # Assert
-    assert create_first_app.status_code == 200
+    assert res.status_code != 200
+
+    assert res_data["detail"] == "Another app with the same label already exists"
+
+
+def test_create_app_req_error_duplicate_names(test_client, dropbase_router_mocker):
+    # Arrange
+    data = {
+        "app_label": "a_different_label",
+        "app_name": NEW_APP_NAME,
+        "workspace_id": TEST_WORKSPACE_ID,
+    }
+
+    # Act
+    dropbase_router_mocker.patch("app", "create_app", side_effect=lambda *args, **kwargs: None)
+    test_client.post("/app/", json=data)
+
+    res = test_client.post("/app/", json=data)
+    res_data = res.json()
+
+    # Assert
     assert res.status_code != 200
 
     assert res_data["detail"] == "Another app with the same name already exists"
