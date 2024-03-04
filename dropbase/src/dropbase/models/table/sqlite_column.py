@@ -10,17 +10,16 @@ class SqliteColumnContextProperty(ComponentDisplayProperties):
 
 class SqliteColumnDefinedProperty(BaseColumnDefinedProperty):
 
-    # schema_name: str = None
-    table_name: str = None
-    column_name: str = None
+    table_name: Annotated[str, PropertyCategory.view_only] = None
+    column_name: Annotated[str, PropertyCategory.view_only] = None
 
-    primary_key: bool = False
-    foreign_key: bool = False
-    default: str = None
-    nullable: bool = True
-    unique: bool = False
+    primary_key: Annotated[bool, PropertyCategory.view_only] = False
+    foreign_key: Annotated[bool, PropertyCategory.view_only] = False
+    default: Annotated[str, PropertyCategory.view_only] = None
+    nullable: Annotated[bool, PropertyCategory.view_only] = False
+    unique: Annotated[bool, PropertyCategory.view_only] = False
 
-    edit_keys: list = []
+    edit_keys: Annotated[list, PropertyCategory.internal] = []
 
     # internal
     column_type: Annotated[
@@ -28,5 +27,5 @@ class SqliteColumnDefinedProperty(BaseColumnDefinedProperty):
     ] = ColumnTypeEnum.SQLITE
 
     # visibility
-    hidden: bool = False
-    editable: bool = False
+    hidden: Annotated[bool, PropertyCategory.default] = False
+    editable: Annotated[bool, PropertyCategory.default] = False

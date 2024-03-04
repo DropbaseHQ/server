@@ -30,6 +30,7 @@ def convert_sql_table(req: ConvertTableRequest, router: DropbaseRouter):
             "column_names": column_names,
             "gpt_schema": gpt_schema,
             "db_schema": db_schema,
+            "db_type": user_db.db_type,
         }
 
         resp = router.misc.get_smart_columns(get_smart_table_payload)
