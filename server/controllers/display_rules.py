@@ -90,8 +90,10 @@ def compare_values(target_value: Any, operator: str, rule_value: Any, target_typ
         rule_value = coerce_to_target_type(target_type, rule_value)
 
         if target_type == "string_array":
-            # Convert target value from string to a list
-            target_value = ast.literal_eval(target_value)
+            if target_value is not None:
+                target_value = ast.literal_eval(target_value)
+            else:
+                target_value = []
             if operator == "equals":
                 return rule_value in target_value
             elif operator == "not_equals":
