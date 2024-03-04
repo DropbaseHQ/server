@@ -1,4 +1,5 @@
 import copy
+import time
 
 from server.tests.verify_property_exists import verify_property_exists
 from server.tests.verify_state_and_context import verify_object_in_state_context
@@ -317,6 +318,8 @@ def test_update_component_req(test_client, dropbase_router_mocker):
     )
 
     headers = {"access-token": "mock access token"}
+
+    time.sleep(1)
 
     # Act
     res = test_client.put("/page", json=data, headers=headers)

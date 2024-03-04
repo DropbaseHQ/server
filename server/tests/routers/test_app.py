@@ -60,7 +60,7 @@ def test_create_app_req_error_duplicate_names(test_client, dropbase_router_mocke
     assert create_first_app.status_code == 200
     assert res.status_code != 200
 
-    assert res_data["detail"] == "An app with this name already exists"
+    assert res_data["detail"] == "Another app with the same name already exists"
 
 
 def test_create_app_req_error_illegal_name_space_between(test_client, dropbase_router_mocker):
