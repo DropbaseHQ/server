@@ -62,6 +62,9 @@ def coerce_to_target_type(target_type: str, value: Any):
         case "integer":
             value = int(value)
             return value
+        case "int":
+            value = int(value)
+            return value
         case "text":
             value = str(value)
             return value
@@ -109,6 +112,10 @@ def compare_values(target_value: Any, operator: str, rule_value: Any, target_typ
         elif operator == "gte":
             return target_value >= rule_value
         elif operator == "lt":
+            print("target_value", target_value)
+            print("type", type(target_value))
+            print("rule_value", rule_value)
+            print("type", type(rule_value))
             return target_value < rule_value
         elif operator == "lte":
             return target_value <= rule_value
