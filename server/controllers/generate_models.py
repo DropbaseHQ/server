@@ -68,6 +68,10 @@ def get_widget_state_class(widgets_props):
             component_name = component["name"]
             # NOTE: only input has data type as of now. the rest are defaulted to string
 
+            if component.get("component_type") == "select" and component.get(
+                "multiple"
+            ):
+                component["data_type"] = "string_array"
             component_type = component_state_type_mapper(component.get("data_type"))
 
             # state is pulled from ComponentDefined class
