@@ -238,13 +238,13 @@ def test_delete_file_req_not_exists(test_client):
 
 def test_update_file_req(test_client):
     # Arrange
-    if not workspace_file_exists("scripts/test_ui.py"):
+    if not workspace_file_exists("scripts/test_fetcher.sql"):
         data = copy.deepcopy(base_data)
-        data["name"] = "test_ui"
+        data["name"] = "test_fetcher"
 
         test_client.post("/files/", json=data)
 
-    file_name = "test_ui"
+    file_name = "test_fetcher"
     data = {
         "app_name": TEST_APP_NAME,
         "page_name": TEST_PAGE_NAME,
