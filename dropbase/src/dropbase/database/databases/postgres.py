@@ -201,7 +201,7 @@ class PostgresDatabase(Database):
                     if res:
                         validated.append(col_name)
                 if not res[0][0]:
-                    raise "Invalid column"
+                    raise Exception("Invalid column")
             except (SQLAlchemyError):
                 continue
         return validated
@@ -349,19 +349,30 @@ def _get_fast_sql(
     """
 
 
-def _get_slow_sql(
+def _get_slow_sql(  # Test the new query, the last query is what resulted in the error
     user_sql: str,
     name: str,
     schema_name: str,
     table_name: str,
     column_name: str,
 ) -> str:
-    # Query that results in [(True,)] if valid, [(False,)] if false
-    # NOTE: validate name of the column in user query (name) against column name in table (column_name)
-    # NOTE: limit user query to 500 rows to improve performance
+    # ensures that both the user column and the target table's column aren't contain null
+    # checks for existence of at least once piece of data the query
+    # TODO: Unlike _get_fast_sql this does not include null handling
     return f"""
-    WITH uq as ({user_sql})
-    SELECT CASE WHEN count(t.{column_name}) = 0 THEN true ELSE false END
-    FROM {schema_name}.{table_name} t
-    WHERE t.{column_name} not in (select uq.{name} from uq LIMIT 500);
+    WITH uq AS ({user_sql} LIMIT 500),
+    verify_columns AS (
+        SELECT
+            EXISTS(SELECT 1 FROM uq WHERE {name} IS NOT NULL) AND
+            EXISTS(SELECT 1 FROM {schema_name}.{table_name} WHERE {column_name} IS NOT NULL) AS both_columns_present,
+            EXISTS(
+                SELECT 1
+                FROM {schema_name}.{table_name} t
+                INNER JOIN uq ON t.{column_name} = uq.{name}
+                LIMIT 1
+            ) AS match_columns
+    )
+    SELECT
+        (SELECT both_columns_present FROM verify_columns) AND
+        (SELECT match_columns FROM verify_columns) AS validation_result;
     """
