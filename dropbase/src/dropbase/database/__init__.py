@@ -1,5 +1,3 @@
-from .connect import connect_to_user_db as connect
+from .connect import connect
 
-__all__ = [
-    "connect",
-]
+__all__ = ["connect"]
