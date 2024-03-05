@@ -1,4 +1,5 @@
 import logging
+import ast
 from datetime import datetime
 from functools import reduce
 from typing import Any
@@ -87,6 +88,19 @@ def compare_values(target_value: Any, operator: str, rule_value: Any, target_typ
 
         target_value = coerce_to_target_type(target_type, target_value)
         rule_value = coerce_to_target_type(target_type, rule_value)
+
+        if target_type == "string_array":
+            if target_value is not None:
+                target_value = ast.literal_eval(target_value)
+            else:
+                target_value = []
+            if operator == "equals":
+                return rule_value in target_value
+            elif operator == "not_equals":
+                return rule_value not in target_value
+            elif operator == "exists":
+                return len(target_value) > 0
+            return False
 
         if operator == "equals":
             return target_value == rule_value

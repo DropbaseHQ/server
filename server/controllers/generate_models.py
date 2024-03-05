@@ -45,6 +45,8 @@ def component_state_type_mapper(input_type: str):
             return str
         case "date":
             return str
+        case "string_array":
+            return list
         case _:
             return str
 
@@ -65,6 +67,11 @@ def get_widget_state_class(widgets_props):
             # get the type that will be used in state. this is what client will send back to server
             component_name = component["name"]
             # NOTE: only input has data type as of now. the rest are defaulted to string
+
+            if component.get("component_type") == "select" and component.get(
+                "multiple"
+            ):
+                component["data_type"] = "string_array"
             component_type = component_state_type_mapper(component.get("data_type"))
 
             # state is pulled from ComponentDefined class
@@ -74,8 +81,9 @@ def get_widget_state_class(widgets_props):
             )
 
         widget_class_name = widget_name.capitalize() + "State"
-        locals()[widget_class_name] = create_model(widget_class_name, **components_props)
-
+        locals()[widget_class_name] = create_model(
+            widget_class_name, **components_props
+        )
         widgets_state[widget_name] = (locals()[widget_class_name], ...)
 
     # compose Widgets
@@ -146,7 +154,9 @@ def get_widget_context(widgets_props):
             components_props[component["name"]] = (BaseProperty, ...)
 
         components_class_name = widget_name.capitalize() + "ComponentsContext"
-        widget_components_class = create_model(components_class_name, **components_props)
+        widget_components_class = create_model(
+            components_class_name, **components_props
+        )
 
         widget_class_name = widget_name.capitalize() + "Context"
 
@@ -193,7 +203,9 @@ def get_table_context(tables_props):
 
         # create table context class
         locals()[table_class_name] = create_model(
-            table_class_name, **{"columns": (table_columns_class, ...)}, __base__=TableContextProperty
+            table_class_name,
+            **{"columns": (table_columns_class, ...)},
+            __base__=TableContextProperty,
         )
 
         # add each table context class into main context class
