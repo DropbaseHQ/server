@@ -7,7 +7,7 @@ from dropbase.database.connect import connect_to_user_db
 from dropbase.helpers.dataframe import convert_df_to_resp_obj
 from dropbase.schemas.query import RunSQLRequestTask, RunSQLStringRequest
 from server.constants import cwd
-from server.controllers.python_subprocess import format_process_result, verify_state_subprocess
+from server.controllers.python_subprocess import verify_state
 from server.controllers.redis import r
 from server.controllers.utils import process_query_result
 
@@ -82,7 +82,7 @@ def run_sql_query(args: RunSQLRequestTask, job_id: str):
 
         response["status_code"] = 500
 
-        r.set(job_id, format_process_result(str(e)))
+        r.set(job_id, str(e))
     finally:
         r.set(job_id, json.dumps(response))
 
@@ -103,7 +103,3 @@ def get_sql_from_file(app_name: str, page_name: str, file_name: str) -> str:
     with open(path, "r") as sql_file:
         sql = sql_file.read()
     return sql
-
-
-def verify_state(app_name: str, page_name: str, state: dict):
-    return verify_state_subprocess(app_name, page_name, state)

@@ -7,7 +7,7 @@ from server.constants import TASK_TIMEOUT, cwd
 from server.controllers.utils import get_state
 
 
-def verify_state_subprocess(app_name, page_name, state) -> bool:
+def verify_state(app_name: str, page_name: str, state: dict) -> bool:
     parent_conn, child_conn = Pipe()
     task = Process(
         target=_run_task,
@@ -27,22 +27,14 @@ def verify_state_subprocess(app_name, page_name, state) -> bool:
 
 
 def _run_task(child_conn, app_name, page_name, state):
-    # Change the current working directory to root_directory
-    os.chdir(cwd)
-
-    importlib.invalidate_caches()
-
     try:
+        # Change the current working directory to root_directory
+        os.chdir(cwd)
+        importlib.invalidate_caches()
         sys.path.insert(0, cwd)
         get_state(app_name, page_name, state)
         child_conn.send(True)
-
     except Exception:
         child_conn.send(False)
-
     finally:
         child_conn.close()
-
-
-def format_process_result(result: any, stdout: str = "", success: bool = True):
-    return {"result": result, "stdout": stdout, "success": success}
