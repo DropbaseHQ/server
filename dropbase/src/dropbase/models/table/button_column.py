@@ -39,3 +39,6 @@ class ButtonColumnDefinedProperty(BaseModel):
 
     # events
     on_click: Annotated[Optional[OnSelect], PropertyCategory.events]
+
+    # visibility
+    hidden: Annotated[bool, PropertyCategory.default] = False
