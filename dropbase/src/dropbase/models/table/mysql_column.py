@@ -1,6 +1,7 @@
-from typing import Literal, Optional
+from typing import Annotated, Literal, Optional
 
-from dropbase.models.common import BaseColumnDefinedProperty, ComponentDisplayProperties
+from dropbase.models.category import PropertyCategory
+from dropbase.models.common import BaseColumnDefinedProperty, ColumnTypeEnum, ComponentDisplayProperties
 
 
 class MySqlColumnContextProperty(ComponentDisplayProperties):
@@ -8,23 +9,23 @@ class MySqlColumnContextProperty(ComponentDisplayProperties):
 
 
 class MySqlColumnDefinedProperty(BaseColumnDefinedProperty):
-    name: str
-    column_type: Optional[str]
-    display_type: Optional[
-        Literal["text", "integer", "float", "boolean", "datetime", "date", "time", "set", "blob"]
-    ]
 
-    table_name: str = None
-    column_name: str = None
+    table_name: Annotated[str, PropertyCategory.view_only] = None
+    column_name: Annotated[str, PropertyCategory.view_only] = None
 
-    primary_key: bool = False
-    foreign_key: bool = False
-    default: str = None
-    nullable: bool = True
-    unique: bool = False
+    primary_key: Annotated[bool, PropertyCategory.view_only] = False
+    foreign_key: Annotated[bool, PropertyCategory.view_only] = False
+    default: Annotated[str, PropertyCategory.view_only] = None
+    nullable: Annotated[bool, PropertyCategory.view_only] = False
+    unique: Annotated[bool, PropertyCategory.view_only] = False
 
-    edit_keys: list = []
+    edit_keys: Annotated[list, PropertyCategory.internal] = []
+
+    # internal
+    column_type: Annotated[
+        Literal[ColumnTypeEnum.MYSQL], PropertyCategory.internal
+    ] = ColumnTypeEnum.MYSQL
 
     # visibility
-    hidden: bool = False
-    editable: bool = False
+    hidden: Annotated[bool, PropertyCategory.default] = False
+    editable: Annotated[bool, PropertyCategory.default] = False

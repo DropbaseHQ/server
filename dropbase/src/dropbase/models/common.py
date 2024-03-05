@@ -39,6 +39,15 @@ class DisplayType(str, Enum):
     select = "select"
 
 
+class ColumnTypeEnum(str, Enum):
+    PG = "postgres"
+    MYSQL = "mysql"
+    SNOWFLAKE = "snowflake"
+    SQLITE = "sqlite"
+    PY = "python"
+    BUTTON = "button"
+
+
 class BaseColumnDefinedProperty(BaseModel):
     name: Annotated[str, PropertyCategory.default]
     data_type: Annotated[Optional[str], PropertyCategory.default]
