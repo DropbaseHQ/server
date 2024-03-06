@@ -13,7 +13,7 @@ def test_equals_operator_succeeds_when_equal():
     target_value = 5
     operator = "equals"
     rule_value = 5
-    target_type = "int"
+    target_type = "integer"
 
     result = compare_values(target_value, operator, rule_value, target_type)
 
@@ -24,7 +24,7 @@ def test_equals_operator_fails_when_not_equal():
     target_value = 5
     operator = "equals"
     rule_value = 10
-    target_type = "int"
+    target_type = "integer"
 
     result = compare_values(target_value, operator, rule_value, target_type)
 
@@ -101,7 +101,7 @@ def test_equals_operator_succeeds_with_mix_string_and_int():
     target_value = "5"
     operator = "equals"
     rule_value = 5
-    target_type = "int"
+    target_type = "integer"
 
     result = compare_values(target_value, operator, rule_value, target_type)
 
@@ -112,7 +112,7 @@ def test_equals_operator_fails_with_mix_string_and_int():
     target_value = "5"
     operator = "equals"
     rule_value = 10
-    target_type = "int"
+    target_type = "integer"
 
     result = compare_values(target_value, operator, rule_value, target_type)
 
@@ -167,7 +167,7 @@ def test_lt_operator_succeeds_when_less_than():
     target_value = 5
     operator = "lt"
     rule_value = 10
-    target_type = "int"
+    target_type = "integer"
 
     result = compare_values(target_value, operator, rule_value, target_type)
 
@@ -178,7 +178,7 @@ def test_lt_operator_fails_when_equal():
     target_value = 5
     operator = "lt"
     rule_value = 5
-    target_type = "int"
+    target_type = "integer"
 
     result = compare_values(target_value, operator, rule_value, target_type)
 
@@ -190,7 +190,7 @@ def test_lte_operator_succeeds_when_less_than_or_equal():
     target_value = 5
     operator = "lte"
     rule_value = 5
-    target_type = "int"
+    target_type = "integer"
 
     result = compare_values(target_value, operator, rule_value, target_type)
 
@@ -201,7 +201,7 @@ def test_lte_operator_fails_when_greater_than():
     target_value = 10
     operator = "lte"
     rule_value = 5
-    target_type = "int"
+    target_type = "integer"
 
     result = compare_values(target_value, operator, rule_value, target_type)
 
@@ -212,7 +212,7 @@ def test_gt_operator_succeeds_when_greater_than():
     target_value = 10
     operator = "gt"
     rule_value = 5
-    target_type = "int"
+    target_type = "integer"
 
     result = compare_values(target_value, operator, rule_value, target_type)
 
@@ -223,7 +223,7 @@ def test_gt_operator_fails_when_equal():
     target_value = 5
     operator = "gt"
     rule_value = 5
-    target_type = "int"
+    target_type = "integer"
 
     result = compare_values(target_value, operator, rule_value, target_type)
 
@@ -234,7 +234,7 @@ def test_gte_operator_succeeds_when_greater_than_or_equal():
     target_value = 10
     operator = "gte"
     rule_value = 10
-    target_type = "int"
+    target_type = "integer"
 
     result = compare_values(target_value, operator, rule_value, target_type)
 
@@ -245,7 +245,7 @@ def test_gte_operator_fails_when_less_than():
     target_value = 5
     operator = "gte"
     rule_value = 10
-    target_type = "int"
+    target_type = "integer"
 
     result = compare_values(target_value, operator, rule_value, target_type)
 
@@ -256,7 +256,7 @@ def test_not_equals_operator():
     target_value = 5
     operator = "not_equals"
     rule_value = 10
-    target_type = "int"
+    target_type = "integer"
 
     result = compare_values(target_value, operator, rule_value, target_type)
 
@@ -267,7 +267,7 @@ def test_not_equals_operator_succeeds_when_not_equal():
     target_value = 5
     operator = "not_equals"
     rule_value = 10
-    target_type = "int"
+    target_type = "integer"
 
     result = compare_values(target_value, operator, rule_value, target_type)
 
@@ -278,7 +278,7 @@ def test_not_equals_operator_fails_when_equal():
     target_value = 5
     operator = "not_equals"
     rule_value = 5
-    target_type = "int"
+    target_type = "integer"
 
     result = compare_values(target_value, operator, rule_value, target_type)
 
@@ -355,7 +355,7 @@ def test_not_equals_operator_succeeds_with_mix_string_and_int():
     target_value = "5"
     operator = "not_equals"
     rule_value = 10
-    target_type = "int"
+    target_type = "integer"
 
     result = compare_values(target_value, operator, rule_value, target_type)
 
@@ -366,7 +366,7 @@ def test_not_equals_operator_fails_with_mix_string_and_int():
     target_value = "5"
     operator = "not_equals"
     rule_value = 5
-    target_type = "int"
+    target_type = "integer"
 
     result = compare_values(target_value, operator, rule_value, target_type)
 
