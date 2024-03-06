@@ -2,21 +2,12 @@ import importlib
 import json
 import os
 import time
-from unittest.mock import patch
 
-import pytest
-import redis
 from dotenv import load_dotenv
 
-from server.tests.constants import TEST_APP_NAME, TEST_PAGE_NAME
+from server.tests.utils import setup_redis
 
 load_dotenv()
-
-
-@pytest.fixture(scope="session")
-def setup_redis():
-    r = redis.Redis(host="localhost", port=6379, db=0)
-    return r
 
 
 def test_run_python_string(setup_redis):
@@ -48,10 +39,7 @@ def test_run_python_string(setup_redis):
         }
     )
 
-    if os.getenv("type") == "string":
-        module_name = "dropbase.worker.run_python_string"
-    else:
-        module_name = "dropbase.worker.run_python_file"
+    module_name = "dropbase.worker.run_python_string"
 
     run_module = importlib.import_module(module_name)
 
