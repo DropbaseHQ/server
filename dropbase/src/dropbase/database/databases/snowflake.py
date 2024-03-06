@@ -42,7 +42,7 @@ class SnowflakeDatabase(Database):
             where_claw = f"WHERE ({', '.join(key_keys)}) = (:{', :'.join(key_keys)})"
         else:
             where_claw = f"WHERE {key_keys[0]} = :{key_keys[0]}"
-        sql = f"""UPDATE {self.schema}.{table}\n{set_claw}\n{where_claw} RETURNING *;"""  # Snowflake supports the returning clause
+        sql = f"""UPDATE {self.schema}.{table}\n{set_claw}\n{where_claw} RETURNING *;"""  # noqa Snowflake supports the returning clause
         values.update(keys)
         result = self.session.execute(text(sql), values)
         if auto_commit:
@@ -51,7 +51,7 @@ class SnowflakeDatabase(Database):
 
     def select(self, table: str, where_clause: str = None, values: dict = None):
         if where_clause:
-            sql = f"""SELECT * FROM {self.schema}.{table} WHERE {where_clause};"""  # The overall architecture of Snowflake is DB -> Schema -> Table (same as Postgres)
+            sql = f"""SELECT * FROM {self.schema}.{table} WHERE {where_clause};"""  # noqa The overall architecture of Snowflake is DB -> Schema -> Table (same as Postgres)
         else:
             sql = f"""SELECT * FROM {self.schema}.{table};"""
 
@@ -85,19 +85,6 @@ class SnowflakeDatabase(Database):
             self.commit()
         return res.rowcount
 
-    def query(self, sql: str):
-        result = self.session.execute(text(sql))
-        return [dict(row) for row in result.fetchall()]
-
-    def execute(self, sql: str):
-        try:
-            result = self.session.execute(text(sql))
-            self.commit()
-            return {"success": True, "rows_affected": result.rowcount}
-        except SQLAlchemyError as e:
-            self.session.rollback()  # Roll back the session on error.
-            return {"success": False, "error": str(e)}
-
     def filter_and_sort(
         self, table: str, filter_clauses: list = None, sort_by: str = None, ascending: bool = True
     ):
@@ -106,8 +93,7 @@ class SnowflakeDatabase(Database):
             sql += " WHERE " + " AND ".join(filter_clauses)
         if sort_by:
             sql += f" ORDER BY {sort_by} {'ASC' if ascending else 'DESC'}"
-        result = self.session.execute(text(sql))
-        return [dict(row) for row in result.fetchall()]
+        return self.query(sql)
 
     def _get_db_schema(self):
         # TODO: cache this, takes a while
@@ -304,7 +290,7 @@ class SnowflakeDatabase(Database):
                 filter_values[filter_value_name] = filter.value
                 if filter.column_type == "text":
                     filters_list.append(
-                        f"LOWER(user_query.{filter.column_name}) {filter.condition} LOWER(:{filter_value_name})"
+                        f"LOWER(user_query.{filter.column_name}) {filter.condition} LOWER(:{filter_value_name})"  # noqa
                     )
                 else:
                     filters_list.append(

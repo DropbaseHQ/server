@@ -5,7 +5,7 @@ import pytest
 def test_run_sql_string(mocker, test_client, mock_db):
     # Arrange
 
-    mocker.patch("server.controllers.run_sql.connect_to_user_db", return_value=mock_db)
+    mocker.patch("server.controllers.run_sql.connect", return_value=mock_db)
 
     data = {
         "app_name": "dropbase_test_app",

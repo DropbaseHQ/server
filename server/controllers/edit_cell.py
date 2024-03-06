@@ -1,6 +1,6 @@
 from typing import List
 
-from dropbase.database.connect import connect_to_user_db
+from dropbase.database.connect import connect
 from dropbase.schemas.edit_cell import CellEdit
 from dropbase.schemas.files import DataFile
 
@@ -9,7 +9,7 @@ def edit_cell(file: DataFile, edits: List[CellEdit]):
     result_dict = {"result": [], "errors": None}
     status_code = 200
     try:
-        user_db = connect_to_user_db(file.source)
+        user_db = connect(file.source)
         for edit in edits:
             update_res, success = user_db._update_value(edit)
             result_dict["result"].append(update_res)

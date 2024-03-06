@@ -92,7 +92,7 @@ base_data = {
 @pytest.mark.parametrize("mock_db", ["postgres", "mysql", "snowflake", "sqlite"], indirect=True)
 def test_query_db(mocker, mock_db):
     # Arrange
-    mocker.patch("dropbase.database.connect.connect_to_user_db", return_value=mock_db)
+    mocker.patch("dropbase.database.connect.connect", return_value=mock_db)
 
     # Act
     output = mock_db._run_query("select * from users;", {})
@@ -118,7 +118,7 @@ def test_apply_filters(test_client, mocker, mock_db):
     ]
     data["table"]["fetcher"] = "test_sql"
 
-    mocker.patch("server.controllers.run_sql.connect_to_user_db", return_value=mock_db)
+    mocker.patch("server.controllers.run_sql.connect", return_value=mock_db)
 
     # Act
     res = test_client.post("/query", json=data)
@@ -144,7 +144,7 @@ def test_apply_sorts(test_client, mocker, mock_db):
     data["filter_sort"]["sorts"] = [{"column_name": "user_id", "value": "desc"}]
     data["table"]["fetcher"] = "test_sql"
 
-    mocker.patch("server.controllers.run_sql.connect_to_user_db", return_value=mock_db)
+    mocker.patch("server.controllers.run_sql.connect", return_value=mock_db)
 
     # Act
     res = test_client.post("/query", json=data)

@@ -30,7 +30,7 @@ def test_run_query_sql(test_client, mocker, mock_db):
     # Arrange
     data = copy.deepcopy(base_data)
     data["table"]["fetcher"] = "test_sql"
-    mocker.patch("server.controllers.run_sql.connect_to_user_db", return_value=mock_db)
+    mocker.patch("server.controllers.run_sql.connect", return_value=mock_db)
 
     # Act
     res = test_client.post("/query", json=data)

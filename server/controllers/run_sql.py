@@ -3,7 +3,7 @@ import traceback
 
 from jinja2 import Environment
 
-from dropbase.database.connect import connect_to_user_db
+from dropbase.database.connect import connect
 from dropbase.helpers.dataframe import convert_df_to_resp_obj
 from dropbase.schemas.query import RunSQLRequestTask, RunSQLStringRequest
 from server.constants import cwd
@@ -17,7 +17,7 @@ def run_sql_query_from_string(req: RunSQLStringRequest, job_id: str):
     try:
         verify_state(req.app_name, req.page_name, req.state)
         # connect to user db
-        user_db = connect_to_user_db(req.source)
+        user_db = connect(req.source)
         # prepare sql
         sql = clean_sql(req.file_content)
         sql = render_sql(sql, req.state)
@@ -52,7 +52,7 @@ def run_sql_query(args: RunSQLRequestTask, job_id: str):
 
     try:
         verify_state(args.app_name, args.page_name, args.state)
-        user_db = connect_to_user_db(args.file.source)
+        user_db = connect(args.file.source)
         # get query from file
         file_sql = get_sql_from_file(args.app_name, args.page_name, args.file.name)
         # get get query string and values for sqlalchemy query

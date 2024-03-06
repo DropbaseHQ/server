@@ -7,7 +7,7 @@ from dropbase.database.sources import get_sources
 WORKSPACE_SOURCES = get_sources()
 
 
-def connect_to_user_db(name: str):
+def connect(name: str):
     creds = WORKSPACE_SOURCES.get(name)
     creds_fields = creds.get("fields")
 

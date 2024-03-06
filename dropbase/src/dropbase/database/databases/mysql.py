@@ -70,19 +70,6 @@ class MySqlDatabase(Database):
             self.commit()
         return res.rowcount
 
-    def query(self, sql: str):
-        result = self.session.execute(text(sql))
-        return [dict(row) for row in result.fetchall()]
-
-    def execute(self, sql: str):
-        try:
-            result = self.session.execute(text(sql))
-            self.commit()
-            return {"success": True, "rows_affected": result.rowcount}
-        except SQLAlchemyError as e:
-            self.session.rollback()  # Roll back the session on error.
-            return {"success": False, "error": str(e)}
-
     def filter_and_sort(
         self, table: str, filter_clauses: list = None, sort_by: str = None, ascending: bool = True
     ):
@@ -91,8 +78,7 @@ class MySqlDatabase(Database):
             sql += " WHERE " + " AND ".join(filter_clauses)
         if sort_by:
             sql += f" ORDER BY {sort_by} {'ASC' if ascending else 'DESC'}"
-        result = self.session.execute(text(sql))
-        return [dict(row) for row in result.fetchall()]
+        return self.query(sql)
 
     # MySQL Compatible up to here
 
@@ -288,7 +274,7 @@ class MySqlDatabase(Database):
 
                 if filter.column_type == "text":
                     filters_list.append(
-                        f"LOWER(user_query.`{filter.column_name}`) {filter.condition} LOWER(:{filter_value_name})"
+                        f"LOWER(user_query.`{filter.column_name}`) {filter.condition} LOWER(:{filter_value_name})"  # noqa
                     )
                 else:
                     filters_list.append(
