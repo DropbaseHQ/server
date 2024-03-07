@@ -1,3 +1,4 @@
+import json
 import os
 
 import docker
@@ -15,20 +16,24 @@ def run_container(env_vars: dict, docker_script: str = "inside_docker"):
     config = {key: os.getenv(key) for key in os.environ.keys()}
     env_vars = {**env_vars, **config}
 
-    # replace localhost with host.docker.internal
-    for key, value in env_vars.items():
-        if value == "localhost":
-            env_vars[key] = "host.docker.internal"
-
     # get absolute path of the workspace directory from the environment variable
     workspace_dir = os.getenv("HOST_WORKSPACE_PATH") + "/workspace"
     mount1 = docker.types.Mount(target="/app/workspace", source=workspace_dir, type="bind")
+    mounts = [mount1]
+
+    # add additional mounts from the environment variable
+    for mount in json.loads(os.getenv("HOST_MOUNTS")):
+        mounts.append(
+            docker.types.Mount(
+                target=f"/app/{mount}", source=f"{os.getenv('HOST_WORKSPACE_PATH')}/{mount}", type="bind"
+            )
+        )
 
     # Run the Docker container with the mount
     client.containers.run(
         "dropbase/worker",
         command=f"python {docker_script}.py",
-        mounts=[mount1],
+        mounts=mounts,
         environment=env_vars,
         network="dropbase_default",
         detach=True,
