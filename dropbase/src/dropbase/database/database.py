@@ -124,5 +124,7 @@ class Database(ABC):
             return "datetime"
         elif "bool" in col_type:
             return "boolean"
+        elif "array" in col_type:
+            return "array"
         else:
             return "text"
