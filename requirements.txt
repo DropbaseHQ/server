@@ -11,9 +11,4 @@ fastapi-jwt-auth==0.5.0
 docker==7.0.0
 redis==5.0.1
 python-dotenv==1.0.0
-dropbase==0.0.8
-
-# sqlalchemy==1.4.46
-# pymysql==1.1.0
-# snowflake-sqlalchemy==1.5.1
-# psycopg2-binary==2.9.9
+dropbase==0.0.9
