@@ -327,13 +327,8 @@ class PostgresDatabase(Database):
 
 
 # helper functions
-def _get_fast_sql(
-    user_sql: str,
-    schema_name: str,
-    table_name: str,
-    column_name: str,
-) -> str:
-    # Aliasing ensures that when columns from the user_query and the target table ({schema_name}.{table_name}) are compared there's no ambiguity error
+def _get_fast_sql(user_sql: str, schema_name: str, table_name: str, column_name: str) -> str:
+    # Removed ambiguity from renaming columns to aliases
     aliased_column_name = f"{column_name}_uq"
     return f"""
         WITH user_query AS (
