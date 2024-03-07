@@ -1,10 +1,12 @@
 import json
+import logging
 import os
 
 import docker
 from dotenv import load_dotenv
 
 load_dotenv()
+logger = logging.getLogger(__name__)
 
 
 def run_container(env_vars: dict, docker_script: str = "inside_docker"):
@@ -17,17 +19,26 @@ def run_container(env_vars: dict, docker_script: str = "inside_docker"):
     env_vars = {**env_vars, **config}
 
     # get absolute path of the workspace directory from the environment variable
-    workspace_dir = os.getenv("HOST_WORKSPACE_PATH") + "/workspace"
-    mount1 = docker.types.Mount(target="/app/workspace", source=workspace_dir, type="bind")
-    mounts = [mount1]
+    host_path = os.getenv("HOST_WORKSPACE_PATH")
+    workspace_mount = docker.types.Mount(
+        target="/app/workspace", source=host_path + "/workspace", type="bind"
+    )  # noqa
+    files_mount = docker.types.Mount(target="/app/files", source=host_path + "/files", type="bind")
+    mounts = [workspace_mount, files_mount]
 
     # add additional mounts from the environment variable
-    for mount in json.loads(os.getenv("HOST_MOUNTS")):
-        mounts.append(
-            docker.types.Mount(
-                target=f"/app/{mount}", source=f"{os.getenv('HOST_WORKSPACE_PATH')}/{mount}", type="bind"
-            )
-        )
+    if os.getenv("HOST_MOUNTS"):
+        try:
+            host_mounts = json.loads(os.getenv("HOST_MOUNTS")) or []
+            for mount in host_mounts:
+                mounts.append(
+                    docker.types.Mount(
+                        target=f"/app/{mount}", source=f"{host_path}/{mount}", type="bind"
+                    )
+                )
+        except Exception as e:
+            logger.warning(f"Error parsing HOST_MOUNTS: {e}")
+            mounts = [workspace_mount, files_mount]
 
     # Run the Docker container with the mount
     client.containers.run(
