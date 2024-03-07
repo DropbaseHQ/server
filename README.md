@@ -18,6 +18,11 @@ docker push dropbase/server:0.0.2
 worker
 
 ```
+docker build -t dropbase/worker -f Dockerfile-worker .
+
+```
+
+```
 docker buildx build --platform linux/amd64,linux/arm64 --push -t dropbase/worker:0.0.1 .
 ```
 
