@@ -176,14 +176,17 @@ class PostgresDatabase(Database):
         for col_name, col_data in smart_cols.items():
             col_data = PgColumnDefinedProperty(**col_data)
             pk_name = primary_keys.get(self._get_table_path(col_data))
+
+            if col_name == pk_name:
+                validated.append(col_name)
+                continue
+
             if pk_name:
                 validation_sql = _get_fast_sql(
                     user_sql,
-                    col_name,
                     col_data.schema_name,
                     col_data.table_name,
                     col_data.column_name,
-                    pk_name,
                 )
             else:
                 validation_sql = _get_slow_sql(
@@ -202,8 +205,9 @@ class PostgresDatabase(Database):
                         validated.append(col_name)
                 if not res[0][0]:
                     raise Exception("Invalid column")
-            except (SQLAlchemyError):
-                continue
+            except (SQLAlchemyError) as e:
+                raise Exception(e)
+
         return validated
 
     def _get_primary_keys(self, smart_cols: dict[str, dict]) -> dict[str, dict]:
@@ -323,29 +327,30 @@ class PostgresDatabase(Database):
 
 
 # helper functions
-
-
 def _get_fast_sql(
     user_sql: str,
-    name: str,
     schema_name: str,
     table_name: str,
     column_name: str,
-    table_pk_name: str,
 ) -> str:
-    # Query that results in [(1,)] if valid, [(0,)] if false
-    # NOTE: validate name of the column in user query (name) against column name in table (column_name)
+    # Aliasing ensures that when columns from the user_query and the target table ({schema_name}.{table_name}) are compared there's no ambiguity error
+    aliased_column_name = f"{column_name}_uq"
     return f"""
-    WITH uq as ({user_sql})
-    SELECT min(
-        CASE WHEN
-            t.{column_name} = uq.{name} or
-            t.{column_name} is null and uq.{name} is null
-        THEN 1 ELSE 0 END
-    ) as equal
-    FROM {schema_name}.{table_name} t
-    INNER join uq on t.{table_pk_name} = uq.{table_pk_name}
-    LIMIT 500;
+        WITH user_query AS (
+            {user_sql}
+        ), prepped_uq AS (
+            SELECT *, {column_name} AS {aliased_column_name} FROM user_query
+        )
+        SELECT MIN(
+            CASE
+                WHEN t.{column_name} = prepped_uq.{aliased_column_name} OR
+                     (t.{column_name} IS NULL AND prepped_uq.{aliased_column_name} IS NULL)
+                THEN 1 ELSE 0
+            END
+        ) AS equal
+        FROM {schema_name}.{table_name} t
+        INNER JOIN prepped_uq ON t.{column_name} = prepped_uq.{aliased_column_name}
+        LIMIT 500;
     """
 
 
