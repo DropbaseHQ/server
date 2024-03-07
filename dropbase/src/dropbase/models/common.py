@@ -26,7 +26,7 @@ class SelectType(BaseModel):
 
 class ArrayType(BaseModel):
     config_type: Annotated[Literal["array"], PropertyCategory.internal] = "array"
-    display_as: Optional[Literal["tags", "line", "bars"]] = "tags"
+    display_as: Optional[Literal["tags", "area", "bar"]] = "tags"
 
 
 class DisplayTypeConfigurations(BaseModel):
