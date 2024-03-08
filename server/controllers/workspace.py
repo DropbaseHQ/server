@@ -25,13 +25,17 @@ class WorkspaceFolderController:
         self.r_path_to_workspace = r_path_to_workspace
 
     def write_workspace_properties(self, workspace_properties: dict):
-        workspace_properties_path = os.path.join(self.r_path_to_workspace, "properties.json")
+        workspace_properties_path = os.path.join(
+            self.r_path_to_workspace, "properties.json"
+        )
         with open(workspace_properties_path, "w") as file:
             json.dump(workspace_properties, file, indent=2)
 
     def get_workspace_properties(self):
         if os.path.exists(os.path.join(self.r_path_to_workspace, "properties.json")):
-            with open(os.path.join(self.r_path_to_workspace, "properties.json"), "r") as file:
+            with open(
+                os.path.join(self.r_path_to_workspace, "properties.json"), "r"
+            ) as file:
 
                 props = json.load(file)
                 return props.get("apps", [])
@@ -58,13 +62,16 @@ class WorkspaceFolderController:
         target_app = self.get_app(app_id=app_id)
         if target_app is None:
             raise HTTPException(
-                status_code=400, detail="App does not exist, or id does not exist for this app."
+                status_code=400,
+                detail="App does not exist, or id does not exist for this app.",
             )
 
         existing_app_labels = [a["label"] for a in self.get_workspace_properties()]
 
         if new_label in existing_app_labels:
-            raise HTTPException(status_code=400, detail="Another app with the same label already exists")
+            raise HTTPException(
+                status_code=400, detail="Another app with the same label already exists"
+            )
 
         app_info = {**target_app, "label": new_label}
         workspace_data = self.get_workspace_properties()
@@ -101,14 +108,18 @@ class AppFolderController:
             json.dump(app_properties_data, file, indent=2)
 
     def _get_workspace_properties(self):
-        workspace_properties_path = os.path.join(self.r_path_to_workspace, "properties.json")
+        workspace_properties_path = os.path.join(
+            self.r_path_to_workspace, "properties.json"
+        )
         if not os.path.exists(workspace_properties_path):
             return None
         with open(workspace_properties_path, "r") as file:
             return json.load(file)
 
     def _write_workspace_properties(self, workspace_properties: dict):
-        workspace_properties_path = os.path.join(self.r_path_to_workspace, "properties.json")
+        workspace_properties_path = os.path.join(
+            self.r_path_to_workspace, "properties.json"
+        )
         with open(workspace_properties_path, "w") as file:
             json.dump(workspace_properties, file, indent=2)
 
@@ -168,7 +179,6 @@ class AppFolderController:
             self.create_page(router=router)
 
         except Exception as e:
-            print("Unable to create app folder", e)
             raise HTTPException(status_code=500, detail="Unable to create app folder")
 
     def _get_app_properties(self):
@@ -191,7 +201,9 @@ class AppFolderController:
         created_app_names = get_subdirectories(self.r_path_to_workspace)
         app_info = []
         for app_name in created_app_names:
-            app_properties = os.path.join(self.r_path_to_workspace, app_name, "properties.json")
+            app_properties = os.path.join(
+                self.r_path_to_workspace, app_name, "properties.json"
+            )
             if not os.path.exists(app_properties):
                 app_info.append({"name": app_name, "label": app_name, "id": None})
                 continue
@@ -304,7 +316,8 @@ class AppFolderController:
 
         if len(app_properties_data["pages"]) == 1:
             raise HTTPException(
-                status_code=400, detail="Cannot delete the only page in the app. Delete the app instead."
+                status_code=400,
+                detail="Cannot delete the only page in the app. Delete the app instead.",
             )
 
         # delete page folder
@@ -340,13 +353,19 @@ class AppFolderController:
             )
 
         if check_if_object_exists(self.app_folder_path):
-            raise HTTPException(status_code=400, detail="Another app with the same name already exists")
+            raise HTTPException(
+                status_code=400, detail="Another app with the same name already exists"
+            )
 
         self.create_workspace_properties()
 
-        existing_app_labels = [a["label"] for a in self._get_workspace_properties()["apps"]]
+        existing_app_labels = [
+            a["label"] for a in self._get_workspace_properties()["apps"]
+        ]
         if app_label in existing_app_labels:
-            raise HTTPException(status_code=400, detail="Another app with the same label already exists")
+            raise HTTPException(
+                status_code=400, detail="Another app with the same label already exists"
+            )
 
         self._create_default_workspace_files(router=router, app_label=app_label)
 
