@@ -29,6 +29,8 @@ def column_state_type_mapper(state_type: str):
             return float
         case "boolean":
             return bool
+        case "array":
+            return list
         case _:
             return str
 
@@ -68,9 +70,7 @@ def get_widget_state_class(widgets_props):
             component_name = component["name"]
             # NOTE: only input has data type as of now. the rest are defaulted to string
 
-            if component.get("component_type") == "select" and component.get(
-                "multiple"
-            ):
+            if component.get("component_type") == "select" and component.get("multiple"):
                 component["data_type"] = "string_array"
             component_type = component_state_type_mapper(component.get("data_type"))
 
@@ -81,9 +81,7 @@ def get_widget_state_class(widgets_props):
             )
 
         widget_class_name = widget_name.capitalize() + "State"
-        locals()[widget_class_name] = create_model(
-            widget_class_name, **components_props
-        )
+        locals()[widget_class_name] = create_model(widget_class_name, **components_props)
         widgets_state[widget_name] = (locals()[widget_class_name], ...)
 
     # compose Widgets
@@ -154,9 +152,7 @@ def get_widget_context(widgets_props):
             components_props[component["name"]] = (BaseProperty, ...)
 
         components_class_name = widget_name.capitalize() + "ComponentsContext"
-        widget_components_class = create_model(
-            components_class_name, **components_props
-        )
+        widget_components_class = create_model(components_class_name, **components_props)
 
         widget_class_name = widget_name.capitalize() + "Context"
 
