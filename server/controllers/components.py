@@ -54,15 +54,22 @@ def reduce_method(a, b):
 
 def parse_prop(prop, key, model_schema):
 
-    # maybe we don't need this
     if "anyOf" in prop:
         prop["type"] = []
         for each_prop in prop["anyOf"]:
             prop["type"].append(parse_prop(each_prop, key, model_schema))
         prop.pop("anyOf")
+
     if "$ref" in prop:
         path = prop["$ref"][2:].split("/")
-        prop = reduce_method(path, model_schema)
+        ref_prop = reduce_method(path, model_schema)
+
+        if "properties" in ref_prop:
+            ref_prop["properties"] = {
+                sub_key: parse_prop(sub_prop, sub_key, model_schema)
+                for sub_key, sub_prop in ref_prop["properties"].items()
+            }
+        prop = ref_prop
 
     if key in model_schema.get("required", []):
         prop["required"] = True
