@@ -34,27 +34,33 @@ def convert_sql_table(req: ConvertTableRequest, router: DropbaseRouter):
         }
 
         resp = router.misc.get_smart_columns(get_smart_table_payload)
+
         if resp.status_code != 200:
             return resp
         smart_cols = resp.json().get("columns")
         # NOTE: columns type in smart_cols dict (from chatgpt) is called type
 
         # rename type to data_type
-        for column in smart_cols.values():
-            column["data_type"] = column.pop("type")
-            column["column_type"] = user_db.db_type
+        for col_dict in smart_cols:
+            for column in col_dict.values():
+                column["data_type"] = column.pop("type")
+                column["column_type"] = user_db.db_type
 
         # validate columns
         validated = user_db._validate_smart_cols(smart_cols, user_sql)
-        column_props = [value for name, value in smart_cols.items() if name in validated]
 
-        for column in column_props:
-            column["display_type"] = user_db._detect_col_display_type(column["data_type"].lower())
+        column_props_list = []
+        for col_dict in smart_cols:
+            column_props_list.append([value for name, value in col_dict.items() if name in validated])
+
+        for column_props in column_props_list:
+            for column in column_props:
+                column["display_type"] = user_db._detect_col_display_type(column["data_type"].lower())
 
         for table in properties["tables"]:
             if table["name"] == req.table.name:
                 table["smart"] = True
-                table["columns"] = column_props
+                table["columns"] = column_props_list
 
         # update properties
         update_properties(req.app_name, req.page_name, properties)
