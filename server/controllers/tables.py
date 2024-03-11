@@ -8,6 +8,15 @@ from server.controllers.utils import get_table_data_fetcher
 from server.requests.dropbase_router import DropbaseRouter
 
 
+def check_for_duplicate_columns(column_names):
+    unique_columns = set()
+    for name in column_names:
+        if name in unique_columns:
+            raise ValueError(f"Duplicate column name found: {name}")
+        else:
+            unique_columns.add(name)
+
+
 def convert_sql_table(req: ConvertTableRequest, router: DropbaseRouter):
     try:
         # get db schema
@@ -23,6 +32,8 @@ def convert_sql_table(req: ConvertTableRequest, router: DropbaseRouter):
         user_sql = get_sql_from_file(req.app_name, req.page_name, file.name)
         user_sql = render_sql(user_sql, req.state)
         column_names = user_db._get_column_names(user_sql)
+
+        check_for_duplicate_columns(column_names)
 
         # get columns from file
         get_smart_table_payload = {
