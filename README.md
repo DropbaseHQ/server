@@ -91,3 +91,11 @@ add break point
 ```
 import pdb; pdb.set_trace()
 ```
+
+## mysql
+
+start docker server
+
+```
+docker run -d --name mysql -p 3306:3306 -e MYSQL_ROOT_PASSWORD=dropbase -e MYSQL_DATABASE=dropbase mysql
+```

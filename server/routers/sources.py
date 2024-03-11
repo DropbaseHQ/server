@@ -12,4 +12,7 @@ router = APIRouter(
 @router.get("/")
 async def get_workspace_sources():
     sources = get_sources()
-    return {"sources": list(sources.keys())}
+
+    source_with_type = [{"name": key, "type": value["type"]} for key, value in sources.items()]
+
+    return {"sources": source_with_type}
