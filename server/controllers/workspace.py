@@ -300,7 +300,22 @@ class AppFolderController:
         }
 
         if router:
-            router.page.create_page(page_properties=create_page_payload)
+            create_page_response = router.page.create_page(
+                page_properties=create_page_payload
+            )
+
+            if create_page_response.status_code != 200:
+                app_properties = self._get_app_properties_data()
+                for page in app_properties["pages"]:
+                    if page["name"] == page_name:
+                        app_properties["pages"].remove(page)
+                        break
+
+                self._write_app_properties_data(app_properties)
+                shutil.rmtree(page_folder_path)
+                raise HTTPException(
+                    status_code=500, detail="Unable to create page folder"
+                )
 
         return {"message": "Page created"}
 
@@ -330,28 +345,44 @@ class AppFolderController:
         if not app_properties_data:
             return
 
-        if len(app_properties_data["pages"]) == 1:
-            raise HTTPException(
-                status_code=400,
-                detail="Cannot delete the only page in the app. Delete the app instead.",
-            )
+        with tempfile.NamedTemporaryFile() as temp_app_file:
+            app_properties_path = os.path.join(self.app_folder_path, "properties.json")
+            shutil.copy2(app_properties_path, temp_app_file.name)
 
-        # delete page folder
-        page_folder_path = os.path.join(self.app_folder_path, page_name)
-        shutil.rmtree(page_folder_path)
+            if len(app_properties_data["pages"]) == 1:
+                raise HTTPException(
+                    status_code=400,
+                    detail="Cannot delete the only page in the app. Delete the app instead.",
+                )
+            with tempfile.TemporaryDirectory() as backup_dir:
+                # delete page folder
+                page_folder_path = os.path.join(self.app_folder_path, page_name)
+                shutil.copytree(
+                    page_folder_path,
+                    backup_dir,
+                    dirs_exist_ok=True,
+                )
 
-        # delete page from properties.json
-        page_id = None
-        for page in app_properties_data["pages"]:
-            if page["name"] == page_name:
-                page_id = page.get("id", None)
-                app_properties_data["pages"].remove(page)
-                break
+                shutil.rmtree(page_folder_path)
 
-        self._write_app_properties_data(app_properties_data)
-        router.page.delete_page(page_id=page_id)
+                # delete page from properties.json
+                page_id = None
+                for page in app_properties_data["pages"]:
+                    if page["name"] == page_name:
+                        page_id = page.get("id", None)
+                        app_properties_data["pages"].remove(page)
+                        break
 
-        return {"message": "Page deleted"}
+                self._write_app_properties_data(app_properties_data)
+                response = router.page.delete_page(page_id=page_id)
+                if response.status_code != 200:
+                    shutil.copytree(backup_dir, page_folder_path)
+                    shutil.copy(temp_app_file.name, app_properties_path)
+                    raise HTTPException(
+                        status_code=500, detail="Unable to delete page folder"
+                    )
+
+                return {"message": "Page deleted"}
 
     def get_pages(self):
         if os.path.exists(os.path.join(self.app_folder_path, "properties.json")):
