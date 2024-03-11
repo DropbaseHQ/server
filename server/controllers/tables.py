@@ -51,16 +51,29 @@ def convert_sql_table(req: ConvertTableRequest, router: DropbaseRouter):
 
         column_props_list = []
         for col_dict in smart_cols:
-            column_props_list.append([value for name, value in col_dict.items() if name in validated])
+            filtered_dict = {name: value for name, value in col_dict.items() if name in validated}
+            column_props_list.append(filtered_dict)
 
-        for column_props in column_props_list:
-            for column in column_props:
-                column["display_type"] = user_db._detect_col_display_type(column["data_type"].lower())
+        for col_dict in column_props_list:
+            column_details = next(iter(col_dict.values()))
+            column_details["display_type"] = user_db._detect_col_display_type(
+                column_details["data_type"].lower()
+            )
 
         for table in properties["tables"]:
             if table["name"] == req.table.name:
                 table["smart"] = True
                 table["columns"] = column_props_list
+
+        for table in properties["tables"]:
+            new_columns = []
+            for col_dict in table["columns"]:
+                # Assuming each dictionary in the list has only one key, and its value is another dictionary
+                column_name, column_details = next(iter(col_dict.items()))
+                # Add the 'name' key to the details dictionary
+                column_details["name"] = column_name
+                new_columns.append(column_details)
+            table["columns"] = new_columns
 
         # update properties
         update_properties(req.app_name, req.page_name, properties)
