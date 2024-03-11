@@ -1,5 +1,4 @@
 import copy
-from unittest.mock import patch
 
 import pytest
 
@@ -112,8 +111,20 @@ def setup_tables(request, test_client):
     test_client.put("/page", json=table_data, headers=headers)
 
 
-@pytest.mark.parametrize("mock_db", ["postgres"], indirect=True)
-@pytest.mark.parametrize("setup_tables", ["SELECT * FROM orders", "SELECT * FROM users"], indirect=True)
+@pytest.mark.parametrize("mock_db", ["postgres", "snowflake", "sqlite"], indirect=True)
+@pytest.mark.parametrize(
+    "setup_tables",
+    [
+        "SELECT * FROM orders",
+        "SELECT * FROM orders order by order_id",
+        "SELECT order_id from orders INNER JOIN users ON orders.order_id=users.user_id",
+        "SELECT order_id from orders FULL OUTER JOIN users ON orders.order_id=users.user_id",
+        "SELECT order_id from orders LEFT OUTER JOIN users ON orders.order_id=users.user_id",
+        "SELECT order_id from orders RIGHT OUTER JOIN users ON orders.order_id=users.user_id",
+        "SELECT * FROM orders WHERE order_id = 1",  # "SELECT order_id AS id FROM orders" ADD THIS CASE
+    ],
+    indirect=True,
+)
 def test_convert_to_smart_table(test_client, mocker, mock_db, setup_tables):
     # Arrange
     smart_data = copy.deepcopy(base_smart_table_data)
@@ -125,7 +136,39 @@ def test_convert_to_smart_table(test_client, mocker, mock_db, setup_tables):
     res = test_client.post("/tables/convert", json=smart_data, headers=headers)
     res_data = res.json()
 
+    print(res_data)
+
     # Assertions
     assert res_data["state"]["tables"]["table2"]
     assert verify_property_exists("tables[0].smart", True)
-    # Assert properties to see if smart=True
+
+
+@pytest.mark.parametrize("mock_db", ["mysql"], indirect=True)
+@pytest.mark.parametrize(
+    "setup_tables",
+    [
+        "SELECT * FROM orders",
+        "SELECT * FROM orders order by order_id",
+        "SELECT order_id from orders INNER JOIN users ON orders.order_id=users.user_id",
+        "SELECT order_id from orders LEFT OUTER JOIN users ON orders.order_id=users.user_id",
+        "SELECT order_id from orders RIGHT OUTER JOIN users ON orders.order_id=users.user_id",
+        "SELECT * FROM orders WHERE order_id = 1",  # "SELECT order_id AS id FROM orders" ADD THIS CASE
+    ],
+    indirect=True,
+)
+def test_convert_to_smart_table_mysql(test_client, mocker, mock_db, setup_tables):
+    # Arrange
+    smart_data = copy.deepcopy(base_smart_table_data)
+
+    headers = {"access-token": "mock access token"}
+    mocker.patch("server.controllers.tables.connect", return_value=mock_db)
+
+    # Act
+    res = test_client.post("/tables/convert", json=smart_data, headers=headers)
+    res_data = res.json()
+
+    print(res_data)
+
+    # Assertions
+    assert res_data["state"]["tables"]["table2"]
+    assert verify_property_exists("tables[0].smart", True)
