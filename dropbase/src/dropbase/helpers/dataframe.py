@@ -33,7 +33,7 @@ def flatten_json(json_data):
 
 def get_column_types(df, column_type: str):
     columns = []
-    for col, dtype in df.dtypes.to_dict().items():
+    for col, dtype in df.dtypes.items():
         col_type = str(dtype).lower()
         columns.append(
             {
