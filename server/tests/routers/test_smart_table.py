@@ -136,8 +136,6 @@ def test_convert_to_smart_table(test_client, mocker, mock_db, setup_tables):
     res = test_client.post("/tables/convert", json=smart_data, headers=headers)
     res_data = res.json()
 
-    print(res_data)
-
     # Assertions
     assert res_data["state"]["tables"]["table2"]
     assert verify_property_exists("tables[0].smart", True)
@@ -166,8 +164,6 @@ def test_convert_to_smart_table_mysql(test_client, mocker, mock_db, setup_tables
     # Act
     res = test_client.post("/tables/convert", json=smart_data, headers=headers)
     res_data = res.json()
-
-    print(res_data)
 
     # Assertions
     assert res_data["state"]["tables"]["table2"]
