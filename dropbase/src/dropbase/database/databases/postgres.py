@@ -1,6 +1,7 @@
 from datetime import datetime, timezone
 from typing import List
 
+from sqlalchemy import Table
 from sqlalchemy.engine import URL
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.inspection import inspect
@@ -169,45 +170,19 @@ class PostgresDatabase(Database):
             col_names = list(conn.execute(text(user_sql)).keys())
         return col_names
 
-    def _validate_smart_cols(self, smart_cols: dict[str, dict], user_sql: str) -> list[str]:  # noqa
-        # Will delete any columns that are invalid from smart_cols
-        primary_keys = self._get_primary_keys(smart_cols)
+    def _validate_smart_cols(self, smart_cols: List[dict[str, dict]], user_sql: str) -> list[str]:
         validated = []
-        for col_name, col_data in smart_cols.items():
-            col_data = PgColumnDefinedProperty(**col_data)
-            pk_name = primary_keys.get(self._get_table_path(col_data))
-
-            if col_name == pk_name:
-                validated.append(col_name)
-                continue
-
-            if pk_name:
-                validation_sql = _get_fast_sql(
-                    user_sql,
-                    col_data.schema_name,
-                    col_data.table_name,
-                    col_data.column_name,
-                )
-            else:
-                validation_sql = _get_slow_sql(
-                    user_sql,
-                    col_name,
-                    col_data.schema_name,
-                    col_data.table_name,
-                    col_data.column_name,
-                )
-            try:
-                with self.engine.connect().execution_options(autocommit=True) as conn:
-                    # On SQL programming error, we know that the smart cols are invalid,
-                    # no need to catch them
-                    res = conn.execute(text(validation_sql)).all()
-                    if res:
+        try:
+            with self.engine.connect() as conn:
+                result = conn.execute(text(f"{user_sql} LIMIT 0"))
+                result_keys = result.keys()
+            for col_dict in smart_cols:
+                for col_name, col_data in col_dict.items():
+                    if col_data["column_name"] in result_keys:
                         validated.append(col_name)
-                if not res[0][0]:
-                    raise Exception("Invalid column")
-            except (SQLAlchemyError) as e:
-                raise Exception(e)
 
+        except SQLAlchemyError as e:
+            raise Exception(f"Error executing custom SQL query: {e}")
         return validated
 
     def _get_primary_keys(self, smart_cols: dict[str, dict]) -> dict[str, dict]:
@@ -309,13 +284,13 @@ class PostgresDatabase(Database):
         filter_sql += "\n"
 
         # apply sorts
-        if sorts:
-            filter_sql += "ORDER BY \n"
-            sort_list = []
-            for sort in sorts:
-                sort_list.append(f'user_query."{sort.column_name}" {sort.value}')
+        # if sorts:
+        #     filter_sql += "ORDER BY \n"
+        #     sort_list = []
+        #     for sort in sorts:
+        #         sort_list.append(f'user_query."{sort.column_name}" {sort.value}')
 
-            filter_sql += ", ".join(sort_list)
+        #     filter_sql += ", ".join(sort_list)
         filter_sql += "\n"
 
         if pagination:
