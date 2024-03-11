@@ -187,9 +187,9 @@ class PostgresDatabase(Database):
                     if res:
                         validated.append(col_name)
                 if not res[0][0]:
-                    raise "Invalid column"
-            except (SQLAlchemyError):
-                continue
+                    raise Exception("Invalid column")
+            except SQLAlchemyError as e:
+                raise Exception(f"Failed to convert table: {e}")
         return validated
 
     def _get_primary_keys(self, smart_cols: dict[str, dict]) -> dict[str, dict]:
@@ -347,7 +347,13 @@ def _get_slow_sql(
     # NOTE: limit user query to 500 rows to improve performance
     return f"""
     WITH uq as ({user_sql})
-    SELECT CASE WHEN count(t.{column_name}) = 0 THEN true ELSE false END
-    FROM {schema_name}.{table_name} t
-    WHERE t.{column_name} not in (select uq.{name} from uq LIMIT 500);
+    SELECT CASE
+        WHEN NOT EXISTS (
+            SELECT 1 FROM uq
+            WHERE uq.{column_name} NOT IN (
+                SELECT t.{column_name} FROM {schema_name}.{table_name} t
+            )
+        ) THEN true
+        ELSE false
+        END;
     """
