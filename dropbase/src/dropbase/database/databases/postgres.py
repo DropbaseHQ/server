@@ -57,8 +57,8 @@ class PostgresDatabase(Database):
     def insert(self, table: str, values: dict, auto_commit: bool = True):
         keys = list(values.keys())
         sql = f"""INSERT INTO {self.schema}.{table} ({', '.join(keys)})
-       VALUES (:{', :'.join(keys)})
-       RETURNING *;"""
+      VALUES (:{', :'.join(keys)})
+      RETURNING *;"""
         row = self.session.execute(text(sql), values)
         if auto_commit:
             self.commit()
@@ -157,11 +157,17 @@ class PostgresDatabase(Database):
 
     def _validate_smart_cols(self, smart_cols: dict[str, dict], user_sql: str) -> list[str]:  # noqa
         # Will delete any columns that are invalid from smart_cols
-        primary_keys = self._get_primary_keys(smart_cols)
+        primary_keys, alias_keys = self._get_primary_keys(smart_cols)
+
         validated = []
         for col_name, col_data in smart_cols.items():
             col_data = PgColumnDefinedProperty(**col_data)
+
             pk_name = primary_keys.get(self._get_table_path(col_data))
+
+            if pk_name in alias_keys:
+                uq_pk_name = alias_keys[pk_name]
+
             if pk_name:
                 validation_sql = _get_fast_sql(
                     user_sql,
@@ -170,6 +176,7 @@ class PostgresDatabase(Database):
                     col_data.table_name,
                     col_data.column_name,
                     pk_name,
+                    uq_pk_name,
                 )
             else:
                 validation_sql = _get_slow_sql(
@@ -192,13 +199,19 @@ class PostgresDatabase(Database):
                 raise Exception(f"Failed to convert table: {e}")
         return validated
 
-    def _get_primary_keys(self, smart_cols: dict[str, dict]) -> dict[str, dict]:
+    def _get_primary_keys(self, smart_cols: dict[str, dict]):  # -> dict[str, dict]
         primary_keys = {}
+        alias_keys = {}
         for col_data in smart_cols.values():
             col_data = PgColumnDefinedProperty(**col_data)
             if col_data.primary_key:
+                if col_data.name != col_data.column_name:
+                    alias_keys[col_data.column_name] = col_data.name
+                else:
+                    alias_keys[col_data.column_name] = col_data.name
                 primary_keys[self._get_table_path(col_data)] = col_data.column_name
-        return primary_keys
+
+        return primary_keys, alias_keys
 
     def _get_table_path(self, col_data: PgColumnDefinedProperty) -> str:
         return f"{col_data.schema_name}.{col_data.table_name}"
@@ -227,8 +240,8 @@ class PostgresDatabase(Database):
             prim_key_str = " AND ".join(prim_key_list)
 
             sql = f"""UPDATE "{column.schema_name}"."{column.table_name}"
-            SET {column.column_name} = :new_value
-            WHERE {prim_key_str}"""
+           SET {column.column_name} = :new_value
+           WHERE {prim_key_str}"""
 
             # TODO: add check for prev column value
             # AND {column.column_name} = :old_value
@@ -318,21 +331,23 @@ def _get_fast_sql(
     table_name: str,
     column_name: str,
     table_pk_name: str,
+    uq_pk_name: str,
 ) -> str:
+
     # Query that results in [(1,)] if valid, [(0,)] if false
     # NOTE: validate name of the column in user query (name) against column name in table (column_name)
     return f"""
-    WITH uq as ({user_sql})
-    SELECT min(
-        CASE WHEN
-            t.{column_name} = uq.{name} or
-            t.{column_name} is null and uq.{name} is null
-        THEN 1 ELSE 0 END
-    ) as equal
-    FROM {schema_name}.{table_name} t
-    INNER join uq on t.{table_pk_name} = uq.{table_pk_name}
-    LIMIT 500;
-    """
+   WITH uq as ({user_sql})
+   SELECT min(
+       CASE WHEN
+           t.{column_name} = uq.{name} or
+           t.{column_name} is null and uq.{name} is null
+       THEN 1 ELSE 0 END
+   ) as equal
+   FROM {schema_name}.{table_name} t
+   INNER join uq on t.{table_pk_name} = uq.{uq_pk_name}
+   LIMIT 500;
+   """
 
 
 def _get_slow_sql(
@@ -346,14 +361,14 @@ def _get_slow_sql(
     # NOTE: validate name of the column in user query (name) against column name in table (column_name)
     # NOTE: limit user query to 500 rows to improve performance
     return f"""
-    WITH uq as ({user_sql})
-    SELECT CASE
-        WHEN NOT EXISTS (
-            SELECT 1 FROM uq
-            WHERE uq.{column_name} NOT IN (
-                SELECT t.{column_name} FROM {schema_name}.{table_name} t
-            )
-        ) THEN true
-        ELSE false
-        END;
-    """
+   WITH uq as ({user_sql})
+   SELECT CASE
+       WHEN NOT EXISTS (
+           SELECT 1 FROM uq
+           WHERE uq.{column_name} NOT IN (
+               SELECT t.{column_name} FROM {schema_name}.{table_name} t
+           )
+       ) THEN true
+       ELSE false
+       END;
+   """
