@@ -117,11 +117,12 @@ def setup_tables(request, test_client):
     [
         "SELECT * FROM orders",
         "SELECT * FROM orders order by order_id",
-        "SELECT order_id from orders INNER JOIN users ON orders.order_id=users.user_id",
-        "SELECT order_id from orders FULL OUTER JOIN users ON orders.order_id=users.user_id",
-        "SELECT order_id from orders LEFT OUTER JOIN users ON orders.order_id=users.user_id",
-        "SELECT order_id from orders RIGHT OUTER JOIN users ON orders.order_id=users.user_id",
-        "SELECT * FROM orders WHERE order_id = 1",  # "SELECT order_id AS id FROM orders" ADD THIS CASE
+        "SELECT order_id FROM orders INNER JOIN users ON orders.order_id=users.user_id",
+        "SELECT order_id FROM orders FULL OUTER JOIN users ON orders.order_id=users.user_id",
+        "SELECT order_id FROM orders LEFT OUTER JOIN users ON orders.order_id=users.user_id",
+        "SELECT order_id FROM orders RIGHT OUTER JOIN users ON orders.order_id=users.user_id",
+        "SELECT * FROM orders WHERE order_id = 1",
+        "SELECT id AS employee_id, start_date AS join_date FROM employees",
     ],
     indirect=True,
 )
@@ -147,14 +148,63 @@ def test_convert_to_smart_table(test_client, mocker, mock_db, setup_tables):
     [
         "SELECT * FROM orders",
         "SELECT * FROM orders order by order_id",
-        "SELECT order_id from orders INNER JOIN users ON orders.order_id=users.user_id",
-        "SELECT order_id from orders LEFT OUTER JOIN users ON orders.order_id=users.user_id",
-        "SELECT order_id from orders RIGHT OUTER JOIN users ON orders.order_id=users.user_id",
-        "SELECT * FROM orders WHERE order_id = 1",  # "SELECT order_id AS id FROM orders" ADD THIS CASE
+        "SELECT order_id From orders INNER JOIN users ON orders.order_id=users.user_id",
+        "SELECT order_id From orders LEFT OUTER JOIN users ON orders.order_id=users.user_id",
+        "SELECT order_id From orders RIGHT OUTER JOIN users ON orders.order_id=users.user_id",
+        "SELECT * FROM orders WHERE order_id = 1",
+        "SELECT id AS employee_id, start_date AS join_date FROM employees",
     ],
     indirect=True,
 )
 def test_convert_to_smart_table_mysql(test_client, mocker, mock_db, setup_tables):
+    # Arrange
+    smart_data = copy.deepcopy(base_smart_table_data)
+
+    headers = {"access-token": "mock access token"}
+    mocker.patch("server.controllers.tables.connect", return_value=mock_db)
+
+    # Act
+    res = test_client.post("/tables/convert", json=smart_data, headers=headers)
+    res_data = res.json()
+
+    # Assertions
+    assert res_data["state"]["tables"]["table2"]
+    assert verify_property_exists("tables[0].smart", True)
+
+
+@pytest.mark.parametrize("mock_db", ["mysql"], indirect=True)
+@pytest.mark.parametrize(
+    "setup_tables",
+    [
+        "SELECT * From orders INNER JOIN users ON orders.order_id=users.user_id",
+    ],
+    indirect=True,
+)
+def test_convert_to_smart_table_duplicate_column_name_fail(test_client, mocker, mock_db, setup_tables):
+    # Arrange
+    smart_data = copy.deepcopy(base_smart_table_data)
+
+    headers = {"access-token": "mock access token"}
+    mocker.patch("server.controllers.tables.connect", return_value=mock_db)
+
+    # Act
+    res = test_client.post("/tables/convert", json=smart_data, headers=headers)
+    res_data = res.json()
+
+    print(res_data)
+
+    # Assertions
+    assert "Duplicate column name" in res_data
+    assert verify_property_exists("tables[0].smart", False)
+
+
+@pytest.mark.parametrize("mock_db", ["postgres", "mysql", "snowflake", "sqlite"], indirect=True)
+@pytest.mark.parametrize(
+    "setup_tables",
+    ["SELECT customer_id AS id FROM customers"],
+    indirect=True,
+)
+def test_super_duper_convert_to_smart_table(test_client, mocker, mock_db, setup_tables):
     # Arrange
     smart_data = copy.deepcopy(base_smart_table_data)
 
