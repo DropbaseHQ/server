@@ -145,6 +145,7 @@ class CheckUserPermissions:
             app_id=app_id, access_token=server_access_token
         )
         if response.status_code == 401:
+
             raise Exception(f"Details: {response.json()}")
 
         if response.status_code != 200:
