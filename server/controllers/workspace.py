@@ -2,6 +2,7 @@ import json
 import os
 import shutil
 import uuid
+import tempfile
 
 from fastapi import HTTPException
 
@@ -154,6 +155,14 @@ class AppFolderController:
         self._write_workspace_properties(workspace_properties)
         return app_object
 
+    def _remove_app_from_workspace_properties(self, app_name: str):
+        workspace_properties = self._get_workspace_properties()
+        for app in workspace_properties["apps"]:
+            if app["name"] == app_name:
+                workspace_properties["apps"].remove(app)
+                break
+        self._write_workspace_properties(workspace_properties)
+
     def _create_default_workspace_files(
         self, router: DropbaseRouter, app_label: str = None
     ) -> str | None:
@@ -173,12 +182,19 @@ class AppFolderController:
                 file_name="properties.json",
             )
             if router:
-                router.app.create_app(app_properties={**app_object})
+                response = router.app.create_app(app_properties={**app_object})
+
+            if response.status_code != 200:
+                shutil.rmtree(self.app_folder_path)
+                self._remove_app_from_workspace_properties(self.app_name)
+                raise HTTPException(
+                    status_code=500, detail="Unable to create app folder"
+                )
 
             # Create new page folder with __init__.py
             self.create_page(router=router)
 
-        except Exception as e:
+        except Exception:
             raise HTTPException(status_code=500, detail="Unable to create app folder")
 
     def _get_app_properties(self):
@@ -284,7 +300,22 @@ class AppFolderController:
         }
 
         if router:
-            router.page.create_page(page_properties=create_page_payload)
+            create_page_response = router.page.create_page(
+                page_properties=create_page_payload
+            )
+
+            if create_page_response.status_code != 200:
+                app_properties = self._get_app_properties_data()
+                for page in app_properties["pages"]:
+                    if page["name"] == page_name:
+                        app_properties["pages"].remove(page)
+                        break
+
+                self._write_app_properties_data(app_properties)
+                shutil.rmtree(page_folder_path)
+                raise HTTPException(
+                    status_code=500, detail="Unable to create page folder"
+                )
 
         return {"message": "Page created"}
 
@@ -314,28 +345,44 @@ class AppFolderController:
         if not app_properties_data:
             return
 
-        if len(app_properties_data["pages"]) == 1:
-            raise HTTPException(
-                status_code=400,
-                detail="Cannot delete the only page in the app. Delete the app instead.",
-            )
+        with tempfile.NamedTemporaryFile() as temp_app_file:
+            app_properties_path = os.path.join(self.app_folder_path, "properties.json")
+            shutil.copy2(app_properties_path, temp_app_file.name)
 
-        # delete page folder
-        page_folder_path = os.path.join(self.app_folder_path, page_name)
-        shutil.rmtree(page_folder_path)
+            if len(app_properties_data["pages"]) == 1:
+                raise HTTPException(
+                    status_code=400,
+                    detail="Cannot delete the only page in the app. Delete the app instead.",
+                )
+            with tempfile.TemporaryDirectory() as backup_dir:
+                # delete page folder
+                page_folder_path = os.path.join(self.app_folder_path, page_name)
+                shutil.copytree(
+                    page_folder_path,
+                    backup_dir,
+                    dirs_exist_ok=True,
+                )
 
-        # delete page from properties.json
-        page_id = None
-        for page in app_properties_data["pages"]:
-            if page["name"] == page_name:
-                page_id = page.get("id", None)
-                app_properties_data["pages"].remove(page)
-                break
+                shutil.rmtree(page_folder_path)
 
-        self._write_app_properties_data(app_properties_data)
-        router.page.delete_page(page_id=page_id)
+                # delete page from properties.json
+                page_id = None
+                for page in app_properties_data["pages"]:
+                    if page["name"] == page_name:
+                        page_id = page.get("id", None)
+                        app_properties_data["pages"].remove(page)
+                        break
 
-        return {"message": "Page deleted"}
+                self._write_app_properties_data(app_properties_data)
+                response = router.page.delete_page(page_id=page_id)
+                if response.status_code != 200:
+                    shutil.copytree(backup_dir, page_folder_path)
+                    shutil.copy(temp_app_file.name, app_properties_path)
+                    raise HTTPException(
+                        status_code=500, detail="Unable to delete page folder"
+                    )
+
+                return {"message": "Page deleted"}
 
     def get_pages(self):
         if os.path.exists(os.path.join(self.app_folder_path, "properties.json")):
@@ -373,25 +420,46 @@ class AppFolderController:
 
     def delete_app(self, app_name: str, router: DropbaseRouter):
         app_path = os.path.join(self.r_path_to_workspace, app_name)
-        if os.path.exists(app_path):
-            shutil.rmtree(app_path)
 
-            workspace_properties = self._get_workspace_properties()
-            if not workspace_properties:
+        with tempfile.NamedTemporaryFile() as temp_workspace_file:
+            workspace_properties_path = os.path.join(
+                self.r_path_to_workspace, "properties.json"
+            )
+            if not os.path.exists(workspace_properties_path):
                 return
 
-            app_id = None
-            for app in workspace_properties["apps"]:
-                if app["name"] == app_name:
-                    app_id = app.get("id", None)
-                    workspace_properties["apps"].remove(app)
-                    break
+            shutil.copy2(workspace_properties_path, temp_workspace_file.name)
 
-            self._write_workspace_properties(workspace_properties)
-            router.app.delete_app(app_id=app_id)
-            return {"message": "App deleted"}
-        else:
-            raise HTTPException(status_code=400, detail="App does not exist")
+            with tempfile.TemporaryDirectory() as backup_dir:
+                if os.path.exists(app_path):
+                    shutil.copytree(app_path, backup_dir, dirs_exist_ok=True)
+                    workspace_properties = self._get_workspace_properties()
+                    if not workspace_properties:
+                        return
+
+                    app_id = None
+                    for app in workspace_properties["apps"]:
+                        if app["name"] == app_name:
+                            app_id = app.get("id", None)
+                            workspace_properties["apps"].remove(app)
+                            break
+
+                    self._write_workspace_properties(workspace_properties)
+                    delete_response = router.app.delete_app(app_id=app_id)
+                    if delete_response.status_code != 200:
+                        shutil.rmtree(app_path)
+                        shutil.copytree(backup_dir, app_path)
+                        shutil.copy(temp_workspace_file.name, workspace_properties_path)
+
+                        raise HTTPException(
+                            status_code=500, detail="Unable to delete app folder"
+                        )
+
+                    shutil.rmtree(app_path)
+
+                    return {"message": "App deleted"}
+                else:
+                    raise HTTPException(status_code=400, detail="App does not exist")
 
 
 INIT_CODE = """
