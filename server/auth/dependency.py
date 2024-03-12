@@ -151,10 +151,6 @@ class CheckUserPermissions:
             app_id=app_id, access_token=server_access_token
         )
         if response.status_code == 401:
-            dropbase_token = router.session.headers.get("dropbase-token")
-            logger.warning(f"Dropbase Token: {dropbase_token}")
-            headers = response.request.headers
-            logger.warning(f"Request headers: {headers}")
 
             raise HTTPException(
                 status_code=401,
