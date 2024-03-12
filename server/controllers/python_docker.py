@@ -21,9 +21,11 @@ def run_container(env_vars: dict, docker_script: str = "inside_docker"):
     # get absolute path of the workspace directory from the environment variable
     host_path = os.getenv("HOST_WORKSPACE_PATH")
     workspace_mount = docker.types.Mount(
-        target="/app/workspace", source=host_path + "/workspace", type="bind"
+        target="/app/workspace", source=host_path + "/dropbase-dev/workspace", type="bind"
     )  # noqa
-    files_mount = docker.types.Mount(target="/app/files", source=host_path + "/files", type="bind")
+    files_mount = docker.types.Mount(
+        target="/app/files", source=host_path + "/dropbase-dev/files", type="bind"
+    )
     mounts = [workspace_mount, files_mount]
 
     # add additional mounts from the environment variable
@@ -31,11 +33,12 @@ def run_container(env_vars: dict, docker_script: str = "inside_docker"):
         try:
             host_mounts = json.loads(os.getenv("HOST_MOUNTS")) or []
             for mount in host_mounts:
-                mounts.append(
-                    docker.types.Mount(
-                        target=f"/app/{mount}", source=f"{host_path}/{mount}", type="bind"
-                    )
-                )
+                # NOTE: we need to get the last part of the path to use as the target since all
+                # directories are mounted to /app
+                dir_name = mount.split("/")[-1]
+                target = f"/app/{dir_name}"
+                source = f"{host_path}/{mount}"
+                mounts.append(docker.types.Mount(target=target, source=source, type="bind"))
         except Exception as e:
             logger.warning(f"Error parsing HOST_MOUNTS: {e}")
             mounts = [workspace_mount, files_mount]
