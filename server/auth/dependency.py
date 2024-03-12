@@ -9,7 +9,11 @@ from pydantic import BaseModel
 
 from server.auth.permissions_registry import permissions_registry
 from server.controllers.workspace import WorkspaceFolderController
-from server.requests.dropbase_router import DropbaseRouter, get_dropbase_router, get_server_access_header
+from server.requests.dropbase_router import (
+    DropbaseRouter,
+    get_dropbase_router,
+    get_server_access_header,
+)
 
 cwd = os.getcwd()
 logger = logging.getLogger(__name__)
@@ -29,12 +33,16 @@ def get_config():
     return Settings()
 
 
-def verify_server_access_token(access_token, Authorize: AuthJWT, router: DropbaseRouter):
+def verify_server_access_token(
+    access_token, Authorize: AuthJWT, router: DropbaseRouter
+):
     logger.info("VERIFYING SERVER TOKEN")
     verify_response = router.auth.verify_identity_token(access_token)
     if verify_response.status_code != 200:
         raise HTTPException(status_code=401, detail="Invalid access token")
-    worker_sl_token = Authorize.create_access_token(subject=verify_response.json().get("user_id"))
+    worker_sl_token = Authorize.create_access_token(
+        subject=verify_response.json().get("user_id")
+    )
     max_age = 60 * 5
     raise HTTPException(
         status_code=401,
@@ -45,7 +53,9 @@ def verify_server_access_token(access_token, Authorize: AuthJWT, router: Dropbas
     )
 
 
-def verify_worker_access_token(request: Request, Authorize: AuthJWT, router: DropbaseRouter):
+def verify_worker_access_token(
+    request: Request, Authorize: AuthJWT, router: DropbaseRouter
+):
     access_token = get_server_access_header(request)
 
     if not request.cookies.get("worker_sl_token"):
@@ -70,7 +80,10 @@ def verify_worker_access_token(request: Request, Authorize: AuthJWT, router: Dro
                 )
             return worker_subject
         except exceptions.JWTDecodeError:
-            raise Exception("Worker token was found, but not able to be validated")
+            raise HTTPException(
+                status_code=401,
+                detail="Worker token was found, but not able to be validated",
+            )
 
 
 def get_resource_id_from_req_body(resource_id_accessor: str, request: Request):
@@ -93,26 +106,33 @@ class CheckUserPermissions:
         if app_name is None:
             app_name = get_resource_id_from_req_body("app_name", request)
         if app_name is None:
-            raise Exception("No app name provided")
+            raise HTTPException(status_code=400, detail="No app name provided")
 
         workspace_folder_controller = WorkspaceFolderController(
             r_path_to_workspace=os.path.join(cwd, "workspace")
         )
         app_id = workspace_folder_controller.get_app_id(app_name=app_name)
         if app_id is None:
-            raise Exception(f"App {app_name} either does not exist or has no id.")
+            raise HTTPException(
+                status_code=400,
+                detail=(f"App {app_name} either does not exist or has no id."),
+            )
         return app_id
 
-    def _get_resource_permissions(self, request: Request, user_id: str, workspace_id: str):
+    def _get_resource_permissions(
+        self, request: Request, user_id: str, workspace_id: str
+    ):
         if self.resource == self.WORKSPACE:
             return permissions_registry.get_user_workspace_permissions(
                 user_id=user_id, workspace_id=workspace_id
             )
         elif self.resource == self.APP:
             app_id = self._get_app_id(request)
-            return permissions_registry.get_user_app_permissions(user_id=user_id, app_id=app_id)
+            return permissions_registry.get_user_app_permissions(
+                user_id=user_id, app_id=app_id
+            )
         else:
-            raise Exception("No resource provided")
+            raise HTTPException(status_code=400, detail="No resource provided")
 
     def _load_fresh_permissions(
         self,
@@ -127,21 +147,31 @@ class CheckUserPermissions:
         if app_id:
             payload["app_id"] = app_id
 
-        response = router.auth.check_permissions(app_id=app_id, access_token=server_access_token)
+        response = router.auth.check_permissions(
+            app_id=app_id, access_token=server_access_token
+        )
         if response.status_code == 401:
             dropbase_token = router.session.headers.get("dropbase-token")
             logger.warning(f"Dropbase Token: {dropbase_token}")
             headers = response.request.headers
             logger.warning(f"Request headers: {headers}")
 
-            raise Exception(f"Details: {response.json()}")
+            raise HTTPException(
+                status_code=401,
+                detail="Invalid access token",
+            )
 
         if response.status_code != 200:
-            logger.warning("Dropbase Token: ", router.session.headers.get("dropbase-token"))
+            logger.warning(
+                "Dropbase Token: ", router.session.headers.get("dropbase-token")
+            )
             headers = response.request.headers
             logger.warning(f"Request headers: {headers}")
 
-            raise Exception("Unable to fetch permissions from Dropbase API")
+            raise HTTPException(
+                status_code=500,
+                detail="Could not fetch permissions from Dropbase API",
+            )
 
         workspace_permissions = response.json().get("workspace_permissions")
         app_permissions = response.json().get("app_permissions")
@@ -175,15 +205,17 @@ class CheckUserPermissions:
         Authorize: AuthJWT = Depends(),
         router: DropbaseRouter = Depends(get_dropbase_router),
     ):
-        verify_response = verify_worker_access_token(request=request, Authorize=Authorize, router=router)
+        verify_response = verify_worker_access_token(
+            request=request, Authorize=Authorize, router=router
+        )
         if verify_response:
             user_id = verify_response
         if user_id is None:
-            raise Exception("No user id provided")
+            raise HTTPException(status_code=401, detail="No user id provided")
 
         workspace_id = request.headers.get("workspace-id")
         if not workspace_id:
-            raise Exception("No workspace id provided")
+            raise HTTPException(status_code=400, detail="No workspace id provided")
 
         if self.resource is None:
             logger.warning("No resource provided. Workspace assumed.")
@@ -206,7 +238,9 @@ class CheckUserPermissions:
             request=request, user_id=user_id, workspace_id=workspace_id
         )
 
-        if self.action not in final_user_permissions or not final_user_permissions.get(self.action):
+        if self.action not in final_user_permissions or not final_user_permissions.get(
+            self.action
+        ):
             raise HTTPException(
                 status_code=403,
                 detail="You do not have permission to perform this action",
