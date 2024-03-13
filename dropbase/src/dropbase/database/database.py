@@ -110,7 +110,15 @@ class Database(ABC):
     def _detect_col_display_type(self, col_type: str):
         if "float" in col_type:
             return "float"
-        elif col_type in ["real", "double", "double precision", "decimal", "numeric"]:
+        elif "real" in col_type:
+            return "float"
+        elif "double" in col_type:
+            return "float"
+        elif "double precision" in col_type:
+            return "float"
+        elif "decimal" in col_type:
+            return "float"
+        elif "numeric" in col_type:
             return "float"
         elif "int" in col_type:
             return "integer"
