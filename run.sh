@@ -4,6 +4,7 @@ if [[ $1 == 's' ]]; then
     docker image rm dropbase/worker
     docker network create dropbase_default
     docker build -t dropbase/worker -f Dockerfile-worker .
+    # docker build -t dropbase/worker -f Dockerfile-worker-mysql .
     pip install -U -e dropbase/.
     uvicorn server.main:app --reload --reload-dir server/ --host 0.0.0.0 --port 9090
 elif [[ $1 == 'l' ]]; then
