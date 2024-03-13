@@ -157,6 +157,7 @@ class PostgresDatabase(Database):
 
     def _validate_smart_cols(self, smart_cols: dict[str, dict], user_sql: str) -> list[str]:  # noqa
         # Will delete any columns that are invalid from smart_cols
+        user_sql = user_sql.strip("\n ;")
         primary_keys, alias_keys = self._get_primary_keys(smart_cols)
 
         validated = []

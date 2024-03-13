@@ -116,6 +116,7 @@ def setup_tables(request, test_client):
     "setup_tables",
     [
         "SELECT * FROM orders",
+        "SELECT * FROM orders;",
         "SELECT * FROM orders order by order_id",
         "SELECT order_id FROM orders INNER JOIN users ON orders.order_id=users.user_id",
         "SELECT order_id FROM orders FULL OUTER JOIN users ON orders.order_id=users.user_id",
@@ -148,6 +149,7 @@ def test_convert_to_smart_table(test_client, mocker, mock_db, setup_tables):
     "setup_tables",
     [
         "SELECT * FROM orders",
+        "SELECT * FROM orders;",
         "SELECT * FROM orders order by order_id",
         "SELECT order_id From orders INNER JOIN users ON orders.order_id=users.user_id",
         "SELECT order_id From orders LEFT OUTER JOIN users ON orders.order_id=users.user_id",
@@ -226,7 +228,7 @@ def test_convert_to_smart_table_banned_keyword_groupby_fail(test_client, mocker,
 @pytest.mark.parametrize(
     "setup_tables",
     [
-        "WITH simple_table AS (select order_id, product_name FROM orders) SELECT * FROM simple_table;",
+        "WITH simple_table AS (select order_id, product_name FROM orders) SELECT * FROM simple_table",
     ],
     indirect=True,
 )
