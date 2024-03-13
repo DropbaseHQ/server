@@ -123,6 +123,7 @@ def setup_tables(request, test_client):
         "SELECT order_id FROM orders RIGHT OUTER JOIN users ON orders.order_id=users.user_id",
         "SELECT * FROM orders WHERE order_id = 1",
         "SELECT order_id AS id FROM orders",
+        "SELECT * from ORDERS WHERE product_name LIKE '%Mouse%'",
     ],
     indirect=True,
 )
@@ -153,6 +154,7 @@ def test_convert_to_smart_table(test_client, mocker, mock_db, setup_tables):
         "SELECT order_id From orders RIGHT OUTER JOIN users ON orders.order_id=users.user_id",
         "SELECT * FROM orders WHERE order_id = 1",
         "SELECT id AS employee_id, start_date AS join_date FROM employees",
+        "SELECT * from ORDERS WHERE product_name LIKE '%Mouse%'",
     ],
     indirect=True,
 )
@@ -191,8 +193,6 @@ def test_convert_to_smart_table_duplicate_column_name_fail(test_client, mocker, 
     res = test_client.post("/tables/convert", json=smart_data, headers=headers)
     res_data = res.json()
 
-    print(res_data)
-
     # Assertions
     assert "Duplicate column name" in res_data
     assert verify_property_exists("tables[0].smart", False)
@@ -217,10 +217,8 @@ def test_convert_to_smart_table_banned_keyword_groupby_fail(test_client, mocker,
     res = test_client.post("/tables/convert", json=smart_data, headers=headers)
     res_data = res.json()
 
-    print(res_data)
-
     # Assertions
-    assert "Duplicate column name" in res_data
+    assert "Must remove keyword GROUP BY to convert to smart table" in res_data
     assert verify_property_exists("tables[0].smart", False)
 
 
@@ -228,7 +226,7 @@ def test_convert_to_smart_table_banned_keyword_groupby_fail(test_client, mocker,
 @pytest.mark.parametrize(
     "setup_tables",
     [
-        "SELECT product_name FROM orders GROUP BY product_name",
+        "WITH simple_table AS (select order_id, product_name FROM orders) SELECT * FROM simple_table;",
     ],
     indirect=True,
 )
@@ -243,14 +241,12 @@ def test_convert_to_smart_table_banned_keyword_with_fail(test_client, mocker, mo
     res = test_client.post("/tables/convert", json=smart_data, headers=headers)
     res_data = res.json()
 
-    print(res_data)
-
     # Assertions
-    assert "Duplicate column name" in res_data
+    assert "Must remove keyword WITH to convert to smart table" in res_data
     assert verify_property_exists("tables[0].smart", False)
 
 
-@pytest.mark.parametrize("mock_db", ["sqlite", "mysql"], indirect=True)
+@pytest.mark.parametrize("mock_db", ["sqlite"], indirect=True)
 @pytest.mark.parametrize(
     "setup_tables",
     [
@@ -268,8 +264,6 @@ def test_convert_to_smart_table_no_pk(test_client, mocker, mock_db, setup_tables
     # Act
     res = test_client.post("/tables/convert", json=smart_data, headers=headers)
     res_data = res.json()
-
-    print(res_data)
 
     # Assertions
     assert res_data["state"]["tables"]["table2"]

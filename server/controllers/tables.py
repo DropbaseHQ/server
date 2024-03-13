@@ -20,15 +20,15 @@ def check_for_duplicate_columns(column_names):
 
 
 def check_banned_keywords(user_sql: str) -> bool:
-    normalized_sql = re.sub(r"\'(\\\'|[^'])*\'", "", user_sql)
-
-    print(normalized_sql)
+    normalized_sql = re.sub(r"\s+", " ", user_sql.upper())
 
     # Check for the presence of 'GROUP BY' or standalone 'WITH' (for CTEs)
-    if "GROUP BY" in normalized_sql.upper():
+    if "GROUP BY" in user_sql.upper():
         raise Exception("Must remove keyword GROUP BY to convert to smart table")
-    if re.search(r"\bWITH\b", normalized_sql.upper()):
-        return Exception("Must remove keyword WITH to convert to smart table")
+    if re.search(r"\bWITH\b", normalized_sql):
+        # Further refinement to exclude false positives, such as 'WITH' within strings
+        if not re.search(r"'[^']*WITH[^']*'", normalized_sql):
+            raise Exception("Must remove keyword WITH to convert to smart table")
 
 
 def convert_sql_table(req: ConvertTableRequest, router: DropbaseRouter):
@@ -45,9 +45,7 @@ def convert_sql_table(req: ConvertTableRequest, router: DropbaseRouter):
         # get columns
         user_sql = get_sql_from_file(req.app_name, req.page_name, file.name)
         user_sql = render_sql(user_sql, req.state)
-
         check_banned_keywords(user_sql)
-
         column_names = user_db._get_column_names(user_sql)
 
         check_for_duplicate_columns(column_names)
@@ -62,8 +60,6 @@ def convert_sql_table(req: ConvertTableRequest, router: DropbaseRouter):
         }
 
         resp = router.misc.get_smart_columns(get_smart_table_payload)
-        print("resp")
-        print(resp.json())
         if resp.status_code != 200:
             return resp
         smart_cols = resp.json().get("columns")
