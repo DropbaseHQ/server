@@ -1,3 +1,4 @@
+import datetime
 from typing import List
 
 from sqlalchemy.engine import URL, reflection
@@ -207,10 +208,13 @@ class MySqlDatabase(Database):
             columns_dict = {col.column_name: col for col in edit.columns}
             column = columns_dict[columns_name]
 
-            values = {
-                "new_value": edit.new_value,
-                "old_value": edit.old_value,
-            }
+            new_value = edit.new_value
+            if "date" in edit.data_type.lower() and isinstance(new_value, int):
+                # convert miliseconds to seconds
+                new_value = new_value / 1000 if new_value > 10**10 else new_value
+                new_value = datetime.datetime.utcfromtimestamp(new_value).strftime("%Y-%m-%d %H:%M:%S")
+
+            values = {"new_value": new_value}
             prim_key_list = []
             edit_keys = column.edit_keys
             for key in edit_keys:
@@ -222,9 +226,6 @@ class MySqlDatabase(Database):
             sql = f"""UPDATE `{column.table_name}`
             SET {column.column_name} = :new_value
             WHERE {prim_key_str}"""
-
-            # TODO: add check for prev column value
-            # AND {column.column_name} = :old_value
 
             with self.engine.connect() as conn:
                 result = conn.execute(text(sql), values)
