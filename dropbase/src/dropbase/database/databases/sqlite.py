@@ -1,3 +1,4 @@
+import re
 from typing import List
 
 from sqlalchemy.engine import reflection
@@ -149,10 +150,14 @@ class SqliteDatabase(Database):
         if user_sql == "":
             return []
         user_sql = user_sql.strip("\n ;")
+
         user_sql = f"SELECT * FROM ({user_sql}) AS q LIMIT 1"
         with self.engine.connect().execution_options(autocommit=True) as conn:
             col_names = list(conn.execute(text(user_sql)).keys())
-        return col_names
+            cleaned_col_names = _remove_numerical_suffixes(
+                col_names
+            )  # SQLITE automatically appends suffixes :1, :2 to manage duplicate column names, which will interfere with detecting duplicates
+        return cleaned_col_names
 
     def _validate_smart_cols(self, smart_cols: dict[str, dict], user_sql: str) -> list[str]:  # noqa
         # Will delete any columns that are invalid from smart_cols
@@ -365,3 +370,8 @@ def _get_slow_sql(
        ELSE false
        END;
    """
+
+
+def _remove_numerical_suffixes(col_names):
+    cleaned_col_names = [re.sub(r":\d+$", "", col_name) for col_name in col_names]
+    return cleaned_col_names
