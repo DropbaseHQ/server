@@ -157,14 +157,17 @@ class MySqlDatabase(Database):
     def _validate_smart_cols(self, smart_cols: dict[str, dict], user_sql: str) -> list[str]:  # noqa
         # Will delete any columns that are invalid from smart_cols
         primary_keys = self._get_primary_keys(smart_cols)
+
         validated = []
         for col_name, col_data in smart_cols.items():
             col_data = MySqlColumnDefinedProperty(**col_data)
             pk_name = primary_keys.get(self._get_table_path(col_data))
+
             if pk_name:
                 validation_sql = _get_fast_sql(
                     user_sql,
                     col_name,
+                    col_data.data_name,
                     col_data.table_name,
                     col_data.column_name,
                     pk_name,
@@ -184,7 +187,9 @@ class MySqlDatabase(Database):
                     if res:
                         validated.append(col_name)
                 if not res[0][0]:
-                    raise "Invalid column"
+                    if res[0][0] is None:
+                        raise Exception("Can not convert empty table into smart table")
+                    raise Exception("Invalid column")
             except (SQLAlchemyError):
                 continue
         return validated
@@ -338,8 +343,14 @@ def _get_slow_sql(
     # NOTE: validate name of the column in user query (name) against column name in table (column_name)
     # NOTE: limit user query to 500 rows to improve performance
     return f"""
-    WITH uq as ({user_sql})
-    SELECT CASE WHEN count(t.{column_name}) = 0 THEN true ELSE false END
-    FROM {table_name} t
-    WHERE t.{column_name} not in (select uq.{name} from uq LIMIT 500);
-    """
+   WITH uq as ({user_sql})
+   SELECT CASE
+       WHEN NOT EXISTS (
+           SELECT 1 FROM uq
+           WHERE uq.{column_name} NOT IN (
+               SELECT t.{column_name} FROM {table_name} t
+           )
+       ) THEN true
+       ELSE false
+       END;
+   """

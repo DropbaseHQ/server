@@ -246,12 +246,10 @@ def test_convert_to_smart_table_banned_keyword_with_fail(test_client, mocker, mo
     assert verify_property_exists("tables[0].smart", False)
 
 
-@pytest.mark.parametrize("mock_db", ["sqlite"], indirect=True)
+@pytest.mark.parametrize("mock_db", ["postgres", "mysql", "snowflake", "sqlite"], indirect=True)
 @pytest.mark.parametrize(
     "setup_tables",
-    [
-        "SELECT * FROM NoPrimaryKey",
-    ],
+    ["SELECT * FROM NoPrimaryKey", "SELECT * FROM NoPrimaryKey WHERE quantity > 1"],
     indirect=True,
 )
 def test_convert_to_smart_table_no_pk(test_client, mocker, mock_db, setup_tables):
@@ -268,3 +266,28 @@ def test_convert_to_smart_table_no_pk(test_client, mocker, mock_db, setup_tables
     # Assertions
     assert res_data["state"]["tables"]["table2"]
     assert verify_property_exists("tables[0].smart", True)
+    assert verify_property_exists("tables[0].columns[1].editable", False)
+
+
+@pytest.mark.parametrize("mock_db", ["postgres", "mysql", "snowflake", "sqlite"], indirect=True)
+@pytest.mark.parametrize(
+    "setup_tables",
+    [
+        "SELECT * FROM orders WHERE product_name LIKE '%with%'",
+    ],
+    indirect=True,
+)
+def test_convert_to_smart_table_empty_table_fail(test_client, mocker, mock_db, setup_tables):
+    # Arrange
+    smart_data = copy.deepcopy(base_smart_table_data)
+
+    headers = {"access-token": "mock access token"}
+    mocker.patch("server.controllers.tables.connect", return_value=mock_db)
+
+    # Act
+    res = test_client.post("/tables/convert", json=smart_data, headers=headers)
+    res_data = res.json()
+
+    # Assertions
+    assert "Can not convert empty table into smart table" in res_data
+    assert verify_property_exists("tables[0].smart", False)

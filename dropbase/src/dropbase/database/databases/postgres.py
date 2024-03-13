@@ -194,6 +194,10 @@ class PostgresDatabase(Database):
                     if res:
                         validated.append(col_name)
                 if not res[0][0]:
+                    if (
+                        res[0][0] is None
+                    ):  # If not empty but invalid [(0,)] will appear rather than  [(None,)]
+                        raise Exception("Can not convert empty table into smart table")
                     raise Exception("Invalid column")
             except SQLAlchemyError as e:
                 raise Exception(f"Failed to convert table: {e}")
