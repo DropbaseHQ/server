@@ -157,11 +157,17 @@ class SqliteDatabase(Database):
     def _validate_smart_cols(self, smart_cols: dict[str, dict], user_sql: str) -> list[str]:  # noqa
         # Will delete any columns that are invalid from smart_cols
         user_sql = user_sql.strip("\n ;")
-        primary_keys = self._get_primary_keys(smart_cols)
+        primary_keys, alias_keys = self._get_primary_keys(smart_cols)
+
         validated = []
         for col_name, col_data in smart_cols.items():
             col_data = SqliteColumnDefinedProperty(**col_data)
+
             pk_name = primary_keys.get(self._get_table_path(col_data))
+
+            if pk_name in alias_keys:
+                uq_pk_name = alias_keys[pk_name]
+
             if pk_name:
                 validation_sql = _get_fast_sql(
                     user_sql,
@@ -169,6 +175,7 @@ class SqliteDatabase(Database):
                     col_data.table_name,
                     col_data.column_name,
                     pk_name,
+                    uq_pk_name,
                 )
             else:
                 validation_sql = _get_slow_sql(
@@ -194,11 +201,16 @@ class SqliteDatabase(Database):
 
     def _get_primary_keys(self, smart_cols: dict[str, dict]) -> dict[str, dict]:
         primary_keys = {}
+        alias_keys = {}
         for col_data in smart_cols.values():
             col_data = SqliteColumnDefinedProperty(**col_data)
             if col_data.primary_key:
+                if col_data.name != col_data.column_name:
+                    alias_keys[col_data.column_name] = col_data.name
+                else:
+                    alias_keys[col_data.column_name] = col_data.name
                 primary_keys[self._get_table_path(col_data)] = col_data.column_name
-        return primary_keys
+        return primary_keys, alias_keys
 
     def _get_table_path(self, col_data: SqliteColumnDefinedProperty) -> str:
         return f"{col_data.table_name}"
@@ -314,6 +326,7 @@ def _get_fast_sql(
     table_name: str,
     column_name: str,
     table_pk_name: str,
+    uq_pk_name: str,
 ) -> str:
     # Query that results in [(1,)] if valid, [(0,)] if false
     # NOTE: validate name of the column in user query (name) against column name in table (column_name)
@@ -326,7 +339,7 @@ def _get_fast_sql(
         THEN 1 ELSE 0 END
     ) as equal
     FROM {table_name} t
-    INNER join uq on t.{table_pk_name} = uq.{table_pk_name}
+    INNER join uq on t.{table_pk_name} = uq.{uq_pk_name}
     LIMIT 500;
     """
 

@@ -215,7 +215,6 @@ class PostgresDatabase(Database):
                 else:
                     alias_keys[col_data.column_name] = col_data.name
                 primary_keys[self._get_table_path(col_data)] = col_data.column_name
-
         return primary_keys, alias_keys
 
     def _get_table_path(self, col_data: PgColumnDefinedProperty) -> str:

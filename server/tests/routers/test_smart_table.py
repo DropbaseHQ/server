@@ -155,7 +155,7 @@ def test_convert_to_smart_table(test_client, mocker, mock_db, setup_tables):
         "SELECT order_id From orders LEFT OUTER JOIN users ON orders.order_id=users.user_id",
         "SELECT order_id From orders RIGHT OUTER JOIN users ON orders.order_id=users.user_id",
         "SELECT * FROM orders WHERE order_id = 1",
-        "SELECT id AS employee_id, start_date AS join_date FROM employees",
+        "SELECT order_id AS id FROM orders",
         "SELECT * from ORDERS WHERE product_name LIKE '%Mouse%'",
     ],
     indirect=True,
@@ -204,7 +204,7 @@ def test_convert_to_smart_table_duplicate_column_name_fail(test_client, mocker, 
 @pytest.mark.parametrize(
     "setup_tables",
     [
-        "WITH simple_table AS (SELECT order_id, product_name FROM orders) SELECT * FROM simple_table",
+        "SELECT product_name FROM orders GROUP BY product_name",
     ],
     indirect=True,
 )
