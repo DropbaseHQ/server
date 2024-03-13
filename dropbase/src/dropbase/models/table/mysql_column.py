@@ -10,6 +10,7 @@ class MySqlColumnContextProperty(ComponentDisplayProperties):
 
 class MySqlColumnDefinedProperty(BaseColumnDefinedProperty):
 
+    database_name: Annotated[str, PropertyCategory.view_only] = None
     table_name: Annotated[str, PropertyCategory.view_only] = None
     column_name: Annotated[str, PropertyCategory.view_only] = None
 

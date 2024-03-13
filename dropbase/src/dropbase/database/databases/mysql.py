@@ -131,6 +131,7 @@ class MySqlDatabase(Database):
                     col_name = column["name"]
                     is_pk = col_name in primary_keys
                     db_schema[database][table_name][col_name] = {
+                        "database_name": database,
                         "table_name": table_name,
                         "column_name": col_name,
                         "type": str(column["type"]),
@@ -172,6 +173,7 @@ class MySqlDatabase(Database):
                 validation_sql = _get_fast_sql(
                     user_sql,
                     col_name,
+                    col_data.database_name,
                     col_data.table_name,
                     col_data.column_name,
                     pk_name,
@@ -324,6 +326,7 @@ class MySqlDatabase(Database):
 def _get_fast_sql(
     user_sql: str,
     name: str,
+    database_name: str,
     table_name: str,
     column_name: str,
     table_pk_name: str,
@@ -339,7 +342,7 @@ def _get_fast_sql(
             t.{column_name} is null and uq.{name} is null
         THEN 1 ELSE 0 END
     ) as equal
-    FROM {table_name} t
+    FROM {database_name}.{table_name} t
     INNER join uq on t.{table_pk_name} = uq.{uq_pk_name}
     LIMIT 500;
     """
