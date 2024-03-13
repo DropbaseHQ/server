@@ -32,9 +32,12 @@ class Database(ABC):
     def rollback(self):
         self.session.rollback()
 
-    def execute(self, sql: str):
+    def execute(self, sql: str, values: dict = None):
         try:
-            result = self.session.execute(text(sql))
+            if values:
+                result = self.session.execute(text(sql), values)
+            else:
+                result = self.session.execute(text(sql))
             self.session.commit()
             return result.rowcount
         except SQLAlchemyError as e:
