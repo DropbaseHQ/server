@@ -16,6 +16,12 @@ CREATE TABLE IF NOT EXISTS orders (
     FOREIGN KEY (user_id) REFERENCES users(user_id)
 );
 
+-- Create NoPrimaryKey table
+CREATE TABLE IF NOT EXISTS NoPrimaryKey (
+    product_name VARCHAR(255) NOT NULL,
+    quantity INT NOT NULL
+);
+
 -- Insert data into Users table
 INSERT INTO users (username, email) VALUES
     ('John Doe', 'john.doe@example.com'),
@@ -42,3 +48,15 @@ INSERT INTO orders (user_id, product_name, quantity, total_price, order_date) VA
     (7, 'Camera', 1, 350.00, '2023-09-30'),
     (8, 'Smartphone', 1, 600.00, '2023-10-10');
     
+-- Insert data into NoPrimaryKey table
+INSERT INTO NoPrimaryKey (product_name, quantity) VALUES
+    ('Laptop', 2),
+    ('Mouse', 1),
+    ('Keyboard', 1),
+    ('Headphones', 2),
+    ('Monitor', 1),
+    ('Tablet', 1),
+    ('Printer', 1),
+    ('External HDD08-22', 1),
+    ('Camera', 1),
+    ('Smartphone', 1);
