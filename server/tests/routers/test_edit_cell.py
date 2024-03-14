@@ -1,68 +1,164 @@
 import copy
+import time
 
 import pytest
 
 base_data = {
-    # could be ignored, mocking in mock db
     "file": {"name": "demo_sql", "type": "sql", "source": "local", "depends_on": []},
     "edits": [
         {
-            "row": {"user_id": 1, "username": "John Doe", "email": "john.doe@example.com"},
-            "column_name": "username",
+            "row": {
+                "user_id": 1,
+                "datetime_col": "2024-03-14 15:00:00",
+                "date_col": "2024-03-14",
+                "time_col": "15:00:00",
+                "string_col": "First Entry",
+                "int_col": 1,
+                "float_col": 1.1,
+                "bool_col": True,
+            },
+            "column_name": "string_col",
             "data_type": "VARCHAR(255)",
+            "old_value": "First Entry",
+            "new_value": "Hello World",
             "columns": [
                 {
                     "name": "user_id",
+                    "data_type": "SERIAL",
+                    "display_type": "integer",
+                    "schema_name": "public",
+                    "table_name": "AllTypes",
+                    "column_name": "user_id",
+                    "primary_key": True,
+                    "foreign_key": False,
+                    "default": None,
+                    "Noneable": False,
+                    "unique": True,
+                    "edit_keys": [],
+                    "column_type": "postgres",
+                    "hidden": False,
+                    "editable": False,
+                },
+                {
+                    "name": "datetime_col",
+                    "data_type": "TIMESTAMP WITHOUT TIME ZONE",
+                    "display_type": "timestamp",
+                    "schema_name": "public",
+                    "table_name": "AllTypes",
+                    "column_name": "datetime_col",
+                    "primary_key": False,
+                    "foreign_key": False,
+                    "default": None,
+                    "Noneable": True,
+                    "unique": False,
+                    "edit_keys": ["user_id"],
+                    "column_type": "postgres",
+                    "hidden": False,
+                    "editable": True,
+                },
+                {
+                    "name": "date_col",
+                    "data_type": "DATE",
+                    "display_type": "date",
+                    "schema_name": "public",
+                    "table_name": "AllTypes",
+                    "column_name": "date_col",
+                    "primary_key": False,
+                    "foreign_key": False,
+                    "default": None,
+                    "Noneable": True,
+                    "unique": False,
+                    "edit_keys": ["user_id"],
+                    "column_type": "postgres",
+                    "hidden": False,
+                    "editable": True,
+                },
+                {
+                    "name": "time_col",
+                    "data_type": "TIME WITHOUT TIME ZONE",
+                    "display_type": "time",
+                    "schema_name": "public",
+                    "table_name": "AllTypes",
+                    "column_name": "time_col",
+                    "primary_key": False,
+                    "foreign_key": False,
+                    "default": None,
+                    "Noneable": True,
+                    "unique": False,
+                    "edit_keys": ["user_id"],
+                    "column_type": "postgres",
+                    "hidden": False,
+                    "editable": True,
+                },
+                {
+                    "name": "string_col",
+                    "data_type": "VARCHAR(255)",
+                    "display_type": "text",
+                    "schema_name": "public",
+                    "table_name": "AllTypes",
+                    "column_name": "string_col",
+                    "primary_key": False,
+                    "foreign_key": False,
+                    "default": None,
+                    "Noneable": True,
+                    "unique": False,
+                    "edit_keys": ["user_id"],
+                    "column_type": "postgres",
+                    "hidden": False,
+                    "editable": True,
+                },
+                {
+                    "name": "int_col",
                     "data_type": "INTEGER",
                     "display_type": "integer",
-                    "unique": False,
-                    "default": "nextval('\"public\".users_user_id_seq'::regclass)",
-                    "visible": True,
-                    "editable": False,
-                    "edit_keys": ["user_id"],
-                    "table_name": "users",
-                    "column_name": "user_id",
-                    "foreign_key": False,
-                    "primary_key": True,
                     "schema_name": "public",
-                    "nullable": False,
-                },
-                {
-                    "name": "username",
-                    "data_type": "VARCHAR(255)",
-                    "display_type": "text",
-                    "unique": False,
+                    "table_name": "AllTypes",
+                    "column_name": "int_col",
+                    "primary_key": False,
+                    "foreign_key": False,
                     "default": None,
-                    "visible": True,
+                    "Noneable": True,
+                    "unique": False,
+                    "edit_keys": ["user_id"],
+                    "column_type": "postgres",
+                    "hidden": False,
                     "editable": True,
-                    "edit_keys": ["user_id"],
-                    "table_name": "users",
-                    "column_name": "username",
-                    "foreign_key": False,
-                    "primary_key": False,
-                    "schema_name": "public",
-                    "nullable": True,
                 },
                 {
-                    "name": "email",
-                    "data_type": "VARCHAR(255)",
-                    "display_type": "text",
-                    "unique": False,
-                    "default": None,
-                    "visible": True,
-                    "editable": False,
-                    "edit_keys": ["user_id"],
-                    "table_name": "users",
-                    "column_name": "email",
-                    "foreign_key": False,
-                    "primary_key": False,
+                    "name": "float_col",
+                    "data_type": "REAL",
+                    "display_type": "float",
                     "schema_name": "public",
-                    "nullable": True,
+                    "table_name": "AllTypes",
+                    "column_name": "float_col",
+                    "primary_key": False,
+                    "foreign_key": False,
+                    "default": None,
+                    "Noneable": True,
+                    "unique": False,
+                    "edit_keys": ["user_id"],
+                    "column_type": "postgres",
+                    "hidden": False,
+                    "editable": True,
+                },
+                {
+                    "name": "bool_col",
+                    "data_type": "BOOLEAN",
+                    "display_type": "boolean",
+                    "schema_name": "public",
+                    "table_name": "AllTypes",
+                    "column_name": "bool_col",
+                    "primary_key": False,
+                    "foreign_key": False,
+                    "default": None,
+                    "Noneable": True,
+                    "unique": False,
+                    "edit_keys": ["user_id"],
+                    "column_type": "postgres",
+                    "hidden": False,
+                    "editable": True,
                 },
             ],
-            "column_type": "INTEGER",
-            "old_value": "John Doe",
-            "new_value": "Hello World",
         }
     ],
 }
@@ -76,7 +172,6 @@ def get_edit_cell_data(request, test_client):
     edit_values = request.param
 
     data["edits"][0]["row"] = edit_values["row"]
-    data["edits"][0]["data_type"] = edit_values["data_type"]
     data["edits"][0]["column_name"] = edit_values["column_name"]
     data["edits"][0]["data_type"] = edit_values["data_type"]
     data["edits"][0]["old_value"] = edit_values["old_value"]
@@ -90,13 +185,21 @@ def get_edit_cell_data(request, test_client):
     "get_edit_cell_data",
     [
         {
-            "row": {"user_id": 1, "username": "John Doe", "email": "john.doe@example.com"},
-            "column_name": "username",
+            "row": {
+                "user_id": 1,
+                "datetime_col": "2024-03-14 15:00:00",
+                "date_col": "2024-03-14",
+                "time_col": "15:00:00",
+                "string_col": "First Entry",
+                "int_col": 1,
+                "float_col": 1.1,
+                "bool_col": True,
+            },
+            "column_name": "string_col",
             "data_type": "VARCHAR(255)",
-            "column_type": "INTEGER",
-            "old_value": "John Doe",
+            "old_value": "First Entry",
             "new_value": "Hello World",
-        }
+        },
     ],
     indirect=True,
 )
@@ -105,11 +208,11 @@ def test_edit_cell(test_client, mocker, mock_db, get_edit_cell_data):
     mocker.patch("server.controllers.edit_cell.connect", return_value=mock_db)
 
     # Act
-    res = test_client.post("/edit_cell/edit_sql_table/", json=base_data)
+    res = test_client.post("/edit_cell/edit_sql_table/", json=get_edit_cell_data)
     res_data = res.json()
 
     assert res.status_code == 200
-    assert res_data["result"] == ["Updated username from John Doe to Hello World"]
+    assert res_data["result"] == ["Updated username from First Entry to Hello World"]
 
 
 @pytest.mark.parametrize("mock_db", ["postgres", "mysql", "snowflake", "sqlite"], indirect=True)
@@ -126,8 +229,12 @@ def test_edit_cell_db_execute_fail(test_client, mocker, mock_db):
     res = test_client.post("/edit_cell/edit_sql_table/", json=base_data)
     res_data = res.json()
 
+    time.sleep(3)
+
+    print(res_data)
+
     # Assert
     assert res.status_code != 200
     assert res_data["result"] == [
-        "Failed to update username from John Doe to Hello World. Error: No rows were updated"
+        "Failed to update string_col from First Entry to Hello World. Error: No rows were updated"
     ]

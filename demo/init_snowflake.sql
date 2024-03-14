@@ -22,6 +22,23 @@ CREATE TABLE IF NOT EXISTS NoPrimaryKey (
     quantity INTEGER NOT NULL
 );
 
+CREATE TABLE IF NOT EXISTS AllTypes (
+    user_id INTEGER PRIMARY KEY AUTOINCREMENT,
+    datetime_col DATETIME,
+    date_col DATE,
+    time_col TIME,
+    string_col TEXT,
+    int_col INTEGER,
+    float_col REAL,
+    bool_col INTEGER
+);
+
+INSERT INTO AllTypes (datetime_col, date_col, time_col, string_col, int_col, float_col, bool_col) 
+VALUES 
+('2024-03-14 15:00:00', '2024-03-14', '15:00:00', 'First Entry', 1, 1.1, 1),
+('2024-03-15 16:30:00', '2024-03-15', '16:30:00', 'Second Entry', 2, 2.2, 0),
+('2024-03-16 17:45:00', '2024-03-16', '17:45:00', 'Third Entry', 3, 3.3, 1);
+
 -- Insert data into Users table
 INSERT INTO users (username, email) VALUES
     ('John Doe', 'john.doe@example.com'),
