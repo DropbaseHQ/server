@@ -15,5 +15,11 @@ class AuthRouter:
             json={"app_id": app_id},
         )
 
+    def check_apps_permissions(self, app_ids: list[str]):
+        return self.session.post(
+            "check_apps_permissions",
+            json={"app_ids": app_ids},
+        )
+
     def get_worker_workspace(self):
         return self.session.get("worker_workspace")
