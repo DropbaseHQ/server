@@ -166,11 +166,18 @@ class SnowflakeDatabase(Database):
 
     def _validate_smart_cols(self, smart_cols: dict[str, dict], user_sql: str) -> list[str]:  # noqa
         # Will delete any columns that are invalid from smart_cols
-        primary_keys = self._get_primary_keys(smart_cols)
+        user_sql = user_sql.strip("\n ;")
+        primary_keys, alias_keys = self._get_primary_keys(smart_cols)
+
         validated = []
         for col_name, col_data in smart_cols.items():
             col_data = SnowflakeColumnDefinedProperty(**col_data)
+
             pk_name = primary_keys.get(self._get_table_path(col_data))
+
+            if pk_name in alias_keys:
+                uq_pk_name = alias_keys[pk_name]
+
             if pk_name:
                 validation_sql = _get_fast_sql(
                     user_sql,
@@ -179,6 +186,7 @@ class SnowflakeDatabase(Database):
                     col_data.table_name,
                     col_data.column_name,
                     pk_name,
+                    uq_pk_name,
                 )
             else:
                 validation_sql = _get_slow_sql(
@@ -196,18 +204,25 @@ class SnowflakeDatabase(Database):
                     if res:
                         validated.append(col_name)
                 if not res[0][0]:
-                    raise "Invalid column"
+                    if res[0][0] is None:
+                        raise Exception("Can not convert empty table into smart table")
+                    raise Exception("Invalid column")
             except (SQLAlchemyError):
                 continue
         return validated
 
     def _get_primary_keys(self, smart_cols: dict[str, dict]) -> dict[str, dict]:
         primary_keys = {}
+        alias_keys = {}
         for col_data in smart_cols.values():
             col_data = SnowflakeColumnDefinedProperty(**col_data)
             if col_data.primary_key:
+                if col_data.name != col_data.column_name:
+                    alias_keys[col_data.column_name] = col_data.name
+                else:
+                    alias_keys[col_data.column_name] = col_data.name
                 primary_keys[self._get_table_path(col_data)] = col_data.column_name
-        return primary_keys
+        return primary_keys, alias_keys
 
     def _get_table_path(self, col_data: SnowflakeColumnDefinedProperty) -> str:
         return f"{col_data.schema_name}.{col_data.table_name}"
@@ -328,6 +343,7 @@ def _get_fast_sql(
     table_name: str,
     column_name: str,
     table_pk_name: str,
+    uq_pk_name: str,
 ) -> str:
     # Query that results in [(1,)] if valid, [(0,)] if false
     # NOTE: validate name of the column in user query (name) against column name in table (column_name)
@@ -340,7 +356,7 @@ def _get_fast_sql(
         THEN 1 ELSE 0 END
     ) as equal
     FROM {schema_name}.{table_name} t
-    INNER join uq on t.{table_pk_name} = uq.{table_pk_name}
+    INNER join uq on t.{table_pk_name} = uq.{uq_pk_name}
     LIMIT 500;
     """
 
@@ -356,8 +372,14 @@ def _get_slow_sql(
     # NOTE: validate name of the column in user query (name) against column name in table (column_name)
     # NOTE: limit user query to 500 rows to improve performance
     return f"""
-    WITH uq as ({user_sql})
-    SELECT CASE WHEN count(t.{column_name}) = 0 THEN true ELSE false END
-    FROM {schema_name}.{table_name} t
-    WHERE t.{column_name} not in (select uq.{name} from uq LIMIT 500);
-    """
+   WITH uq as ({user_sql})
+   SELECT CASE
+       WHEN NOT EXISTS (
+           SELECT 1 FROM uq
+           WHERE uq.{column_name} NOT IN (
+               SELECT t.{column_name} FROM {schema_name}.{table_name} t
+           )
+       ) THEN true
+       ELSE false
+       END;
+   """
