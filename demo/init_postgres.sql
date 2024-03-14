@@ -23,7 +23,7 @@ CREATE TABLE IF NOT EXISTS NoPrimaryKey (
 );
 
 -- Create ALLTYPES table
-CREATE TABLE IF NOT EXISTS "AllTypes" (
+CREATE TABLE IF NOT EXISTS AllTypes (
     user_id SERIAL PRIMARY KEY,
     datetime_col TIMESTAMP WITHOUT TIME ZONE,
     date_col DATE,

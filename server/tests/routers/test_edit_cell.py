@@ -171,6 +171,16 @@ def to_epoch_ms(date_str, is_timestamp):
     return int(dt.replace(tzinfo=timezone.utc).timestamp() * 1000)
 
 
+def convert_epoch_to_datetime(epoch_str):
+    epoch_s = epoch_str / 1000.0
+    dt = datetime.fromtimestamp(epoch_s, tz=timezone.utc)
+    new_value_formatted = dt.strftime("%Y-%m-%d %H:%M:%S")
+    tz_formatted = dt.strftime("%z")
+    # Insert a colon between the hours and minutes of the timezone
+    tz_with_colon = tz_formatted[:-2] + ":" + tz_formatted[-2:]
+    return new_value_formatted + tz_with_colon
+
+
 @pytest.fixture(scope="session")
 def get_edit_cell_data(request, test_client):
     # Arrange
@@ -194,7 +204,7 @@ def get_edit_cell_data(request, test_client):
     return data
 
 
-@pytest.mark.parametrize("mock_db", ["postgres"], indirect=True)
+@pytest.mark.parametrize("mock_db", ["postgres", "mysql", "snowflake", "sqlite"], indirect=True)
 @pytest.mark.parametrize(
     "get_edit_cell_data",
     [
@@ -243,7 +253,7 @@ def get_edit_cell_data(request, test_client):
     ],
     indirect=True,
 )
-def test_esdit_cell(test_client, mocker, mock_db, get_edit_cell_data):
+def test_edit_cell(test_client, mocker, mock_db, get_edit_cell_data):
     # Arrange
     mocker.patch("server.controllers.edit_cell.connect", return_value=mock_db)
 
@@ -257,12 +267,8 @@ def test_esdit_cell(test_client, mocker, mock_db, get_edit_cell_data):
     new_value = cell_data["edits"][0]["new_value"]
     old_value = cell_data["edits"][0]["old_value"]
 
-    if "datetime_col" in column_name:
-        epoch_s = new_value / 1000.0
-        dt = datetime.fromtimestamp(epoch_s, tz=timezone.utc)
-
-        # Format the datetime object as a string
-        new_value = dt.strftime("%Y-%m-%d %H:%M:%S%z")
+    if "datetime_col" in column_name or "date_col" in column_name:
+        new_value = convert_epoch_to_datetime(new_value)
 
     assert res.status_code == 200
     assert res_data["result"] == [f"Updated {column_name} from {old_value} to {new_value}"]
