@@ -32,10 +32,16 @@ def check_directory_structure(path):
 def test_create_app_req(test_client, dropbase_router_mocker):
     try:
         # Arrange
-        data = {"app_label": NEW_APP_LABEL, "app_name": NEW_APP_NAME, "workspace_id": TEST_WORKSPACE_ID}
+        data = {
+            "app_label": NEW_APP_LABEL,
+            "app_name": NEW_APP_NAME,
+            "workspace_id": TEST_WORKSPACE_ID,
+        }
 
         # Act
-        dropbase_router_mocker.patch("app", "create_app", side_effect=lambda *args, **kwargs: None)
+        dropbase_router_mocker.patch(
+            "app", "create_app", side_effect=lambda *args, **kwargs: None
+        )
         res = test_client.post("/app/", json=data)
 
         # Assert
@@ -54,7 +60,9 @@ def test_create_app_req_error_duplicate_labels(test_client, dropbase_router_mock
     }
 
     # Act
-    dropbase_router_mocker.patch("app", "create_app", side_effect=lambda *args, **kwargs: None)
+    dropbase_router_mocker.patch(
+        "app", "create_app", side_effect=lambda *args, **kwargs: None
+    )
     test_client.post("/app/", json=data)
 
     res = test_client.post("/app/", json=data)
@@ -75,7 +83,9 @@ def test_create_app_req_error_duplicate_names(test_client, dropbase_router_mocke
     }
 
     # Act
-    dropbase_router_mocker.patch("app", "create_app", side_effect=lambda *args, **kwargs: None)
+    dropbase_router_mocker.patch(
+        "app", "create_app", side_effect=lambda *args, **kwargs: None
+    )
     test_client.post("/app/", json=data)
 
     res = test_client.post("/app/", json=data)
@@ -87,12 +97,20 @@ def test_create_app_req_error_duplicate_names(test_client, dropbase_router_mocke
     assert res_data["detail"] == "Another app with the same name already exists"
 
 
-def test_create_app_req_error_illegal_name_space_between(test_client, dropbase_router_mocker):
+def test_create_app_req_error_illegal_name_space_between(
+    test_client, dropbase_router_mocker
+):
     # Arrange
-    data = {"app_label": NEW_APP_LABEL, "app_name": "My New App", "workspace_id": TEST_WORKSPACE_ID}
+    data = {
+        "app_label": NEW_APP_LABEL,
+        "app_name": "My New App",
+        "workspace_id": TEST_WORKSPACE_ID,
+    }
 
     # Act
-    dropbase_router_mocker.patch("app", "create_app", side_effect=lambda *args, **kwargs: None)
+    dropbase_router_mocker.patch(
+        "app", "create_app", side_effect=lambda *args, **kwargs: None
+    )
     res = test_client.post("/app/", json=data)
     res_data = res.json()
 
@@ -107,12 +125,20 @@ def test_create_app_req_error_illegal_name_space_between(test_client, dropbase_r
     )
 
 
-def test_create_app_req_error_illegal_name_special_characters(test_client, dropbase_router_mocker):
+def test_create_app_req_error_illegal_name_special_characters(
+    test_client, dropbase_router_mocker
+):
     # Arrange
-    data = {"app_label": NEW_APP_LABEL, "app_name": "My_New_App!", "workspace_id": TEST_WORKSPACE_ID}
+    data = {
+        "app_label": NEW_APP_LABEL,
+        "app_name": "My_New_App!",
+        "workspace_id": TEST_WORKSPACE_ID,
+    }
 
     # Act
-    dropbase_router_mocker.patch("app", "create_app", side_effect=lambda *args, **kwargs: None)
+    dropbase_router_mocker.patch(
+        "app", "create_app", side_effect=lambda *args, **kwargs: None
+    )
     res = test_client.post("/app/", json=data)
     res_data = res.json()
 
@@ -127,12 +153,20 @@ def test_create_app_req_error_illegal_name_special_characters(test_client, dropb
     )
 
 
-def test_create_app_req_error_illegal_name_url_path(test_client, dropbase_router_mocker):
+def test_create_app_req_error_illegal_name_url_path(
+    test_client, dropbase_router_mocker
+):
     # Arrange
-    data = {"app_label": NEW_APP_LABEL, "app_name": "../../my_app", "workspace_id": TEST_WORKSPACE_ID}
+    data = {
+        "app_label": NEW_APP_LABEL,
+        "app_name": "../../my_app",
+        "workspace_id": TEST_WORKSPACE_ID,
+    }
 
     # Act
-    dropbase_router_mocker.patch("app", "create_app", side_effect=lambda *args, **kwargs: None)
+    dropbase_router_mocker.patch(
+        "app", "create_app", side_effect=lambda *args, **kwargs: None
+    )
     res = test_client.post("/app/", json=data)
     res_data = res.json()
 
@@ -162,7 +196,9 @@ def test_rename_app_req_error_duplicate_names(test_client, dropbase_router_mocke
         "app_id": "23ea28dc-4e2d-4d48-b15e-09b51f1a1c74",
     }
 
-    dropbase_router_mocker.patch("app", "create_app", side_effect=lambda *args, **kwargs: None)
+    dropbase_router_mocker.patch(
+        "app", "create_app", side_effect=lambda *args, **kwargs: None
+    )
     res = test_client.put("/app/", json=req)
     res_data = res.json()
 
@@ -176,7 +212,9 @@ def test_rename_app_req_error_duplicate_names(test_client, dropbase_router_mocke
 def test_rename_app_req(test_client):
     try:
         # Arrange
-        workspace_folder_controller = WorkspaceFolderController(r_path_to_workspace=WORKSPACE_PATH)
+        workspace_folder_controller = WorkspaceFolderController(
+            r_path_to_workspace=WORKSPACE_PATH
+        )
         app_id = workspace_folder_controller.get_app_id(app_name=TEST_APP_NAME)
         data = {"app_id": app_id, "new_label": NEW_APP_NAME}
 
@@ -203,7 +241,12 @@ def test_rename_app_req(test_client):
 
 def test_delete_app_req(test_client, dropbase_router_mocker):
     # Act
-    dropbase_router_mocker.patch("app", "delete_app", side_effect=lambda *args, **kwargs: None)
+    class MockResponse:
+        status_code = 200
+
+    dropbase_router_mocker.patch(
+        "app", "delete_app", side_effect=lambda *args, **kwargs: MockResponse()
+    )
     res = test_client.request("DELETE", f"/app/{TEST_APP_NAME}")
 
     # Assert
@@ -217,7 +260,9 @@ def test_delete_app_req_block_path_traversal_attack(test_client):
         test_target_path = WORKSPACE_PATH.parent.joinpath(
             "test_delete_app_req_block_path_traversal_attack_folder"
         )
-        test_target_rel_path = "../test_delete_app_req_block_path_traversal_attack_folder"
+        test_target_rel_path = (
+            "../test_delete_app_req_block_path_traversal_attack_folder"
+        )
         os.mkdir(test_target_path)
 
         # Act
