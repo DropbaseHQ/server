@@ -2,6 +2,8 @@ import sqlite3
 
 import psycopg2
 import pymysql
+import pytest
+import redis
 import snowflake.connector
 
 from dropbase.database.databases.mysql import MySqlDatabase
@@ -78,3 +80,9 @@ def connect_to_test_db(db_type: str, creds: dict):
             return SnowflakeDatabase(creds)
         case "sqlite":
             return SqliteDatabase(creds)
+
+
+@pytest.fixture(scope="session")
+def setup_redis():
+    r = redis.Redis(host="localhost", port=6379, db=0)
+    return r

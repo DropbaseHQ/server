@@ -22,10 +22,11 @@ def flatten_json(json_data):
     for row in json_data:
         new_row = []
         for value in row:
-            if isinstance(value, dict) or isinstance(value, list):
-                new_row.append(json.dumps(value, default=str))
-            else:
-                new_row.append(value)
+            new_row.append(value)
+            # if isinstance(value, dict) or isinstance(value, list):
+            #     new_row.append(json.dumps(value, default=str))
+            # else:
+            #     new_row.append(value)
         data.append(new_row)
     return data
 
@@ -39,13 +40,13 @@ def get_column_types(df, column_type: str):
                 "name": col,
                 "column_type": column_type,
                 "data_type": str(dtype),
-                "display_type": detect_col_type(col_type),
+                "display_type": detect_col_type(col_type, df[col]),
             }
         )
     return columns
 
 
-def detect_col_type(col_type):
+def detect_col_type(col_type: str, column: pd.Series):
     if "float" in col_type:
         return "float"
     elif "int" in col_type:
@@ -54,5 +55,14 @@ def detect_col_type(col_type):
         return "datetime"
     elif "bool" in col_type:
         return "boolean"
+    if "object" in col_type:
+        return infer_object_type(column)
+    else:
+        return "text"
+
+
+def infer_object_type(column: pd.Series):
+    if column.map(lambda x: type(x) is list).all():
+        return "array"
     else:
         return "text"

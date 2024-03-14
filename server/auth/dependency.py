@@ -1,18 +1,19 @@
 import asyncio
 import logging
 import os
-import jwt
 
-import requests
+import jwt
 from fastapi import Depends, HTTPException, Request
 from fastapi_jwt_auth import AuthJWT, exceptions
 from pydantic import BaseModel
 
 from server.auth.permissions_registry import permissions_registry
-from server.requests.dropbase_router import get_server_access_header
-from server.requests.dropbase_router import DropbaseRouter, get_dropbase_router
 from server.controllers.workspace import WorkspaceFolderController
-
+from server.requests.dropbase_router import (
+    DropbaseRouter,
+    get_dropbase_router,
+    get_server_access_header,
+)
 
 cwd = os.getcwd()
 logger = logging.getLogger(__name__)
@@ -79,7 +80,10 @@ def verify_worker_access_token(
                 )
             return worker_subject
         except exceptions.JWTDecodeError:
-            raise Exception("Worker token was found, but not able to be validated")
+            raise HTTPException(
+                status_code=401,
+                detail="Worker token was found, but not able to be validated",
+            )
 
 
 def get_resource_id_from_req_body(resource_id_accessor: str, request: Request):
@@ -102,14 +106,17 @@ class CheckUserPermissions:
         if app_name is None:
             app_name = get_resource_id_from_req_body("app_name", request)
         if app_name is None:
-            raise Exception("No app name provided")
+            raise HTTPException(status_code=400, detail="No app name provided")
 
         workspace_folder_controller = WorkspaceFolderController(
             r_path_to_workspace=os.path.join(cwd, "workspace")
         )
         app_id = workspace_folder_controller.get_app_id(app_name=app_name)
         if app_id is None:
-            raise Exception(f"App {app_name} either does not exist or has no id.")
+            raise HTTPException(
+                status_code=400,
+                detail=(f"App {app_name} either does not exist or has no id."),
+            )
         return app_id
 
     def _get_resource_permissions(
@@ -125,7 +132,7 @@ class CheckUserPermissions:
                 user_id=user_id, app_id=app_id
             )
         else:
-            raise Exception("No resource provided")
+            raise HTTPException(status_code=400, detail="No resource provided")
 
     def _load_fresh_permissions(
         self,
@@ -144,12 +151,11 @@ class CheckUserPermissions:
             app_id=app_id, access_token=server_access_token
         )
         if response.status_code == 401:
-            dropbase_token = router.session.headers.get("dropbase-token")
-            logger.warning(f"Dropbase Token: {dropbase_token}")
-            headers = response.request.headers
-            logger.warning(f"Request headers: {headers}")
 
-            raise Exception(f"Details: {response.json()}")
+            raise HTTPException(
+                status_code=401,
+                detail="Invalid access token",
+            )
 
         if response.status_code != 200:
             logger.warning(
@@ -158,7 +164,10 @@ class CheckUserPermissions:
             headers = response.request.headers
             logger.warning(f"Request headers: {headers}")
 
-            raise Exception("Unable to fetch permissions from Dropbase API")
+            raise HTTPException(
+                status_code=500,
+                detail="Could not fetch permissions from Dropbase API",
+            )
 
         workspace_permissions = response.json().get("workspace_permissions")
         app_permissions = response.json().get("app_permissions")
@@ -198,11 +207,11 @@ class CheckUserPermissions:
         if verify_response:
             user_id = verify_response
         if user_id is None:
-            raise Exception("No user id provided")
+            raise HTTPException(status_code=401, detail="No user id provided")
 
         workspace_id = request.headers.get("workspace-id")
         if not workspace_id:
-            raise Exception("No workspace id provided")
+            raise HTTPException(status_code=400, detail="No workspace id provided")
 
         if self.resource is None:
             logger.warning("No resource provided. Workspace assumed.")

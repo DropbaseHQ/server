@@ -2,7 +2,9 @@ from abc import ABC, abstractmethod
 from typing import List
 
 from sqlalchemy.engine import create_engine
+from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import scoped_session, sessionmaker
+from sqlalchemy.sql import text
 
 from dropbase.schemas.edit_cell import CellEdit
 from dropbase.schemas.table import TableFilter, TablePagination, TableSort
@@ -30,6 +32,28 @@ class Database(ABC):
     def rollback(self):
         self.session.rollback()
 
+    def execute(self, sql: str, values: dict = None):
+        try:
+            if values:
+                result = self.session.execute(text(sql), values)
+            else:
+                result = self.session.execute(text(sql))
+            self.session.commit()
+            return result.rowcount
+        except SQLAlchemyError as e:
+            self.session.rollback()  # Roll back the session on error.
+            raise e  # Propagate the error.
+
+    def query(self, sql: str):
+        try:
+            result_proxy = self.session.execute(text(sql))
+            result = [dict(row) for row in result_proxy.fetchall()]
+            result_proxy.close()
+            return result
+        except SQLAlchemyError as e:
+            self.session.rollback()  # Rollback the session on error.
+            raise e  # Propagate the error.
+
     @abstractmethod
     def _get_connection_url(self, creds):
         pass
@@ -48,14 +72,6 @@ class Database(ABC):
 
     @abstractmethod
     def delete(self, table: str, keys: dict, auto_commit: bool = False):
-        pass
-
-    @abstractmethod
-    def query(self, sql: str):
-        pass
-
-    @abstractmethod
-    def execute(self, sql: str, values: dict = None):
         pass
 
     @abstractmethod
@@ -97,7 +113,15 @@ class Database(ABC):
     def _detect_col_display_type(self, col_type: str):
         if "float" in col_type:
             return "float"
-        elif col_type in ["real", "double", "double precision", "decimal", "numeric"]:
+        elif "real" in col_type:
+            return "float"
+        elif "double" in col_type:
+            return "float"
+        elif "double precision" in col_type:
+            return "float"
+        elif "decimal" in col_type:
+            return "float"
+        elif "numeric" in col_type:
             return "float"
         elif "int" in col_type:
             return "integer"
@@ -111,5 +135,7 @@ class Database(ABC):
             return "datetime"
         elif "bool" in col_type:
             return "boolean"
+        elif "array" in col_type:
+            return "array"
         else:
             return "text"

@@ -1,5 +1,5 @@
 from enum import Enum
-from typing import Annotated, Optional, Union
+from typing import Annotated, Literal, Optional, Union
 
 from pydantic import BaseModel, root_validator
 
@@ -13,18 +13,26 @@ class ComponentDisplayProperties(BaseModel):
 
 
 class CurrencyType(BaseModel):
-    symbol: str
+    config_type: Annotated[Literal["currency"], PropertyCategory.internal] = "currency"
+    symbol: Optional[str]
     # precision: Optional[int]
 
 
 class SelectType(BaseModel):
-    options: list
+    config_type: Annotated[Literal["select"], PropertyCategory.internal] = "select"
+    options: Optional[list]
     multiple: Optional[bool]
+
+
+class ArrayType(BaseModel):
+    config_type: Annotated[Literal["array"], PropertyCategory.internal] = "array"
+    display_as: Optional[Literal["tags", "area", "bar"]] = "tags"
 
 
 class DisplayTypeConfigurations(BaseModel):
     currency: Optional[CurrencyType]
     select: Optional[SelectType]
+    array: Optional[ArrayType]
 
 
 class DisplayType(str, Enum):
@@ -37,6 +45,7 @@ class DisplayType(str, Enum):
     time = "time"
     currency = "currency"
     select = "select"
+    array = "array"
 
 
 class ColumnTypeEnum(str, Enum):
@@ -52,7 +61,9 @@ class BaseColumnDefinedProperty(BaseModel):
     name: Annotated[str, PropertyCategory.default]
     data_type: Annotated[Optional[str], PropertyCategory.default]
     display_type: Annotated[Optional[DisplayType], PropertyCategory.default]
-    configurations: Annotated[Optional[Union[CurrencyType, SelectType]], PropertyCategory.default]
+    configurations: Annotated[
+        Optional[Union[ArrayType, CurrencyType, SelectType]], PropertyCategory.default
+    ]
 
     @root_validator
     def check_configurations(cls, values):

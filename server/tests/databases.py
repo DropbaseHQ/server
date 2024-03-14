@@ -1,3 +1,4 @@
+import os
 import sqlite3
 
 import pytest
@@ -28,4 +29,8 @@ def snowflake_db():
 
 @pytest.fixture(scope="session")
 def sqlite_db():
-    sqlite3.connect("data.db")
+    db_connection = sqlite3.connect("data.db")
+    yield db_connection
+
+    db_connection.close()
+    os.remove("data.db")

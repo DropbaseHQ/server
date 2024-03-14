@@ -1,4 +1,4 @@
-from dropbase.database.connect import connect_to_user_db
+from dropbase.database.connect import connect
 from dropbase.schemas.files import DataFile
 from dropbase.schemas.table import ConvertTableRequest
 from server.controllers.page import get_page_state_context
@@ -15,7 +15,7 @@ def convert_sql_table(req: ConvertTableRequest, router: DropbaseRouter):
         file = get_table_data_fetcher(properties["files"], req.table.fetcher)
         file = DataFile(**file)
 
-        user_db = connect_to_user_db(file.source)
+        user_db = connect(file.source)
 
         db_schema, gpt_schema = user_db._get_db_schema()
 
