@@ -1,13 +1,62 @@
 import os
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
 
-from dropbase.schemas.workspace import CreateAppRequest, RenameAppRequest
+from dropbase.schemas.workspace import (
+    CreateAppRequest,
+    RenameAppRequest,
+    SyncAppRequest,
+)
 from server.controllers.app import get_workspace_apps
 from server.controllers.workspace import AppFolderController, WorkspaceFolderController
 from server.requests.dropbase_router import DropbaseRouter, get_dropbase_router
 
-router = APIRouter(prefix="/app", tags=["app"], responses={404: {"description": "Not found"}})
+router = APIRouter(
+    prefix="/app", tags=["app"], responses={404: {"description": "Not found"}}
+)
+
+
+@router.post("/sync_app")
+def sync_app_req(
+    request: SyncAppRequest, router: DropbaseRouter = Depends(get_dropbase_router)
+):
+    try:
+        path_to_workspace = os.path.join(os.path.dirname(__file__), "../../workspace")
+        workspace_folder_controller = WorkspaceFolderController(
+            r_path_to_workspace=path_to_workspace
+        )
+        workspace_apps = workspace_folder_controller.get_workspace_properties()
+        target_app = None
+        for app in workspace_apps:
+            if app.get("name") == request.app_name:
+                target_app = app
+                break
+
+        if (
+            target_app.get("status", None) is None
+            or target_app.get("status") == "SYNCED"
+        ):
+            return {"message": "App is already synced"}
+
+        sync_response = router.misc.sync_app(
+            payload={
+                "app_name": request.app_name,
+                "app_label": target_app.get("label"),
+                "generate_new": request.generate_new,
+            }
+        )
+        workspace_apps = workspace_folder_controller.get_workspace_properties()
+
+        for app in workspace_apps:
+            if app.get("name") == request.app_name:
+                app["id"] = sync_response.json().get("app_id")
+                app["status"] = "SYNCED"
+                break
+
+        workspace_folder_controller.write_workspace_properties({"apps": workspace_apps})
+        return {"message": "App synced"}
+    except Exception:
+        raise HTTPException(status_code=500, detail="Unable to sync app with Dropbase")
 
 
 @router.get("/list/")
@@ -31,23 +80,18 @@ def create_app_req(
 def rename_app_req(req: RenameAppRequest):
     # assert page does not exist
     path_to_workspace = os.path.join(os.path.dirname(__file__), "../../workspace")
-    workspace_folder_controller = WorkspaceFolderController(r_path_to_workspace=path_to_workspace)
-    return workspace_folder_controller.update_app_info(app_id=req.app_id, new_label=req.new_label)
-
-    # if check_if_object_exists(f"workspace/{req.new_name}/"):
-    #     response.status_code = 400
-    #     return {"message": "An app with this name already exists"}
-
-    # workspace_folder_path = os.path.join(os.path.dirname(__file__), "../../workspace")
-    # app_path = os.path.join(workspace_folder_path, req.old_name)
-    # new_path = os.path.join(workspace_folder_path, req.new_name)
-    # if os.path.exists(app_path):
-    #     os.rename(app_path, new_path)
-    # return {"success": True}
+    workspace_folder_controller = WorkspaceFolderController(
+        r_path_to_workspace=path_to_workspace
+    )
+    return workspace_folder_controller.update_app_info(
+        app_id=req.app_id, new_label=req.new_label
+    )
 
 
 @router.delete("/{app_name}")
-def delete_app_req(app_name: str, router: DropbaseRouter = Depends(get_dropbase_router)):
+def delete_app_req(
+    app_name: str, router: DropbaseRouter = Depends(get_dropbase_router)
+):
     r_path_to_workspace = os.path.join(os.path.dirname(__file__), "../../workspace")
     app_folder_controller = AppFolderController(app_name, r_path_to_workspace)
     return app_folder_controller.delete_app(app_name=app_name, router=router)

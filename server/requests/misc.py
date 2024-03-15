@@ -20,3 +20,6 @@ class MiscRouter:
 
     def sync_structure(self, payload: dict):
         return self.session.post(url="sync/structure/", json=payload)
+
+    def sync_app(self, payload: dict):
+        return self.session.post(url="sync/app/", json=payload)
