@@ -30,8 +30,10 @@ def get_sources():
                 else:
                     sources[name][field] = value
             else:
-                sources[name] = {field: value, "type": type}
-
+                if field == "schema":
+                    sources[name] = {"dbschema": value, "type": type}
+                else:
+                    sources[name] = {field: value, "type": type}
     verified_sources = {}
     for name, source in sources.items():
         db_type = source["type"]
