@@ -25,7 +25,8 @@ def sync_app_req(
         workspace_folder_controller = WorkspaceFolderController(
             r_path_to_workspace=path_to_workspace
         )
-        workspace_apps = workspace_folder_controller.get_workspace_properties()
+        workspace_props = workspace_folder_controller.get_workspace_properties()
+        workspace_apps = workspace_props.get("apps", [])
         target_app = None
         for app in workspace_apps:
             if app.get("name") == request.app_name:
@@ -52,7 +53,8 @@ def sync_app_req(
                 "pages": app_pages,
             }
         )
-        workspace_apps = workspace_folder_controller.get_workspace_properties()
+        workspace_props = workspace_folder_controller.get_workspace_properties()
+        workspace_apps = workspace_props.get("apps", [])
 
         response_pages = sync_response.json().get("pages")
 
@@ -72,7 +74,9 @@ def sync_app_req(
 
                 break
 
-        workspace_folder_controller.write_workspace_properties({"apps": workspace_apps})
+        workspace_folder_controller.write_workspace_properties(
+            {**workspace_props, "apps": workspace_apps}
+        )
         return {"message": "App synced"}
     except Exception as e:
         raise HTTPException(status_code=500, detail="Unable to sync app with Dropbase")
