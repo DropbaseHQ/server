@@ -21,11 +21,9 @@ def run_container(env_vars: dict, docker_script: str = "inside_docker"):
     # get absolute path of the workspace directory from the environment variable
     host_path = os.getenv("HOST_WORKSPACE_PATH")
     workspace_mount = docker.types.Mount(
-        target="/app/workspace", source=host_path + "/dropbase-dev/workspace", type="bind"
+        target="/app/workspace", source=host_path + "/workspace", type="bind"
     )  # noqa
-    files_mount = docker.types.Mount(
-        target="/app/files", source=host_path + "/dropbase-dev/files", type="bind"
-    )
+    files_mount = docker.types.Mount(target="/app/files", source=host_path + "/files", type="bind")
     mounts = [workspace_mount, files_mount]
 
     # add additional mounts from the environment variable
@@ -37,7 +35,7 @@ def run_container(env_vars: dict, docker_script: str = "inside_docker"):
                 # directories are mounted to /app
                 dir_name = mount.split("/")[-1]
                 target = f"/app/{dir_name}"
-                source = f"{host_path}/{mount}"
+                source = f"{mount}"
                 mounts.append(docker.types.Mount(target=target, source=source, type="bind"))
         except Exception as e:
             logger.warning(f"Error parsing HOST_MOUNTS: {e}")
@@ -50,7 +48,7 @@ def run_container(env_vars: dict, docker_script: str = "inside_docker"):
         mounts=mounts,
         environment=env_vars,
         network="dropbase_default",
-        detach=True,
         working_dir="/app",
+        detach=True,
         auto_remove=True,
     )

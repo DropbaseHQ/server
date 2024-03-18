@@ -1,5 +1,9 @@
+import json
+
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
+
+from server.controllers.utils import check_if_object_exists
 from server.requests.dropbase_router import DropbaseRouter, get_dropbase_router
 from server.controllers.sync import sync_with_dropbase
 
@@ -22,4 +26,56 @@ async def get_workspace(router: DropbaseRouter = Depends(get_dropbase_router)) -
 async def sync_workspace(router: DropbaseRouter = Depends(get_dropbase_router)) -> dict:
     response = router.auth.sync_worker_workspace()
     workspace_info = response.json()
+    # sync demo here
+    # check if demo dicrectory exists
+    if check_if_object_exists("workspace/demo"):
+        # check if already synced
+        demo_synced = False
+        if check_if_object_exists("workspace/properties.json"):
+            with open("workspace/properties.json", "r") as file:
+                apps = json.load(file)["apps"]
+            for app in apps:
+                if app.get("name") == "demo" and app.get("id") != "":
+                    demo_synced = True
+                    break
+
+        if not demo_synced:
+            # call server to sync demo
+            resp = router.misc.sync_demo()
+            if resp.status_code == 200:
+                response = resp.json()
+
+                # sync app
+                app_record = {
+                    "name": "demo",
+                    "label": "Demo",
+                    "id": response.get("app_id"),
+                }
+                if not check_if_object_exists("workspace/properties.json"):
+                    apps = [app_record]
+                else:
+                    # using app read from properties.json from above
+                    demo_exists = False
+                    for app in apps:
+                        if app.get("name") == "demo":
+                            app["id"] = response.get("app_id")
+                            demo_exists = True
+                            break
+                    if not demo_exists:
+                        apps.append(app_record)
+
+                with open("workspace/properties.json", "w") as file:
+                    json.dump({"apps": apps}, file)
+
+                # sync pages
+                if check_if_object_exists("workspace/demo/properties.json"):
+                    with open("workspace/demo/properties.json", "r") as file:
+                        pages = json.load(file)["pages"]
+                    for page in pages:
+                        if page.get("id") == "":
+                            page["id"] = response.get("page_id")
+                            break
+                    with open("workspace/demo/properties.json", "w") as file:
+                        json.dump({"pages": pages}, file)
+
     return workspace_info

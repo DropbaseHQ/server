@@ -18,6 +18,7 @@ class InputDefinedProperty(BaseModel):
     ] = "text"
     placeholder: Annotated[Optional[str], PropertyCategory.default]
     default: Annotated[Optional[Any], PropertyCategory.default]
+    multiline: Annotated[Optional[bool], PropertyCategory.default] = False
 
     # display rules
     display_rules: Annotated[Optional[List[dict]], PropertyCategory.display_rules]

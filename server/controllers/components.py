@@ -81,10 +81,6 @@ def parse_prop(prop, key, model_schema):
     if "enum" in prop:
         prop["type"] = "select"
 
-    if "type" in prop:
-        if prop["type"] == "string":
-            prop["type"] = "template"
-
     prop["name"] = key
     return prop
 
