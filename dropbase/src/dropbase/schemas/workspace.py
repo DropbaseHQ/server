@@ -16,3 +16,8 @@ class RenameAppRequest(BaseModel):
     # new_name: Optional[str] = Field(regex=FILE_NAME_REGEX)
     app_id: str
     new_label: Optional[str]
+
+
+class SyncAppRequest(BaseModel):
+    generate_new: Optional[bool] = False
+    app_name: str

@@ -31,6 +31,7 @@ def get_workspace_apps(router: DropbaseRouter):
                 "name": app.get("name"),
                 "label": app.get("label"),
                 "id": app.get("id"),
+                "status": app.get("status"),
                 "pages": pages,
             }
         )

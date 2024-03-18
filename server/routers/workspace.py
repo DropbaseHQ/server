@@ -1,9 +1,11 @@
 import json
 
 from fastapi import APIRouter, Depends
+from sqlalchemy.orm import Session
 
 from server.controllers.utils import check_if_object_exists
 from server.requests.dropbase_router import DropbaseRouter, get_dropbase_router
+from server.controllers.sync import sync_with_dropbase, auto_sync_demo
 
 router = APIRouter(
     prefix="/worker_workspace",
@@ -15,6 +17,15 @@ router = APIRouter(
 @router.get("/")
 async def get_workspace(router: DropbaseRouter = Depends(get_dropbase_router)) -> dict:
     response = router.auth.get_worker_workspace()
+    workspace_info = response.json()
+    auto_sync_demo(router=router)
+    sync_with_dropbase(router=router)
+    return workspace_info
+
+
+@router.post("/sync")
+async def sync_workspace(router: DropbaseRouter = Depends(get_dropbase_router)) -> dict:
+    response = router.auth.sync_worker_workspace()
     workspace_info = response.json()
     # sync demo here
     # check if demo dicrectory exists
@@ -31,12 +42,29 @@ async def get_workspace(router: DropbaseRouter = Depends(get_dropbase_router)) -
 
         if not demo_synced:
             # call server to sync demo
-            resp = router.misc.sync_demo()
+            resp = router.misc.sync_app(
+                payload={
+                    "app_name": "demo",
+                    "app_label": "Demo",
+                    "generate_new": True,
+                    "pages": [
+                        {
+                            "name": "demo",
+                            "label": "Demo",
+                            "id": "",
+                        }
+                    ],
+                }
+            )
             if resp.status_code == 200:
                 response = resp.json()
 
                 # sync app
-                app_record = {"name": "demo", "label": "Demo", "id": response.get("app_id")}
+                app_record = {
+                    "name": "demo",
+                    "label": "Demo",
+                    "id": response.get("app_id"),
+                }
                 if not check_if_object_exists("workspace/properties.json"):
                     apps = [app_record]
                 else:
@@ -57,9 +85,12 @@ async def get_workspace(router: DropbaseRouter = Depends(get_dropbase_router)) -
                 if check_if_object_exists("workspace/demo/properties.json"):
                     with open("workspace/demo/properties.json", "r") as file:
                         pages = json.load(file)["pages"]
+
+                    page_info = response.get("pages")
+                    demo_page = page_info[0]
                     for page in pages:
                         if page.get("id") == "":
-                            page["id"] = response.get("page_id")
+                            page["id"] = demo_page.get("id")
                             break
                     with open("workspace/demo/properties.json", "w") as file:
                         json.dump({"pages": pages}, file)

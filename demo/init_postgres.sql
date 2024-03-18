@@ -22,6 +22,24 @@ CREATE TABLE IF NOT EXISTS NoPrimaryKey (
     quantity INT NOT NULL
 );
 
+-- Create ALLTYPES table
+CREATE TABLE IF NOT EXISTS AllTypes (
+    user_id SERIAL PRIMARY KEY,
+    datetime_col TIMESTAMP WITHOUT TIME ZONE,
+    date_col DATE,
+    time_col TIME WITHOUT TIME ZONE,
+    string_col VARCHAR(255),
+    int_col INTEGER,
+    float_col REAL,
+    bool_col BOOLEAN
+);
+
+-- Insert data into ALLTYPES table
+INSERT INTO AllTypes (datetime_col, date_col, time_col, string_col, int_col, float_col, bool_col) VALUES 
+    ('2024-03-14 15:00:00', '2024-03-14', '15:00:00', 'First Entry', 1, 1.1, TRUE),
+    ('2024-03-15 16:30:00', '2024-03-15', '16:30:00', 'Second Entry', 2, 2.2, FALSE),
+    ('2024-03-16 17:45:00', '2024-03-16', '17:45:00', 'Third Entry', 3, 3.3, TRUE);
+
 -- Insert data into Users table
 INSERT INTO users (username, email) VALUES
     ('John Doe', 'john.doe@example.com'),
@@ -60,3 +78,4 @@ INSERT INTO NoPrimaryKey (product_name, quantity) VALUES
     ('External HDD08-22', 1),
     ('Camera', 1),
     ('Smartphone', 1);
+
