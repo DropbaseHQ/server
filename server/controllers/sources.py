@@ -1,10 +1,10 @@
-import json
+# todo: group with dropbase package sources
 import logging
-import os
 
 from pydantic import ValidationError
 
 from dropbase.schemas.database import MySQLCreds, PgCreds, SnowflakeCreds, SqliteCreds
+from server.settings import config
 
 db_type_to_class = {
     "postgres": PgCreds,
@@ -17,9 +17,7 @@ db_type_to_class = {
 
 def get_sources():
     sources = {}
-    env_sources = os.environ.get("sources", "{}")
-    env_sources = json.loads(env_sources)
-
+    env_sources = config.get("sources", {})
     for db_type in env_sources:
         for key, value in env_sources[db_type].items():
             value["type"] = db_type
