@@ -17,8 +17,23 @@ router = APIRouter(
 
 @router.get("/")
 async def get_workspace(router: DropbaseRouter = Depends(get_dropbase_router)) -> dict:
+
     response = router.auth.get_worker_workspace()
     workspace_info = response.json()
+    workspace_folder_controller = WorkspaceFolderController(
+        r_path_to_workspace=os.path.join(os.getcwd(), "workspace")
+    )
+    # Adds workspace id to workspace properties if not there already
+    if check_if_object_exists("workspace/properties.json"):
+        workspace_props = workspace_folder_controller.get_workspace_properties()
+        workspace_id = workspace_props.get("id")
+        if not workspace_id:
+            remote_id = workspace_info.get("id")
+            if remote_id:
+                workspace_props["id"] = remote_id
+                workspace_folder_controller.write_workspace_properties(
+                    {**workspace_props, "id": remote_id}
+                )
     auto_sync_demo(router=router)
     sync_with_dropbase(router=router)
     return workspace_info
@@ -34,8 +49,7 @@ async def sync_workspace(router: DropbaseRouter = Depends(get_dropbase_router)) 
     workspace_folder_controller = WorkspaceFolderController(
         r_path_to_workspace=os.path.join(os.getcwd(), "workspace")
     )
-    if check_if_object_exists("workspace/properties.json"):
-        workspace_properties = workspace_folder_controller.get_workspace_properties()
+
     if check_if_object_exists("workspace/demo"):
         # check if already synced
         demo_synced = False
