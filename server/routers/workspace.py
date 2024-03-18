@@ -1,11 +1,12 @@
 import json
-
+import os
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
 from server.controllers.utils import check_if_object_exists
 from server.requests.dropbase_router import DropbaseRouter, get_dropbase_router
 from server.controllers.sync import sync_with_dropbase, auto_sync_demo
+from server.controllers.workspace import WorkspaceFolderController
 
 router = APIRouter(
     prefix="/worker_workspace",
@@ -27,8 +28,14 @@ async def get_workspace(router: DropbaseRouter = Depends(get_dropbase_router)) -
 async def sync_workspace(router: DropbaseRouter = Depends(get_dropbase_router)) -> dict:
     response = router.auth.sync_worker_workspace()
     workspace_info = response.json()
+    # Sync workspace_id to properties.json
     # sync demo here
     # check if demo dicrectory exists
+    workspace_folder_controller = WorkspaceFolderController(
+        r_path_to_workspace=os.path.join(os.getcwd(), "workspace")
+    )
+    if check_if_object_exists("workspace/properties.json"):
+        workspace_properties = workspace_folder_controller.get_workspace_properties()
     if check_if_object_exists("workspace/demo"):
         # check if already synced
         demo_synced = False
