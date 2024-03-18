@@ -30,7 +30,7 @@ CREATE TABLE IF NOT EXISTS AllTypes (
     string_col TEXT,
     int_col INTEGER,
     float_col REAL,
-    bool_col INTEGER
+    bool_col BOOLEAN
 );
 
 INSERT INTO AllTypes (datetime_col, date_col, time_col, string_col, int_col, float_col, bool_col) 
