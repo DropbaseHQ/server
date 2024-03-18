@@ -19,6 +19,8 @@ class BooleanDefinedProperty(BaseModel):
     label: Annotated[str, PropertyCategory.default]
     name: Annotated[str, PropertyCategory.default]
 
+    default: Annotated[Optional[bool], PropertyCategory.default] = False
+
     # events
     on_toggle: Annotated[Optional[OnToggle], PropertyCategory.events]
 

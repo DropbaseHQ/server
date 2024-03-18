@@ -19,4 +19,4 @@ class MiscRouter:
         return self.session.post(url="get_smart_cols/", json=payload)
 
     def sync_demo(self):
-        return self.session.get(url="sync_demo/")
+        return self.session.get(url="sync_demo")

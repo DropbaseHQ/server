@@ -1,13 +1,13 @@
+import datetime
 import json
 
 import pandas as pd
 
-INFER_TYPE_SAMPLE_SIZE = 50
+from dropbase.constants import INFER_TYPE_SAMPLE_SIZE
 
 
 def convert_df_to_resp_obj(df: pd.DataFrame, column_type: str) -> dict:
     values = json.loads(df.to_json(orient="split", default_handler=str))
-    values["data"] = flatten_json(values["data"])
 
     if len(df) > INFER_TYPE_SAMPLE_SIZE:
         df = df.sample(INFER_TYPE_SAMPLE_SIZE)
@@ -15,20 +15,6 @@ def convert_df_to_resp_obj(df: pd.DataFrame, column_type: str) -> dict:
     columns = get_column_types(df, column_type)
     values["columns"] = columns
     return values
-
-
-def flatten_json(json_data):
-    data = []
-    for row in json_data:
-        new_row = []
-        for value in row:
-            new_row.append(value)
-            # if isinstance(value, dict) or isinstance(value, list):
-            #     new_row.append(json.dumps(value, default=str))
-            # else:
-            #     new_row.append(value)
-        data.append(new_row)
-    return data
 
 
 def get_column_types(df, column_type: str):
@@ -62,7 +48,19 @@ def detect_col_type(col_type: str, column: pd.Series):
 
 
 def infer_object_type(column: pd.Series):
-    if column.map(lambda x: type(x) is list).all():
-        return "array"
-    else:
-        return "text"
+    type_names = ["array", "datetime", "date", "time", "text"]
+    types = [0, 0, 0, 0, 0]
+    for col in column:
+        inferred_type = type(col)
+        if inferred_type is list:
+            types[0] += 1
+        elif inferred_type is datetime.datetime:
+            types[1] += 1
+        elif inferred_type is datetime.date:
+            types[2] += 1
+        elif inferred_type is datetime.time:
+            types[3] += 1
+        else:
+            types[4] += 1
+    type_index = types.index(max(types))
+    return type_names[type_index]
