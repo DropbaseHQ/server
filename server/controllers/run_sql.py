@@ -3,10 +3,10 @@ import traceback
 
 from jinja2 import Environment
 
-from dropbase.database.connect import connect
 from dropbase.helpers.dataframe import convert_df_to_resp_obj
 from dropbase.schemas.query import RunSQLRequestTask, RunSQLStringRequest
 from server.constants import cwd
+from server.controllers.connect import connect
 from server.controllers.python_subprocess import verify_state
 from server.controllers.redis import r
 from server.controllers.utils import process_query_result
