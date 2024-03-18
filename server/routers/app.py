@@ -38,24 +38,43 @@ def sync_app_req(
         ):
             return {"message": "App is already synced"}
 
+        app_folder_controller = AppFolderController(
+            app_name=request.app_name, r_path_to_workspace=path_to_workspace
+        )
+
+        app_pages = app_folder_controller._get_app_properties_data().get("pages")
+
         sync_response = router.misc.sync_app(
             payload={
                 "app_name": request.app_name,
                 "app_label": target_app.get("label"),
                 "generate_new": request.generate_new,
+                "pages": app_pages,
             }
         )
         workspace_apps = workspace_folder_controller.get_workspace_properties()
+
+        response_pages = sync_response.json().get("pages")
 
         for app in workspace_apps:
             if app.get("name") == request.app_name:
                 app["id"] = sync_response.json().get("app_id")
                 app["status"] = "SYNCED"
+
+                app_properties = app_folder_controller._get_app_properties_data()
+                if response_pages is not None and len(response_pages) > 0:
+                    combined_page_info = zip(
+                        app_properties.get("pages"), response_pages
+                    )
+                    for local_page, remote_page in combined_page_info:
+                        local_page["id"] = remote_page.get("id")
+                        local_page["status"] = "SYNCED"
+
                 break
 
         workspace_folder_controller.write_workspace_properties({"apps": workspace_apps})
         return {"message": "App synced"}
-    except Exception:
+    except Exception as e:
         raise HTTPException(status_code=500, detail="Unable to sync app with Dropbase")
 
 
