@@ -221,8 +221,8 @@ def test_rename_app_req(test_client):
         # Act
         res = test_client.put("/app/", json=data)
 
-        apps = workspace_folder_controller.get_workspace_properties()
-
+        workspace_props = workspace_folder_controller.get_workspace_properties()
+        apps = workspace_props.get("apps", [])
         app_still_has_old_name = False
         app_has_new_label = False
         for app in apps:

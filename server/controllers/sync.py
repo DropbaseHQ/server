@@ -17,7 +17,8 @@ def sync_with_dropbase(router: DropbaseRouter):
     workspace_folder_controller = WorkspaceFolderController(
         r_path_to_workspace=workspace_path
     )
-    workspace_apps = workspace_folder_controller.get_workspace_properties()
+    workspace_props = workspace_folder_controller.get_workspace_properties()
+    workspace_apps = workspace_props.get("apps", [])
     workspace_app_structure = []
 
     for app in workspace_apps:
@@ -49,7 +50,8 @@ def sync_with_dropbase(router: DropbaseRouter):
     apps_without_ids = structure_response.json().get("apps_without_id")
     app_with_ids = structure_response.json().get("apps_with_id")
 
-    properties = workspace_folder_controller.get_workspace_properties()
+    workspace_props = workspace_folder_controller.get_workspace_properties()
+    properties = workspace_props.get("apps", [])
     for app in apps_without_ids:
         for app_properties in properties:
             if app_properties.get("name") == app.get("name"):
@@ -62,7 +64,9 @@ def sync_with_dropbase(router: DropbaseRouter):
             app["status"] = "SYNCED"
             continue
 
-    workspace_folder_controller.write_workspace_properties({"apps": properties})
+    workspace_folder_controller.write_workspace_properties(
+        {**workspace_props, "apps": properties}
+    )
 
 
 def auto_sync_demo(router: DropbaseRouter):
@@ -73,7 +77,8 @@ def auto_sync_demo(router: DropbaseRouter):
             workspace_folder_controller = WorkspaceFolderController(
                 r_path_to_workspace=os.path.join(cwd, "workspace")
             )
-            apps = workspace_folder_controller.get_workspace_properties()
+            workspace_props = workspace_folder_controller.get_workspace_properties()
+            apps = workspace_props.get("apps", [])
             for app in apps:
                 if app.get("name") == "demo" and app.get("id"):
                     demo_synced = True
@@ -118,7 +123,9 @@ def auto_sync_demo(router: DropbaseRouter):
                     if not demo_exists:
                         apps.append(app_record)
 
-                workspace_folder_controller.write_workspace_properties({"apps": apps})
+                workspace_folder_controller.write_workspace_properties(
+                    {**workspace_props, "apps": apps}
+                )
 
                 # sync pages
                 if check_if_object_exists("workspace/demo/properties.json"):
