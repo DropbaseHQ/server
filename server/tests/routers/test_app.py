@@ -29,6 +29,10 @@ def check_directory_structure(path):
     return True
 
 
+class MockResponse:
+    status_code = 200
+
+
 def test_create_app_req(test_client, dropbase_router_mocker):
     try:
         # Arrange
@@ -40,7 +44,10 @@ def test_create_app_req(test_client, dropbase_router_mocker):
 
         # Act
         dropbase_router_mocker.patch(
-            "app", "create_app", side_effect=lambda *args, **kwargs: None
+            "app", "create_app", side_effect=lambda *args, **kwargs: MockResponse()
+        )
+        dropbase_router_mocker.patch(
+            "page", "create_page", side_effect=lambda *args, **kwargs: MockResponse()
         )
         res = test_client.post("/app/", json=data)
 
@@ -61,7 +68,10 @@ def test_create_app_req_error_duplicate_labels(test_client, dropbase_router_mock
 
     # Act
     dropbase_router_mocker.patch(
-        "app", "create_app", side_effect=lambda *args, **kwargs: None
+        "app", "create_app", side_effect=lambda *args, **kwargs: MockResponse()
+    )
+    dropbase_router_mocker.patch(
+        "page", "create_page", side_effect=lambda *args, **kwargs: MockResponse()
     )
     test_client.post("/app/", json=data)
 
@@ -71,7 +81,7 @@ def test_create_app_req_error_duplicate_labels(test_client, dropbase_router_mock
     # Assert
     assert res.status_code != 200
 
-    assert res_data["detail"] == "Another app with the same label already exists"
+    assert res_data["detail"] == "Another app with the same name already exists"
 
 
 def test_create_app_req_error_duplicate_names(test_client, dropbase_router_mocker):
@@ -221,8 +231,8 @@ def test_rename_app_req(test_client):
         # Act
         res = test_client.put("/app/", json=data)
 
-        apps = workspace_folder_controller.get_workspace_properties()
-
+        workspace_props = workspace_folder_controller.get_workspace_properties()
+        apps = workspace_props.get("apps", [])
         app_still_has_old_name = False
         app_has_new_label = False
         for app in apps:
@@ -241,8 +251,6 @@ def test_rename_app_req(test_client):
 
 def test_delete_app_req(test_client, dropbase_router_mocker):
     # Act
-    class MockResponse:
-        status_code = 200
 
     dropbase_router_mocker.patch(
         "app", "delete_app", side_effect=lambda *args, **kwargs: MockResponse()

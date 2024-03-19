@@ -23,3 +23,4 @@ workspace/*
 dump.rdb
 *.db
 *.db-journal
+config.toml

@@ -39,12 +39,14 @@ class WorkspaceFolderController:
             ) as file:
 
                 props = json.load(file)
-                return props.get("apps", [])
+                # return props.get("apps", [])
+                return props
 
         return None
 
     def get_app(self, app_id: str):
-        workspace_data = self.get_workspace_properties()
+        workspace_props = self.get_workspace_properties()
+        workspace_data = workspace_props.get("apps", [])
 
         for app in workspace_data:
             if app.get("id") == app_id:
@@ -52,7 +54,9 @@ class WorkspaceFolderController:
         return None
 
     def get_app_id(self, app_name: str):
-        workspace_data = self.get_workspace_properties()
+        workspace_props = self.get_workspace_properties()
+        workspace_data = workspace_props.get("apps", [])
+
         app_id = None
         for app in workspace_data:
             if app.get("name") == app_name:
@@ -66,8 +70,9 @@ class WorkspaceFolderController:
                 status_code=400,
                 detail="App does not exist, or id does not exist for this app.",
             )
-
-        existing_app_labels = [a["label"] for a in self.get_workspace_properties()]
+        workspace_props = self.get_workspace_properties()
+        workspace_apps = workspace_props.get("apps", [])
+        existing_app_labels = [a["label"] for a in workspace_apps]
 
         if new_label in existing_app_labels:
             raise HTTPException(
@@ -75,12 +80,13 @@ class WorkspaceFolderController:
             )
 
         app_info = {**target_app, "label": new_label}
-        workspace_data = self.get_workspace_properties()
+        workspace_props = self.get_workspace_properties()
+        workspace_data = workspace_props.get("apps", [])
         for app in workspace_data:
             if app.get("id") == app_id:
                 app.update(app_info)
                 break
-        self.write_workspace_properties({"apps": workspace_data})
+        self.write_workspace_properties({**workspace_props, "apps": workspace_data})
 
 
 class AppFolderController:
