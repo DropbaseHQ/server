@@ -8,6 +8,7 @@ from dropbase.schemas.table import CommitTableColumnsRequest, ConvertTableReques
 from server.auth.dependency import CheckUserPermissions
 from server.controllers.columns import commit_table_columns
 from server.controllers.python_docker import run_container
+from server.controllers.redis import r
 from server.controllers.tables import convert_sql_table
 from server.requests.dropbase_router import DropbaseRouter, get_dropbase_router
 
@@ -27,18 +28,21 @@ async def convert_sql_table_req(
 ):
     job_id = uuid.uuid4().hex
 
-    args = {
-        "app_name": req.app_name,
-        "page_name": req.page_name,
+    background_tasks.add_task(convert_sql_table, req, router, job_id)
+    status_code = 202
+    reponse_payload = {
+        "message": "job started",
+        "status_code": status_code,
         "job_id": job_id,
-        "type": "smart",
     }
-    args["table"] = json.dumps(req.table.dict())
-    args["state"] = json.dumps(req.state)
 
-    background_tasks.add_task(run_container, args)
-    # Now correctly scheduling the wrapper function
-    return {"message": "Conversion started", "job_id": job_id}
+    # set initial status to pending
+    r.set(job_id, json.dumps(reponse_payload))
+    r.expire(job_id, 300)  # timeout in 5 minutes
+
+    response.status_code = status_code
+    reponse_payload.pop("status_code")
+    return reponse_payload
 
 
 @router.post(
