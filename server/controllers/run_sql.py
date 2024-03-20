@@ -1,4 +1,5 @@
 import json
+import re
 import traceback
 
 from jinja2 import Environment
@@ -9,17 +10,40 @@ from server.constants import cwd
 from server.controllers.connect import connect
 from server.controllers.python_subprocess import verify_state
 from server.controllers.redis import r
-from server.controllers.utils import process_query_result
+from server.controllers.utils import get_state, process_query_result
+
+
+def get_column_name(sql):
+    match = re.search(r"\{\{state\.tables\.\w+\.(\w+)\}\}", sql, re.IGNORECASE)
+    if match is not None:
+        return match.group(1)
+
+
+def verify_columns(state, col_name):
+    tables_state = getattr(state, "tables", None)
+
+    if tables_state is not None:
+        for table_name, table_state in tables_state.__dict__.items():
+            if hasattr(table_state, col_name):
+                table = getattr(tables_state, table_name)
+                column = getattr(table, col_name, None)
+                if column is not None:
+                    return True
+        raise Exception(f"Column '{col_name}' not found in any table state.")
+    else:
+        raise Exception("No tables found in the state.")
 
 
 def run_sql_query_from_string(req: RunSQLStringRequest, job_id: str):
     response = {"stdout": "", "traceback": "", "message": "", "type": "", "status_code": 202}
     try:
         verify_state(req.app_name, req.page_name, req.state)
+
         # connect to user db
         user_db = connect(req.source)
         # prepare sql
         sql = clean_sql(req.file_content)
+
         sql = render_sql(sql, req.state)
         # query db
         res = user_db._run_query(sql, {})
@@ -55,13 +79,22 @@ def run_sql_query(args: RunSQLRequestTask, job_id: str):
         user_db = connect(args.file.source)
         # get query from file
         file_sql = get_sql_from_file(args.app_name, args.page_name, args.file.name)
+
         # get get query string and values for sqlalchemy query
         sql = clean_sql(file_sql)
+
+        state = get_state(args.app_name, args.page_name, args.state)
+        col_name = get_column_name(sql)
+
+        if col_name:
+            verify_columns(state, col_name)
+
         sql = render_sql(sql, args.state)
 
         filter_sql, filter_values = user_db._apply_filters(
             sql, args.filter_sort.filters, args.filter_sort.sorts, args.filter_sort.pagination
         )
+
         # query user db
         res = user_db._run_query(filter_sql, filter_values)
         df = process_query_result(res)
