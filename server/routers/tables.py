@@ -26,9 +26,10 @@ async def convert_sql_table_req(
     background_tasks: BackgroundTasks,
     router: DropbaseRouter = Depends(get_dropbase_router),
 ):
-    job_id = uuid.uuid4().hex
 
+    job_id = uuid.uuid4().hex
     background_tasks.add_task(convert_sql_table, req, router, job_id)
+
     status_code = 202
     reponse_payload = {
         "message": "job started",
