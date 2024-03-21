@@ -1,6 +1,5 @@
 import json
 import re
-import traceback
 
 from dropbase.schemas.files import DataFile
 from dropbase.schemas.table import ConvertTableRequest
@@ -35,7 +34,7 @@ def check_banned_keywords(user_sql: str) -> bool:
 
 
 def convert_sql_table(req: ConvertTableRequest, router: DropbaseRouter, job_id):
-    response = {"stdout": "", "traceback": "", "message": "", "type": "", "status_code": 202}
+    response = {"message": "", "type": "", "status_code": 202}
     try:
         # get db schema
         properties = read_page_properties(req.app_name, req.page_name)
@@ -83,6 +82,7 @@ def convert_sql_table(req: ConvertTableRequest, router: DropbaseRouter, job_id):
         for column in column_props:
             column["display_type"] = user_db._detect_col_display_type(column["data_type"].lower())
 
+        # rereading properties
         properties = read_page_properties(req.app_name, req.page_name)
 
         for table in properties["tables"]:
@@ -90,20 +90,15 @@ def convert_sql_table(req: ConvertTableRequest, router: DropbaseRouter, job_id):
                 table["smart"] = True
                 table["columns"] = column_props
 
-        # rereading properties
         update_properties(req.app_name, req.page_name, properties)
-        # get new steate and context
-        state_context = get_page_state_context(req.app_name, req.page_name)
 
         r.set(job_id, json.dumps(response))
 
         response["status_code"] = 200
-        response["state_context"] = state_context
 
-        return {"message": "success"}
+        return get_page_state_context(req.app_name, req.page_name)
 
     except Exception as e:
-        response["traceback"] = traceback.format_exc()
         response["message"] = str(e)
         response["type"] = "error"
 
