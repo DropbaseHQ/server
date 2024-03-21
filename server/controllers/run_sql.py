@@ -13,27 +13,6 @@ from server.controllers.redis import r
 from server.controllers.utils import get_state, process_query_result
 
 
-def get_column_name(sql):
-    match = re.search(r"\{\{state\.tables\.\w+\.(\w+)\}\}", sql, re.IGNORECASE)
-    if match is not None:
-        return match.group(1)
-
-
-def verify_columns(state, col_name):
-    tables_state = getattr(state, "tables", None)
-
-    if tables_state is not None:
-        for table_name, table_state in tables_state.__dict__.items():
-            if hasattr(table_state, col_name):
-                table = getattr(tables_state, table_name)
-                column = getattr(table, col_name, None)
-                if column is not None:
-                    return True
-        raise Exception(f"Column '{col_name}' not found in any table state.")
-    else:
-        raise Exception("No tables found in the state.")
-
-
 def run_sql_query_from_string(req: RunSQLStringRequest, job_id: str):
     response = {"stdout": "", "traceback": "", "message": "", "type": "", "status_code": 202}
     try:
@@ -83,11 +62,13 @@ def run_sql_query(args: RunSQLRequestTask, job_id: str):
         # get get query string and values for sqlalchemy query
         sql = clean_sql(file_sql)
 
+        # validate state
         state = get_state(args.app_name, args.page_name, args.state)
-        col_name = get_column_name(sql)
-
-        if col_name:
-            verify_columns(state, col_name)
+        col_names = re.findall("{{(state.tables.*?)}}", sql)
+        for col_name in col_names:
+            # eval() executes the string as python code. if column is not present, it will raise an Error
+            # not sure if we need globals() here though
+            eval(col_name, globals(), state)
 
         sql = render_sql(sql, args.state)
 
