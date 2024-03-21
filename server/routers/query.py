@@ -131,44 +131,48 @@ async def run_query(req: QueryPythonRequest, response: Response, background_task
 async def start_docker_for_function(
     req: QueryFunctionRequest, response: Response, background_tasks: BackgroundTasks
 ):
-    properties = read_page_properties(req.app_name, req.page_name)
-    file = get_table_data_fetcher(properties["files"], req.fetcher)
-    file = DataFile(**file)
-    job_id = uuid.uuid4().hex
-    args = {
-        "app_name": req.app_name,
-        "page_name": req.page_name,
-        "job_id": job_id,
-        "type": "file",
-    }
-    if file.type == "data_fetcher":
-        # need to turn into json to pass to docker container as environment variables
-        args["file"] = json.dumps(file.dict())
-        args["state"] = json.dumps(req.state)
-        background_tasks.add_task(run_container, args)
-    else:
-        # called internally, so can pass objects directly
-        args["file"] = file
-        args["state"] = req.state
-        args["filter_sort"] = FilterSort(filters=[], sorts=[])
-        args = RunSQLRequestTask(**args)
-        background_tasks.add_task(run_sql_query, args, job_id)
+    try:
+        properties = read_page_properties(req.app_name, req.page_name)
+        file = get_table_data_fetcher(properties["files"], req.fetcher)
+        file = DataFile(**file)
+        job_id = uuid.uuid4().hex
+        args = {
+            "app_name": req.app_name,
+            "page_name": req.page_name,
+            "job_id": job_id,
+            "type": "file",
+        }
+        if file.type == "data_fetcher":
+            # need to turn into json to pass to docker container as environment variables
+            args["file"] = json.dumps(file.dict())
+            args["state"] = json.dumps(req.state)
+            run_container(env_vars=args)
+        else:
+            # called internally, so can pass objects directly
+            args["file"] = file
+            args["state"] = req.state
+            args["filter_sort"] = FilterSort(filters=[], sorts=[])
+            args["job_id"] = job_id
+            args = RunSQLRequestTask(**args)
+            background_tasks.add_task(run_sql_query, args)
 
-    status_code = 202
-    response_payload = {
-        "message": "job started",
-        "status_code": status_code,
-        "job_id": job_id,
-    }
+        status_code = 202
+        reponse_payload = {
+            "message": "job started",
+            "status_code": status_code,
+            "job_id": job_id,
+        }
 
-    # set initial status to pending
-    r.set(job_id, json.dumps(response_payload))
-    r.expire(job_id, 300)  # timeout in 5 minutes
+        # set initial status to pending
+        r.set(job_id, json.dumps(reponse_payload))
+        r.expire(job_id, 300)  # timeout in 5 minutes
 
-    response.status_code = status_code
-    response_payload.pop("status_code")
-    print(response_payload)
-    return response_payload
+        response.status_code = status_code
+        reponse_payload.pop("status_code")
+        return reponse_payload
+    except Exception as e:
+        response.status_code = 500
+        return {"message": str(e)}
 
 
 @router.get("/status/{job_id}")
