@@ -1,4 +1,5 @@
 import copy
+import time
 
 import pytest
 
@@ -51,12 +52,56 @@ base_table_data = {
                         "display_type": "text",
                     },
                 ],
-            }
+            },
+            {
+                "label": "Table3",
+                "name": "table3",
+                "description": None,
+                "fetcher": "function3",
+                "height": "",
+                "size": 10,
+                "filters": None,
+                "type": "sql",
+                "smart": False,
+                "columns": [
+                    {
+                        "name": "customer_id",
+                        "column_type": "postgres",
+                        "data_type": "int64",
+                        "display_type": "integer",
+                    },
+                    {
+                        "name": "company_name",
+                        "column_type": "postgres",
+                        "data_type": "object",
+                        "display_type": "text",
+                    },
+                    {
+                        "name": "contact_name",
+                        "column_type": "postgres",
+                        "data_type": "object",
+                        "display_type": "text",
+                    },
+                    {
+                        "name": "phone_number",
+                        "column_type": "postgres",
+                        "data_type": "object",
+                        "display_type": "text",
+                    },
+                    {
+                        "name": "customer_type",
+                        "column_type": "postgres",
+                        "data_type": "object",
+                        "display_type": "text",
+                    },
+                ],
+            },
         ],
         "widgets": [],
         "files": [{"name": "function3", "type": "sql", "source": "dropbasedev", "depends_on": []}],
     },
 }
+
 
 base_smart_table_data = {
     "table": {
@@ -71,10 +116,11 @@ base_smart_table_data = {
         "smart": False,
         "columns": [],
     },
-    "state": {"tables": {"table1": {}, "table2": {}}, "widgets": {}},
+    "state": {"tables": {"table2": {}, "table3": {}}, "widgets": {}},
     "app_name": "dropbase_test_app",
     "page_name": "page1",
 }
+
 
 base_file_data = {
     "name": "function3",
@@ -83,6 +129,7 @@ base_file_data = {
     "type": "sql",
     "source": "dropbasedev",
 }
+
 
 base_add_file_data = {
     "page_name": "page1",
@@ -293,3 +340,38 @@ def test_convert_to_smart_table_empty_table_fail(test_client, mocker, mock_db, s
     # Assertions
     assert "Can not convert empty table into smart table" in res_data
     assert verify_property_exists("tables[0].smart", False)
+
+
+@pytest.mark.parametrize("mock_db", ["postgres", "mysql", "snowflake", "sqlite"], indirect=True)
+@pytest.mark.parametrize(
+    "setup_tables",
+    [
+        "SELECT * FROM orders",
+    ],
+    indirect=True,
+)
+def test_convert_to_smart_table_in_parallel(test_client, mocker, mock_db, setup_tables):
+    # Arrange
+    smart_data = copy.deepcopy(base_smart_table_data)
+
+    headers = {"access-token": "mock access token"}
+    mocker.patch("server.controllers.tables.connect", return_value=mock_db)
+
+    # Act
+    res = test_client.post("/tables/convert", json=smart_data, headers=headers)
+    res_data = res.json()
+
+    time.sleep(3)
+
+    smart_data_2 = copy.deepcopy(base_smart_table_data)
+    smart_data_2["table"]["label"] = "Table3"
+    smart_data_2["table"]["name"] = "table3"
+
+    res_2 = test_client.post("/tables/convert", json=smart_data_2, headers=headers)
+    res_data_2 = res_2.json()
+
+    # Assertions
+    assert res_data["state"]["tables"]["table2"]
+    assert verify_property_exists("tables[0].smart", True)
+    assert res_data_2["state"]["tables"]["table3"]
+    assert verify_property_exists("tables[1].smart", True)
