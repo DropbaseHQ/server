@@ -27,7 +27,7 @@ class SelectDefinedProperty(BaseModel):
 
     use_fetcher: Annotated[bool, PropertyCategory.default] = False
     options: Annotated[Optional[List[Dict]], PropertyCategory.default]
-    fetcher: Annotated[Optional[str], PropertyCategory.default]
+    fetcher: Annotated[str, PropertyCategory.default]
     name_column: Annotated[str, PropertyCategory.default]
     value_column: Annotated[str, PropertyCategory.default]
 
