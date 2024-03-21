@@ -19,7 +19,6 @@ def stringify_env_vars(env_vars: dict) -> dict:
 
 
 def run_container(env_vars: dict, docker_script: str = "inside_docker"):
-
     client = docker.from_env()
 
     # add environment variables from .env file
@@ -38,18 +37,14 @@ def run_container(env_vars: dict, docker_script: str = "inside_docker"):
 
     # add additional mounts from the environment variable
     if config.get("host_mounts"):
-        try:
-            host_mounts = config.get("host_mounts") or []
-            for mount in host_mounts:
-                # NOTE: we need to get the last part of the path to use as the target since all
-                # directories are mounted to /app
-                dir_name = mount.split("/")[-1]
-                target = f"/app/{dir_name}"
-                source = f"{mount}"
-                mounts.append(docker.types.Mount(target=target, source=source, type="bind"))
-        except Exception as e:
-            logger.warning(f"Error parsing HOST_MOUNTS: {e}")
-            mounts = [workspace_mount, files_mount]
+        host_mounts = config.get("host_mounts") or []
+        for mount in host_mounts:
+            # NOTE: we need to get the last part of the path to use as the target since all
+            # directories are mounted to /app
+            dir_name = mount.split("/")[-1]
+            target = f"/app/{dir_name}"
+            source = f"{mount}"
+            mounts.append(docker.types.Mount(target=target, source=source, type="bind"))
 
     # Run the Docker container with the mount
     client.containers.run(

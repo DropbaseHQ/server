@@ -12,9 +12,14 @@ class RunSQLStringRequest(BaseModel):
     state: dict
 
 
+class RunSQLStringTask(RunSQLStringRequest):
+    job_id: str
+
+
 class RunSQLRequestTask(BaseModel):
     app_name: str
     page_name: str
     file: DataFile
     filter_sort: FilterSort
     state: dict
+    job_id: str
