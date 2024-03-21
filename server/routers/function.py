@@ -1,7 +1,7 @@
 import json
 import uuid
 
-from fastapi import APIRouter, BackgroundTasks, Response
+from fastapi import APIRouter, Response
 
 from dropbase.schemas.files import DataFile
 from dropbase.schemas.function import RunFunction
@@ -18,7 +18,7 @@ router = APIRouter(
 
 
 @router.post("/")
-async def run_function_req(req: RunFunction, response: Response, background_tasks: BackgroundTasks):
+async def run_function_req(req: RunFunction, response: Response):
     try:
         properties = read_page_properties(req.app_name, req.page_name)
         file = get_table_data_fetcher(properties["files"], req.function_name)
@@ -29,7 +29,7 @@ async def run_function_req(req: RunFunction, response: Response, background_task
         file = DataFile(**file)
 
         job_id = uuid.uuid4().hex
-        args = {
+        env_vars = {
             "app_name": req.app_name,
             "page_name": req.page_name,
             "file": json.dumps(file.dict()),
@@ -39,7 +39,7 @@ async def run_function_req(req: RunFunction, response: Response, background_task
             "type": "file",
         }
         # start a job
-        background_tasks.add_task(run_container, args)
+        run_container(env_vars)
 
         status_code = 202
         reponse_payload = {
