@@ -51,7 +51,7 @@ class TableDefinedProperty(BaseModel):
     w: Annotated[Optional[int], PropertyCategory.internal]
     h: Annotated[Optional[int], PropertyCategory.internal]
     x: Annotated[Optional[int], PropertyCategory.internal]
-    w: Annotated[Optional[int], PropertyCategory.internal]
+    y: Annotated[Optional[int], PropertyCategory.internal]
 
     type: Optional[Literal["python", "sql"]] = "sql"
     smart: Optional[bool] = False
