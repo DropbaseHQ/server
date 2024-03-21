@@ -31,3 +31,10 @@ class QueryPythonRequest(BaseModel):
     table: TableBase
     filter_sort: FilterSort
     state: dict
+
+
+class QueryFunctionRequest(BaseModel):
+    app_name: str
+    page_name: str
+    fetcher: str
+    state: dict
