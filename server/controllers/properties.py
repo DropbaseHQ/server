@@ -18,7 +18,7 @@ def update_properties(app_name: str, page_name: str, properties: dict, update_mo
     shutil.copytree(page_dir_path, page_dir_path_backup)
 
     try:
-        # write propertie
+        # write properties
         write_page_properties(app_name, page_name, properties)
 
         # update state and context models
