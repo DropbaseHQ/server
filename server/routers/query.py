@@ -83,53 +83,25 @@ async def run_python_string_test(req: RunPythonStringRequestNew, response: Respo
 
 @router.post("/")
 async def run_query(req: QueryPythonRequest, response: Response, background_tasks: BackgroundTasks):
-    try:
-        properties = read_page_properties(req.app_name, req.page_name)
-        file = get_table_data_fetcher(properties["files"], req.table.fetcher)
-        file = DataFile(**file)
-        job_id = uuid.uuid4().hex
-        args = {
-            "app_name": req.app_name,
-            "page_name": req.page_name,
-            "job_id": job_id,
-            "type": "file",
-        }
-        if file.type == "data_fetcher":
-            # need to turn into json to pass to docker container as environment variables
-            args["file"] = json.dumps(file.dict())
-            args["state"] = json.dumps(req.state)
-            run_container(env_vars=args)
-        else:
-            # called internally, so can pass objects directly
-            args["file"] = file
-            args["state"] = req.state
-            args["filter_sort"] = req.filter_sort
-            args["job_id"] = job_id
-            args = RunSQLRequestTask(**args)
-            background_tasks.add_task(run_sql_query, args)
-
-        status_code = 202
-        reponse_payload = {
-            "message": "job started",
-            "status_code": status_code,
-            "job_id": job_id,
-        }
-
-        # set initial status to pending
-        r.set(job_id, json.dumps(reponse_payload))
-        r.expire(job_id, 300)  # timeout in 5 minutes
-
-        response.status_code = status_code
-        reponse_payload.pop("status_code")
-        return reponse_payload
-    except Exception as e:
-        response.status_code = 500
-        return {"message": str(e)}
+    req = req.dict()
+    req["fetcher"] = req["table"]["fetcher"]
+    return await _run_query_helper(
+        QueryFunctionRequest(**req), response, background_tasks, req["filter_sort"]
+    )
 
 
 @router.post("/function/")
-async def start_docker_for_function(
+async def run_query_from_fetcher(
     req: QueryFunctionRequest, response: Response, background_tasks: BackgroundTasks
+):
+    return await _run_query_helper(req, response, background_tasks)
+
+
+async def _run_query_helper(
+    req: QueryFunctionRequest,
+    response: Response,
+    background_tasks: BackgroundTasks,
+    filter_sort=FilterSort(filters=[], sorts=[]),
 ):
     try:
         properties = read_page_properties(req.app_name, req.page_name)
@@ -151,7 +123,7 @@ async def start_docker_for_function(
             # called internally, so can pass objects directly
             args["file"] = file
             args["state"] = req.state
-            args["filter_sort"] = FilterSort(filters=[], sorts=[])
+            args["filter_sort"] = filter_sort
             args["job_id"] = job_id
             args = RunSQLRequestTask(**args)
             background_tasks.add_task(run_sql_query, args)
