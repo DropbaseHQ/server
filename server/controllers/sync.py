@@ -1,13 +1,12 @@
-from sqlalchemy.orm import Session
-from fastapi import HTTPException, status
+import logging
+import os
+
 from server.controllers.workspace import WorkspaceFolderController
 from server.controllers.app import AppFolderController
 from server.requests.dropbase_router import DropbaseRouter
 from server.controllers.utils import check_if_object_exists
 
-import os
-import json
-
+logger = logging.getLogger(__name__)
 cwd = os.getcwd()
 
 
@@ -47,8 +46,18 @@ def sync_with_dropbase(router: DropbaseRouter):
     workspace_structure = {"apps": workspace_app_structure}
 
     structure_response = router.misc.sync_structure(workspace_structure)
-    apps_without_ids = structure_response.json().get("apps_without_id")
-    app_with_ids = structure_response.json().get("apps_with_id")
+    if structure_response.status_code != 200:
+        logger.info("Failed to sync workspace structure")
+        return
+
+    try:
+        structure_response = structure_response.json()
+    except Exception as e:
+        logger.info(f"Error parsing response from server: {e}")
+        return
+
+    apps_without_ids = structure_response.get("apps_without_id")
+    app_with_ids = structure_response.get("apps_with_id")
 
     workspace_props = workspace_folder_controller.get_workspace_properties()
     properties = workspace_props.get("apps", [])
