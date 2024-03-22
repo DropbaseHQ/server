@@ -21,6 +21,10 @@ def get_sources():
     for db_type in env_sources:
         for key, value in env_sources[db_type].items():
             value["type"] = db_type
+
+            if "schema" in value:
+                value["dbschema"] = value.pop("schema")
+
             sources[key] = value
 
     verified_sources = {}
