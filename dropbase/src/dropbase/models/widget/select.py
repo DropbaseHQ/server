@@ -21,7 +21,7 @@ class SelectDefinedProperty(BaseModel):
     name: Annotated[str, PropertyCategory.default]
 
     data_type: Annotated[
-        Optional[Literal["string", "integer", "float", "boolean", "string_array"]],
+        Literal["string", "integer", "float", "boolean", "string_array"],
         PropertyCategory.default,
     ]
 
