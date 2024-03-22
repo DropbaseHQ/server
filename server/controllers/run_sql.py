@@ -4,7 +4,7 @@ import traceback
 from jinja2 import Environment
 
 from dropbase.helpers.dataframe import convert_df_to_resp_obj
-from dropbase.schemas.query import RunSQLRequestTask, RunSQLStringRequest
+from dropbase.schemas.query import RunSQLRequestTask, RunSQLStringTask
 from server.constants import cwd
 from server.controllers.connect import connect
 from server.controllers.python_subprocess import verify_state
@@ -12,21 +12,21 @@ from server.controllers.redis import r
 from server.controllers.utils import process_query_result
 
 
-def run_sql_query_from_string(req: RunSQLStringRequest, job_id: str):
+def run_sql_query_from_string(args: RunSQLStringTask):
     response = {"stdout": "", "traceback": "", "message": "", "type": "", "status_code": 202}
     try:
-        verify_state(req.app_name, req.page_name, req.state)
+        verify_state(args.app_name, args.page_name, args.state)
         # connect to user db
-        user_db = connect(req.source)
+        user_db = connect(args.source)
         # prepare sql
-        sql = clean_sql(req.file_content)
-        sql = render_sql(sql, req.state)
+        sql = clean_sql(args.file_content)
+        sql = render_sql(sql, args.state)
         # query db
         res = user_db._run_query(sql, {})
         # parse pandas response
         df = process_query_result(res)
         res = convert_df_to_resp_obj(df, user_db.db_type)
-        r.set(job_id, json.dumps(res))
+        r.set(args.job_id, json.dumps(res))
 
         response["data"] = res["data"]
         response["columns"] = res["columns"]
@@ -43,10 +43,10 @@ def run_sql_query_from_string(req: RunSQLStringRequest, job_id: str):
         response["status_code"] = 200
     finally:
         # pass
-        r.set(job_id, json.dumps(response))
+        r.set(args.job_id, json.dumps(response))
 
 
-def run_sql_query(args: RunSQLRequestTask, job_id: str):
+def run_sql_query(args: RunSQLRequestTask):
 
     response = {"stdout": "", "traceback": "", "message": "", "type": "", "status_code": 202}
 
@@ -67,7 +67,7 @@ def run_sql_query(args: RunSQLRequestTask, job_id: str):
         df = process_query_result(res)
 
         res = convert_df_to_resp_obj(df, user_db.db_type)
-        r.set(job_id, json.dumps(res))
+        r.set(args.job_id, json.dumps(res))
         response["data"] = res["data"]
         response["columns"] = res["columns"]
         response["message"] = "job completed"
@@ -82,9 +82,9 @@ def run_sql_query(args: RunSQLRequestTask, job_id: str):
 
         response["status_code"] = 500
 
-        r.set(job_id, str(e))
+        r.set(args.job_id, str(e))
     finally:
-        r.set(job_id, json.dumps(response))
+        r.set(args.job_id, json.dumps(response))
 
 
 # NOTE: this might need to move to db classes, not all sqls have the same end of line characters

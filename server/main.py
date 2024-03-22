@@ -6,9 +6,15 @@ import requests
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
-
+from starlette.websockets import WebSocketDisconnect
+from fastapi.responses import JSONResponse
 from server import routers
-from server.constants import CORS_ORIGINS, DROPBASE_API_URL, DROPBASE_TOKEN, WORKER_VERSION
+from server.constants import (
+    CORS_ORIGINS,
+    DROPBASE_API_URL,
+    DROPBASE_TOKEN,
+    WORKER_VERSION,
+)
 
 
 # to disable cache for static files
@@ -58,10 +64,21 @@ app.include_router(routers.websocket_router)
 app.include_router(routers.workspace_router)
 
 
+page_logger = logging.getLogger(__name__)
+
+
+@app.exception_handler(WebSocketDisconnect)
+async def websocket_disconnect_exception_handler(request, exc):
+    page_logger.info("WebSocket connection closed")
+
+
 # send health report to dropbase server
 async def send_report_continuously():
     while True:
-        requests.get(DROPBASE_API_URL + f"/worker/worker_status/{DROPBASE_TOKEN}/{WORKER_VERSION}")
+        requests.get(
+            DROPBASE_API_URL
+            + f"/worker/worker_status/{DROPBASE_TOKEN}/{WORKER_VERSION}"
+        )
         await asyncio.sleep(300)
 
 

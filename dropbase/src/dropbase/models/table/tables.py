@@ -36,7 +36,7 @@ class TableDefinedProperty(BaseModel):
     fetcher: Annotated[Optional[str], PropertyCategory.default]
 
     # settings
-    height: Annotated[Optional[str], PropertyCategory.default]
+
     size: Annotated[Optional[int], PropertyCategory.default] = 10
 
     # actions
@@ -48,5 +48,10 @@ class TableDefinedProperty(BaseModel):
     filters: Annotated[Optional[List[PinnedFilter]], PropertyCategory.other]
 
     # internal
+    w: Annotated[Optional[int], PropertyCategory.internal]
+    h: Annotated[Optional[int], PropertyCategory.internal]
+    x: Annotated[Optional[int], PropertyCategory.internal]
+    y: Annotated[Optional[int], PropertyCategory.internal]
+
     type: Optional[Literal["python", "sql"]] = "sql"
     smart: Optional[bool] = False
