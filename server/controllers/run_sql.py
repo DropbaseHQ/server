@@ -67,7 +67,7 @@ def run_sql_query(args: RunSQLRequestTask):
         for col_name in col_names:
             # eval() executes the string as python code. if column is not present, it will raise an Error
             # not sure if we need globals() here though
-            eval(col_name, globals(), state)
+            eval(col_name, {"state": state})
 
         sql = render_sql(sql, args.state)
 
