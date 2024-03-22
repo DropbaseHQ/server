@@ -23,7 +23,7 @@ class SelectDefinedProperty(BaseModel):
     data_type: Annotated[
         Optional[Literal["string", "integer", "float", "boolean", "string_array"]],
         PropertyCategory.default,
-    ] = "string"
+    ]
 
     options: Annotated[Optional[List[Dict]], PropertyCategory.default]
     default: Annotated[Optional[Any], PropertyCategory.other]
@@ -37,3 +37,7 @@ class SelectDefinedProperty(BaseModel):
 
     # internal
     component_type: Literal["select"]
+
+    def __init__(self, **data):
+        data.setdefault("data_type", "string")
+        super().__init__(**data)
