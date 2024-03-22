@@ -15,7 +15,7 @@ class InputDefinedProperty(BaseModel):
     name: Annotated[str, PropertyCategory.default]
     data_type: Annotated[
         Literal["text", "integer", "float", "datetime", "date", "time"], PropertyCategory.default
-    ] = "text"
+    ]
     placeholder: Annotated[Optional[str], PropertyCategory.default]
     default: Annotated[Optional[Any], PropertyCategory.default]
     multiline: Annotated[Optional[bool], PropertyCategory.default] = False
@@ -25,3 +25,7 @@ class InputDefinedProperty(BaseModel):
 
     # internal
     component_type: Literal["input"]
+
+    def __init__(self, **data):
+        data.setdefault("data_type", "text")
+        super().__init__(**data)
