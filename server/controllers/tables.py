@@ -1,3 +1,4 @@
+import json
 import re
 
 from dropbase.schemas.files import DataFile
@@ -5,6 +6,7 @@ from dropbase.schemas.table import ConvertTableRequest
 from server.controllers.connect import connect
 from server.controllers.page import get_page_state_context
 from server.controllers.properties import read_page_properties, update_properties
+from server.controllers.redis import r
 from server.controllers.run_sql import get_sql_from_file, render_sql
 from server.controllers.utils import get_table_data_fetcher
 from server.requests.dropbase_router import DropbaseRouter
@@ -31,7 +33,8 @@ def check_banned_keywords(user_sql: str) -> bool:
             raise Exception("Must remove keyword WITH to convert to smart table")
 
 
-def convert_sql_table(req: ConvertTableRequest, router: DropbaseRouter):
+def convert_sql_table(req: ConvertTableRequest, router: DropbaseRouter, job_id):
+    response = {"message": "", "type": "", "status_code": 202}
     try:
         # get db schema
         properties = read_page_properties(req.app_name, req.page_name)
@@ -45,6 +48,7 @@ def convert_sql_table(req: ConvertTableRequest, router: DropbaseRouter):
         # get columns
         user_sql = get_sql_from_file(req.app_name, req.page_name, file.name)
         user_sql = render_sql(user_sql, req.state)
+
         check_banned_keywords(user_sql)
         column_names = user_db._get_column_names(user_sql)
 
@@ -60,6 +64,7 @@ def convert_sql_table(req: ConvertTableRequest, router: DropbaseRouter):
         }
 
         resp = router.misc.get_smart_columns(get_smart_table_payload)
+
         if resp.status_code != 200:
             return resp
         smart_cols = resp.json().get("columns")
@@ -77,16 +82,26 @@ def convert_sql_table(req: ConvertTableRequest, router: DropbaseRouter):
         for column in column_props:
             column["display_type"] = user_db._detect_col_display_type(column["data_type"].lower())
 
+        # rereading properties
+        properties = read_page_properties(req.app_name, req.page_name)
+
         for table in properties["tables"]:
             if table["name"] == req.table.name:
                 table["smart"] = True
                 table["columns"] = column_props
 
-        # update properties
         update_properties(req.app_name, req.page_name, properties)
 
-        # get new steate and context
-        return get_page_state_context(req.app_name, req.page_name), 200
+        r.set(job_id, json.dumps(response))
+
+        response["status_code"] = 200
+
+        return get_page_state_context(req.app_name, req.page_name)
 
     except Exception as e:
-        return str(e), 500
+        response["message"] = str(e)
+        response["type"] = "error"
+
+        response["status_code"] = 200
+    finally:
+        r.set(job_id, json.dumps(response))

@@ -1,8 +1,11 @@
 import os
 from pathlib import Path
 
+import toml
+
 TEST_APP_NAME = "dropbase_test_app"
 TEST_PAGE_NAME = "page1"
+
 
 ROOT_PATH = Path(__file__).parent.parent.parent
 WORKSPACE_PATH = ROOT_PATH.joinpath("workspace")
@@ -11,6 +14,7 @@ DEMO_INIT_POSTGRESQL_PATH = ROOT_PATH.joinpath("demo/init_postgres.sql")
 DEMO_INIT_MYSQL_PATH = ROOT_PATH.joinpath("demo/init_mysql.sql")
 DEMO_INIT_SNOWFLAKE_PATH = ROOT_PATH.joinpath("demo/init_snowflake.sql")
 DEMO_INIT_SQLITE_PATH = ROOT_PATH.joinpath("demo/init_sqlite.sql")
+
 
 MYSQL_TEST_CREDS = {
     "host": "localhost",
@@ -21,6 +25,7 @@ MYSQL_TEST_CREDS = {
     "drivername": "mysql+pymysql",
 }
 
+
 MYSQL_TEST_CONNECTION_PARAMS = {
     "host": "localhost",
     "database": "test",
@@ -29,43 +34,26 @@ MYSQL_TEST_CONNECTION_PARAMS = {
     "port": 3307,
 }
 
-SNOWFLAKE_TEST_CREDS = {
-    "drivername": "snowflake",
-    "host": os.getenv("SNOWFLAKE_TEST_HOST"),
-    "username": os.getenv("SNOWFLAKE_TEST_USERNAME"),
-    "password": os.getenv("SNOWFLAKE_TEST_PASSWORD"),
-    "database": os.getenv("SNOWFLAKE_TEST_DATABASE"),
-    "dbschema": os.getenv("SNOWFLAKE_TEST_SCHEMA"),
-    "warehouse": os.getenv("SNOWFLAKE_TEST_WAREHOUSE"),
-    "role": os.getenv("SNOWFLAKE_TEST_ROLE"),
-}
 
-# why do we need this?
-SNOWFLAKE_TEST_CONNECTION_PARAMS = {
-    "account": os.getenv("SNOWFLAKE_TEST_HOST"),
-    "user": os.getenv("SNOWFLAKE_TEST_USERNAME"),
-    "password": os.getenv("SNOWFLAKE_TEST_PASSWORD"),
-    "database": os.getenv("SNOWFLAKE_TEST_DATABASE"),
-    "schema": os.getenv("SNOWFLAKE_TEST_SCHEMA"),
-    "warehouse": os.getenv("SNOWFLAKE_TEST_WAREHOUSE"),
-    "role": os.getenv("SNOWFLAKE_TEST_ROLE"),
-}
+with open("config.toml", "r") as toml_file:
+    config = toml.load(toml_file)
 
 
-SNOWFLAKE_TEST_CREDS = {
-    "drivername": "snowflake",
-    "host": os.getenv("SNOWFLAKE_TEST_HOST"),
-    "username": os.getenv("SNOWFLAKE_TEST_USERNAME"),
-    "password": os.getenv("SNOWFLAKE_TEST_PASSWORD"),
-    "database": os.getenv("SNOWFLAKE_TEST_DATABASE"),
-    "dbschema": os.getenv("SNOWFLAKE_TEST_SCHEMA"),
-    "warehouse": os.getenv("SNOWFLAKE_TEST_WAREHOUSE"),
-    "role": os.getenv("SNOWFLAKE_TEST_ROLE"),
-}
+SNOWFLAKE_TEST_CREDS = config["sources"]["snowflake"]["test"]
+SNOWFLAKE_TEST_CREDS["drivername"] = "snowflake"
+SNOWFLAKE_TEST_CREDS["dbschema"] = SNOWFLAKE_TEST_CREDS.pop("schema")
+
+
+SNOWFLAKE_TEST_CONNECTION_PARAMS = SNOWFLAKE_TEST_CREDS.copy()
+SNOWFLAKE_TEST_CONNECTION_PARAMS["account"] = SNOWFLAKE_TEST_CONNECTION_PARAMS.pop("host")
+SNOWFLAKE_TEST_CONNECTION_PARAMS["user"] = SNOWFLAKE_TEST_CONNECTION_PARAMS.pop("username")
+SNOWFLAKE_TEST_CONNECTION_PARAMS["schema"] = SNOWFLAKE_TEST_CONNECTION_PARAMS.pop("dbschema")
+
 
 SQLITE_TEST_CONNECTION_PARAMS = {
     "database": "data.db",
 }
+
 
 SQLITE_TEST_CREDS = {
     "drivername": "sqlite",
