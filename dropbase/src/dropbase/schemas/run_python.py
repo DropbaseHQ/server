@@ -1,8 +1,8 @@
-from typing import Any, Dict
+from typing import Any, Dict, Optional
 
 from pydantic import BaseModel
 
-from dropbase.schemas.table import FilterSort, TableBase
+from dropbase.schemas.table import FilterSort
 
 
 class QueryTablePayload(BaseModel):
@@ -28,13 +28,6 @@ class RunPythonStringRequestNew(BaseModel):
 class QueryPythonRequest(BaseModel):
     app_name: str
     page_name: str
-    table: TableBase
-    filter_sort: FilterSort
-    state: dict
-
-
-class QueryFunctionRequest(BaseModel):
-    app_name: str
-    page_name: str
     fetcher: str
+    filter_sort: Optional[FilterSort]
     state: dict

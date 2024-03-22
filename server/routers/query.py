@@ -5,11 +5,7 @@ from fastapi import APIRouter, BackgroundTasks, Depends, Response
 
 from dropbase.schemas.files import DataFile
 from dropbase.schemas.query import RunSQLRequestTask, RunSQLStringRequest, RunSQLStringTask
-from dropbase.schemas.run_python import (
-    QueryFunctionRequest,
-    QueryPythonRequest,
-    RunPythonStringRequestNew,
-)
+from dropbase.schemas.run_python import QueryPythonRequest, RunPythonStringRequestNew
 from dropbase.schemas.table import FilterSort
 from server.auth.dependency import CheckUserPermissions
 from server.controllers.properties import read_page_properties
@@ -83,26 +79,6 @@ async def run_python_string_test(req: RunPythonStringRequestNew, response: Respo
 
 @router.post("/")
 async def run_query(req: QueryPythonRequest, response: Response, background_tasks: BackgroundTasks):
-    req = req.dict()
-    req["fetcher"] = req["table"]["fetcher"]
-    return await _run_query_helper(
-        QueryFunctionRequest(**req), response, background_tasks, req["filter_sort"]
-    )
-
-
-@router.post("/function/")
-async def run_query_from_fetcher(
-    req: QueryFunctionRequest, response: Response, background_tasks: BackgroundTasks
-):
-    return await _run_query_helper(req, response, background_tasks)
-
-
-async def _run_query_helper(
-    req: QueryFunctionRequest,
-    response: Response,
-    background_tasks: BackgroundTasks,
-    filter_sort=FilterSort(filters=[], sorts=[]),
-):
     try:
         properties = read_page_properties(req.app_name, req.page_name)
         file = get_table_data_fetcher(properties["files"], req.fetcher)
@@ -123,6 +99,9 @@ async def _run_query_helper(
             # called internally, so can pass objects directly
             args["file"] = file
             args["state"] = req.state
+            filter_sort = (
+                req.filter_sort if req.filter_sort is not None else FilterSort(filters=[], sorts=[])
+            )
             args["filter_sort"] = filter_sort
             args["job_id"] = job_id
             args = RunSQLRequestTask(**args)
