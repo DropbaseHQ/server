@@ -198,8 +198,11 @@ class AppFolderController:
 
             # Create new page folder with __init__.py
             self.create_page(router=router)
-            response_body = response.json()
-            return response_body.get("id")
+            if hasattr(response, "json"):
+                response_body = response.json()
+                return response_body.get("id")
+
+            return None
 
         except Exception:
             raise HTTPException(status_code=500, detail="Unable to create app folder")
@@ -400,37 +403,35 @@ class AppFolderController:
         return pages
 
     def create_app(self, app_label: str = None, router: DropbaseRouter = None):
-        try:
-            if not validate_column_name(self.app_name):
-                raise HTTPException(
-                    status_code=400,
-                    detail="Invalid app name. Only alphanumeric characters and underscores are allowed",
-                )
 
-            if check_if_object_exists(self.app_folder_path):
-                raise HTTPException(
-                    status_code=400,
-                    detail="Another app with the same name already exists",
-                )
-
-            self.create_workspace_properties()
-
-            existing_app_labels = [
-                a["label"] for a in self._get_workspace_properties()["apps"]
-            ]
-            if app_label is not None and app_label in existing_app_labels:
-                raise HTTPException(
-                    status_code=400,
-                    detail="Another app with the same label already exists",
-                )
-
-            app_id = self._create_default_workspace_files(
-                router=router, app_label=app_label
+        if not validate_column_name(self.app_name):
+            raise HTTPException(
+                status_code=400,
+                detail="Invalid app name. Only alphanumeric characters and underscores are allowed",
             )
 
-            return {"app_id": app_id}
-        except Exception as e:
-            print("Error: ", e)
+        if check_if_object_exists(self.app_folder_path):
+            raise HTTPException(
+                status_code=400,
+                detail="Another app with the same name already exists",
+            )
+
+        self.create_workspace_properties()
+
+        existing_app_labels = [
+            a["label"] for a in self._get_workspace_properties()["apps"]
+        ]
+        if app_label is not None and app_label in existing_app_labels:
+            raise HTTPException(
+                status_code=400,
+                detail="Another app with the same label already exists",
+            )
+
+        app_id = self._create_default_workspace_files(
+            router=router, app_label=app_label
+        )
+
+        return {"app_id": app_id}
 
     def delete_app(self, app_name: str, router: DropbaseRouter):
         app_path = os.path.join(self.r_path_to_workspace, app_name)
