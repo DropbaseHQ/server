@@ -4,10 +4,9 @@ import uuid
 import anyio
 from fastapi import APIRouter, BackgroundTasks, Depends, Response
 
-from dropbase.schemas.table import CommitTableColumnsRequest, ConvertTableRequest, TableBase
+from dropbase.schemas.table import CommitTableColumnsRequest, ConvertTableRequest, ConvertTableTask
 from server.auth.dependency import CheckUserPermissions
 from server.controllers.columns import commit_table_columns
-from server.controllers.python_docker import run_container
 from server.controllers.redis import r
 from server.controllers.tables import convert_sql_table
 from server.requests.dropbase_router import DropbaseRouter, get_dropbase_router
@@ -28,7 +27,8 @@ async def convert_sql_table_req(
 ):
 
     job_id = uuid.uuid4().hex
-    background_tasks.add_task(convert_sql_table, req, router, job_id)
+    args = ConvertTableTask(**req.dict(), job_id=job_id)
+    background_tasks.add_task(convert_sql_table, args, router)
 
     status_code = 202
     reponse_payload = {

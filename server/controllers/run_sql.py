@@ -32,14 +32,13 @@ def run_sql_query_from_string(args: RunSQLStringTask):
         response["columns"] = res["columns"]
         response["message"] = "job completed"
         response["type"] = "table"
-
         response["status_code"] = 200
         return {"message": "success"}
     except Exception as e:
         response["traceback"] = traceback.format_exc()
         response["message"] = str(e)
         response["type"] = "error"
-
+        # NOTE: returns 200 since this error is disaplyed in studio as stdout
         response["status_code"] = 200
     finally:
         # pass

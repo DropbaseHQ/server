@@ -41,6 +41,10 @@ class ConvertTableRequest(BaseModel):
     state: dict
 
 
+class ConvertTableTask(ConvertTableRequest):
+    job_id: str
+
+
 class CommitTableColumnsRequest(BaseModel):
     app_name: str = Field(regex=FILE_NAME_REGEX)
     page_name: str = Field(regex=FILE_NAME_REGEX)

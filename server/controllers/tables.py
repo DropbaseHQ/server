@@ -2,9 +2,8 @@ import json
 import re
 
 from dropbase.schemas.files import DataFile
-from dropbase.schemas.table import ConvertTableRequest
+from dropbase.schemas.table import ConvertTableTask
 from server.controllers.connect import connect
-from server.controllers.page import get_page_state_context
 from server.controllers.properties import read_page_properties, update_properties
 from server.controllers.redis import r
 from server.controllers.run_sql import get_sql_from_file, render_sql
@@ -33,8 +32,7 @@ def check_banned_keywords(user_sql: str) -> bool:
             raise Exception("Must remove keyword WITH to convert to smart table")
 
 
-def convert_sql_table(req: ConvertTableRequest, router: DropbaseRouter, job_id):
-    response = {"message": "", "type": "", "status_code": 202}
+def convert_sql_table(req: ConvertTableTask, router: DropbaseRouter):
     try:
         # get db schema
         properties = read_page_properties(req.app_name, req.page_name)
@@ -91,17 +89,8 @@ def convert_sql_table(req: ConvertTableRequest, router: DropbaseRouter, job_id):
                 table["columns"] = column_props
 
         update_properties(req.app_name, req.page_name, properties)
-
-        r.set(job_id, json.dumps(response))
-
-        response["status_code"] = 200
-
-        return get_page_state_context(req.app_name, req.page_name)
-
+        response = {"message": "Table converted to smart table", "type": "success", "status_code": 200}
     except Exception as e:
-        response["message"] = str(e)
-        response["type"] = "error"
-
-        response["status_code"] = 200
+        response = {"message": str(e), "type": "error", "status_code": 500}
     finally:
-        r.set(job_id, json.dumps(response))
+        r.set(req.job_id, json.dumps(response))
