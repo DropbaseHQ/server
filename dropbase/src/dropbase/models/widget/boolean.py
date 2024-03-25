@@ -3,16 +3,11 @@ from typing import Annotated, List, Literal, Optional
 from pydantic import BaseModel
 
 from dropbase.models.category import PropertyCategory
-from dropbase.models.common import ComponentDisplayProperties
+from dropbase.models.common import ComponentDisplayProperties, OnEvent
 
 
 class BooleanContextProperty(ComponentDisplayProperties):
     pass
-
-
-class OnToggle(BaseModel):
-    type: Literal["widget", "function"] = "function"
-    value: str
 
 
 class BooleanDefinedProperty(BaseModel):
@@ -22,7 +17,7 @@ class BooleanDefinedProperty(BaseModel):
     default: Annotated[Optional[bool], PropertyCategory.default] = False
 
     # events
-    on_toggle: Annotated[Optional[OnToggle], PropertyCategory.events]
+    on_toggle: Annotated[Optional[OnEvent], PropertyCategory.events]
 
     # display rules
     display_rules: Annotated[Optional[List[dict]], PropertyCategory.display_rules]

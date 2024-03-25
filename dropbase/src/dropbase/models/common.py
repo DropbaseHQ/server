@@ -73,3 +73,8 @@ class BaseColumnDefinedProperty(BaseModel):
         if display_type == DisplayType.select and not isinstance(configurations, SelectType):
             raise ValueError("configurations for 'datetime' must be a DatetimeType instance")
         return values
+
+
+class OnEvent(BaseModel):
+    type: Literal["widget", "table", "function"] = "function"
+    value: str

@@ -11,6 +11,9 @@ elif [[ $1 == 'l' ]]; then
     pylsp --ws --port 9095
 elif [[ $1 == 'r' ]]; then
     uvicorn server.main:app --reload --reload-dir server/ --host 0.0.0.0 --port 9090
+elif [[ $1 == 'i' ]]; then
+    pip install -U -e dropbase/.
+    uvicorn server.main:app --reload --reload-dir server/ --host 0.0.0.0 --port 9090
 else
     echo "Invalid argument, please use 's' for server and 'l' for lsp."
 fi
