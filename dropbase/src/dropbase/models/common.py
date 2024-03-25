@@ -12,10 +12,29 @@ class ComponentDisplayProperties(BaseModel):
     message_type: Optional[str]
 
 
+class IntType(BaseModel):
+    config_type: Literal["int"]
+
+
 class CurrencyType(BaseModel):
     config_type: Annotated[Literal["currency"], PropertyCategory.internal] = "currency"
     symbol: Optional[str]
     # precision: Optional[int]
+
+
+class WeightType(BaseModel):
+    config_type: Annotated[Literal["weight"], PropertyCategory.internal] = "weight"
+    unit: Optional[str]
+
+
+class IntegerTypes(BaseModel):
+    int: Optional[IntType]
+    currency: Optional[CurrencyType]
+    weight: Optional[WeightType]
+
+
+class TextType(BaseModel):
+    config_type: Literal["text"]
 
 
 class SelectType(BaseModel):
@@ -24,15 +43,24 @@ class SelectType(BaseModel):
     multiple: Optional[bool]
 
 
+class TextTypes(BaseModel):
+    text: Optional[TextType]
+    select: Optional[SelectType]
+
+
 class ArrayType(BaseModel):
     config_type: Annotated[Literal["array"], PropertyCategory.internal] = "array"
     display_as: Optional[Literal["tags", "area", "bar"]] = "tags"
 
 
-class DisplayTypeConfigurations(BaseModel):
-    currency: Optional[CurrencyType]
-    select: Optional[SelectType]
+class ArrayTypes(BaseModel):
     array: Optional[ArrayType]
+
+
+class DisplayTypeConfigurations(BaseModel):
+    integer: Optional[IntegerTypes]
+    text: Optional[TextTypes]
+    array: Optional[ArrayTypes]
 
 
 class DisplayType(str, Enum):
@@ -62,7 +90,7 @@ class BaseColumnDefinedProperty(BaseModel):
     data_type: Annotated[Optional[str], PropertyCategory.default]
     display_type: Annotated[Optional[DisplayType], PropertyCategory.default]
     configurations: Annotated[
-        Optional[Union[ArrayType, CurrencyType, SelectType]], PropertyCategory.default
+        Optional[Union[IntegerTypes, TextTypes, ArrayTypes]], PropertyCategory.default
     ]
 
     @root_validator
