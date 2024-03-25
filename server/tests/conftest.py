@@ -4,7 +4,8 @@ import tempfile
 import pytest
 import pytest_postgresql.factories
 from fastapi.testclient import TestClient
-from pytest_mysql import factories
+
+# from pytest_mysql import factories
 
 from server.auth.dependency import CheckUserPermissions
 from server.controllers.properties import read_page_properties, update_properties
@@ -34,8 +35,8 @@ from server.tests.utils import connect_to_test_db, load_test_db
 postgresql_proc = pytest_postgresql.factories.postgresql_proc(load=[load_test_db])
 postgres_db = pytest_postgresql.factories.postgresql("postgresql_proc")
 
-mysql_proc = factories.mysql_proc(port=3307)
-mysql_db = factories.mysql("mysql_proc")
+# mysql_proc = factories.mysql_proc(port=3307)
+# mysql_db = factories.mysql("mysql_proc")
 
 
 @pytest.fixture(scope="module", autouse=True)
@@ -67,6 +68,12 @@ def test_client():
     ] = override_check_user_app_permissions
     app.dependency_overrides[
         CheckUserPermissions(action="use", resource=CheckUserPermissions.APP)
+    ] = override_check_user_app_permissions
+    app.dependency_overrides[
+        CheckUserPermissions(action="edit", resource=CheckUserPermissions.WORKSPACE)
+    ] = override_check_user_app_permissions
+    app.dependency_overrides[
+        CheckUserPermissions(action="use", resource=CheckUserPermissions.WORKSPACE)
     ] = override_check_user_app_permissions
     return TestClient(app)
 

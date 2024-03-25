@@ -10,13 +10,19 @@ from dropbase.schemas.workspace import (
 from server.controllers.app import get_workspace_apps
 from server.controllers.workspace import AppFolderController, WorkspaceFolderController
 from server.requests.dropbase_router import DropbaseRouter, get_dropbase_router
+from server.auth.dependency import CheckUserPermissions
 
 router = APIRouter(
     prefix="/app", tags=["app"], responses={404: {"description": "Not found"}}
 )
 
 
-@router.post("/sync_app")
+@router.post(
+    "/sync_app",
+    dependencies=[
+        Depends(CheckUserPermissions(action="edit", resource=CheckUserPermissions.APP))
+    ],
+)
 def sync_app_req(
     request: SyncAppRequest, router: DropbaseRouter = Depends(get_dropbase_router)
 ):
@@ -87,7 +93,14 @@ def get_user_apps(router: DropbaseRouter = Depends(get_dropbase_router)):
     return get_workspace_apps(router=router)
 
 
-@router.post("/")
+@router.post(
+    "/",
+    dependencies=[
+        Depends(
+            CheckUserPermissions(action="edit", resource=CheckUserPermissions.WORKSPACE)
+        )
+    ],
+)
 def create_app_req(
     req: CreateAppRequest,
     router: DropbaseRouter = Depends(get_dropbase_router),
@@ -99,7 +112,12 @@ def create_app_req(
     return app_folder_controller.create_app(router=router, app_label=req.app_label)
 
 
-@router.put("/")
+@router.put(
+    "/",
+    dependencies=[
+        Depends(CheckUserPermissions(action="edit", resource=CheckUserPermissions.APP))
+    ],
+)
 def rename_app_req(req: RenameAppRequest):
     # assert page does not exist
     path_to_workspace = os.path.join(os.path.dirname(__file__), "../../workspace")
@@ -111,7 +129,12 @@ def rename_app_req(req: RenameAppRequest):
     )
 
 
-@router.delete("/{app_name}")
+@router.delete(
+    "/{app_name}",
+    dependencies=[
+        Depends(CheckUserPermissions(action="edit", resource=CheckUserPermissions.APP))
+    ],
+)
 def delete_app_req(
     app_name: str, router: DropbaseRouter = Depends(get_dropbase_router)
 ):

@@ -112,11 +112,6 @@ class CheckUserPermissions:
             r_path_to_workspace=os.path.join(cwd, "workspace")
         )
         app_id = workspace_folder_controller.get_app_id(app_name=app_name)
-        if app_id is None:
-            raise HTTPException(
-                status_code=400,
-                detail=(f"App {app_name} either does not exist or has no id."),
-            )
         return app_id
 
     def _get_resource_permissions(

@@ -43,13 +43,19 @@ def test_create_app_req(test_client, dropbase_router_mocker):
         }
 
         # Act
+        # dropbase_router_mocker.patch(
+        #     "auth",
+        #     "verify_identity_token",
+        #     side_effect=lambda *args, **kwargs: MockResponse(),
+        # )
         dropbase_router_mocker.patch(
             "app", "create_app", side_effect=lambda *args, **kwargs: MockResponse()
         )
         dropbase_router_mocker.patch(
             "page", "create_page", side_effect=lambda *args, **kwargs: MockResponse()
         )
-        res = test_client.post("/app/", json=data)
+        headers = {"access-token": "mock access token"}
+        res = test_client.post("/app/", json=data, headers=headers)
 
         # Assert
         assert res.status_code == 200
@@ -75,13 +81,14 @@ def test_create_app_req_error_duplicate_labels(test_client, dropbase_router_mock
     )
     test_client.post("/app/", json=data)
 
-    res = test_client.post("/app/", json=data)
+    headers = {"access-token": "mock access token"}
+    res = test_client.post("/app/", json=data, headers=headers)
     res_data = res.json()
 
     # Assert
     assert res.status_code != 200
 
-    assert res_data["detail"] == "Another app with the same name already exists"
+    assert res_data["detail"] == "Another app with the same label already exists"
 
 
 def test_create_app_req_error_duplicate_names(test_client, dropbase_router_mocker):
@@ -97,8 +104,8 @@ def test_create_app_req_error_duplicate_names(test_client, dropbase_router_mocke
         "app", "create_app", side_effect=lambda *args, **kwargs: None
     )
     test_client.post("/app/", json=data)
-
-    res = test_client.post("/app/", json=data)
+    headers = {"access-token": "mock access token"}
+    res = test_client.post("/app/", json=data, headers=headers)
     res_data = res.json()
 
     # Assert
@@ -121,7 +128,8 @@ def test_create_app_req_error_illegal_name_space_between(
     dropbase_router_mocker.patch(
         "app", "create_app", side_effect=lambda *args, **kwargs: None
     )
-    res = test_client.post("/app/", json=data)
+    headers = {"access-token": "mock access token"}
+    res = test_client.post("/app/", json=data, headers=headers)
     res_data = res.json()
 
     # Assert
@@ -149,7 +157,8 @@ def test_create_app_req_error_illegal_name_special_characters(
     dropbase_router_mocker.patch(
         "app", "create_app", side_effect=lambda *args, **kwargs: None
     )
-    res = test_client.post("/app/", json=data)
+    headers = {"access-token": "mock access token"}
+    res = test_client.post("/app/", json=data, headers=headers)
     res_data = res.json()
 
     # Assert
@@ -177,7 +186,8 @@ def test_create_app_req_error_illegal_name_url_path(
     dropbase_router_mocker.patch(
         "app", "create_app", side_effect=lambda *args, **kwargs: None
     )
-    res = test_client.post("/app/", json=data)
+    headers = {"access-token": "mock access token"}
+    res = test_client.post("/app/", json=data, headers=headers)
     res_data = res.json()
 
     # Assert
@@ -229,7 +239,8 @@ def test_rename_app_req(test_client):
         data = {"app_id": app_id, "new_label": NEW_APP_NAME}
 
         # Act
-        res = test_client.put("/app/", json=data)
+        headers = {"access-token": "mock access token"}
+        res = test_client.put("/app/", json=data, headers=headers)
 
         workspace_props = workspace_folder_controller.get_workspace_properties()
         apps = workspace_props.get("apps", [])
@@ -255,7 +266,8 @@ def test_delete_app_req(test_client, dropbase_router_mocker):
     dropbase_router_mocker.patch(
         "app", "delete_app", side_effect=lambda *args, **kwargs: MockResponse()
     )
-    res = test_client.request("DELETE", f"/app/{TEST_APP_NAME}")
+    headers = {"access-token": "mock access token"}
+    res = test_client.request("DELETE", f"/app/{TEST_APP_NAME}", headers=headers)
 
     # Assert
     assert res.status_code == 200
@@ -274,7 +286,10 @@ def test_delete_app_req_block_path_traversal_attack(test_client):
         os.mkdir(test_target_path)
 
         # Act
-        res = test_client.request("DELETE", f"/app/{test_target_rel_path}")
+        headers = {"access-token": "mock access token"}
+        res = test_client.request(
+            "DELETE", f"/app/{test_target_rel_path}", headers=headers
+        )
 
         # Assert
         assert res.status_code != 200
