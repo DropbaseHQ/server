@@ -1,4 +1,4 @@
-from typing import Annotated, List, Literal, Optional, Union
+from typing import Annotated, Any, List, Literal, Optional, Union
 
 from pydantic import BaseModel
 
@@ -19,8 +19,8 @@ class BooleanDefinedProperty(BaseModel):
     label: Annotated[str, PropertyCategory.default]
     name: Annotated[str, PropertyCategory.default]
 
-    # str to allow state values in default
-    default: Annotated[Optional[Union[str, bool]], PropertyCategory.default] = False
+    # `Any` to allow state values in default
+    default: Annotated[Optional[Any], PropertyCategory.default] = False
 
     # events
     on_toggle: Annotated[Optional[OnToggle], PropertyCategory.events]
