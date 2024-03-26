@@ -33,7 +33,7 @@ def update_page_properties(req: PageProperties):
         # update properties
         update_properties(req.app_name, req.page_name, req.properties.dict())
         # get new steate and context
-        return get_page_state_context(req.app_name, req.page_name)
+        return {"message": "Properties updated successfully"}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 

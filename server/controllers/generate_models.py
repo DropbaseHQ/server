@@ -1,8 +1,7 @@
-# state
 from pathlib import Path
 
 from datamodel_code_generator import generate
-from pydantic import BaseModel, Field, create_model
+from pydantic import Field, create_model
 
 from dropbase.models.table import TableContextProperty
 from dropbase.models.table.button_column import ButtonColumnContextProperty
@@ -53,79 +52,6 @@ def component_state_type_mapper(input_type: str):
             return str
 
 
-def get_widget_state_class(widgets_props):
-    non_editable = ["button", "text"]
-    widgets_state = {}
-
-    for widget_data in widgets_props:
-        widget_name = widget_data.get("name")
-        widget_components = widget_data.get("components")
-        components_props = {}
-        for component in widget_components:
-            # skip non-editable components, like text and button
-            if component["component_type"] in non_editable:
-                continue
-
-            # get the type that will be used in state. this is what client will send back to server
-            component_name = component["name"]
-            # NOTE: only input has data type as of now. the rest are defaulted to string
-
-            if component.get("component_type") == "select" and component.get("multiple"):
-                component["data_type"] = "string_array"
-            component_type = component_state_type_mapper(component.get("data_type"))
-
-            # state is pulled from ComponentDefined class
-            components_props[component_name] = (
-                component_type,
-                Field(default=None),
-            )
-
-        widget_class_name = widget_name.capitalize() + "State"
-        locals()[widget_class_name] = create_model(widget_class_name, **components_props)
-        widgets_state[widget_name] = (locals()[widget_class_name], ...)
-
-    # compose Widgets
-    return create_model("WidgetsState", **widgets_state)
-
-
-def get_tables_state_class(tables_props):
-    tables_state = {}
-
-    for table_data in tables_props:
-        table_name = table_data.get("name")
-        table_columns = table_data.get("columns")
-
-        columns_props = {}
-        for column in table_columns:
-            if not column.get("display_type"):
-                continue
-
-            column_name = column["name"]
-            state_type = column_state_type_mapper(column.get("display_type"))
-
-            # state is pulled from ComponentDefined class
-            columns_props[column_name] = (state_type, Field(default=None))
-
-        table_class_name = table_name.capitalize() + "State"
-        locals()[table_class_name] = create_model(table_class_name, **columns_props)
-
-        tables_state[table_name] = (locals()[table_class_name], ...)
-
-    # compose Widgets
-    return create_model("TablesState", **tables_state)
-
-
-def create_state(component_props):
-    WidgetState = get_widget_state_class(component_props.get("widgets"))
-    TablesState = get_tables_state_class(component_props.get("tables"))
-
-    class State(BaseModel):
-        widgets: WidgetState
-        tables: TablesState
-
-    return State
-
-
 context_model_mapper = {
     "button": ButtonContextProperty,
     "boolean": BooleanContextProperty,
@@ -133,39 +59,6 @@ context_model_mapper = {
     "select": SelectContextProperty,
     "text": TextContextProperty,
 }
-
-
-def get_widget_context(widgets_props):
-    widgets_context = {}
-    for widget_data in widgets_props:
-
-        widget_name = widget_data.get("name")
-        widget_components = widget_data.get("components")
-
-        # create components contexts
-        components_props = {}
-        for component in widget_components:
-
-            component_type = component.get("component_type")
-            BaseProperty = context_model_mapper.get(component_type)
-            # create component context class
-            components_props[component["name"]] = (BaseProperty, ...)
-
-        components_class_name = widget_name.capitalize() + "ComponentsContext"
-        widget_components_class = create_model(components_class_name, **components_props)
-
-        widget_class_name = widget_name.capitalize() + "Context"
-
-        # create widget context class
-        locals()[widget_class_name] = create_model(
-            widget_class_name,
-            **{"components": (widget_components_class, ...)},
-            __base__=WidgetContextProperty,
-        )
-
-        # add each widget context class into main context class
-        widgets_context[widget_name] = (locals()[widget_class_name], ...)
-    return create_model("WidgetsContext", **widgets_context)
 
 
 column_context_model_mapper = {
@@ -178,59 +71,97 @@ column_context_model_mapper = {
 }
 
 
-def get_table_context(tables_props):
-    tables_context = {}
-    for table_data in tables_props:
+def compose_context_model(components):
+    context = {}
+    for name, item in components.items():
+        class_name = name.capitalize() + "Context"
+        props = {}
 
-        table_name = table_data.get("name")
-        table_columns = table_data.get("columns")
+        # create components contexts
+        if item["component_type"] == "widget":
+            child = "components"
+            base_model = WidgetContextProperty
+            for component in item["components"]:
+                component_type = component.get("component_type")
+                BaseProperty = context_model_mapper.get(component_type)
+                # create component context class
+                props[component["name"]] = (BaseProperty, ...)
 
-        # create columns contexts
-        columns_props = {}
-        for column in table_columns:
-            BaseProperty = column_context_model_mapper.get(column.get("column_type"))
-            # create column context class
-            columns_props[column["name"]] = (BaseProperty, ...)
+        else:
+            child = "columns"
+            base_model = TableContextProperty
+            for column in item["columns"]:
+                column_type = column.get("column_type")
+                BaseProperty = column_context_model_mapper.get(column_type)
+                # create column context class
+                props[column["name"]] = (BaseProperty, ...)
 
-        columns_class_name = table_name.capitalize() + "ColumnsContext"
-        table_columns_class = create_model(columns_class_name, **columns_props)
-
-        table_class_name = table_name.capitalize() + "Context"
+        child_class_name = name.capitalize() + child.capitalize() + "Context"
+        child_class = create_model(child_class_name, **props)
 
         # create table context class
-        locals()[table_class_name] = create_model(
-            table_class_name,
-            **{"columns": (table_columns_class, ...)},
-            __base__=TableContextProperty,
+        locals()[class_name] = create_model(
+            class_name,
+            **{child: (child_class, ...)},
+            __base__=base_model,
         )
 
         # add each table context class into main context class
-        tables_context[table_name] = (locals()[table_class_name], ...)
-    return create_model("TablesContext", **tables_context)
+        context[name] = (locals()[class_name], ...)
+    return create_model("Context", **context)
 
 
-def create_context(component_props):
-    WidgetState = get_widget_context(component_props.get("widgets"))
-    TablesState = get_table_context(component_props.get("tables"))
+def compose_state_model(components):
+    state = {}
+    non_editable_components = ["button", "text"]
+    for name, item in components.items():
+        props = {}
+        if item["component_type"] == "widget":
+            for component in item.get("components"):
+                # skip non-editable components, like text and button
+                if component["component_type"] in non_editable_components:
+                    continue
 
-    class Context(BaseModel):
-        widgets: WidgetState
-        tables: TablesState
+                if component.get("component_type") == "select" and component.get("multiple"):
+                    component["data_type"] = "string_array"
 
-    return Context
+                component_type = component_state_type_mapper(component.get("data_type"))
+                # state is pulled from ComponentDefined class
+                props[component["name"]] = (
+                    component_type,
+                    Field(default=None),
+                )
+        else:
+            for column in item.get("columns"):
+                # skip non-editable columns
+                if not column.get("display_type"):
+                    continue
+
+                column_type = column_state_type_mapper(column.get("display_type"))
+                # state is pulled from ComponentDefined class
+                props[column["name"]] = (
+                    column_type,
+                    Field(default=None),
+                )
+
+        class_name = name.capitalize() + "State"
+        locals()[class_name] = create_model(class_name, **props)
+        state[name] = (locals()[class_name], ...)
+
+    # compose State
+    return create_model("State", **state)
 
 
-def create_state_context_files(app_name: str, page_name: str, properties: dict):
-    output_path = f"workspace/{app_name}/{page_name}"
+def create_state_context_files(output_path: str, properties: dict):
     # context
-    context = create_context(properties)
+    context = compose_context_model(properties["components"])
     generate(
         input_=context.schema_json(indent=2),
         input_file_type="json",
         output=Path(output_path + "/context.py"),
     )
     # state
-    state = create_state(properties)
+    state = compose_state_model(properties["components"])
     generate(
         input_=state.schema_json(indent=2),
         input_file_type="json",
