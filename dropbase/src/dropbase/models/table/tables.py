@@ -45,6 +45,8 @@ class TableDefinedProperty(BaseModel):
     # on_row_change: Annotated[Optional[str], PropertyCategory.events]
     # on_row_selection: Annotated[Optional[str], PropertyCategory.events]
 
+    widget: Optional[str]
+
     # table filters
     filters: Annotated[Optional[List[PinnedFilter]], PropertyCategory.other]
 

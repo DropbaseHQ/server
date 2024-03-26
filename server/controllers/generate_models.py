@@ -74,24 +74,25 @@ column_context_model_mapper = {
 
 def compose_context_model(components):
     context = {}
-    for name, item in components.items():
+    for component in components:
+        name = component["name"]
         class_name = name.capitalize() + "Context"
         props = {}
 
         # create components contexts
-        if item["component_type"] == "widget":
+        if component["component_type"] == "widget":
             child = "components"
             base_model = WidgetContextProperty
-            for component in item["components"]:
-                component_type = component.get("component_type")
+            for widget_component in component["components"]:
+                component_type = widget_component.get("component_type")
                 BaseProperty = context_model_mapper.get(component_type)
                 # create component context class
-                props[component["name"]] = (BaseProperty, ...)
+                props[widget_component["name"]] = (BaseProperty, ...)
 
         else:
             child = "columns"
             base_model = TableContextProperty
-            for column in item["columns"]:
+            for column in component["columns"]:
                 BaseProperty = column_context_model_mapper.get(column.get("column_type"))
                 # create column context class
                 props[column["name"]] = (BaseProperty, ...)
@@ -114,25 +115,28 @@ def compose_context_model(components):
 def compose_state_model(components):
     state = {}
     non_editable_components = ["button", "text"]
-    for name, item in components.items():
+    for component in components:
+        name = component["name"]
         props = {}
-        if item["component_type"] == "widget":
-            for component in item.get("components"):
+        if component["component_type"] == "widget":
+            for widget_component in component.get("components"):
                 # skip non-editable components, like text and button
-                if component["component_type"] in non_editable_components:
+                if widget_component["component_type"] in non_editable_components:
                     continue
 
-                if component.get("component_type") == "select" and component.get("multiple"):
-                    component["data_type"] = "string_array"
+                if widget_component.get("component_type") == "select" and widget_component.get(
+                    "multiple"
+                ):  # noqa
+                    widget_component["data_type"] = "string_array"
 
-                component_type = component_state_type_mapper(component.get("data_type"))
+                component_type = component_state_type_mapper(widget_component.get("data_type"))
                 # state is pulled from ComponentDefined class
-                props[component["name"]] = (
+                props[widget_component["name"]] = (
                     component_type,
                     Field(default=None),
                 )
         else:
-            for column in item.get("columns"):
+            for column in component.get("columns"):
                 # skip non-editable columns
                 if not column.get("display_type"):
                     continue

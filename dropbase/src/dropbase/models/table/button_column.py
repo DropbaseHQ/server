@@ -3,10 +3,10 @@ from typing import Annotated, Literal, Optional
 from pydantic import BaseModel
 
 from dropbase.models.category import PropertyCategory
-from dropbase.models.common import ComponentDisplayProperties, OnEvent
+from dropbase.models.common import ColumnDisplayProperties, OnEvent
 
 
-class ButtonColumnContextProperty(ComponentDisplayProperties):
+class ButtonColumnContextProperty(ColumnDisplayProperties):
     pass
 
 
