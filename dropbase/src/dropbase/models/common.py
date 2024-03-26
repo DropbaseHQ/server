@@ -7,7 +7,10 @@ from dropbase.models.category import PropertyCategory
 
 
 class ComponentDisplayProperties(BaseModel):
-    visible: Optional[bool]  # used for display rules
+    visible: Optional[bool]
+
+
+class PageDisplayProperties(BaseModel):
     message: Optional[str]
     message_type: Optional[str]
 
@@ -78,3 +81,7 @@ class BaseColumnDefinedProperty(BaseModel):
 class OnEvent(BaseModel):
     type: Literal["widget", "table", "function"] = "function"
     value: str
+
+
+class BaseContext(BaseModel):
+    page: PageDisplayProperties

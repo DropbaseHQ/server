@@ -3,6 +3,7 @@ from pathlib import Path
 from datamodel_code_generator import generate
 from pydantic import Field, create_model
 
+from dropbase.models.common import BaseContext
 from dropbase.models.table import TableContextProperty
 from dropbase.models.table.button_column import ButtonColumnContextProperty
 from dropbase.models.table.mysql_column import MySqlColumnContextProperty
@@ -91,8 +92,7 @@ def compose_context_model(components):
             child = "columns"
             base_model = TableContextProperty
             for column in item["columns"]:
-                column_type = column.get("column_type")
-                BaseProperty = column_context_model_mapper.get(column_type)
+                BaseProperty = column_context_model_mapper.get(column.get("column_type"))
                 # create column context class
                 props[column["name"]] = (BaseProperty, ...)
 
@@ -108,7 +108,7 @@ def compose_context_model(components):
 
         # add each table context class into main context class
         context[name] = (locals()[class_name], ...)
-    return create_model("Context", **context)
+    return create_model("Context", **context, __base__=BaseContext)
 
 
 def compose_state_model(components):
