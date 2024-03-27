@@ -13,7 +13,7 @@ class ComponentDisplayProperties(BaseModel):
 
 
 class IntType(BaseModel):
-    config_type: Literal["int"]
+    config_type: Annotated[Literal["int"], PropertyCategory.internal] = "int"
 
 
 class CurrencyType(BaseModel):
@@ -34,7 +34,7 @@ class IntegerTypes(BaseModel):
 
 
 class TextType(BaseModel):
-    config_type: Literal["text"]
+    config_type: Annotated[Literal["text"], PropertyCategory.internal] = "text"
 
 
 class SelectType(BaseModel):
