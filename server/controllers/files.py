@@ -270,10 +270,8 @@ def {req.name}(state: State) -> pd.DataFrame:
     return df
 """
     elif req.type == "python":
-        return """
-def function():
-print("This is a generic Python function")
-
+        return f"""def {req.name}():
+    pass
 """
     else:
         return ""
