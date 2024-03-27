@@ -1,9 +1,18 @@
 from enum import Enum
 from typing import Annotated, Literal, Optional, Union
 
-from pydantic import BaseModel, root_validator
+from pydantic import BaseModel, ValidationError, root_validator
 
 from dropbase.models.category import PropertyCategory
+
+
+class ConfigTypeEnum(str, Enum):
+    INT = "int"
+    CURRENCY = "currency"
+    WEIGHT = "weight"
+    TEXT = "text"
+    SELECT = "select"
+    ARRAY = "array"
 
 
 class ComponentDisplayProperties(BaseModel):
@@ -13,32 +22,45 @@ class ComponentDisplayProperties(BaseModel):
 
 
 class IntType(BaseModel):
-    config_type: Annotated[Literal["int"], PropertyCategory.internal] = "int"
+    config_type: Annotated[Literal[ConfigTypeEnum.INT], PropertyCategory.internal] = ConfigTypeEnum.INT
 
 
 class CurrencyType(BaseModel):
-    config_type: Annotated[Literal["currency"], PropertyCategory.internal] = "currency"
+    config_type: Annotated[
+        Literal[ConfigTypeEnum.CURRENCY], PropertyCategory.internal
+    ] = ConfigTypeEnum.CURRENCY
     symbol: Optional[str]
     # precision: Optional[int]
 
 
 class WeightType(BaseModel):
-    config_type: Annotated[Literal["weight"], PropertyCategory.internal] = "weight"
+    config_type: Annotated[
+        Literal[ConfigTypeEnum.WEIGHT], PropertyCategory.internal
+    ] = ConfigTypeEnum.WEIGHT
     unit: Optional[str]
 
 
 class IntegerTypes(BaseModel):
-    int: Optional[IntType]
+    integer: Optional[IntType]
     currency: Optional[CurrencyType]
     weight: Optional[WeightType]
 
+    @root_validator
+    def check_at_least_one(cls, values):
+        # at least one of the fields is not None
+        if not any(values.values()):
+            raise ValidationError("At least one field must be provided.", IntegerTypes)
+        return values
+
 
 class TextType(BaseModel):
-    config_type: Annotated[Literal["text"], PropertyCategory.internal] = "text"
+    config_type: Annotated[Literal[ConfigTypeEnum.TEXT], PropertyCategory.internal] = ConfigTypeEnum.TEXT
 
 
 class SelectType(BaseModel):
-    config_type: Annotated[Literal["select"], PropertyCategory.internal] = "select"
+    config_type: Annotated[
+        Literal[ConfigTypeEnum.SELECT], PropertyCategory.internal
+    ] = ConfigTypeEnum.SELECT
     options: Optional[list]
     multiple: Optional[bool]
 
@@ -47,14 +69,30 @@ class TextTypes(BaseModel):
     text: Optional[TextType]
     select: Optional[SelectType]
 
+    @root_validator
+    def check_at_least_one(cls, values):
+        # at least one of the fields is not None
+        if not any(values.values()):
+            raise ValidationError("At least one field must be provided.", IntegerTypes)
+        return values
+
 
 class ArrayType(BaseModel):
-    config_type: Annotated[Literal["array"], PropertyCategory.internal] = "array"
+    config_type: Annotated[
+        Literal[ConfigTypeEnum.ARRAY], PropertyCategory.internal
+    ] = ConfigTypeEnum.ARRAY
     display_as: Optional[Literal["tags", "area", "bar"]] = "tags"
 
 
 class ArrayTypes(BaseModel):
     array: Optional[ArrayType]
+
+    @root_validator
+    def check_at_least_one(cls, values):
+        # at least one of the fields is not None
+        if not any(values.values()):
+            raise ValidationError("At least one field must be provided.", IntegerTypes)
+        return values
 
 
 class DisplayTypeConfigurations(BaseModel):
@@ -90,7 +128,8 @@ class BaseColumnDefinedProperty(BaseModel):
     data_type: Annotated[Optional[str], PropertyCategory.default]
     display_type: Annotated[Optional[DisplayType], PropertyCategory.default]
     configurations: Annotated[
-        Optional[Union[IntegerTypes, TextTypes, ArrayTypes]], PropertyCategory.default
+        Optional[Union[IntegerTypes, TextTypes, ArrayTypes]],
+        PropertyCategory.default,  # ERROR!!! TextTypes is TAKEN AS Integer Types use ENUM
     ]
 
     @root_validator
