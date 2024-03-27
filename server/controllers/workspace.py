@@ -15,8 +15,8 @@ APP_PROPERTIES_TEMPLATE = {
 }
 
 PAGE_PROPERTIES_TEMPLATE = {
-    "components": [
-        {"component_type": "table", "name": "table1", "label": "Table 1", "type": "sql", "columns": []}
+    "blocks": [
+        {"block_type": "table", "name": "table1", "label": "Table 1", "type": "sql", "columns": []}
     ],
     "files": [],
 }
