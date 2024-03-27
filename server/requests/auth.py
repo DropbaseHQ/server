@@ -1,24 +1,29 @@
 import json
 from cachetools import cached, TTLCache
+from fastapi import HTTPException
 from cachetools.keys import hashkey
 from server.constants import CUSTOM_PERMISSIONS_EXPIRY_TIME
-
+from .main_request import DropbaseSession
 
 cache = TTLCache(maxsize=1024, ttl=CUSTOM_PERMISSIONS_EXPIRY_TIME)
 
 
-def mykey(_, apps: str):
+def mykey(self, apps: str):
     apps = json.loads(apps)
     app_ids = [app.get("id") for app in apps]
     jsonified_app_ids = json.dumps(app_ids)
-
-    hash = hashkey(jsonified_app_ids)
-
-    return hash
+    try:
+        auth_token = self.session.headers.get("Authorization")
+        hash = hashkey(jsonified_app_ids, auth_token)
+        return hash
+    except Exception:
+        raise HTTPException(
+            status_code=400, detail="Unable to hash check apps permissions."
+        )
 
 
 class AuthRouter:
-    def __init__(self, session):
+    def __init__(self, session: DropbaseSession):
         self.session = session
 
     def verify_identity_token(self, access_token: str):
@@ -37,7 +42,6 @@ class AuthRouter:
     @cached(cache=cache, key=mykey)
     def check_apps_permissions(self, apps: str):
         apps = json.loads(apps)
-        print("getting permissions for apps")
         return self.session.post(
             "check_apps_permissions",
             json={"apps": apps},
