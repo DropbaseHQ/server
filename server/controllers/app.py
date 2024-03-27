@@ -1,9 +1,9 @@
-import os
 import json
+import os
+
 from server.constants import cwd
 from server.controllers.workspace import AppFolderController, get_subdirectories
 from server.requests.dropbase_router import DropbaseRouter
-from server.constants import CUSTOM_PERMISSIONS_EXPIRY_TIME
 
 
 def get_workspace_apps(router: DropbaseRouter):
@@ -14,9 +14,7 @@ def get_workspace_apps(router: DropbaseRouter):
             apps = json.load(file)["apps"]
     else:
         app_names = get_subdirectories(folder_path)
-        apps = [
-            {"name": app_name, "label": app_name, "id": None} for app_name in app_names
-        ]
+        apps = [{"name": app_name, "label": app_name, "id": None} for app_name in app_names]
     response = []
     for app in apps:
         if not app.get("name"):
@@ -41,8 +39,6 @@ def get_workspace_apps(router: DropbaseRouter):
 
 def parse_apps_permissions(app_list, router: DropbaseRouter):
     jsonified_apps = json.dumps(app_list)
-    permissions_response = router.auth.check_apps_permissions(
-        apps=jsonified_apps
-    ).json()
+    permissions_response = router.auth.check_apps_permissions(apps=jsonified_apps).json()
 
     return permissions_response
