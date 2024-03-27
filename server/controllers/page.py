@@ -29,7 +29,7 @@ def get_state_context(app_name, page_name, permissions):
 def update_page_properties(req: PageProperties):
     try:
         # validate properties
-        validate_property_names(req.properties.dict())
+        # validate_property_names(req.properties.dict())
         # update properties
         update_properties(req.app_name, req.page_name, req.properties.dict())
         # get new steate and context
@@ -44,7 +44,7 @@ def validate_property_names(properties: dict):
     widget_names = set()
 
     # validate column names
-    for table in properties["tables"]:
+    for table in properties["blocks"]["tables"]:
         # Check for duplicate table names
         if table["name"] in table_names:
             raise Exception("A table with this name already exists")
@@ -57,7 +57,7 @@ def validate_property_names(properties: dict):
             if not validate_column_name(column["name"]):
                 raise Exception("Invalid column names present in the table")
     # validate component names
-    for widget in properties["widgets"]:
+    for widget in properties["blocks"]["widgets"]:
         if widget["name"] in widget_names:
             raise Exception("A widget with this name already exists")
 

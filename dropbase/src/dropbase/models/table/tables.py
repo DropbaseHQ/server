@@ -28,7 +28,7 @@ class TableContextProperty(BaseModel):
 
 
 class TableDefinedProperty(BaseModel):
-    component_type: Literal["table"] = "table"
+    block_type: Literal["table"] = "table"
     label: Annotated[str, PropertyCategory.default]
     name: Annotated[str, PropertyCategory.default]
     description: Annotated[Optional[str], PropertyCategory.default]

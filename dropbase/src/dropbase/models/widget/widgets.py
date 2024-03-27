@@ -11,7 +11,7 @@ class WidgetContextProperty(BaseModel):
 
 
 class WidgetDefinedProperty(BaseModel):
-    component_type: Literal["widget"] = "widget"
+    block_type: Literal["widget"] = "widget"
     label: Annotated[str, PropertyCategory.default]
     name: Annotated[str, PropertyCategory.default]
     description: Annotated[Optional[str], PropertyCategory.default]
