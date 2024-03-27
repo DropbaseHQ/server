@@ -1,3 +1,22 @@
+import json
+from cachetools import cached, TTLCache
+from cachetools.keys import hashkey
+from server.constants import CUSTOM_PERMISSIONS_EXPIRY_TIME
+
+
+cache = TTLCache(maxsize=1024, ttl=CUSTOM_PERMISSIONS_EXPIRY_TIME)
+
+
+def mykey(_, apps: str):
+    apps = json.loads(apps)
+    app_ids = [app.get("id") for app in apps]
+    jsonified_app_ids = json.dumps(app_ids)
+
+    hash = hashkey(jsonified_app_ids)
+
+    return hash
+
+
 class AuthRouter:
     def __init__(self, session):
         self.session = session
@@ -15,10 +34,13 @@ class AuthRouter:
             json={"app_id": app_id},
         )
 
-    def check_apps_permissions(self, app_ids: list[str]):
+    @cached(cache=cache, key=mykey)
+    def check_apps_permissions(self, apps: str):
+        apps = json.loads(apps)
+        print("getting permissions for apps")
         return self.session.post(
             "check_apps_permissions",
-            json={"app_ids": app_ids},
+            json={"apps": apps},
         )
 
     def get_worker_workspace(self):

@@ -1,6 +1,6 @@
 import logging
 import os
-
+import time
 from server.controllers.workspace import WorkspaceFolderController
 from server.controllers.app import AppFolderController
 from server.requests.dropbase_router import DropbaseRouter
@@ -9,8 +9,17 @@ from server.controllers.utils import check_if_object_exists
 logger = logging.getLogger(__name__)
 cwd = os.getcwd()
 
+sync_interval = 900  # 15 minutes
+last_sync_time = 0
+
 
 def sync_with_dropbase(router: DropbaseRouter):
+    current_time = time.time()
+    global last_sync_time
+    if current_time - last_sync_time < sync_interval:
+        return
+    last_sync_time = current_time
+
     # Get all workspace info, including workspace, apps, and their pages
     workspace_path = os.path.join(cwd, "workspace")
     workspace_folder_controller = WorkspaceFolderController(
