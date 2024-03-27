@@ -80,7 +80,7 @@ def compose_context_model(components):
         props = {}
 
         # create components contexts
-        if component["component_type"] == "widget":
+        if component["block_type"] == "widget":
             child = "components"
             base_model = WidgetContextProperty
             for widget_component in component["components"]:
@@ -118,7 +118,7 @@ def compose_state_model(components):
     for component in components:
         name = component["name"]
         props = {}
-        if component["component_type"] == "widget":
+        if component["block_type"] == "widget":
             for widget_component in component.get("components"):
                 # skip non-editable components, like text and button
                 if widget_component["component_type"] in non_editable_components:
@@ -158,14 +158,14 @@ def compose_state_model(components):
 
 def create_state_context_files(output_path: str, properties: dict):
     # context
-    context = compose_context_model(properties["components"])
+    context = compose_context_model(properties["blocks"])
     generate(
         input_=context.schema_json(indent=2),
         input_file_type="json",
         output=Path(output_path + "/context.py"),
     )
     # state
-    state = compose_state_model(properties["components"])
+    state = compose_state_model(properties["blocks"])
     generate(
         input_=state.schema_json(indent=2),
         input_file_type="json",
