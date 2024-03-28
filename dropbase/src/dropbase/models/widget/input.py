@@ -3,7 +3,7 @@ from typing import Annotated, Any, List, Literal, Optional
 from pydantic import BaseModel
 
 from dropbase.models.category import PropertyCategory
-from dropbase.models.common import ComponentDisplayProperties
+from dropbase.models.common import ComponentDisplayProperties, OnEvent
 
 
 class InputContextProperty(ComponentDisplayProperties):
@@ -22,6 +22,9 @@ class InputDefinedProperty(BaseModel):
 
     # display rules
     display_rules: Annotated[Optional[List[dict]], PropertyCategory.display_rules]
+
+    # events
+    on_change: Annotated[Optional[OnEvent], PropertyCategory.events]
 
     # internal
     component_type: Literal["input"]

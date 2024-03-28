@@ -1,10 +1,10 @@
 from typing import Annotated, Literal
 
 from dropbase.models.category import PropertyCategory
-from dropbase.models.common import BaseColumnDefinedProperty, ComponentDisplayProperties
+from dropbase.models.common import BaseColumnDefinedProperty, ColumnDisplayProperties
 
 
-class PyColumnContextProperty(ComponentDisplayProperties):
+class PyColumnContextProperty(ColumnDisplayProperties):
     pass
 
 

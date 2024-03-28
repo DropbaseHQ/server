@@ -1,5 +1,5 @@
-import os
 import json
+import os
 
 from server.constants import cwd
 from server.controllers.workspace import AppFolderController, get_subdirectories
@@ -14,9 +14,7 @@ def get_workspace_apps(router: DropbaseRouter):
             apps = json.load(file)["apps"]
     else:
         app_names = get_subdirectories(folder_path)
-        apps = [
-            {"name": app_name, "label": app_name, "id": None} for app_name in app_names
-        ]
+        apps = [{"name": app_name, "label": app_name, "id": None} for app_name in app_names]
     response = []
     for app in apps:
         if not app.get("name"):
@@ -35,15 +33,12 @@ def get_workspace_apps(router: DropbaseRouter):
                 "pages": pages,
             }
         )
-    filtered_apps = []
-    permissions_response = router.auth.check_apps_permissions(
-        app_ids=[app.get("id") for app in response]
-    ).json()
+    # return response
+    return parse_apps_permissions(response, router)
 
-    for app in response:
-        if app.get("id") in permissions_response:
-            if not permissions_response.get(app.get("id")):
-                continue
-            filtered_apps.append(app)
 
-    return filtered_apps
+def parse_apps_permissions(app_list, router: DropbaseRouter):
+    jsonified_apps = json.dumps(app_list)
+    permissions_response = router.auth.check_apps_permissions(apps=jsonified_apps).json()
+
+    return permissions_response

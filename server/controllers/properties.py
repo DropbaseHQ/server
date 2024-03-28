@@ -14,7 +14,7 @@ def update_properties(app_name: str, page_name: str, properties: dict, update_mo
     page_dir_path = f"workspace/{app_name}/{page_name}"
     page_dir_path_backup = f"{page_dir_path}_backup"
 
-    # Step 1: create a backup by copying entire directory (including subdirectories)
+    # create a backup by copying entire directory (including subdirectories)
     shutil.copytree(page_dir_path, page_dir_path_backup)
 
     try:
@@ -24,11 +24,11 @@ def update_properties(app_name: str, page_name: str, properties: dict, update_mo
         # update state and context models
         if update_modes:
             # update state context
-            create_state_context_files(app_name, page_name, properties)
+            create_state_context_files(page_dir_path, properties)
     except Exception as e:
-        # Step 3: on failure, delete edited directory
+        # on failure, delete edited directory
         shutil.rmtree(page_dir_path)
-        # Step 4: rename backup directory to original name
+        # rename backup directory to original name
         os.rename(page_dir_path_backup, page_dir_path)
         raise e
     finally:

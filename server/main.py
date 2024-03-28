@@ -1,5 +1,4 @@
 import asyncio
-import json
 import logging
 
 import requests
@@ -7,14 +6,9 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from starlette.websockets import WebSocketDisconnect
-from fastapi.responses import JSONResponse
+
 from server import routers
-from server.constants import (
-    CORS_ORIGINS,
-    DROPBASE_API_URL,
-    DROPBASE_TOKEN,
-    WORKER_VERSION,
-)
+from server.constants import CORS_ORIGINS, DROPBASE_API_URL, DROPBASE_TOKEN, WORKER_VERSION
 
 
 # to disable cache for static files
@@ -37,11 +31,10 @@ logger = logging.getLogger("uvicorn.access")
 logger.addFilter(LogSpamFilter())
 
 app = FastAPI()
-origins = json.loads(CORS_ORIGINS)
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins,
+    allow_origins=CORS_ORIGINS,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -75,10 +68,8 @@ async def websocket_disconnect_exception_handler(request, exc):
 # send health report to dropbase server
 async def send_report_continuously():
     while True:
-        requests.get(
-            DROPBASE_API_URL
-            + f"/worker/worker_status/{DROPBASE_TOKEN}/{WORKER_VERSION}"
-        )
+        worker_status_url = DROPBASE_API_URL + f"/worker/worker_status/{DROPBASE_TOKEN}/{WORKER_VERSION}"
+        requests.get(worker_status_url)
         await asyncio.sleep(300)
 
 

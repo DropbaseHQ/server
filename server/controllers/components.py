@@ -60,6 +60,12 @@ def parse_prop(prop, key, model_schema):
             prop["type"].append(parse_prop(each_prop, key, model_schema))
         prop.pop("anyOf")
 
+    # if "allOf" in prop:
+    #     prop["type"] = []
+    #     for each_prop in prop["allOf"]:
+    #         prop["type"].append(parse_prop(each_prop, key, model_schema))
+    #     prop.pop("allOf")
+
     if "$ref" in prop:
         path = prop["$ref"][2:].split("/")
         ref_prop = reduce_method(path, model_schema)

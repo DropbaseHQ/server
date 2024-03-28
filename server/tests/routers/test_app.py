@@ -81,7 +81,7 @@ def test_create_app_req_error_duplicate_labels(test_client, dropbase_router_mock
     # Assert
     assert res.status_code != 200
 
-    assert res_data["detail"] == "Another app with the same name already exists"
+    assert res_data["detail"] == "Another app with the same label already exists"
 
 
 def test_create_app_req_error_duplicate_names(test_client, dropbase_router_mocker):
