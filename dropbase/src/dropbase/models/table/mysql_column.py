@@ -1,10 +1,10 @@
 from typing import Annotated, Literal
 
 from dropbase.models.category import PropertyCategory
-from dropbase.models.common import BaseColumnDefinedProperty, ColumnTypeEnum, ComponentDisplayProperties
+from dropbase.models.common import BaseColumnDefinedProperty, ColumnDisplayProperties, ColumnTypeEnum
 
 
-class MySqlColumnContextProperty(ComponentDisplayProperties):
+class MySqlColumnContextProperty(ColumnDisplayProperties):
     pass
 
 

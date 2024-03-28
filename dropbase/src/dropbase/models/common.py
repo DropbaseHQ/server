@@ -16,7 +16,16 @@ class ConfigTypeEnum(str, Enum):
 
 
 class ComponentDisplayProperties(BaseModel):
-    visible: Optional[bool]  # used for display rules
+    visible: Optional[bool]
+
+
+class ColumnDisplayProperties(BaseModel):
+    visible: Optional[bool]
+    message: Optional[str]
+    message_type: Optional[str]
+
+
+class PageDisplayProperties(BaseModel):
     message: Optional[str]
     message_type: Optional[str]
 
@@ -140,3 +149,12 @@ class BaseColumnDefinedProperty(BaseModel):
         if display_type == DisplayType.select and not isinstance(configurations, SelectType):
             raise ValueError("configurations for 'datetime' must be a DatetimeType instance")
         return values
+
+
+class OnEvent(BaseModel):
+    type: Literal["widget", "table", "function"] = "function"
+    value: str
+
+
+class BaseContext(BaseModel):
+    page: PageDisplayProperties

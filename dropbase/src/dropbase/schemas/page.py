@@ -48,8 +48,7 @@ class TableProperties(TableDefinedProperty):
 
 
 class Properties(BaseModel):
-    tables: List[TableProperties]
-    widgets: List[WidgetProperties]
+    blocks: List[Union[TableProperties, WidgetProperties]]
     files: List[DataFile]
 
 

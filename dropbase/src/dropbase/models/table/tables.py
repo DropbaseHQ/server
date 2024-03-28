@@ -28,6 +28,7 @@ class TableContextProperty(BaseModel):
 
 
 class TableDefinedProperty(BaseModel):
+    block_type: Literal["table"] = "table"
     label: Annotated[str, PropertyCategory.default]
     name: Annotated[str, PropertyCategory.default]
     description: Annotated[Optional[str], PropertyCategory.default]
@@ -43,6 +44,8 @@ class TableDefinedProperty(BaseModel):
     # TODO: implement these
     # on_row_change: Annotated[Optional[str], PropertyCategory.events]
     # on_row_selection: Annotated[Optional[str], PropertyCategory.events]
+
+    widget: Optional[str]
 
     # table filters
     filters: Annotated[Optional[List[PinnedFilter]], PropertyCategory.other]
