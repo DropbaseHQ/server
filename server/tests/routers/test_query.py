@@ -15,22 +15,8 @@ load_dotenv()
 base_data = {
     "app_name": "dropbase_test_app",
     "page_name": "page1",
-    "table": {
-        "label": "Table 1",
-        "name": "table1",
-        "description": None,
-        "fetcher": "CUSTOM_FETCHER_GOES_HERE",
-        "height": "",
-        "size": 10,
-        "filters": None,
-        "type": "sql",
-        "smart": False,
-    },
-    "state": {"widgets": {"widget1": {}}, "tables": {"table1": {}}},
-    "context": {
-        "tables": {"table1": {"message": None, "message_type": None, "reload": False, "columns": {}}},
-        "widgets": {},
-    },
+    "fetcher": "CUSTOMER_FETCHER_GOES_HERE",
+    "state": {"table1": {}},
     "filter_sort": {"filters": [], "sorts": [], "pagination": {"page": 0, "page_size": 10}},
 }
 
@@ -39,7 +25,7 @@ base_data = {
 def test_run_query_sql(test_client, mocker, mock_db):
     # Arrange
     data = copy.deepcopy(base_data)
-    data["table"]["fetcher"] = "test_sql"
+    data["fetcher"] = "test_sql"
     mocker.patch("server.controllers.run_sql.connect", return_value=mock_db)
 
     # Act
@@ -71,7 +57,7 @@ def test_run_python_datafetcher(setup_redis):
     os.environ["page_name"] = "page1"
     os.environ["job_id"] = job_id
     os.environ["file"] = json.dumps({"type": "data_fetcher", "name": "test_data_fetcher_function"})
-    os.environ["state"] = json.dumps({"widgets": {"widget1": {}}, "tables": {"table1": {}}})
+    os.environ["state"] = json.dumps({"widget1": {}, "table1": {}})
 
     with patch("dropbase.worker.run_python_file.get_function_by_name") as mock_get_function_by_name:
 
@@ -120,15 +106,8 @@ def test_run_python_ui(setup_redis):
     os.environ["page_name"] = "page1"
     os.environ["job_id"] = job_id
     os.environ["file"] = json.dumps({"type": "ui", "name": "test_ui_function"})
-    os.environ["state"] = json.dumps({"widgets": {"widget1": {}}, "tables": {"table1": {}}})
-    os.environ["context"] = json.dumps(
-        {
-            "tables": {
-                "table1": {"message": None, "message_type": None, "reload": False, "columns": {}}
-            },
-            "widgets": {},
-        }
-    )
+    os.environ["state"] = json.dumps({"widget1": {}, "table1": {}})
+    os.environ["context"] = json.dumps({"page": {}, "widget1": {}, "table1": {"columns": {}}})
 
     with patch("dropbase.worker.run_python_file.get_function_by_name") as mock_get_function_by_name:
 
@@ -153,6 +132,8 @@ def test_run_python_ui(setup_redis):
 
         res = setup_redis.get(job_id)
         res_data = json.loads(res)
+
+        print(res_data)
 
         assert res_data["status_code"] == 200
         assert res_data["job_id"] == "test_job_id"
