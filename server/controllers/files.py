@@ -212,14 +212,14 @@ class FileController:
     def _update_properties(self, mode: str = "update"):
         if mode == "rename":
             # find old file name in table fetcher in properties and update it
-            for table in self.properties["tables"]:
-                if table.get("fetcher") == self.file_name:
-                    table["fetcher"] = self.new_name
+            for block in self.properties["blocks"]:
+                if block["block_type"] == "table" and block.get("fetcher") == self.file_name:
+                    block["fetcher"] = self.new_name
         elif mode == "delete":
             # find file name in table fetcher in properties and delete it
-            for table in self.properties["tables"]:
-                if table.get("fetcher") == self.file_name:
-                    table["fetcher"] = ""
+            for block in self.properties["blocks"]:
+                if block["block_type"] == "table" and block.get("fetcher") == self.file_name:
+                    block["fetcher"] = ""
         write_page_properties(self.app_name, self.page_name, self.properties)
 
     def _rename_function_in_file(self):
