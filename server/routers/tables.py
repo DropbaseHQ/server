@@ -14,10 +14,6 @@ from server.requests.dropbase_router import DropbaseRouter, get_dropbase_router
 router = APIRouter(prefix="/tables", tags=["tables"], responses={404: {"description": "Not found"}})
 
 
-def convert_sql_table_sync_wrapper(req, router):
-    anyio.run(convert_sql_table, req, router)
-
-
 @router.post("/convert/")
 async def convert_sql_table_req(
     req: ConvertTableRequest,
