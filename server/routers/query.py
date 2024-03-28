@@ -6,6 +6,7 @@ from fastapi import APIRouter, BackgroundTasks, Depends, Response
 from dropbase.schemas.files import DataFile
 from dropbase.schemas.query import RunSQLRequestTask, RunSQLStringRequest, RunSQLStringTask
 from dropbase.schemas.run_python import QueryPythonRequest, RunPythonStringRequestNew
+from dropbase.schemas.table import FilterSort
 from server.auth.dependency import CheckUserPermissions
 from server.controllers.properties import read_page_properties
 from server.controllers.python_docker import run_container
@@ -80,7 +81,7 @@ async def run_python_string_test(req: RunPythonStringRequestNew, response: Respo
 async def run_query(req: QueryPythonRequest, response: Response, background_tasks: BackgroundTasks):
     try:
         properties = read_page_properties(req.app_name, req.page_name)
-        file = get_table_data_fetcher(properties["files"], req.table.fetcher)
+        file = get_table_data_fetcher(properties["files"], req.fetcher)
         file = DataFile(**file)
         job_id = uuid.uuid4().hex
         args = {
@@ -98,7 +99,10 @@ async def run_query(req: QueryPythonRequest, response: Response, background_task
             # called internally, so can pass objects directly
             args["file"] = file
             args["state"] = req.state
-            args["filter_sort"] = req.filter_sort
+            filter_sort = (
+                req.filter_sort if req.filter_sort is not None else FilterSort(filters=[], sorts=[])
+            )
+            args["filter_sort"] = filter_sort
             args["job_id"] = job_id
             args = RunSQLRequestTask(**args)
             background_tasks.add_task(run_sql_query, args)
