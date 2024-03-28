@@ -4,11 +4,8 @@ def test_run_function(test_client):
         "app_name": "dropbase_test_app",
         "page_name": "page1",
         "payload": {
-            "state": {"widgets": {"widget1": {}}, "tables": {"table1": {}}},
-            "context": {
-                "widgets": {"widget1": {"components": {}}},
-                "tables": {"table1": {"columns": {}}},
-            },
+            "state": {"table1": {}},
+            "context": {"page": {}, "widget1": {}, "table1": {"columns": {}}},
         },
         "function_name": "test_ui",
     }
@@ -23,7 +20,7 @@ def test_run_function(test_client):
 
     import time
 
-    time.sleep(2)
+    time.sleep(3)
 
     res = test_client.get(f"/query/status/{job_id}")
     assert res.status_code == 200
