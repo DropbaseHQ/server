@@ -263,7 +263,7 @@ def compose_boilerplate_code(req: CreateFile):
     if req.type == "ui":
         return f"""from workspace.{req.app_name}.{req.page_name} import Context, State\n\n
 def {req.name}(state: State, context: Context) -> Context:
-    context.widgets.widget1.message = "Hello World"
+    context.page.message = "Hello World"
     return context
 """
     elif req.type == "data_fetcher":
