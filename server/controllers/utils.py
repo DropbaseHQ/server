@@ -8,6 +8,7 @@ import pandas as pd
 def get_function_by_name(app_name: str, page_name: str, function_name: str):
     file_module = f"workspace.{app_name}.{page_name}.scripts.{function_name}"
     scripts = importlib.import_module(file_module)
+    importlib.reload(scripts)
     function = getattr(scripts, function_name)
     return function
 
@@ -15,6 +16,7 @@ def get_function_by_name(app_name: str, page_name: str, function_name: str):
 def get_state_context(app_name: str, page_name: str, state: dict, context: dict):
     page_module = f"workspace.{app_name}.{page_name}"
     page = importlib.import_module(page_module)
+    importlib.reload(page)
     State = getattr(page, "State")
     Context = getattr(page, "Context")
     return State(**state), Context(**context)
@@ -23,6 +25,7 @@ def get_state_context(app_name: str, page_name: str, state: dict, context: dict)
 def get_state(app_name: str, page_name: str, state: dict):
     page_module = f"workspace.{app_name}.{page_name}"
     page = importlib.import_module(page_module)
+    importlib.reload(page)
     State = getattr(page, "State")
     return State(**state)
 
