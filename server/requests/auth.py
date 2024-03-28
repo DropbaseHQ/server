@@ -8,9 +8,7 @@ from .main_request import DropbaseSession
 cache = TTLCache(maxsize=1024, ttl=CUSTOM_PERMISSIONS_EXPIRY_TIME)
 
 
-def mykey(self, apps: str):
-    apps = json.loads(apps)
-    app_ids = [app.get("id") for app in apps]
+def mykey(self, app_ids: str):
     jsonified_app_ids = json.dumps(app_ids)
     try:
         auth_token = self.session.headers.get("Authorization")
@@ -40,11 +38,10 @@ class AuthRouter:
         )
 
     @cached(cache=cache, key=mykey)
-    def check_apps_permissions(self, apps: str):
-        apps = json.loads(apps)
+    def check_apps_permissions(self, app_ids: str):
         return self.session.post(
             "check_apps_permissions",
-            json={"apps": apps},
+            json={"app_ids": app_ids},
         )
 
     def get_worker_workspace(self):
