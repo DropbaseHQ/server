@@ -134,13 +134,12 @@ def display_rule(state, context, rules: DisplayRules):
             # If the current component's target is not visible, then even if there
             # is a value in the target that matches the rule, the component should
             # not be visible
-            if rule.target.startswith("widgets"):
-                widgets_context = getattr(context, "widgets")
-                target_widget = rule.target.split(".")[1]
-                target_component = rule.target.split(".")[2]
+            target_widget = rule.target.split(".")[0]
+            target_component = rule.target.split(".")[1]
 
-                widget_context = getattr(widgets_context, target_widget)
-                components_context = getattr(widget_context, "components")
+            target_widget_context = getattr(context, target_widget)
+            if hasattr(target_widget_context, "components"):
+                components_context = getattr(target_widget_context, "components")
                 component_context = getattr(components_context, target_component)
 
                 if component_context.visible is False:
@@ -179,12 +178,14 @@ def display_rule(state, context, rules: DisplayRules):
 
 def get_display_rules_from_comp_props(component_props):
     component_display_rules = []
-    for widget_data in component_props.get("widgets"):
-        widget_name = widget_data.get("name")
-        for component in widget_data.get("components"):
+    for data in component_props:
+        widget_name = data.get("name")
+        if not data.get("components"):
+            continue
+        for component in data.get("components"):
             component_name = component.get("name")
             if component.get("display_rules"):
-                comp_name = f"widgets.{widget_name}.components.{component_name}"
+                comp_name = f"{widget_name}.components.{component_name}"
                 comp_rule = {
                     "component": comp_name,
                     "rules": component.get("display_rules"),
@@ -202,7 +203,8 @@ def run_display_rule(app_name: str, page_name: str, state: dict, context: dict):
         context = Context(**context)
 
         properties = read_page_properties(app_name, page_name)
-        display_rules = get_display_rules_from_comp_props(properties)
+        block_properties = properties.get("blocks")
+        display_rules = get_display_rules_from_comp_props(block_properties)
 
         rules = DisplayRules(display_rules=display_rules)
         return display_rule(state, context, rules)
