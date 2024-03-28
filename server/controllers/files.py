@@ -135,7 +135,11 @@ class FileController:
             # get depends on tables
             depends_on = req.depends_on if req.depends_on else []
             if req.type == "sql":
-                depends_on = self._get_depend_table_names(user_sql=req.code)
+                depends_on_tables = self._get_depend_table_names(user_sql=req.code)
+                tables = {p["name"]: p for p in self.properties["blocks"] if p["block_type"] == "table"}
+                for table_name in depends_on_tables:
+                    if tables.get(table_name):
+                        depends_on.append(table_name)
 
             # update file property in properties.json
             for file in self.properties["files"]:
@@ -250,7 +254,7 @@ class FileController:
             raise HTTPException(status_code=400, detail="The file does not exist")
 
     def _get_depend_table_names(self, user_sql: str):
-        pattern = re.compile(r"\{\{state\.tables\.(\w+)\.\w+\}\}")
+        pattern = re.compile(r"\{\{state\.(\w+)\.\w+\}\}")
         matches = pattern.findall(user_sql)
         return list(set(matches))
 
