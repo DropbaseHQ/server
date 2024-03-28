@@ -276,27 +276,31 @@ def test_delete_binded_fetcher(test_client):
 
         assert workspace_file_exists("scripts/test_fetcher.sql")
 
-    if not verify_object_in_state_context("TablesState", "table2"):
+    if not verify_object_in_state_context("State", "table2"):
         data = {
             "app_name": TEST_APP_NAME,
             "page_name": TEST_PAGE_NAME,
             "properties": {
-                "tables": [
+                "blocks": [
                     {
+                        "block_type": "table",
                         "label": "Table2",
                         "name": "table2",
                         "description": None,
                         "fetcher": "test_fetcher",
-                        "height": "",
                         "size": 10,
+                        "widget": None,
                         "filters": None,
+                        "w": 4,
+                        "h": 1,
+                        "x": 0,
+                        "y": 0,
                         "type": "sql",
                         "smart": False,
                         "columns": [],
                         "depends_on": None,
-                    }
+                    },
                 ],
-                "widgets": [],
                 "files": [{"name": "test_fetcher", "type": "sql", "source": None, "depends_on": []}],
             },
         }
@@ -319,8 +323,8 @@ def test_delete_binded_fetcher(test_client):
     assert res.status_code == 200
     assert not workspace_file_exists("scripts/test_fetcher.sql")
 
-    assert not verify_property_exists("tables[0].fetcher", "test_fetcher")
-    assert verify_property_exists("tables[0].fetcher", "")
+    assert not verify_property_exists("blocks[0].fetcher", "test_fetcher")
+    assert verify_property_exists("blocks[0].fetcher", "")
 
 
 def test_rename_binded_fetcher(test_client):
@@ -333,27 +337,31 @@ def test_rename_binded_fetcher(test_client):
 
         assert workspace_file_exists("scripts/test_fetcher.sql")
 
-    if not verify_object_in_state_context("TablesState", "table2"):
+    if not verify_object_in_state_context("State", "table2"):
         data = {
             "app_name": TEST_APP_NAME,
             "page_name": TEST_PAGE_NAME,
             "properties": {
-                "tables": [
+                "blocks": [
                     {
+                        "block_type": "table",
                         "label": "Table2",
                         "name": "table2",
                         "description": None,
                         "fetcher": "test_fetcher",
-                        "height": "",
                         "size": 10,
+                        "widget": None,
                         "filters": None,
+                        "w": 4,
+                        "h": 1,
+                        "x": 0,
+                        "y": 0,
                         "type": "sql",
                         "smart": False,
                         "columns": [],
                         "depends_on": None,
-                    }
+                    },
                 ],
-                "widgets": [],
                 "files": [{"name": "test_fetcher", "type": "sql", "source": None, "depends_on": []}],
             },
         }
@@ -378,5 +386,5 @@ def test_rename_binded_fetcher(test_client):
     assert not workspace_file_exists("scripts/test_fetcher.sql")
     assert workspace_file_exists("scripts/test_new_fetcher.sql")
 
-    assert not verify_property_exists("tables[0].fetcher", "test_fetcher")
-    assert verify_property_exists("tables[0].fetcher", "test_new_fetcher")
+    assert not verify_property_exists("blocks[0].fetcher", "test_fetcher")
+    assert verify_property_exists("blocks[0].fetcher", "test_new_fetcher")
