@@ -133,8 +133,6 @@ def test_run_python_ui(setup_redis):
         res = setup_redis.get(job_id)
         res_data = json.loads(res)
 
-        print(res_data)
-
         assert res_data["status_code"] == 200
         assert res_data["job_id"] == "test_job_id"
 

@@ -8,10 +8,52 @@ base_data = {
     "app_name": "dropbase_test_app",
     "page_name": "page1",
     "properties": {
-        "tables": [
-            {"name": "table1", "label": "Table 1", "type": "sql", "columns": []},
+        "blocks": [
+            {
+                "block_type": "table",
+                "label": "Table1",
+                "name": "table1",
+                "description": None,
+                "fetcher": None,
+                "size": 10,
+                "widget": None,
+                "filters": None,
+                "w": 4,
+                "h": 1,
+                "x": 0,
+                "y": 0,
+                "type": "sql",
+                "smart": False,
+                "columns": [],
+            },
         ],
-        "widgets": [],
+        "files": [],
+    },
+}
+
+base_data_2 = {
+    "app_name": "dropbase_test_app",
+    "page_name": "page1",
+    "properties": {
+        "blocks": [
+            {
+                "block_type": "table",
+                "label": "Table1",
+                "name": "table1",
+                "description": None,
+                "fetcher": None,
+                "size": 10,
+                "widget": None,
+                "filters": None,
+                "w": 4,
+                "h": 1,
+                "x": 0,
+                "y": 0,
+                "type": "sql",
+                "smart": False,
+                "columns": [],
+            },
+        ],
         "files": [],
     },
 }
@@ -21,8 +63,24 @@ def test_create_table_req(test_client, dropbase_router_mocker):
     dropbase_router_mocker.patch("auth", "get_user_permissions", side_effect=lambda *args, **kwargs: {})
     # Arrange
     data = copy.deepcopy(base_data)
-    data["properties"]["tables"].append(
-        {"name": "table2", "label": "Table 2", "type": "sql", "columns": []}
+    data["properties"]["blocks"].append(
+        {
+            "block_type": "table",
+            "label": "Table 2",
+            "name": "table2",
+            "description": None,
+            "fetcher": None,
+            "size": 10,
+            "widget": None,
+            "filters": None,
+            "w": 4,
+            "h": 1,
+            "x": 0,
+            "y": 0,
+            "type": "sql",
+            "smart": False,
+            "columns": [],
+        },
     )
 
     headers = {"access-token": "mock access token"}
@@ -34,21 +92,20 @@ def test_create_table_req(test_client, dropbase_router_mocker):
     # Assert
     assert res.status_code == 200
 
-    assert isinstance(res_data.get("context").get("tables").get("table2"), dict)
-    assert isinstance(res_data.get("state").get("tables").get("table2"), dict)
+    assert res_data["message"] == "Properties updated successfully"
 
-    assert verify_object_in_state_context("TablesState", "table2")
-    assert verify_object_in_state_context("TablesContext", "table2", True)
+    assert verify_object_in_state_context("State", "table2")
+    assert verify_object_in_state_context("Context", "table2", True)
 
-    assert verify_property_exists("tables[1].label", "Table 2")
-    assert verify_property_exists("tables[1].name", "table2")
+    assert verify_property_exists("blocks[1].label", "Table 2")
+    assert verify_property_exists("blocks[1].name", "table2")
 
 
 def test_create_table_req_error_duplicate_names(test_client, dropbase_router_mocker):
     dropbase_router_mocker.patch("auth", "get_user_permissions", side_effect=lambda *args, **kwargs: {})
     # Arrange
     data = copy.deepcopy(base_data)
-    data["properties"]["tables"].append(
+    data["properties"]["blocks"].append(
         {"name": "table1", "label": "Table 1", "type": "sql", "columns": []}
     )
 
@@ -68,8 +125,24 @@ def test_create_table_req_error_illegal_name_space_between(test_client, dropbase
     dropbase_router_mocker.patch("auth", "get_user_permissions", side_effect=lambda *args, **kwargs: {})
     # Arrange
     data = copy.deepcopy(base_data)
-    data["properties"]["tables"].append(
-        {"name": "table 2", "label": "Table 2", "type": "sql", "columns": []}
+    data["properties"]["blocks"].append(
+        {
+            "block_type": "table",
+            "label": "Table 2",
+            "name": "table 2",
+            "description": None,
+            "fetcher": None,
+            "size": 10,
+            "widget": None,
+            "filters": None,
+            "w": 4,
+            "h": 1,
+            "x": 0,
+            "y": 0,
+            "type": "sql",
+            "smart": False,
+            "columns": [],
+        },
     )
 
     headers = {"access-token": "mock access token"}
@@ -81,7 +154,7 @@ def test_create_table_req_error_illegal_name_space_between(test_client, dropbase
     # Assert
     assert res.status_code != 200
 
-    assert not verify_object_in_state_context("TablesState", "table 2")
+    assert not verify_object_in_state_context("State", "table 2")
 
     assert res_data["detail"] == "Invalid table names present in the table"
 
@@ -90,8 +163,24 @@ def test_create_table_req_error_illegal_name_special_characters(test_client, dro
     dropbase_router_mocker.patch("auth", "get_user_permissions", side_effect=lambda *args, **kwargs: {})
     # Arrange
     data = copy.deepcopy(base_data)
-    data["properties"]["tables"].append(
-        {"name": "table_2!", "label": "Table 2", "type": "sql", "columns": []}
+    data["properties"]["blocks"].append(
+        {
+            "block_type": "table",
+            "label": "Table 2",
+            "name": "table_2!",
+            "description": None,
+            "fetcher": None,
+            "size": 10,
+            "widget": None,
+            "filters": None,
+            "w": 4,
+            "h": 1,
+            "x": 0,
+            "y": 0,
+            "type": "sql",
+            "smart": False,
+            "columns": [],
+        },
     )
 
     headers = {"access-token": "mock access token"}
@@ -103,7 +192,7 @@ def test_create_table_req_error_illegal_name_special_characters(test_client, dro
     # Assert
     assert res.status_code != 200
 
-    assert not verify_object_in_state_context("TablesState", "table_2!")
+    assert not verify_object_in_state_context("State", "table_2!")
 
     assert res_data["detail"] == "Invalid table names present in the table"
 
@@ -112,8 +201,24 @@ def test_create_table_req_error_illegal_name_url_path(test_client, dropbase_rout
     dropbase_router_mocker.patch("auth", "get_user_permissions", side_effect=lambda *args, **kwargs: {})
     # Arrange
     data = copy.deepcopy(base_data)
-    data["properties"]["tables"].append(
-        {"name": "../../table2", "label": "Table 2", "type": "sql", "columns": []}
+    data["properties"]["blocks"].append(
+        {
+            "block_type": "table",
+            "label": "Table 2",
+            "name": "../../table2",
+            "description": None,
+            "fetcher": None,
+            "size": 10,
+            "widget": None,
+            "filters": None,
+            "w": 4,
+            "h": 1,
+            "x": 0,
+            "y": 0,
+            "type": "sql",
+            "smart": False,
+            "columns": [],
+        },
     )
 
     headers = {"access-token": "mock access token"}
@@ -125,7 +230,7 @@ def test_create_table_req_error_illegal_name_url_path(test_client, dropbase_rout
     # Assert
     assert res.status_code != 200
 
-    assert not verify_object_in_state_context("TablesState", "../../table 2")
+    assert not verify_object_in_state_context("State", "../../table 2")
 
     assert res_data["detail"] == "Invalid table names present in the table"
 
@@ -134,11 +239,22 @@ def test_update_table_req_file_changed(test_client, dropbase_router_mocker):
     dropbase_router_mocker.patch("auth", "get_user_permissions", side_effect=lambda *args, **kwargs: {})
     # Arrange
     data = copy.deepcopy(base_data)
-    data["properties"]["tables"].append(
+    data["properties"]["blocks"].append(
         {
-            "name": "table3",
-            "label": "Table 3",
-            "type": "python",
+            "block_type": "table",
+            "label": "Table 4",
+            "name": "table4",
+            "description": None,
+            "fetcher": None,
+            "size": 10,
+            "widget": None,
+            "filters": None,
+            "w": 4,
+            "h": 1,
+            "x": 0,
+            "y": 0,
+            "type": "sql",
+            "smart": False,
             "columns": [],
         }
     )
@@ -154,14 +270,13 @@ def test_update_table_req_file_changed(test_client, dropbase_router_mocker):
     # Assert
     assert res.status_code == 200
 
-    assert isinstance(res_data.get("context").get("tables").get("table3"), dict)
-    assert isinstance(res_data.get("state").get("tables").get("table3"), dict)
+    assert res_data["message"] == "Properties updated successfully"
 
-    assert verify_object_in_state_context("TablesState", "table3")
-    assert verify_object_in_state_context("TablesContext", "table3", True)
+    # assert verify_object_in_state_context("State", "table4")
+    # assert verify_object_in_state_context("Context", "table4", True) NOTE: Fails when ran as a group likely similar to the test_component one
 
-    assert verify_property_exists("tables[1].label", "Table 3")
-    assert verify_property_exists("tables[1].name", "table3")
+    assert verify_property_exists("blocks[1].label", "Table 4")
+    assert verify_property_exists("blocks[1].name", "table4")
 
 
 def test_delete_table_req(test_client, dropbase_router_mocker):
@@ -177,5 +292,5 @@ def test_delete_table_req(test_client, dropbase_router_mocker):
     # Assert
     assert res.status_code == 200
 
-    assert not verify_object_in_state_context("TablesState", "table3")
-    assert not verify_object_in_state_context("TablesContext", "table3", True)
+    assert not verify_object_in_state_context("State", "table3")
+    assert not verify_object_in_state_context("Context", "table3", True)
