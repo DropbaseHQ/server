@@ -13,9 +13,9 @@ def commit_table_columns(req: CommitTableColumnsRequest):
     # get properties
     properties = read_page_properties(req.app_name, req.page_name)
     # update columns
-    for table in properties["tables"]:
-        if table["name"] == req.table.name:
-            table["columns"] = req.columns
+    for block in properties["blocks"]:
+        if block["name"] == req.table.name and block["block_type"] == "table":
+            block["columns"] = req.columns
             break
 
     update_properties(req.app_name, req.page_name, properties)

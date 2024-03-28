@@ -64,7 +64,7 @@ def run_sql_query(args: RunSQLRequestTask):
 
         # validate state
         state = get_state(args.app_name, args.page_name, args.state)
-        col_names = re.findall("{{(state.tables.*?)}}", sql)
+        col_names = re.findall("{{(state.*?)}}", sql)
         for col_name in col_names:
             # eval() executes the string as python code. if column is not present, it will raise an Error
             # not sure if we need globals() here though
