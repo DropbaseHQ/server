@@ -21,7 +21,21 @@ class PinnedFilter(BaseModel):
     condition: Literal["=", ">", "<", ">=", "<=", "like", "in"]
 
 
+class TableColumn(BaseModel):
+    name: str
+    column_type: str
+    data_type: str
+    display_type: str
+
+
+class TableData(BaseModel):
+    type: Literal["python", "postgres", "mysql", "snowflake", "sqlite"] = "python"
+    columns: List[TableColumn]
+    data: List[List[Any]]
+
+
 class TableContextProperty(BaseModel):
+    data: Optional[TableData]
     message: Optional[str]
     message_type: Optional[str]
     reload: Annotated[Optional[bool], PropertyCategory.other] = False
