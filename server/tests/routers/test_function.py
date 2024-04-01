@@ -20,7 +20,9 @@ def test_run_function(test_client):
 
     import time
 
-    time.sleep(3)
+    time.sleep(
+        5
+    )  # NOTE: Interesting enough, time.sleep(3) is enough for test_function to pass as a group, but not as a whole where all tests are fun (maybe speed slows down)
 
     res = test_client.get(f"/query/status/{job_id}")
     assert res.status_code == 200
@@ -76,7 +78,7 @@ def test_run_function_invalid_state_context(test_client):
 
     import time
 
-    time.sleep(2)
+    time.sleep(5)
 
     res = test_client.get(f"/query/status/{job_id}")
     assert res.status_code == 500

@@ -107,7 +107,18 @@ def test_run_python_ui(setup_redis):
     os.environ["job_id"] = job_id
     os.environ["file"] = json.dumps({"type": "ui", "name": "test_ui_function"})
     os.environ["state"] = json.dumps({"widget1": {}, "table1": {}})
-    os.environ["context"] = json.dumps({"page": {}, "widget1": {}, "table1": {"columns": {}}})
+    os.environ["context"] = json.dumps(
+        {
+            "page": {},
+            "widget1": {
+                "components": {  # NOTE: We need these components when ran in groups or else it will raise a validator error
+                    "button1": {},
+                    "text2": {},
+                }
+            },
+            "table1": {"columns": {}},
+        }
+    )
 
     with patch("dropbase.worker.run_python_file.get_function_by_name") as mock_get_function_by_name:
 
@@ -132,6 +143,8 @@ def test_run_python_ui(setup_redis):
 
         res = setup_redis.get(job_id)
         res_data = json.loads(res)
+
+        print(res_data)
 
         assert res_data["status_code"] == 200
         assert res_data["job_id"] == "test_job_id"
