@@ -9,95 +9,224 @@ base_table_data = {
     "app_name": "dropbase_test_app",
     "page_name": "page1",
     "properties": {
-        "tables": [
+        "blocks": [
             {
+                "block_type": "table",
                 "label": "Table2",
                 "name": "table2",
                 "description": None,
                 "fetcher": "function3",
-                "height": "",
+                "widget": None,
                 "size": 10,
                 "filters": None,
+                "w": 4,
+                "h": 1,
+                "x": 0,
+                "y": 1,
                 "type": "sql",
                 "smart": False,
                 "columns": [
                     {
                         "name": "customer_id",
-                        "column_type": "postgres",
                         "data_type": "int64",
                         "display_type": "integer",
+                        "configurations": None,
+                        "schema_name": None,
+                        "table_name": None,
+                        "column_name": None,
+                        "primary_key": False,
+                        "foreign_key": False,
+                        "default": None,
+                        "Noneable": False,
+                        "unique": False,
+                        "edit_keys": [],
+                        "column_type": "postgres",
+                        "hidden": False,
+                        "editable": False,
                     },
                     {
                         "name": "company_name",
-                        "column_type": "postgres",
                         "data_type": "object",
                         "display_type": "text",
+                        "configurations": None,
+                        "schema_name": None,
+                        "table_name": None,
+                        "column_name": None,
+                        "primary_key": False,
+                        "foreign_key": False,
+                        "default": None,
+                        "Noneable": False,
+                        "unique": False,
+                        "edit_keys": [],
+                        "column_type": "postgres",
+                        "hidden": False,
+                        "editable": False,
                     },
                     {
                         "name": "contact_name",
-                        "column_type": "postgres",
                         "data_type": "object",
                         "display_type": "text",
+                        "configurations": None,
+                        "schema_name": None,
+                        "table_name": None,
+                        "column_name": None,
+                        "primary_key": False,
+                        "foreign_key": False,
+                        "default": None,
+                        "Noneable": False,
+                        "unique": False,
+                        "edit_keys": [],
+                        "column_type": "postgres",
+                        "hidden": False,
+                        "editable": False,
                     },
                     {
                         "name": "phone_number",
-                        "column_type": "postgres",
                         "data_type": "object",
                         "display_type": "text",
+                        "configurations": None,
+                        "schema_name": None,
+                        "table_name": None,
+                        "column_name": None,
+                        "primary_key": False,
+                        "foreign_key": False,
+                        "default": None,
+                        "Noneable": False,
+                        "unique": False,
+                        "edit_keys": [],
+                        "column_type": "postgres",
+                        "hidden": False,
+                        "editable": False,
                     },
                     {
                         "name": "customer_type",
-                        "column_type": "postgres",
                         "data_type": "object",
                         "display_type": "text",
+                        "configurations": None,
+                        "schema_name": None,
+                        "table_name": None,
+                        "column_name": None,
+                        "primary_key": False,
+                        "foreign_key": False,
+                        "default": None,
+                        "Noneable": False,
+                        "unique": False,
+                        "edit_keys": [],
+                        "column_type": "postgres",
+                        "hidden": False,
+                        "editable": False,
                     },
                 ],
             },
             {
+                "block_type": "table",
                 "label": "Table3",
                 "name": "table3",
                 "description": None,
                 "fetcher": "function3",
-                "height": "",
+                "widget": None,
                 "size": 10,
                 "filters": None,
+                "w": 4,
+                "h": 1,
+                "x": 0,
+                "y": 1,
                 "type": "sql",
                 "smart": False,
                 "columns": [
                     {
                         "name": "customer_id",
-                        "column_type": "postgres",
                         "data_type": "int64",
                         "display_type": "integer",
+                        "configurations": None,
+                        "schema_name": None,
+                        "table_name": None,
+                        "column_name": None,
+                        "primary_key": False,
+                        "foreign_key": False,
+                        "default": None,
+                        "Noneable": False,
+                        "unique": False,
+                        "edit_keys": [],
+                        "column_type": "postgres",
+                        "hidden": False,
+                        "editable": False,
                     },
                     {
                         "name": "company_name",
-                        "column_type": "postgres",
                         "data_type": "object",
                         "display_type": "text",
+                        "configurations": None,
+                        "schema_name": None,
+                        "table_name": None,
+                        "column_name": None,
+                        "primary_key": False,
+                        "foreign_key": False,
+                        "default": None,
+                        "Noneable": False,
+                        "unique": False,
+                        "edit_keys": [],
+                        "column_type": "postgres",
+                        "hidden": False,
+                        "editable": False,
                     },
                     {
                         "name": "contact_name",
-                        "column_type": "postgres",
                         "data_type": "object",
                         "display_type": "text",
+                        "configurations": None,
+                        "schema_name": None,
+                        "table_name": None,
+                        "column_name": None,
+                        "primary_key": False,
+                        "foreign_key": False,
+                        "default": None,
+                        "Noneable": False,
+                        "unique": False,
+                        "edit_keys": [],
+                        "column_type": "postgres",
+                        "hidden": False,
+                        "editable": False,
                     },
                     {
                         "name": "phone_number",
-                        "column_type": "postgres",
                         "data_type": "object",
                         "display_type": "text",
+                        "configurations": None,
+                        "schema_name": None,
+                        "table_name": None,
+                        "column_name": None,
+                        "primary_key": False,
+                        "foreign_key": False,
+                        "default": None,
+                        "Noneable": False,
+                        "unique": False,
+                        "edit_keys": [],
+                        "column_type": "postgres",
+                        "hidden": False,
+                        "editable": False,
                     },
                     {
                         "name": "customer_type",
-                        "column_type": "postgres",
                         "data_type": "object",
                         "display_type": "text",
+                        "configurations": None,
+                        "schema_name": None,
+                        "table_name": None,
+                        "column_name": None,
+                        "primary_key": False,
+                        "foreign_key": False,
+                        "default": None,
+                        "Noneable": False,
+                        "unique": False,
+                        "edit_keys": [],
+                        "column_type": "postgres",
+                        "hidden": False,
+                        "editable": False,
                     },
                 ],
             },
         ],
-        "widgets": [],
         "files": [{"name": "function3", "type": "sql", "source": "dropbasedev", "depends_on": []}],
     },
 }
@@ -105,18 +234,129 @@ base_table_data = {
 
 base_smart_table_data = {
     "table": {
+        "block_type": "table",
         "label": "Table2",
         "name": "table2",
         "description": None,
         "fetcher": "function3",
-        "height": "",
+        "widget": None,
         "size": 10,
         "filters": None,
+        "w": 4,
+        "h": 1,
+        "x": 0,
+        "y": 0,
         "type": "sql",
         "smart": False,
-        "columns": [],
+        "columns": [
+            {
+                "name": "customer_id",
+                "data_type": "int64",
+                "display_type": "integer",
+                "configurations": None,
+                "schema_name": None,
+                "table_name": None,
+                "column_name": None,
+                "primary_key": False,
+                "foreign_key": False,
+                "default": None,
+                "Noneable": False,
+                "unique": False,
+                "edit_keys": [],
+                "column_type": "postgres",
+                "hidden": False,
+                "editable": False,
+            },
+            {
+                "name": "company_name",
+                "data_type": "object",
+                "display_type": "text",
+                "configurations": None,
+                "schema_name": None,
+                "table_name": None,
+                "column_name": None,
+                "primary_key": False,
+                "foreign_key": False,
+                "default": None,
+                "Noneable": False,
+                "unique": False,
+                "edit_keys": [],
+                "column_type": "postgres",
+                "hidden": False,
+                "editable": False,
+            },
+            {
+                "name": "contact_name",
+                "data_type": "object",
+                "display_type": "text",
+                "configurations": None,
+                "schema_name": None,
+                "table_name": None,
+                "column_name": None,
+                "primary_key": False,
+                "foreign_key": False,
+                "default": None,
+                "Noneable": False,
+                "unique": False,
+                "edit_keys": [],
+                "column_type": "postgres",
+                "hidden": False,
+                "editable": False,
+            },
+            {
+                "name": "phone_number",
+                "data_type": "object",
+                "display_type": "text",
+                "configurations": None,
+                "schema_name": None,
+                "table_name": None,
+                "column_name": None,
+                "primary_key": False,
+                "foreign_key": False,
+                "default": None,
+                "Noneable": False,
+                "unique": False,
+                "edit_keys": [],
+                "column_type": "postgres",
+                "hidden": False,
+                "editable": False,
+            },
+            {
+                "name": "customer_type",
+                "data_type": "object",
+                "display_type": "text",
+                "configurations": None,
+                "schema_name": None,
+                "table_name": None,
+                "column_name": None,
+                "primary_key": False,
+                "foreign_key": False,
+                "default": None,
+                "Noneable": False,
+                "unique": False,
+                "edit_keys": [],
+                "column_type": "postgres",
+                "hidden": False,
+                "editable": False,
+            },
+        ],
     },
-    "state": {"tables": {"table2": {}, "table3": {}}, "widgets": {}},
+    "state": {
+        "table2": {
+            "customer_id": None,
+            "company_name": None,
+            "contact_name": None,
+            "phone_number": None,
+            "customer_type": None,
+        },
+        "table3": {
+            "customer_id": None,
+            "company_name": None,
+            "contact_name": None,
+            "phone_number": None,
+            "customer_type": None,
+        },
+    },
     "app_name": "dropbase_test_app",
     "page_name": "page1",
 }
@@ -135,7 +375,7 @@ base_add_file_data = {
     "page_name": "page1",
     "app_name": "dropbase_test_app",
     "file_name": "function3",
-    "code": "SELECT * FROM users",
+    "code": "SELECT * FROM customers",
     "source": "dropbasedev",
     "type": "sql",
 }
@@ -175,7 +415,7 @@ def setup_tables(request, test_client):
     ],
     indirect=True,
 )
-def test_convert_to_smart_table(test_client, mocker, mock_db, setup_tables):
+def test_convert_to_smart_table_222(test_client, mocker, mock_db, setup_tables):
     # Arrange
     smart_data = copy.deepcopy(base_smart_table_data)
 
@@ -192,7 +432,7 @@ def test_convert_to_smart_table(test_client, mocker, mock_db, setup_tables):
     # Assertions
     assert job_status.status_code == 200
     res_data["message"] == "job started"
-    assert verify_property_exists("tables[0].smart", True)
+    assert verify_property_exists("blocks[0].smart", True)
 
 
 @pytest.mark.parametrize("mock_db", ["mysql"], indirect=True)
@@ -228,7 +468,7 @@ def test_convert_to_smart_table_mysql(test_client, mocker, mock_db, setup_tables
     # Assertions
     assert job_status.status_code == 200
     res_data["message"] == "job started"
-    assert verify_property_exists("tables[0].smart", True)
+    assert verify_property_exists("blocks[0].smart", True)
 
 
 @pytest.mark.parametrize("mock_db", ["postgres", "mysql", "snowflake", "sqlite"], indirect=True)
@@ -257,7 +497,7 @@ def test_convert_to_smart_table_duplicate_column_name_fail(test_client, mocker, 
     # Assertions
     assert "Duplicate column name" in status_data["message"]
     assert status_data["type"] == "error"
-    assert verify_property_exists("tables[0].smart", False)
+    assert verify_property_exists("blocks[0].smart", False)
 
 
 @pytest.mark.parametrize("mock_db", ["postgres", "mysql", "snowflake", "sqlite"], indirect=True)
@@ -286,7 +526,7 @@ def test_convert_to_smart_table_banned_keyword_groupby_fail(test_client, mocker,
     # Assertions
     assert "Must remove keyword GROUP BY to convert to smart table" in status_data["message"]
     assert status_data["type"] == "error"
-    assert verify_property_exists("tables[0].smart", False)
+    assert verify_property_exists("blocks[0].smart", False)
 
 
 @pytest.mark.parametrize("mock_db", ["postgres", "mysql", "snowflake", "sqlite"], indirect=True)
@@ -315,7 +555,7 @@ def test_convert_to_smart_table_banned_keyword_with_fail(test_client, mocker, mo
     # Assertions
     assert "Must remove keyword WITH to convert to smart table" in status_data["message"]
     assert status_data["type"] == "error"
-    assert verify_property_exists("tables[0].smart", False)
+    assert verify_property_exists("blocks[0].smart", False)
 
 
 @pytest.mark.parametrize("mock_db", ["postgres", "mysql", "snowflake", "sqlite"], indirect=True)
@@ -341,8 +581,8 @@ def test_convert_to_smart_table_no_pk(test_client, mocker, mock_db, setup_tables
     # Assertions
     assert job_status.status_code == 200
     res_data["message"] == "job started"
-    assert verify_property_exists("tables[0].smart", True)
-    assert verify_property_exists("tables[0].columns[1].editable", False)
+    assert verify_property_exists("blocks[0].smart", True)
+    assert verify_property_exists("blocks[0].columns[1].editable", False)
 
 
 @pytest.mark.parametrize("mock_db", ["postgres", "mysql", "snowflake", "sqlite"], indirect=True)
@@ -371,7 +611,7 @@ def test_convert_to_smart_table_empty_table_fail(test_client, mocker, mock_db, s
     # Assertions
     assert "Can not convert empty table into smart table" in status_data["message"]
     assert status_data["type"] == "error"
-    assert verify_property_exists("tables[0].smart", False)
+    assert verify_property_exists("blocks[0].smart", False)
 
 
 @pytest.mark.parametrize("mock_db", ["postgres", "mysql", "snowflake", "sqlite"], indirect=True)
@@ -411,7 +651,7 @@ def test_convert_to_smart_table_in_parallel(test_client, mocker, mock_db, setup_
     # Assertions
     assert job_status.status_code == 200
     assert res_data["message"] == "job started"
-    assert verify_property_exists("tables[0].smart", True)
+    assert verify_property_exists("blocks[0].smart", True)
     assert job_status_2.status_code == 200
     assert res_data_2["message"] == "job started"
-    assert verify_property_exists("tables[1].smart", True)
+    assert verify_property_exists("blocks[1].smart", True)
