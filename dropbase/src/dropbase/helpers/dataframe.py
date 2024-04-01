@@ -18,7 +18,7 @@ def convert_df_to_resp_obj(df: pd.DataFrame, data_type: str = "python") -> dict:
     # infer column types
     columns = get_column_types(df)
     values["columns"] = columns
-    values["data_type"] = data_type
+    values["type"] = data_type
     return values
 
 

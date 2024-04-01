@@ -1,6 +1,7 @@
 import json
 import re
 
+from dropbase.helpers.utils import get_table_data_fetcher
 from dropbase.schemas.files import DataFile
 from dropbase.schemas.table import ConvertTableRequest
 from server.controllers.connect import connect
@@ -8,7 +9,6 @@ from server.controllers.page import get_page_state_context
 from server.controllers.properties import read_page_properties, update_properties
 from server.controllers.redis import r
 from server.controllers.run_sql import get_sql_from_file, render_sql
-from server.controllers.utils import get_table_data_fetcher
 from server.requests.dropbase_router import DropbaseRouter
 
 

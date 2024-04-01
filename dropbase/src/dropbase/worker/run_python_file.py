@@ -5,7 +5,8 @@ import traceback
 
 from dotenv import load_dotenv
 
-from dropbase.helpers.dataframe import convert_df_to_resp_obj
+from dropbase.helpers.user_functions import get_requried_fields, non_empty_values
+from dropbase.helpers.utils import get_state
 
 load_dotenv()
 
@@ -17,32 +18,13 @@ def get_function_by_name(app_name: str, page_name: str, function_name: str):
     return function
 
 
-def get_state(app_name: str, page_name: str, class_dict: dict, class_name: str = "State"):
+def get_empty_context(app_name: str, page_name: str):
     page_module = f"workspace.{app_name}.{page_name}"
     page = importlib.import_module(page_module)
-    ClassName = getattr(page, class_name)
-    return ClassName(**class_dict)
-
-
-# run data fetcher code
-def run_python_data_fetcher(app_name: str, page_name: str, file: dict, state: dict):
-    state = get_state(app_name, page_name, state, "State")
-    args = {"state": state}
-    function_name = get_function_by_name(app_name, page_name, file.get("name"))
-    # call function
-    df = function_name(**args)
-    return convert_df_to_resp_obj(df, "python")
-
-
-# for ui functions
-def run_python_ui(app_name: str, page_name: str, file: dict, state: dict, context: dict):
-    state = get_state(app_name, page_name, state, "State")
-    context = get_state(app_name, page_name, context, "Context")
-    args = {"state": state, "context": context}
-    function_name = get_function_by_name(app_name, page_name, file.get("name"))
-    # call function
-    context = function_name(**args)
-    return context.dict()
+    Context = getattr(page, "Context")
+    schema = Context.schema()
+    empty_context = get_requried_fields(schema, schema["definitions"])
+    return Context(**empty_context)
 
 
 def run(r, response):
@@ -54,18 +36,20 @@ def run(r, response):
         file = json.loads(os.getenv("file"))
         job_id = os.getenv("job_id")
 
-        # run python script and get result
-        if file["type"] == "ui":
-            context = json.loads(os.getenv("context"))
-            result = run_python_ui(app_name, page_name, file, state, context)
-            response["type"] = "context"
-            response["context"] = result
-        elif file["type"] == "data_fetcher":
-            result = run_python_data_fetcher(app_name, page_name, file, state)
-            response["type"] = "table"
-            response["data"] = result["data"]
-            response["columns"] = result["columns"]
+        # get state and context
+        state = get_state(app_name, page_name, state)
+        context = get_empty_context(app_name, page_name)
 
+        # run python script and get result
+        function_name = get_function_by_name(app_name, page_name, file.get("name"))
+        args = {"state": state, "context": context}
+        context = function_name(**args)
+
+        # remove empty values
+        context = non_empty_values(context.dict())
+
+        response["type"] = "context"
+        response["context"] = context
         response["message"] = "job completed"
         response["status_code"] = 200
     except Exception as e:
