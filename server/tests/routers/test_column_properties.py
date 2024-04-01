@@ -6,12 +6,14 @@ base_data = {
     "app_name": "test9",
     "page_name": "page1",
     "properties": {
-        "tables": [
+        "blocks": [
             {
-                "label": "Table2",
-                "name": "table2",
+                "block_type": "table",
+                "label": "Table1",
+                "name": "table1",
                 "description": None,
                 "fetcher": "function1",
+                "widget": None,
                 "size": 10,
                 "filters": None,
                 "w": 4,
@@ -24,12 +26,8 @@ base_data = {
                     {
                         "name": "id",
                         "data_type": "int64",
-                        "display_type": "integer",
-                        "configurations": {
-                            "integer": {"config_type": "int"},
-                            "currency": None,
-                            "weight": None,
-                        },
+                        "display_type": "currency",
+                        "configurations": None,
                         "schema_name": None,
                         "table_name": None,
                         "column_name": None,
@@ -83,22 +81,7 @@ base_data = {
                         "name": "string",
                         "data_type": "object",
                         "display_type": "text",
-                        "configurations": {
-                            "select": {
-                                "options": [
-                                    {
-                                        "id": "a6d206e7-02d9-48f4-b538-b7dac370d972",
-                                        "name": "name1",
-                                        "value": "value1",
-                                    },
-                                    {
-                                        "id": "bee35b94-180a-4ec6-8af6-98afaec6b906",
-                                        "name": "name2",
-                                        "value": "value2",
-                                    },
-                                ]
-                            }
-                        },
+                        "configurations": None,
                         "schema_name": None,
                         "table_name": None,
                         "column_name": None,
@@ -201,22 +184,23 @@ def get_column_properties_data(request, test_client):
     # Arrange
     data = copy.deepcopy(base_data)
 
-    # column_property_values = request.param
+    for column in data["properties"]["blocks"][0]["columns"]:
+        if column["name"] == request.param["column_name"]:
+            column["configurations"] = request.param["configurations"]
 
-    # data changes here
     return data
 
 
-@pytest.mark.parametrize("mock_db", ["postgres", "snowflake"], indirect=True)
+@pytest.mark.parametrize("mock_db", ["postgres", "snowflake", "mysql", "sqlite"], indirect=True)
 @pytest.mark.parametrize(
-    "get_column_properties_cell_data",
+    "get_column_properties_data",
     [
         {
-            "column_name": "int_col",
+            "column_name": "int",
             "configurations": {"currency": {"config_type": "currency", "symbol": "$$"}},
         },
         {
-            "column_name": "int_col",
+            "column_name": "int",
             "configurations": {
                 "integer": {
                     "config_type": "int",
@@ -224,19 +208,19 @@ def get_column_properties_data(request, test_client):
             },
         },
         {
-            "column_name": "float_col",
+            "column_name": "float",
             "configurations": {"currency": {"config_type": "currency", "symbol": "$$"}},
         },
         {
-            "column_name": "float_col",
+            "column_name": "float",
             "configurations": {
-                "integer": {
+                "float": {
                     "config_type": "float",
                 }
             },
         },
         {
-            "column_name": "string_col",
+            "column_name": "string",
             "configurations": {
                 "select": {
                     "options": [
@@ -255,9 +239,9 @@ def get_column_properties_data(request, test_client):
             },
         },
         {
-            "column_name": "string_col",
+            "column_name": "string",
             "configurations": {
-                "integer": {
+                "text": {
                     "config_type": "text",
                 }
             },
@@ -265,11 +249,17 @@ def get_column_properties_data(request, test_client):
     ],
     indirect=True,
 )
-def test_column_properties(test_client, mocker, mock_db, get_edit_cell_data):
+def test_column_properties(test_client, mocker, mock_db, get_column_properties_data):
     # Arrange
     mocker.patch("server.controllers.edit_cell.connect", return_value=mock_db)
 
-    # cell_data = get_edit_cell_data
+    properties_data = get_column_properties_data
+    headers = {"access-token": "mock access token"}
 
     # Act
+    res = test_client.put("/page", json=properties_data, headers=headers)
+    res_data = res.json()
+
     # Assert
+    assert res.status_code == 200
+    assert res_data["message"] == "Properties updated successfully"

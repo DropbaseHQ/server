@@ -8,6 +8,7 @@ from dropbase.models.category import PropertyCategory
 
 class ConfigTypeEnum(str, Enum):
     INT = "int"
+    FLOAT = "float"
     CURRENCY = "currency"
     WEIGHT = "weight"
     TEXT = "text"
@@ -34,6 +35,12 @@ class IntType(BaseModel):
     config_type: Annotated[Literal[ConfigTypeEnum.INT], PropertyCategory.internal] = ConfigTypeEnum.INT
 
 
+class FloatType(BaseModel):
+    config_type: Annotated[
+        Literal[ConfigTypeEnum.FLOAT], PropertyCategory.internal
+    ] = ConfigTypeEnum.FLOAT
+
+
 class CurrencyType(BaseModel):
     config_type: Annotated[
         Literal[ConfigTypeEnum.CURRENCY], PropertyCategory.internal
@@ -51,6 +58,7 @@ class WeightType(BaseModel):
 
 class IntegerTypes(BaseModel):
     integer: Optional[IntType]
+    float: Optional[FloatType]
     currency: Optional[CurrencyType]
     weight: Optional[WeightType]
 
@@ -140,15 +148,6 @@ class BaseColumnDefinedProperty(BaseModel):
         Optional[Union[IntegerTypes, TextTypes, ArrayTypes]],
         PropertyCategory.default,  # ERROR!!! TextTypes is TAKEN AS Integer Types use ENUM
     ]
-
-    @root_validator
-    def check_configurations(cls, values):
-        display_type, configurations = values.get("display_type"), values.get("configurations")
-        if display_type == DisplayType.currency and not isinstance(configurations, CurrencyType):
-            raise ValueError("Configurations for 'currency' must be a CurrencyType instance")
-        if display_type == DisplayType.select and not isinstance(configurations, SelectType):
-            raise ValueError("configurations for 'datetime' must be a DatetimeType instance")
-        return values
 
 
 class OnEvent(BaseModel):
