@@ -38,18 +38,17 @@ def write_file(file_code: str, test_code: str, state: dict, context: dict = {}, 
     python_str = file_code
     # NOTE: not all user functions will have state and context, so wrapping in try-except
     python_str += f"""
+from dropbase.helpers.user_functions import get_requried_fields
 state = {state}
 context = {context}
 
-try:
-    state = State(**state)
-except:
-    pass
+# initiate state model
+state = State(**state)
 
-try:
-    context = Context(**context)
-except:
-    pass
+# initiate empty context model
+context_schema = Context.schema()
+empty_context = get_requried_fields(context_schema, context_schema["definitions"])
+context = Context(**empty_context)
 """
     python_str += test_code
 

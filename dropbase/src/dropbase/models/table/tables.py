@@ -30,8 +30,8 @@ class TableColumn(BaseModel):
 
 class TableData(BaseModel):
     type: Literal["python", "postgres", "mysql", "snowflake", "sqlite"] = "python"
-    columns: List[TableColumn]
-    data: List[List[Any]]
+    columns: List[Optional[TableColumn]] = []
+    data: List[Optional[List[Any]]] = []
 
 
 class TableContextProperty(BaseModel):
