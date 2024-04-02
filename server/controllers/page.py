@@ -15,9 +15,9 @@ def get_state_context(app_name, page_name, permissions):
         state_context["properties"] = read_page_properties(app_name, page_name)
         return {"state_context": state_context, "permissions": permissions}
     except Exception:
-        # in cases where there are some hanging files/dirs from update properties step
-        # wait for a second for files to clear up and try again
         try:
+            # in cases where there are some hanging files/dirs from update properties step
+            # wait for a second for files to clear up and try again
             time.sleep(1)
             state_context = get_page_state_context(app_name, page_name)
             state_context["properties"] = read_page_properties(app_name, page_name)
@@ -35,7 +35,6 @@ def update_page_properties(req: PageProperties):
         # get new steate and context
         state_context = get_page_state_context(req.app_name, req.page_name)
         return {"state_context": state_context}
-        return {"message": "Properties updated successfully"}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -47,6 +46,9 @@ def validate_property_names(properties: dict):
 
     # validate column names
     for block in properties["blocks"]:
+        if block["name"] == "page":
+            raise Exception("Page is a reserved name")
+
         if block["block_type"] == "table":
             # Check for duplicate table names
             if block["name"] in table_names:
@@ -81,9 +83,7 @@ def validate_property_names(properties: dict):
 
 def get_page_state_context(app_name: str, page_name: str):
     State = get_state_context_model(app_name, page_name, "state")
-    Context = get_state_context_model(app_name, page_name, "context")
     state = _dict_from_pydantic_model(State)
-    context = _dict_from_pydantic_model(Context)
     context = run_display_rule(app_name, page_name, state)
     return {"state": state, "context": context}
 
