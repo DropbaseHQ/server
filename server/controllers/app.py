@@ -46,6 +46,9 @@ def parse_apps_permissions(app_list, router: DropbaseRouter):
 
     filtered_apps = []
     for app in app_list:
+        if app.get("id") is None:
+            filtered_apps.append(app)
+
         if app.get("id") in permissions_response:
             if not permissions_response.get(app.get("id")):
                 continue
