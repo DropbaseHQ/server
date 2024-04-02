@@ -9,9 +9,9 @@ from server.controllers.display_rules import run_display_rule
 from server.controllers.properties import read_page_properties, update_properties
 
 
-def get_state_context(app_name, page_name, permissions):
+def get_state_context(app_name, page_name, permissions, initial=False):
     try:
-        state_context = get_page_state_context(app_name, page_name)
+        state_context = get_page_state_context(app_name, page_name, initial)
         state_context["properties"] = read_page_properties(app_name, page_name)
         return {"state_context": state_context, "permissions": permissions}
     except Exception:
@@ -81,13 +81,20 @@ def validate_property_names(properties: dict):
                     raise Exception("Invalid component names present in the table")
 
 
-def get_page_state_context(app_name: str, page_name: str):
+def get_page_state_context(app_name: str, page_name: str, initial=False):
     State = get_state_context_model(app_name, page_name, "state")
     state = _dict_from_pydantic_model(State)
-    context = run_display_rule(app_name, page_name, state)
+    if initial:
+        Context = get_state_context_model(app_name, page_name, "context")
+        context = _dict_from_pydantic_model(Context)
+        context = Context(**context)
+        context = context.dict()
+    else:
+        context = run_display_rule(app_name, page_name, state)
     return {"state": state, "context": context}
 
 
+# TODO: AZ this might be the same as get_requried_fields
 def _dict_from_pydantic_model(model):
     data = {}
     for name, field in model.__fields__.items():
