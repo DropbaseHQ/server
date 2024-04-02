@@ -33,7 +33,7 @@ def update_page_properties(req: PageProperties):
         # update properties
         update_properties(req.app_name, req.page_name, req.properties.dict())
         # get new steate and context
-        return get_page_state_context(req.app_name, req.page_name)
+        return {"message": "Properties updated successfully"}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -44,37 +44,37 @@ def validate_property_names(properties: dict):
     widget_names = set()
 
     # validate column names
-    for table in properties["tables"]:
-        # Check for duplicate table names
-        if table["name"] in table_names:
-            raise Exception("A table with this name already exists")
+    for block in properties["blocks"]:
+        if block["block_type"] == "table":
+            # Check for duplicate table names
+            if block["name"] in table_names:
+                raise Exception("A table with this name already exists")
 
-        table_names.add(table["name"])
+            table_names.add(block["name"])
 
-        if not validate_column_name(table["name"]):
-            raise Exception("Invalid table names present in the table")
-        for column in table.get("columns"):
-            if not validate_column_name(column["name"]):
-                raise Exception("Invalid column names present in the table")
-    # validate component names
-    for widget in properties["widgets"]:
-        if widget["name"] in widget_names:
-            raise Exception("A widget with this name already exists")
+            if not validate_column_name(block["name"]):
+                raise Exception("Invalid table names present in the table")
+            for column in block.get("columns"):
+                if not validate_column_name(column["name"]):
+                    raise Exception("Invalid column names present in the table")
+        elif block["block_type"] == "widget":
+            if block["name"] in widget_names:
+                raise Exception("A widget with this name already exists")
 
-        widget_names.add(widget["name"])
+            widget_names.add(block["name"])
 
-        if not validate_column_name(widget["name"]):
-            raise Exception("Invalid widget names present in the table")
+            if not validate_column_name(block["name"]):
+                raise Exception("Invalid widget names present in the table")
 
-        component_names = set()
-        for component in widget.get("components"):
-            if component["name"] in component_names:
-                raise Exception("A component with this name already exists")
+            component_names = set()
+            for component in block.get("components"):
+                if component["name"] in component_names:
+                    raise Exception("A component with this name already exists")
 
-            component_names.add(component["name"])
+                component_names.add(component["name"])
 
-            if not validate_column_name(component["name"]):
-                raise Exception("Invalid component names present in the table")
+                if not validate_column_name(component["name"]):
+                    raise Exception("Invalid component names present in the table")
 
 
 def get_page_state_context(app_name: str, page_name: str):

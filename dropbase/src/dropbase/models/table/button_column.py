@@ -3,17 +3,11 @@ from typing import Annotated, Literal, Optional
 from pydantic import BaseModel
 
 from dropbase.models.category import PropertyCategory
-from dropbase.models.common import ColumnDisplayProperties
+from dropbase.models.common import ColumnDisplayProperties, OnEvent
 
 
 class ButtonColumnContextProperty(ColumnDisplayProperties):
     pass
-
-
-# TODO: group with others
-class OnSelect(BaseModel):
-    type: Literal["widget", "function"] = "function"
-    value: str
 
 
 class ButtonColumnDefinedProperty(BaseModel):
@@ -38,7 +32,7 @@ class ButtonColumnDefinedProperty(BaseModel):
     ]
 
     # events
-    on_click: Annotated[Optional[OnSelect], PropertyCategory.events]
+    on_click: Annotated[Optional[OnEvent], PropertyCategory.events]
 
     # visibility
     hidden: Annotated[bool, PropertyCategory.default] = False

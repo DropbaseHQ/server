@@ -85,10 +85,10 @@ def convert_sql_table(req: ConvertTableRequest, router: DropbaseRouter, job_id):
         # rereading properties
         properties = read_page_properties(req.app_name, req.page_name)
 
-        for table in properties["tables"]:
-            if table["name"] == req.table.name:
-                table["smart"] = True
-                table["columns"] = column_props
+        for block in properties["blocks"]:
+            if block["block_type"] == "table" and block["name"] == req.table.name:
+                block["smart"] = True
+                block["columns"] = column_props
 
         update_properties(req.app_name, req.page_name, properties)
 

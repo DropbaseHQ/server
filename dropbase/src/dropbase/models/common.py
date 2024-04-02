@@ -7,13 +7,16 @@ from dropbase.models.category import PropertyCategory
 
 
 class ComponentDisplayProperties(BaseModel):
-    visible: Optional[bool]  # used for display rules
-    message: Optional[str]
-    message_type: Optional[str]
+    visible: Optional[bool]
 
 
 class ColumnDisplayProperties(BaseModel):
     visible: Optional[bool]
+
+
+class PageDisplayProperties(BaseModel):
+    message: Optional[str]
+    message_type: Optional[str]
 
 
 class CurrencyType(BaseModel):
@@ -77,3 +80,12 @@ class BaseColumnDefinedProperty(BaseModel):
         if display_type == DisplayType.select and not isinstance(configurations, SelectType):
             raise ValueError("configurations for 'datetime' must be a DatetimeType instance")
         return values
+
+
+class OnEvent(BaseModel):
+    type: Literal["widget", "table", "function"] = "function"
+    value: str
+
+
+class BaseContext(BaseModel):
+    page: PageDisplayProperties

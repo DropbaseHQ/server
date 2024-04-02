@@ -1,8 +1,8 @@
 import json
 import os
 import shutil
-import uuid
 import tempfile
+import uuid
 
 from fastapi import HTTPException
 
@@ -15,8 +15,15 @@ APP_PROPERTIES_TEMPLATE = {
 }
 
 PAGE_PROPERTIES_TEMPLATE = {
-    "tables": [{"name": "table1", "label": "Table 1", "type": "sql", "columns": []}],
-    "widgets": [],
+    "blocks": [
+        {
+            "block_type": "table",
+            "name": "table1",
+            "label": "Table 1",
+            "type": "sql",
+            "columns": [],
+        }
+    ],
     "files": [],
 }
 
@@ -301,7 +308,8 @@ class AppFolderController:
         create_folder(path=scripts_folder_path)
         create_init_file(path=scripts_folder_path, init_code="")
 
-        create_state_context_files(self.app_name, page_name, self.page_properties)
+        page_dir_path = f"workspace/{self.app_name}/{page_name}"
+        create_state_context_files(page_dir_path, self.page_properties)
         page_object = self._add_page_to_app_properties(page_name, page_label)
         app_id = self.get_app_id(self.app_name)
         create_page_payload = {

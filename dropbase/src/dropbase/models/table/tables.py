@@ -28,12 +28,14 @@ class TableContextProperty(BaseModel):
 
 
 class TableDefinedProperty(BaseModel):
+    block_type: Literal["table"] = "table"
     label: Annotated[str, PropertyCategory.default]
     name: Annotated[str, PropertyCategory.default]
     description: Annotated[Optional[str], PropertyCategory.default]
 
     # data fetcher
     fetcher: Annotated[Optional[str], PropertyCategory.default]
+    widget: Annotated[Optional[str], PropertyCategory.default]
 
     # settings
 

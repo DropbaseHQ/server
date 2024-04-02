@@ -4,10 +4,9 @@ import uuid
 import anyio
 from fastapi import APIRouter, BackgroundTasks, Depends, Response
 
-from dropbase.schemas.table import CommitTableColumnsRequest, ConvertTableRequest, TableBase
+from dropbase.schemas.table import CommitTableColumnsRequest, ConvertTableRequest
 from server.auth.dependency import CheckUserPermissions
 from server.controllers.columns import commit_table_columns
-from server.controllers.python_docker import run_container
 from server.controllers.redis import r
 from server.controllers.tables import convert_sql_table
 from server.requests.dropbase_router import DropbaseRouter, get_dropbase_router
