@@ -4,7 +4,7 @@ from pydantic import BaseModel
 
 
 class PayloadState(BaseModel):
-    context: Optional[dict]
+    # context: Optional[dict]
     state: Optional[dict]
 
 

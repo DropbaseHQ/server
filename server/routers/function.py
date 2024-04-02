@@ -34,7 +34,6 @@ async def run_function_req(req: RunFunction, response: Response):
             "page_name": req.page_name,
             "file": json.dumps(file.dict()),
             "state": json.dumps(req.payload.state),
-            "context": json.dumps(req.payload.context),
             "job_id": job_id,
             "type": "file",
         }

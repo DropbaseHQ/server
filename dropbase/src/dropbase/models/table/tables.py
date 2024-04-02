@@ -29,7 +29,7 @@ class TableColumn(BaseModel):
 
 
 class TableData(BaseModel):
-    type: Literal["python", "postgres", "mysql", "snowflake", "sqlite"] = "python"
+    type: Optional[Literal["python", "postgres", "mysql", "snowflake", "sqlite"]] = "python"
     columns: List[Optional[TableColumn]] = []
     data: List[Optional[List[Any]]] = []
 

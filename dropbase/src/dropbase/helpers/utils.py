@@ -4,13 +4,7 @@ from pathlib import Path
 
 import pandas as pd
 
-
-def get_function_by_name(app_name: str, page_name: str, function_name: str):
-    file_module = f"workspace.{app_name}.{page_name}.scripts.{function_name}"
-    scripts = importlib.import_module(file_module)
-    importlib.reload(scripts)
-    function = getattr(scripts, function_name)
-    return function
+from dropbase.helpers.user_functions import get_requried_fields
 
 
 def get_state_context(app_name: str, page_name: str, state: dict, context: dict):
@@ -64,3 +58,20 @@ def process_query_result(res) -> pd.DataFrame:
     df = pd.DataFrame(res)
     df = clean_df(df)
     return df
+
+
+def get_function_by_name(app_name: str, page_name: str, function_name: str):
+    file_module = f"workspace.{app_name}.{page_name}.scripts.{function_name}"
+    scripts = importlib.import_module(file_module)
+    importlib.reload(scripts)
+    function = getattr(scripts, function_name)
+    return function
+
+
+def get_empty_context(app_name: str, page_name: str):
+    page_module = f"workspace.{app_name}.{page_name}"
+    page = importlib.import_module(page_module)
+    Context = getattr(page, "Context")
+    schema = Context.schema()
+    empty_context = get_requried_fields(schema, schema["definitions"])
+    return Context(**empty_context)

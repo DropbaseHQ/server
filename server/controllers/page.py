@@ -33,6 +33,8 @@ def update_page_properties(req: PageProperties):
         # update properties
         update_properties(req.app_name, req.page_name, req.properties.dict())
         # get new steate and context
+        state_context = get_page_state_context(req.app_name, req.page_name)
+        return {"state_context": state_context}
         return {"message": "Properties updated successfully"}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
@@ -82,7 +84,7 @@ def get_page_state_context(app_name: str, page_name: str):
     Context = get_state_context_model(app_name, page_name, "context")
     state = _dict_from_pydantic_model(State)
     context = _dict_from_pydantic_model(Context)
-    context = run_display_rule(app_name, page_name, state, context)
+    context = run_display_rule(app_name, page_name, state)
     return {"state": state, "context": context}
 
 
