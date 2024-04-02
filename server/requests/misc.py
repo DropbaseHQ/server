@@ -19,7 +19,7 @@ class MiscRouter:
         return self.session.post(url="get_smart_cols/", json=payload)
 
     def sync_structure(self, payload: dict):
-        return self.session.post(url="sync/structure/", json=payload)
+        return self.session.post(url="sync/structure", json=payload)
 
     def sync_app(self, payload: dict):
         return self.session.post(url="sync/app/", json=payload)
