@@ -12,6 +12,10 @@ class ComponentDisplayProperties(BaseModel):
     message_type: Optional[str]
 
 
+class ColumnDisplayProperties(BaseModel):
+    visible: Optional[bool]
+
+
 class CurrencyType(BaseModel):
     config_type: Annotated[Literal["currency"], PropertyCategory.internal] = "currency"
     symbol: Optional[str]
