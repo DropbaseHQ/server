@@ -87,6 +87,7 @@ async def run_query(req: QueryPythonRequest, response: Response, background_task
         args = {
             "app_name": req.app_name,
             "page_name": req.page_name,
+            "table_name": req.table_name,
             "job_id": job_id,
             "type": "file",
         }
@@ -105,6 +106,7 @@ async def run_query(req: QueryPythonRequest, response: Response, background_task
             args["filter_sort"] = filter_sort
             args["job_id"] = job_id
             args = RunSQLRequestTask(**args)
+
             background_tasks.add_task(run_sql_query, args)
 
         status_code = 202

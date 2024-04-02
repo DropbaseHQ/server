@@ -4,7 +4,6 @@ import traceback
 
 from dotenv import load_dotenv
 
-from dropbase.helpers.user_functions import non_empty_values
 from dropbase.helpers.utils import get_empty_context, get_function_by_name, get_state
 
 load_dotenv()
@@ -28,11 +27,8 @@ def run(r, response):
         args = {"state": state, "context": context}
         context = function_name(**args)
 
-        # remove empty values
-        context = non_empty_values(context.dict())
-
         response["type"] = "context"
-        response["context"] = context
+        response["context"] = context.dict()
         response["message"] = "job completed"
         response["status_code"] = 200
     except Exception as e:

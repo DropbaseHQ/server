@@ -28,6 +28,7 @@ class RunPythonStringRequestNew(BaseModel):
 class QueryPythonRequest(BaseModel):
     app_name: str
     page_name: str
+    table_name: str
     fetcher: str
     filter_sort: Optional[FilterSort]
     state: dict

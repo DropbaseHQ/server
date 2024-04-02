@@ -5,7 +5,7 @@ import traceback
 from jinja2 import Environment
 
 from dropbase.helpers.dataframe import convert_df_to_resp_obj
-from dropbase.helpers.utils import get_state, process_query_result
+from dropbase.helpers.utils import get_empty_context, get_state, process_query_result
 from dropbase.schemas.query import RunSQLRequestTask, RunSQLStringTask
 from server.constants import cwd
 from server.controllers.connect import connect
@@ -78,8 +78,16 @@ def run_sql_query(args: RunSQLRequestTask):
         df = process_query_result(res)
 
         res = convert_df_to_resp_obj(df, user_db.db_type)
-        r.set(args.job_id, json.dumps(res))
-        response = {**res, "message": "job completed", "type": "table", "status_code": 200}
+
+        context = get_empty_context(args.app_name, args.page_name)
+        context = context.dict()
+        context[args.table_name] = {"data": res}
+        response = {
+            "type": "context",
+            "context": context,
+            "message": "job completed",
+            "status_code": 200,
+        }
     except Exception as e:
         response = {
             "message": str(e),
