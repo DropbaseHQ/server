@@ -22,4 +22,4 @@ class MiscRouter:
         return self.session.post(url="sync/structure", json=payload)
 
     def sync_app(self, payload: dict):
-        return self.session.post(url="sync/app/", json=payload)
+        return self.session.post(url="sync/app", json=payload)
