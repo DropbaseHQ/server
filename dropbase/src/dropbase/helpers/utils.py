@@ -3,8 +3,7 @@ import re
 from pathlib import Path
 
 import pandas as pd
-
-from dropbase.helpers.user_functions import get_requried_fields
+from pydantic import BaseModel
 
 
 def get_state_context(app_name: str, page_name: str, state: dict, context: dict):
@@ -68,10 +67,25 @@ def get_function_by_name(app_name: str, page_name: str, function_name: str):
     return function
 
 
+def _dict_from_pydantic_model(model):
+    data = {}
+    for name, field in model.__fields__.items():
+        if isinstance(field.outer_type_, type) and issubclass(field.outer_type_, BaseModel):
+            data[name] = _dict_from_pydantic_model(field.outer_type_)
+        else:
+            data[name] = field.default
+    return data
+
+
 def get_empty_context(app_name: str, page_name: str):
-    page_module = f"workspace.{app_name}.{page_name}"
-    page = importlib.import_module(page_module)
-    Context = getattr(page, "Context")
-    schema = Context.schema()
-    empty_context = get_requried_fields(schema, schema["definitions"])
-    return Context(**empty_context)
+    Context = get_state_context_model(app_name, page_name, "context")
+    context = _dict_from_pydantic_model(Context)
+    return Context(**context)
+
+
+def get_state_empty_context(app_name: str, page_name: str, state: dict):
+    State = get_state_context_model(app_name, page_name, "state")
+    Context = get_state_context_model(app_name, page_name, "context")
+    context = _dict_from_pydantic_model(Context)
+
+    return State(**state), Context(**context)

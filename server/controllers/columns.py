@@ -1,6 +1,5 @@
 from dropbase.helpers.utils import validate_column_name
 from dropbase.schemas.table import CommitTableColumnsRequest
-from server.controllers.page import get_page_state_context
 from server.controllers.properties import read_page_properties, update_properties
 
 
@@ -20,5 +19,4 @@ def commit_table_columns(req: CommitTableColumnsRequest):
 
     update_properties(req.app_name, req.page_name, properties)
 
-    # get new steate and context
-    return get_page_state_context(req.app_name, req.page_name)
+    return {"message": "success"}

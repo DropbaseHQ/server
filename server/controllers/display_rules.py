@@ -6,7 +6,7 @@ from typing import Any
 
 from dateutil.parser import parse
 
-from dropbase.helpers.utils import get_empty_context, get_state_context_model
+from dropbase.helpers.utils import get_state_empty_context
 from dropbase.schemas.display_rules import DisplayRules
 from server.controllers.properties import read_page_properties
 
@@ -194,11 +194,7 @@ def get_display_rules_from_comp_props(component_props):
 
 def run_display_rule(app_name: str, page_name: str, state: dict):
     try:
-        State = get_state_context_model(app_name, page_name, "state")
-
-        state = State(**state)
-        context = get_empty_context(app_name, page_name)
-
+        state, context = get_state_empty_context(app_name=app_name, page_name=page_name, state=state)
         properties = read_page_properties(app_name, page_name)
         block_properties = properties.get("blocks")
         display_rules = get_display_rules_from_comp_props(block_properties)

@@ -4,7 +4,7 @@ import traceback
 
 from dotenv import load_dotenv
 
-from dropbase.helpers.utils import get_empty_context, get_function_by_name, get_state
+from dropbase.helpers.utils import get_function_by_name, get_state_empty_context
 
 load_dotenv()
 
@@ -19,8 +19,7 @@ def run(r, response):
         job_id = os.getenv("job_id")
 
         # get state and context
-        state = get_state(app_name, page_name, state)
-        context = get_empty_context(app_name, page_name)
+        state, context = get_state_empty_context(app_name, page_name, state)
 
         # run python script and get result
         function_name = get_function_by_name(app_name, page_name, file.get("name"))

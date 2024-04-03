@@ -260,22 +260,17 @@ class FileController:
 
 
 def compose_boilerplate_code(req: CreateFile):
-    if req.type == "ui":
-        return f"""from workspace.{req.app_name}.{req.page_name} import Context, State\n\n
+    if req.type == "sql":
+        return ""
+    else:
+        return f"""from workspace.{req.app_name}.{req.page_name} import State, Context
+from dropbase.helpers.dataframe import convert_df_to_resp_obj
+import pandas as pd
+
+
 def {req.name}(state: State, context: Context) -> Context:
     context.page.message = "Hello World"
+    df = pd.DataFrame({{"a": [1, 2, 3]}})
+    context.table1.data = convert_df_to_resp_obj(df)
     return context
 """
-    elif req.type == "data_fetcher":
-        return f"""from workspace.{req.app_name}.{req.page_name} import State
-import pandas as pd\n\n
-def {req.name}(state: State) -> pd.DataFrame:
-    df = pd.DataFrame()
-    return df
-"""
-    elif req.type == "python":
-        return f"""def {req.name}():
-    pass
-"""
-    else:
-        return ""

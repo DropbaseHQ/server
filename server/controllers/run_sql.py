@@ -80,7 +80,7 @@ def run_sql_query(args: RunSQLRequestTask):
         res = convert_df_to_resp_obj(df, user_db.db_type)
 
         context = get_empty_context(args.app_name, args.page_name)
-        context = context.dict()
+        context = json.loads(context.json())
         context[args.table_name] = {"data": res}
         response = {
             "type": "context",
