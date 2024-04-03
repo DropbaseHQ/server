@@ -64,10 +64,10 @@ class TableDefinedProperty(BaseModel):
     filters: Annotated[Optional[List[PinnedFilter]], PropertyCategory.other]
 
     # internal
-    w: Annotated[Optional[int], PropertyCategory.internal]
-    h: Annotated[Optional[int], PropertyCategory.internal]
-    x: Annotated[Optional[int], PropertyCategory.internal]
-    y: Annotated[Optional[int], PropertyCategory.internal]
+    w: Annotated[Optional[int], PropertyCategory.internal] = 0
+    h: Annotated[Optional[int], PropertyCategory.internal] = 0
+    x: Annotated[Optional[int], PropertyCategory.internal] = 1
+    y: Annotated[Optional[int], PropertyCategory.internal] = 4
 
     type: Optional[Literal["python", "sql"]] = "sql"
     smart: Optional[bool] = False
