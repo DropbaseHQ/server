@@ -1,5 +1,5 @@
-import logging
 import ast
+import logging
 from datetime import datetime
 from functools import reduce
 from typing import Any
@@ -169,9 +169,7 @@ def display_rule(state, context, rules: DisplayRules):
                 component_visible = rule_applies
 
         # the resulting state of the component is defined by the final rule resulting condition
-        set_by_path(
-            context, f"{component_display_rules.component}.visible", component_visible
-        )
+        set_by_path(context, f"{component_display_rules.component}.visible", component_visible)
 
     return context.dict()
 
@@ -210,4 +208,22 @@ def run_display_rule(app_name: str, page_name: str, state: dict, context: dict):
         return display_rule(state, context, rules)
     except Exception as e:
         logger.error(f"Error running display rule: {e}")
+        return context
+
+
+def sync_col_visibility(app_name: str, page_name: str, context: dict):
+    try:
+        Context = get_state_context_model(app_name, page_name, "context")
+        context = Context(**context)
+
+        properties = read_page_properties(app_name, page_name).get("blocks")
+
+        for block in properties:
+            if block["block_type"] == "table":
+                for col in block["columns"]:
+                    set_by_path(context, f"{block['name']}.columns.{col['name']}.hidden", col["hidden"])
+
+        return context
+    except Exception as e:
+        logger.error(f"Error syncing column visibility: {e}")
         return context
