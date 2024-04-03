@@ -32,7 +32,6 @@ def sync_app_req(
             if app.get("name") == request.app_name:
                 target_app = app
                 break
-
         if (
             target_app.get("status", None) is None
             or target_app.get("status") == "SYNCED"
@@ -43,7 +42,10 @@ def sync_app_req(
             app_name=request.app_name, r_path_to_workspace=path_to_workspace
         )
 
-        app_pages = app_folder_controller._get_app_properties_data().get("pages")
+        app_properties = app_folder_controller._get_app_properties_data()
+        app_pages = None
+        if app_properties is not None:
+            app_pages = app_properties.get("pages")
 
         sync_response = router.misc.sync_app(
             payload={
@@ -79,6 +81,7 @@ def sync_app_req(
         )
         return {"message": "App synced"}
     except Exception as e:
+        print("e", e)
         raise HTTPException(status_code=500, detail="Unable to sync app with Dropbase")
 
 

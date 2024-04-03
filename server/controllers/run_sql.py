@@ -50,8 +50,6 @@ def run_sql_query_from_string(args: RunSQLStringTask):
 
 def run_sql_query(args: RunSQLRequestTask):
 
-    response = {"stdout": "", "traceback": "", "message": "", "type": "", "status_code": 202}
-
     try:
         verify_state(args.app_name, args.page_name, args.state)
         user_db = connect(args.file.source)
@@ -63,7 +61,7 @@ def run_sql_query(args: RunSQLRequestTask):
 
         # validate state
         state = get_state(args.app_name, args.page_name, args.state)
-        col_names = re.findall("{{(state.tables.*?)}}", sql)
+        col_names = re.findall("{{(state.*?)}}", sql)
         for col_name in col_names:
             # eval() executes the string as python code. if column is not present, it will raise an Error
             # not sure if we need globals() here though
@@ -81,21 +79,13 @@ def run_sql_query(args: RunSQLRequestTask):
 
         res = convert_df_to_resp_obj(df, user_db.db_type)
         r.set(args.job_id, json.dumps(res))
-        response["data"] = res["data"]
-        response["columns"] = res["columns"]
-        response["message"] = "job completed"
-        response["type"] = "table"
-
-        response["status_code"] = 200
-
+        response = {**res, "message": "job completed", "type": "table", "status_code": 200}
     except Exception as e:
-        response["traceback"] = traceback.format_exc()
-        response["message"] = str(e)
-        response["type"] = "error"
-
-        response["status_code"] = 500
-
-        r.set(args.job_id, str(e))
+        response = {
+            "message": str(e),
+            "type": "error",
+            "status_code": 500,
+        }
     finally:
         r.set(args.job_id, json.dumps(response))
 
