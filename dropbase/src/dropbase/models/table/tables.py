@@ -29,9 +29,9 @@ class TableColumn(BaseModel):
 
 
 class TableData(BaseModel):
-    type: Optional[Literal["python", "postgres", "mysql", "snowflake", "sqlite"]] = "python"
-    columns: List[Optional[TableColumn]] = []
-    data: List[Optional[List[Any]]] = []
+    type: Optional[Literal["python", "postgres", "mysql", "snowflake", "sqlite"]]
+    columns: Optional[List[TableColumn]]
+    data: Optional[List[List[Any]]]
 
 
 class TableContextProperty(BaseModel):
