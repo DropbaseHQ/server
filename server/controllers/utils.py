@@ -1,5 +1,6 @@
 import importlib
 import re
+from functools import reduce
 from pathlib import Path
 
 import pandas as pd
@@ -64,3 +65,14 @@ def process_query_result(res) -> pd.DataFrame:
     df = pd.DataFrame(res)
     df = clean_df(df)
     return df
+
+
+def get_by_path(root, items):
+    return reduce(lambda x, y: getattr(x, y), items.split("."), root)
+
+
+def set_by_path(root, items, value):
+    attrs = items.split(".")
+    last_attr = attrs.pop()
+    obj = reduce(lambda x, y: getattr(x, y), attrs, root)
+    setattr(obj, last_attr, value)

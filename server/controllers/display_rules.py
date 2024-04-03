@@ -1,27 +1,15 @@
 import ast
 import logging
 from datetime import datetime
-from functools import reduce
 from typing import Any
 
 from dateutil.parser import parse
 
 from dropbase.schemas.display_rules import DisplayRules
 from server.controllers.properties import read_page_properties
-from server.controllers.utils import get_state_context_model
+from server.controllers.utils import get_by_path, get_state_context_model, set_by_path
 
 logger = logging.getLogger(__name__)
-
-
-def get_by_path(root, items):
-    return reduce(lambda x, y: getattr(x, y), items.split("."), root)
-
-
-def set_by_path(root, items, value):
-    attrs = items.split(".")
-    last_attr = attrs.pop()
-    obj = reduce(lambda x, y: getattr(x, y), attrs, root)
-    setattr(obj, last_attr, value)
 
 
 def is_epoch_timestamp(value: str):
@@ -208,22 +196,4 @@ def run_display_rule(app_name: str, page_name: str, state: dict, context: dict):
         return display_rule(state, context, rules)
     except Exception as e:
         logger.error(f"Error running display rule: {e}")
-        return context
-
-
-def sync_col_visibility(app_name: str, page_name: str, context: dict):
-    try:
-        Context = get_state_context_model(app_name, page_name, "context")
-        context = Context(**context)
-
-        properties = read_page_properties(app_name, page_name).get("blocks")
-
-        for block in properties:
-            if block["block_type"] == "table":
-                for col in block["columns"]:
-                    set_by_path(context, f"{block['name']}.columns.{col['name']}.hidden", col["hidden"])
-
-        return context
-    except Exception as e:
-        logger.error(f"Error syncing column visibility: {e}")
         return context

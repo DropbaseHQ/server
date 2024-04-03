@@ -5,7 +5,7 @@ from pydantic import BaseModel
 
 from dropbase.schemas.page import PageProperties
 from server.controllers.display_rules import run_display_rule
-from server.controllers.properties import read_page_properties, update_properties
+from server.controllers.properties import read_page_properties, sync_col_visibility, update_properties
 from server.controllers.utils import get_state_context_model, validate_column_name
 
 
@@ -83,6 +83,7 @@ def get_page_state_context(app_name: str, page_name: str):
     state = _dict_from_pydantic_model(State)
     context = _dict_from_pydantic_model(Context)
     context = run_display_rule(app_name, page_name, state, context)
+    context = sync_col_visibility(app_name, page_name, context)
     return {"state": state, "context": context}
 
 
