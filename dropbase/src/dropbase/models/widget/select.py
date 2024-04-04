@@ -7,7 +7,7 @@ from dropbase.models.common import ComponentDisplayProperties, OnEvent
 
 
 class SelectContextProperty(ComponentDisplayProperties):
-    pass
+    options: Annotated[Optional[List[Dict]], PropertyCategory.default]
 
 
 class SelectDefinedProperty(BaseModel):
