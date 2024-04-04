@@ -129,7 +129,7 @@ def test_apply_filters(test_client, mocker, mock_db):
 
     time.sleep(2)
 
-    res = test_client.get(f"/query/status/{job_id}")
+    res = test_client.get(f"/status/{job_id}")
     assert res.status_code == 200
     res_data = res.json()
     assert res_data["type"] == "table"
@@ -155,7 +155,7 @@ def test_apply_sorts(test_client, mocker, mock_db):
 
     time.sleep(2)
 
-    res = test_client.get(f"/query/status/{job_id}")
+    res = test_client.get(f"/status/{job_id}")
     assert res.status_code == 200
     res_data = res.json()
     assert res_data["type"] == "table"

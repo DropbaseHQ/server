@@ -8,7 +8,7 @@ import pytest
 from dotenv import load_dotenv
 
 from server.tests.mocks.mock_classes import MockContext
-from server.tests.utils import setup_redis
+from server.tests.utils import setup_redis  # noqa
 
 load_dotenv()
 
@@ -54,7 +54,7 @@ def test_run_query_sql(test_client, mocker, mock_db):
 
     time.sleep(2)
 
-    res = test_client.get(f"/query/status/{job_id}")
+    res = test_client.get(f"/status/{job_id}")
     assert res.status_code == 200
     res_data = res.json()
     assert res_data["type"] == "table"
@@ -62,7 +62,7 @@ def test_run_query_sql(test_client, mocker, mock_db):
     assert isinstance(res_data["columns"], list)
 
 
-def test_run_python_datafetcher(setup_redis):
+def test_run_python_datafetcher(setup_redis):  # noqa
     # Arrange
     job_id = "test_job_id"
 
@@ -111,7 +111,7 @@ def test_run_python_datafetcher(setup_redis):
         assert res_data["data"] == [[1]]
 
 
-def test_run_python_ui(setup_redis):
+def test_run_python_ui(setup_redis):  # noqa
     # Arrange
     job_id = "test_job_id"
 

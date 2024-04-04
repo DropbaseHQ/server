@@ -187,7 +187,7 @@ def test_convert_to_smart_table(test_client, mocker, mock_db, setup_tables):
     res_data = res.json()
 
     job_id = res_data["job_id"]
-    job_status = test_client.get(f"/query/status/{job_id}")
+    job_status = test_client.get(f"/status/{job_id}")
 
     # Assertions
     assert job_status.status_code == 200
@@ -223,7 +223,7 @@ def test_convert_to_smart_table_mysql(test_client, mocker, mock_db, setup_tables
     res_data = res.json()
 
     job_id = res_data["job_id"]
-    job_status = test_client.get(f"/query/status/{job_id}")
+    job_status = test_client.get(f"/status/{job_id}")
 
     # Assertions
     assert job_status.status_code == 200
@@ -251,7 +251,7 @@ def test_convert_to_smart_table_duplicate_column_name_fail(test_client, mocker, 
     res_data = res.json()
 
     job_id = res_data["job_id"]
-    job_status = test_client.get(f"/query/status/{job_id}")
+    job_status = test_client.get(f"/status/{job_id}")
     status_data = job_status.json()
 
     # Assertions
@@ -280,7 +280,7 @@ def test_convert_to_smart_table_banned_keyword_groupby_fail(test_client, mocker,
     res_data = res.json()
 
     job_id = res_data["job_id"]
-    job_status = test_client.get(f"/query/status/{job_id}")
+    job_status = test_client.get(f"/status/{job_id}")
     status_data = job_status.json()
 
     # Assertions
@@ -309,7 +309,7 @@ def test_convert_to_smart_table_banned_keyword_with_fail(test_client, mocker, mo
     res_data = res.json()
 
     job_id = res_data["job_id"]
-    job_status = test_client.get(f"/query/status/{job_id}")
+    job_status = test_client.get(f"/status/{job_id}")
     status_data = job_status.json()
 
     # Assertions
@@ -336,7 +336,7 @@ def test_convert_to_smart_table_no_pk(test_client, mocker, mock_db, setup_tables
     res_data = res.json()
 
     job_id = res_data["job_id"]
-    job_status = test_client.get(f"/query/status/{job_id}")
+    job_status = test_client.get(f"/status/{job_id}")
 
     # Assertions
     assert job_status.status_code == 200
@@ -365,7 +365,7 @@ def test_convert_to_smart_table_empty_table_fail(test_client, mocker, mock_db, s
     res_data = res.json()
 
     job_id = res_data["job_id"]
-    job_status = test_client.get(f"/query/status/{job_id}")
+    job_status = test_client.get(f"/status/{job_id}")
     status_data = job_status.json()
 
     # Assertions
@@ -394,7 +394,7 @@ def test_convert_to_smart_table_in_parallel(test_client, mocker, mock_db, setup_
     res_data = res.json()
 
     job_id = res_data["job_id"]
-    job_status = test_client.get(f"/query/status/{job_id}")
+    job_status = test_client.get(f"/status/{job_id}")
 
     time.sleep(3)
 
@@ -406,7 +406,7 @@ def test_convert_to_smart_table_in_parallel(test_client, mocker, mock_db, setup_
     res_data_2 = res_2.json()
 
     job_id_2 = res_data_2["job_id"]
-    job_status_2 = test_client.get(f"/query/status/{job_id_2}")
+    job_status_2 = test_client.get(f"/status/{job_id_2}")
 
     # Assertions
     assert job_status.status_code == 200
