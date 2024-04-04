@@ -2,7 +2,7 @@ import copy
 
 from server.tests.constants import TEST_APP_NAME, TEST_PAGE_NAME, WORKSPACE_PATH
 from server.tests.verify_file_exists import workspace_file_exists
-from server.tests.verify_property_exists import verify_property_exists
+from server.tests.verify_property_exists import verify_table_prop_exists
 from server.tests.verify_state_and_context import verify_object_in_state_context
 
 base_data = {
@@ -281,8 +281,9 @@ def test_delete_binded_fetcher(test_client):
             "app_name": TEST_APP_NAME,
             "page_name": TEST_PAGE_NAME,
             "properties": {
-                "tables": [
+                "blocks": [
                     {
+                        "block_type": "table",
                         "label": "Table2",
                         "name": "table2",
                         "description": None,
@@ -294,9 +295,12 @@ def test_delete_binded_fetcher(test_client):
                         "smart": False,
                         "columns": [],
                         "depends_on": None,
+                        "w": 4,
+                        "h": 1,
+                        "x": 0,
+                        "y": 0,
                     }
                 ],
-                "widgets": [],
                 "files": [{"name": "test_fetcher", "type": "sql", "source": None, "depends_on": []}],
             },
         }
@@ -318,9 +322,7 @@ def test_delete_binded_fetcher(test_client):
     # Assert
     assert res.status_code == 200
     assert not workspace_file_exists("scripts/test_fetcher.sql")
-
-    assert not verify_property_exists("tables[0].fetcher", "test_fetcher")
-    assert verify_property_exists("tables[0].fetcher", "")
+    assert verify_table_prop_exists(TEST_APP_NAME, TEST_PAGE_NAME, "table", "table2", "fetcher") == ""
 
 
 def test_rename_binded_fetcher(test_client):
@@ -338,8 +340,9 @@ def test_rename_binded_fetcher(test_client):
             "app_name": TEST_APP_NAME,
             "page_name": TEST_PAGE_NAME,
             "properties": {
-                "tables": [
+                "blocks": [
                     {
+                        "block_type": "table",
                         "label": "Table2",
                         "name": "table2",
                         "description": None,
@@ -353,7 +356,6 @@ def test_rename_binded_fetcher(test_client):
                         "depends_on": None,
                     }
                 ],
-                "widgets": [],
                 "files": [{"name": "test_fetcher", "type": "sql", "source": None, "depends_on": []}],
             },
         }
@@ -377,6 +379,7 @@ def test_rename_binded_fetcher(test_client):
     assert res.status_code == 200
     assert not workspace_file_exists("scripts/test_fetcher.sql")
     assert workspace_file_exists("scripts/test_new_fetcher.sql")
-
-    assert not verify_property_exists("tables[0].fetcher", "test_fetcher")
-    assert verify_property_exists("tables[0].fetcher", "test_new_fetcher")
+    assert (
+        verify_table_prop_exists(TEST_APP_NAME, TEST_PAGE_NAME, "table", "table2", "fetcher")
+        == "test_new_fetcher"
+    )  # noqa

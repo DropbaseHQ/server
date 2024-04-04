@@ -1,5 +1,7 @@
 import json
 
+from server.controllers.properties import read_page_properties
+
 
 def get_value_from_json_path(data, json_path):
     keys = json_path.split(".")
@@ -37,3 +39,10 @@ def verify_property_exists(
     except AttributeError as e:
         print(f"Error accessing class: {e}")
         return False
+
+
+def verify_table_prop_exists(app_name, page_name, comp_type, comp_name, attribute):
+    properties = read_page_properties(app_name, page_name)
+    for block in properties["blocks"]:
+        if block["block_type"] == comp_type and block["name"] == comp_name:
+            return block[attribute]
