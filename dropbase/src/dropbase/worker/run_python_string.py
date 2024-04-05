@@ -34,21 +34,21 @@ def assign_last_expression(script: str) -> str:
     return astor.to_source(module)
 
 
-def write_file(file_code: str, test_code: str, state: dict, context: dict = {}, file_name: str = {}):
+# TODO: move to class method
+def write_file(
+    file_code: str, test_code: str, state: dict, app_name: str, page_name: str, file_name: str = {}
+):
     python_str = file_code
     # NOTE: not all user functions will have state and context, so wrapping in try-except
     python_str += f"""
-from dropbase.helpers.user_functions import get_requried_fields
-state = {state}
-context = {context}
+from dropbase.helpers.utils import get_empty_context
 
 # initiate state model
+state = {state}
 state = State(**state)
 
 # initiate empty context model
-context_schema = Context.schema()
-empty_context = get_requried_fields(context_schema, context_schema["definitions"])
-context = Context(**empty_context)
+context = get_empty_context(app_name = "{app_name}", page_name = "{page_name}")
 """
     python_str += test_code
 
@@ -71,7 +71,8 @@ def run(r, response):
 
     try:
         state = json.loads(os.getenv("state") or "{}")
-        context = json.loads(os.getenv("context") or "{}")
+        app_name = os.getenv("app_name")
+        page_name = os.getenv("page_name")
         file_code = os.getenv("file_code")
         test_code = os.getenv("test_code")
 
@@ -79,7 +80,7 @@ def run(r, response):
         test_code = assign_last_expression(test_code)
 
         # write exec file
-        write_file(file_code, test_code, state, context, file_name)
+        write_file(file_code, test_code, state, app_name, page_name, file_name)
 
         # import temp file
         module_name = file_name.split(".")[0]  # this gets you "temp_file"

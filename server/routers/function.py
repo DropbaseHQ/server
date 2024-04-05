@@ -69,7 +69,6 @@ async def run_python_string(req: RunPythonStringRequestNew, response: Response):
             "file_code": req.file_code,
             "test_code": req.test_code,
             "state": json.dumps(req.state),
-            "context": json.dumps(req.context),
             "job_id": job_id,
             "type": "string",
         }
