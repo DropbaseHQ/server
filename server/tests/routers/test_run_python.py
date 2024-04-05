@@ -5,7 +5,7 @@ import time
 
 from dotenv import load_dotenv
 
-from server.tests.utils import setup_redis
+from server.tests.utils import setup_redis  # noqa
 
 load_dotenv()
 
@@ -28,8 +28,7 @@ APP_NAME = "dropbase_test_app"
 PAGE_NAME = "page1"
 
 
-def test_run_python_string():
-    r = setup_redis()
+def test_run_python_string(setup_redis):  # noqa
     # Arrange
     os.environ["type"] = "string"
     job_id = "test_job_id"
@@ -55,11 +54,11 @@ def test_run_python_string():
     run_module = importlib.import_module(module_name)
 
     # Act
-    run_module.run(r, response)
+    run_module.run(setup_redis, response)
 
     time.sleep(1)
 
-    res = r.get(job_id)
+    res = setup_redis.get(job_id)
     res_data = json.loads(res)
 
     # Assert
