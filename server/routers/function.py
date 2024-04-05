@@ -1,7 +1,7 @@
 import json
 import uuid
 
-from fastapi import APIRouter, Response
+from fastapi import APIRouter, HTTPException, Response
 
 from dropbase.schemas.files import DataFile
 from dropbase.schemas.function import RunFunction
@@ -23,8 +23,7 @@ async def run_function_req(req: RunFunction, response: Response):
         properties = read_page_properties(req.app_name, req.page_name)
         file = get_table_data_fetcher(properties["files"], req.function_name)
         if file is None:
-            response.status_code = 404
-            return {"message": "function not found"}
+            raise HTTPException(status_code=404, detail="Function not found")
 
         file = DataFile(**file)
 
@@ -55,6 +54,7 @@ async def run_function_req(req: RunFunction, response: Response):
         response.status_code = status_code
         reponse_payload.pop("status_code")
         return reponse_payload
+    except HTTPException:
+        raise
     except Exception as e:
-        response.status_code = 500
-        return {"message": str(e)}
+        raise HTTPException(status_code=500, detail=str(e))

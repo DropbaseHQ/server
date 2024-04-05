@@ -1,7 +1,7 @@
 import json
 import uuid
 
-from fastapi import APIRouter, BackgroundTasks, Depends, Response
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Response
 
 from dropbase.schemas.files import DataFile
 from dropbase.schemas.query import RunSQLRequestTask, RunSQLStringRequest, RunSQLStringTask
@@ -72,9 +72,10 @@ async def run_python_string_test(req: RunPythonStringRequestNew, response: Respo
         response.status_code = status_code
         reponse_payload.pop("status_code")
         return reponse_payload
+    except HTTPException:
+        raise
     except Exception as e:
-        response.status_code = 500
-        return {"message": str(e)}
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 @router.post("/")
@@ -121,9 +122,10 @@ async def run_query(req: QueryPythonRequest, response: Response, background_task
         response.status_code = status_code
         reponse_payload.pop("status_code")
         return reponse_payload
+    except HTTPException:
+        raise
     except Exception as e:
-        response.status_code = 500
-        return {"message": str(e)}
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 @router.get("/status/{job_id}")
@@ -135,5 +137,4 @@ async def get_job_status(job_id: str, response: Response, use_cache=False):
         result.pop("status_code")
         return result
     else:
-        response.status_code = 404
-        return {"message": "job not found"}
+        raise HTTPException(status_code=404, detail="Job not found")
