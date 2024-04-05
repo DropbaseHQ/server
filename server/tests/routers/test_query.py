@@ -41,3 +41,35 @@ def test_run_query_sql(test_client, mocker, mock_db):
     res_data = res.json()
     assert isinstance(res_data["context"]["table1"]["data"]["data"], list)
     assert isinstance(res_data["context"]["table1"]["data"]["columns"], list)
+
+
+@pytest.mark.parametrize("mock_db", ["postgres", "mysql", "snowflake", "sqlite"], indirect=True)
+def test_run_sql_string(mocker, test_client, mock_db):
+    # Arrange
+
+    mocker.patch("server.controllers.run_sql.connect", return_value=mock_db)
+    data = {
+        "app_name": "dropbase_test_app",
+        "page_name": "page1",
+        "file_content": "select * from users;",
+        "source": "local",
+        "state": {"table1": {}},
+    }
+
+    # Act
+    res = test_client.post("/query/string", json=data)
+
+    # Assert
+    assert res.status_code == 202
+    response_data = res.json()
+    job_id = response_data["job_id"]
+
+    import time
+
+    time.sleep(2)
+
+    res = test_client.get(f"/status/{job_id}")
+    assert res.status_code == 200
+    res_data = res.json()
+    assert isinstance(res_data["data"], list)
+    assert isinstance(res_data["columns"], list)

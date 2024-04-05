@@ -2,7 +2,7 @@ import copy
 
 from server.tests.constants import TEST_APP_NAME, TEST_PAGE_NAME, WORKSPACE_PATH
 from server.tests.verify_file_exists import workspace_file_exists
-from server.tests.verify_property_exists import verify_table_prop_exists
+from server.tests.verify_property_exists import verify_object_prop_exists
 from server.tests.verify_state_and_context import verify_object_in_state_context
 
 base_data = {
@@ -322,7 +322,7 @@ def test_delete_binded_fetcher(test_client):
     # Assert
     assert res.status_code == 200
     assert not workspace_file_exists("scripts/test_fetcher.sql")
-    assert verify_table_prop_exists(TEST_APP_NAME, TEST_PAGE_NAME, "table", "table2", "fetcher") == ""
+    assert verify_object_prop_exists(TEST_APP_NAME, TEST_PAGE_NAME, "table", "table2", "fetcher") == ""
 
 
 def test_rename_binded_fetcher(test_client):
@@ -380,6 +380,6 @@ def test_rename_binded_fetcher(test_client):
     assert not workspace_file_exists("scripts/test_fetcher.sql")
     assert workspace_file_exists("scripts/test_new_fetcher.sql")
     assert (
-        verify_table_prop_exists(TEST_APP_NAME, TEST_PAGE_NAME, "table", "table2", "fetcher")
+        verify_object_prop_exists(TEST_APP_NAME, TEST_PAGE_NAME, "table", "table2", "fetcher")
         == "test_new_fetcher"
     )  # noqa

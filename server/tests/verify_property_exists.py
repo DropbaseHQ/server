@@ -41,7 +41,7 @@ def verify_property_exists(
         return False
 
 
-def verify_table_prop_exists(app_name, page_name, comp_type, comp_name, attribute):
+def verify_object_prop_exists(app_name, page_name, comp_type, comp_name, attribute):
     properties = read_page_properties(app_name, page_name)
     for block in properties["blocks"]:
         if block["block_type"] == comp_type and block["name"] == comp_name:
@@ -55,3 +55,11 @@ def get_objects_child_prop(properties, comp_type, comp_name, child_type, child_n
                 if child["name"] == child_name:
                     return child[attribute]
     return None
+
+
+def verify_object_exists(app_name, page_name, comp_type, comp_name):
+    properties = read_page_properties(app_name, page_name)
+    for block in properties["blocks"]:
+        if block["block_type"] == comp_type and block["name"] == comp_name:
+            return True
+    return False
