@@ -2,7 +2,7 @@ import copy
 import time
 
 from server.controllers.properties import read_page_properties
-from server.tests.verify_property_exists import get_objects_child_prop, verify_property_exists
+from server.tests.verify_property_exists import get_objects_child_prop
 from server.tests.verify_state_and_context import verify_object_in_state_context
 
 APP_NAME = "dropbase_test_app"
