@@ -6,13 +6,18 @@ def get_test_ui():
 
 
 def test_ui(state: State, context: Context) -> Context:
-    print("test")
-    return context"""
+    context.page.message = "Test page message"
+    return context
+"""
 
 
 def get_test_data_fetcher():
-    return f"""import pandas as pd
-from workspace.{TEST_APP_NAME}.{TEST_PAGE_NAME} import State, Context
+    return f"""from workspace.{TEST_APP_NAME}.{TEST_PAGE_NAME} import State, Context
+import pandas as pd
+from dropbase.helpers.dataframe import convert_df_to_resp_obj
 
-def test_data_fetcher(state: State) -> pd.DataFrame:
-    return pd.DataFrame(data=[[1]], columns=["x"])"""
+
+def test_data_fetcher(state: State, context: Context) -> Context:
+    df = pd.DataFrame({{"a": [1, 2, 3]}})
+    context.table1.data = convert_df_to_resp_obj(df)
+    return context"""
