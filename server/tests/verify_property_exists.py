@@ -46,3 +46,12 @@ def verify_table_prop_exists(app_name, page_name, comp_type, comp_name, attribut
     for block in properties["blocks"]:
         if block["block_type"] == comp_type and block["name"] == comp_name:
             return block[attribute]
+
+
+def get_objects_child_prop(properties, comp_type, comp_name, child_type, child_name, attribute):  # noqa
+    for block in properties["blocks"]:
+        if block["block_type"] == comp_type and block["name"] == comp_name:
+            for child in block[child_type]:
+                if child["name"] == child_name:
+                    return child[attribute]
+    return None
