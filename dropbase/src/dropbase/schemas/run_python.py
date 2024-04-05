@@ -14,6 +14,8 @@ class RunPythonStringRequest(BaseModel):
 
 
 class RunPythonStringRequestNew(BaseModel):
+    app_name: str
+    page_name: str
     file_code: str
     test_code: str
     state: dict

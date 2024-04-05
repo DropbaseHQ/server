@@ -68,6 +68,8 @@ async def run_python_string(req: RunPythonStringRequestNew, response: Response):
         env_vars = {
             "file_code": req.file_code,
             "test_code": req.test_code,
+            "app_name": req.app_name,
+            "page_name": req.page_name,
             "state": json.dumps(req.state),
             "job_id": job_id,
             "type": "string",

@@ -38,6 +38,7 @@ def assign_last_expression(script: str) -> str:
 def write_file(
     file_code: str, test_code: str, state: dict, app_name: str, page_name: str, file_name: str = {}
 ):
+    # TODO: can pass empty context directly since Context model is loaded in most cases
     python_str = file_code
     # NOTE: not all user functions will have state and context, so wrapping in try-except
     python_str += f"""
