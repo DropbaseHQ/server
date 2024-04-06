@@ -15,14 +15,13 @@ load_dotenv()
 
 PAGE_MESSAGE = "Hello World"
 FILE_CODE = f"""from workspace.test_app.page1 import State, Context
-from dropbase.helpers.dataframe import convert_df_to_resp_obj
 import pandas as pd
 
 
 def test(state: State, context: Context) -> Context:
     context.page.message = "{PAGE_MESSAGE}"
     df = pd.DataFrame({{\"a\": [1, 2, 3]}})
-    context.table1.data = convert_df_to_resp_obj(df)
+    context.table1.data = df.to_dtable()
     return context
 """
 TEST_CODE = "test(state,context)"

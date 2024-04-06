@@ -11,8 +11,6 @@ import astor
 import pandas as pd
 from dotenv import load_dotenv
 
-from dropbase.helpers.dataframe import convert_df_to_resp_obj
-
 load_dotenv()
 
 
@@ -93,7 +91,8 @@ def run(r, response):
             response["context"] = result.dict()
             response["type"] = "context"
         elif isinstance(result, pd.DataFrame):
-            result = convert_df_to_resp_obj(result, "python")
+
+            result = result.to_dtable()
             response["data"] = result["data"]
             response["columns"] = result["columns"]
             response["type"] = "table"

@@ -6,6 +6,10 @@ import pandas as pd
 from dropbase.constants import INFER_TYPE_SAMPLE_SIZE
 
 
+def to_dtable(self, data_type: str = "python"):
+    return convert_df_to_resp_obj(self, data_type)
+
+
 # TODO: az rename this functions
 def convert_df_to_resp_obj(df: pd.DataFrame, data_type: str = "python") -> dict:
     # TODO: az do we need column_type as input? where is it used?

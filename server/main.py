@@ -77,3 +77,11 @@ async def send_report_continuously():
 @app.on_event("startup")
 async def startup_event():
     asyncio.create_task(send_report_continuously())
+
+
+# register to_dtype function to pandas DataFrame
+import pandas as pd
+
+from dropbase.helpers.dataframe import to_dtable
+
+pd.DataFrame.to_dtable = to_dtable

@@ -264,13 +264,12 @@ def compose_boilerplate_code(req: CreateFile):
         return ""
     else:
         return f"""from workspace.{req.app_name}.{req.page_name} import State, Context
-from dropbase.helpers.dataframe import convert_df_to_resp_obj
 import pandas as pd
 
 
 def {req.name}(state: State, context: Context) -> Context:
     context.page.message = "Hello World"
     df = pd.DataFrame({{"a": [1, 2, 3]}})
-    context.table1.data = convert_df_to_resp_obj(df)
+    context.table1.data = df.to_dtable()
     return context
 """
