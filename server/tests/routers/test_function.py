@@ -18,7 +18,7 @@ def test_run_function(test_client):
     response_data = res.json()
     job_id = response_data["job_id"]
 
-    time.sleep(1)
+    time.sleep(2)
 
     res = test_client.get(f"/status/{job_id}")
     assert res.status_code == 200

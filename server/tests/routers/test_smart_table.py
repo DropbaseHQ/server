@@ -9,8 +9,9 @@ base_table_data = {
     "app_name": "dropbase_test_app",
     "page_name": "page1",
     "properties": {
-        "tables": [
+        "blocks": [
             {
+                "block_type": "table",
                 "label": "Table2",
                 "name": "table2",
                 "description": None,
@@ -54,6 +55,7 @@ base_table_data = {
                 ],
             },
             {
+                "block_type": "table",
                 "label": "Table3",
                 "name": "table3",
                 "description": None,

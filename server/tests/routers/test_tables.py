@@ -1,7 +1,6 @@
 import copy
-import time
 
-from server.tests.verify_property_exists import verify_property_exists
+from server.tests.verify_property_exists import verify_object_exists
 from server.tests.verify_state_and_context import verify_object_in_state_context
 
 APP_NAME = "dropbase_test_app"
@@ -146,9 +145,7 @@ def test_create_table_req_error_illegal_name_url_path(test_client, dropbase_rout
     assert res_data["detail"] == "Invalid table names present in the table"
 
 
-from server.tests.verify_property_exists import verify_object_exists
-
-
+# NOTE: might need to change this, i don't understand how this checks for update
 def test_update_table_req_file_changed(test_client, dropbase_router_mocker):
     dropbase_router_mocker.patch("auth", "get_user_permissions", side_effect=lambda *args, **kwargs: {})
     # Arrange
@@ -172,20 +169,3 @@ def test_update_table_req_file_changed(test_client, dropbase_router_mocker):
     assert verify_object_exists(APP_NAME, PAGE_NAME, "table", "table3")
     assert verify_object_in_state_context("State", "table3")
     assert verify_object_in_state_context("Context", "table3", True)
-
-
-# def test_delete_table_req(test_client, dropbase_router_mocker):
-#     # TODO: this test is fake, need to add a table and delete it
-#     dropbase_router_mocker.patch("auth", "get_user_permissions", side_effect=lambda *args, **kwargs: {})
-#     # Arrange
-#     data = copy.deepcopy(base_data)
-
-#     headers = {"access-token": "mock access token"}
-
-#     # Act
-#     res = test_client.put("/page", json=data, headers=headers)
-
-#     # Assert
-#     assert res.status_code == 200
-#     assert not verify_object_in_state_context("State", "table3")
-#     assert not verify_object_in_state_context("Context", "table3", True)
