@@ -6,7 +6,7 @@ from server.controllers.workspace import AppFolderController, get_subdirectories
 from server.requests.dropbase_router import DropbaseRouter
 
 
-def get_workspace_apps(router: DropbaseRouter):
+def get_workspace_apps():
     folder_path = os.path.join(cwd, "workspace")
     apps = []
     if os.path.exists(os.path.join(folder_path, "properties.json")):
@@ -35,5 +35,4 @@ def get_workspace_apps(router: DropbaseRouter):
                 "pages": pages,
             }
         )
-    # return response
     return response

@@ -86,8 +86,8 @@ def sync_app_req(
 
 
 @router.get("/list/")
-def get_user_apps(router: DropbaseRouter = Depends(get_dropbase_router)):
-    return get_workspace_apps(router=router)
+def get_user_apps():
+    return get_workspace_apps()
 
 
 @router.post("/")
