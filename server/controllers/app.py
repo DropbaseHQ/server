@@ -36,22 +36,4 @@ def get_workspace_apps(router: DropbaseRouter):
             }
         )
     # return response
-    return parse_apps_permissions(response, router)
-
-
-def parse_apps_permissions(app_list, router: DropbaseRouter):
-
-    app_ids = [app.get("id") for app in app_list]
-    permissions_response = router.auth.check_apps_permissions(app_ids=app_ids).json()
-
-    filtered_apps = []
-    for app in app_list:
-        if app.get("id") is None:
-            filtered_apps.append(app)
-
-        if app.get("id") in permissions_response:
-            if not permissions_response.get(app.get("id")):
-                continue
-            filtered_apps.append(app)
-
-    return filtered_apps
+    return response

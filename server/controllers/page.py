@@ -68,11 +68,11 @@ def validate_property_names(properties: dict):
                     raise Exception("Invalid component names present in the table")
 
 
-def get_state_context(app_name, page_name, permissions, initial=False):
+def get_state_context(app_name, page_name, initial=False):
     try:
         state_context = get_page_state_context(app_name, page_name, initial)
         state_context["properties"] = read_page_properties(app_name, page_name)
-        return {"state_context": state_context, "permissions": permissions}
+        return {"state_context": state_context}
     except Exception:
         try:
             # in cases where there are some hanging files/dirs from update properties step
@@ -80,7 +80,7 @@ def get_state_context(app_name, page_name, permissions, initial=False):
             time.sleep(1)
             state_context = get_page_state_context(app_name, page_name)
             state_context["properties"] = read_page_properties(app_name, page_name)
-            return {"state_context": state_context, "permissions": permissions}
+            return {"state_context": state_context}
         except Exception as e:
             raise HTTPException(status_code=500, detail=str(e))
 

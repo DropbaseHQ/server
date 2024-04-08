@@ -6,7 +6,6 @@ import pytest_postgresql.factories
 from fastapi.testclient import TestClient
 from pytest_mysql import factories
 
-from server.auth.dependency import CheckUserPermissions
 from server.controllers.properties import read_page_properties, update_properties
 from server.controllers.workspace import WorkspaceFolderController
 from server.main import app
@@ -53,21 +52,7 @@ def test_workspace():
 
 @pytest.fixture(scope="session")
 def test_client():
-    def override_check_user_app_permissions():
-        return {"use": True, "edit": True, "own": True}
 
-    app.dependency_overrides[CheckUserPermissions(action="edit")] = (
-        override_check_user_app_permissions
-    )
-    app.dependency_overrides[CheckUserPermissions(action="use")] = (
-        override_check_user_app_permissions
-    )
-    app.dependency_overrides[
-        CheckUserPermissions(action="edit", resource=CheckUserPermissions.APP)
-    ] = override_check_user_app_permissions
-    app.dependency_overrides[
-        CheckUserPermissions(action="use", resource=CheckUserPermissions.APP)
-    ] = override_check_user_app_permissions
     return TestClient(app)
 
 

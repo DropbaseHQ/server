@@ -1,14 +1,12 @@
 from fastapi import APIRouter, Depends
 
 from dropbase.schemas.files import CreateFile, DeleteFile, RenameFile, UpdateFile
-from server.auth.dependency import CheckUserPermissions
 from server.controllers.files import FileController
 
 router = APIRouter(
     prefix="/files",
     tags=["files"],
     responses={404: {"description": "Not found"}},
-    dependencies=[Depends(CheckUserPermissions(action="edit", resource=CheckUserPermissions.APP))],
 )
 
 
