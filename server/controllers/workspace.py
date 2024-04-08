@@ -33,13 +33,17 @@ class WorkspaceFolderController:
         self.r_path_to_workspace = r_path_to_workspace
 
     def write_workspace_properties(self, workspace_properties: dict):
-        workspace_properties_path = os.path.join(self.r_path_to_workspace, "properties.json")
+        workspace_properties_path = os.path.join(
+            self.r_path_to_workspace, "properties.json"
+        )
         with open(workspace_properties_path, "w") as file:
             json.dump(workspace_properties, file, indent=2)
 
     def get_workspace_properties(self):
         if os.path.exists(os.path.join(self.r_path_to_workspace, "properties.json")):
-            with open(os.path.join(self.r_path_to_workspace, "properties.json"), "r") as file:
+            with open(
+                os.path.join(self.r_path_to_workspace, "properties.json"), "r"
+            ) as file:
 
                 props = json.load(file)
                 # return props.get("apps", [])
@@ -78,7 +82,9 @@ class WorkspaceFolderController:
         existing_app_labels = [a["label"] for a in workspace_apps]
 
         if new_label in existing_app_labels:
-            raise HTTPException(status_code=400, detail="Another app with the same label already exists")
+            raise HTTPException(
+                status_code=400, detail="Another app with the same label already exists"
+            )
 
         app_info = {**target_app, "label": new_label}
         workspace_props = self.get_workspace_properties()
@@ -116,14 +122,18 @@ class AppFolderController:
             json.dump(app_properties_data, file, indent=2)
 
     def _get_workspace_properties(self):
-        workspace_properties_path = os.path.join(self.r_path_to_workspace, "properties.json")
+        workspace_properties_path = os.path.join(
+            self.r_path_to_workspace, "properties.json"
+        )
         if not os.path.exists(workspace_properties_path):
             return None
         with open(workspace_properties_path, "r") as file:
             return json.load(file)
 
     def _write_workspace_properties(self, workspace_properties: dict):
-        workspace_properties_path = os.path.join(self.r_path_to_workspace, "properties.json")
+        workspace_properties_path = os.path.join(
+            self.r_path_to_workspace, "properties.json"
+        )
         with open(workspace_properties_path, "w") as file:
             json.dump(workspace_properties, file, indent=2)
 
@@ -183,13 +193,13 @@ class AppFolderController:
                 file_name="properties.json",
             )
             response = None
-            if router:
-                response = router.app.create_app(app_properties={**app_object})
 
             if response is not None and response.status_code != 200:
                 shutil.rmtree(self.app_folder_path)
                 self._remove_app_from_workspace_properties(self.app_name)
-                raise HTTPException(status_code=500, detail="Unable to create app folder")
+                raise HTTPException(
+                    status_code=500, detail="Unable to create app folder"
+                )
 
             # Create new page folder with __init__.py
             self.create_page(router=router)
@@ -222,7 +232,9 @@ class AppFolderController:
         created_app_names = get_subdirectories(self.r_path_to_workspace)
         app_info = []
         for app_name in created_app_names:
-            app_properties = os.path.join(self.r_path_to_workspace, app_name, "properties.json")
+            app_properties = os.path.join(
+                self.r_path_to_workspace, app_name, "properties.json"
+            )
             if not os.path.exists(app_properties):
                 app_info.append({"name": app_name, "label": app_name, "id": None})
                 continue
@@ -296,26 +308,6 @@ class AppFolderController:
 
         page_dir_path = f"workspace/{self.app_name}/{page_name}"
         create_state_context_files(page_dir_path, self.page_properties)
-        page_object = self._add_page_to_app_properties(page_name, page_label)
-        app_id = self.get_app_id(self.app_name)
-        create_page_payload = {
-            "app_id": app_id,
-            **page_object,
-        }
-
-        if router:
-            create_page_response = router.page.create_page(page_properties=create_page_payload)
-
-            if create_page_response.status_code != 200:
-                app_properties = self._get_app_properties_data()
-                for page in app_properties["pages"]:
-                    if page["name"] == page_name:
-                        app_properties["pages"].remove(page)
-                        break
-
-                self._write_app_properties_data(app_properties)
-                shutil.rmtree(page_folder_path)
-                raise HTTPException(status_code=500, detail="Unable to create page folder")
 
         return {"message": "Page created"}
 
@@ -366,19 +358,12 @@ class AppFolderController:
                 shutil.rmtree(page_folder_path)
 
                 # delete page from properties.json
-                page_id = None
                 for page in app_properties_data["pages"]:
                     if page["name"] == page_name:
-                        page_id = page.get("id", None)
                         app_properties_data["pages"].remove(page)
                         break
 
                 self._write_app_properties_data(app_properties_data)
-                response = router.page.delete_page(page_id=page_id)
-                if response.status_code != 200:
-                    shutil.copytree(backup_dir, page_folder_path)
-                    shutil.copy(temp_app_file.name, app_properties_path)
-                    raise HTTPException(status_code=500, detail="Unable to delete page folder")
 
                 return {"message": "Page deleted"}
 
@@ -406,14 +391,18 @@ class AppFolderController:
 
         self.create_workspace_properties()
 
-        existing_app_labels = [a["label"] for a in self._get_workspace_properties()["apps"]]
+        existing_app_labels = [
+            a["label"] for a in self._get_workspace_properties()["apps"]
+        ]
         if app_label is not None and app_label in existing_app_labels:
             raise HTTPException(
                 status_code=400,
                 detail="Another app with the same label already exists",
             )
 
-        app_id = self._create_default_workspace_files(router=router, app_label=app_label)
+        app_id = self._create_default_workspace_files(
+            router=router, app_label=app_label
+        )
 
         return {"app_id": app_id}
 
@@ -421,7 +410,9 @@ class AppFolderController:
         app_path = os.path.join(self.r_path_to_workspace, app_name)
 
         with tempfile.NamedTemporaryFile() as temp_workspace_file:
-            workspace_properties_path = os.path.join(self.r_path_to_workspace, "properties.json")
+            workspace_properties_path = os.path.join(
+                self.r_path_to_workspace, "properties.json"
+            )
             if not os.path.exists(workspace_properties_path):
                 return
 
@@ -434,22 +425,12 @@ class AppFolderController:
                     if not workspace_properties:
                         return
 
-                    app_id = None
                     for app in workspace_properties["apps"]:
                         if app["name"] == app_name:
-                            app_id = app.get("id", None)
                             workspace_properties["apps"].remove(app)
                             break
 
                     self._write_workspace_properties(workspace_properties)
-                    delete_response = router.app.delete_app(app_id=app_id)
-                    if delete_response.status_code != 200:
-                        shutil.rmtree(app_path)
-                        shutil.copytree(backup_dir, app_path)
-                        shutil.copy(temp_workspace_file.name, workspace_properties_path)
-
-                        raise HTTPException(status_code=500, detail="Unable to delete app folder")
-
                     shutil.rmtree(app_path)
 
                     return {"message": "App deleted"}
