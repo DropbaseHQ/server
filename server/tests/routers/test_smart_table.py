@@ -194,7 +194,7 @@ def test_convert_to_smart_table(test_client, mocker, mock_db, setup_tables):
     # Assertions
     assert job_status.status_code == 200
     res_data["message"] == "job started"
-    assert verify_property_exists("tables[0].smart", True)
+    assert verify_property_exists("blocks[0].smart", True)
 
 
 @pytest.mark.parametrize("mock_db", ["mysql"], indirect=True)
@@ -230,7 +230,7 @@ def test_convert_to_smart_table_mysql(test_client, mocker, mock_db, setup_tables
     # Assertions
     assert job_status.status_code == 200
     res_data["message"] == "job started"
-    assert verify_property_exists("tables[0].smart", True)
+    assert verify_property_exists("blocks[0].smart", True)
 
 
 @pytest.mark.parametrize("mock_db", ["postgres", "mysql", "snowflake", "sqlite"], indirect=True)
@@ -259,7 +259,7 @@ def test_convert_to_smart_table_duplicate_column_name_fail(test_client, mocker, 
     # Assertions
     assert "Duplicate column name" in status_data["message"]
     assert status_data["type"] == "error"
-    assert verify_property_exists("tables[0].smart", False)
+    assert verify_property_exists("blocks[0].smart", False)
 
 
 @pytest.mark.parametrize("mock_db", ["postgres", "mysql", "snowflake", "sqlite"], indirect=True)
@@ -288,7 +288,7 @@ def test_convert_to_smart_table_banned_keyword_groupby_fail(test_client, mocker,
     # Assertions
     assert "Must remove keyword GROUP BY to convert to smart table" in status_data["message"]
     assert status_data["type"] == "error"
-    assert verify_property_exists("tables[0].smart", False)
+    assert verify_property_exists("blocks[0].smart", False)
 
 
 @pytest.mark.parametrize("mock_db", ["postgres", "mysql", "snowflake", "sqlite"], indirect=True)
@@ -317,7 +317,7 @@ def test_convert_to_smart_table_banned_keyword_with_fail(test_client, mocker, mo
     # Assertions
     assert "Must remove keyword WITH to convert to smart table" in status_data["message"]
     assert status_data["type"] == "error"
-    assert verify_property_exists("tables[0].smart", False)
+    assert verify_property_exists("blocks[0].smart", False)
 
 
 @pytest.mark.parametrize("mock_db", ["postgres", "mysql", "snowflake", "sqlite"], indirect=True)
@@ -343,8 +343,8 @@ def test_convert_to_smart_table_no_pk(test_client, mocker, mock_db, setup_tables
     # Assertions
     assert job_status.status_code == 200
     res_data["message"] == "job started"
-    assert verify_property_exists("tables[0].smart", True)
-    assert verify_property_exists("tables[0].columns[1].editable", False)
+    assert verify_property_exists("blocks[0].smart", True)
+    assert verify_property_exists("blocks[0].columns[1].editable", False)
 
 
 @pytest.mark.parametrize("mock_db", ["postgres", "mysql", "snowflake", "sqlite"], indirect=True)
@@ -373,7 +373,7 @@ def test_convert_to_smart_table_empty_table_fail(test_client, mocker, mock_db, s
     # Assertions
     assert "Can not convert empty table into smart table" in status_data["message"]
     assert status_data["type"] == "error"
-    assert verify_property_exists("tables[0].smart", False)
+    assert verify_property_exists("blocks[0].smart", False)
 
 
 @pytest.mark.parametrize("mock_db", ["postgres", "mysql", "snowflake", "sqlite"], indirect=True)
@@ -413,7 +413,7 @@ def test_convert_to_smart_table_in_parallel(test_client, mocker, mock_db, setup_
     # Assertions
     assert job_status.status_code == 200
     assert res_data["message"] == "job started"
-    assert verify_property_exists("tables[0].smart", True)
+    assert verify_property_exists("blocks[0].smart", True)
     assert job_status_2.status_code == 200
     assert res_data_2["message"] == "job started"
-    assert verify_property_exists("tables[1].smart", True)
+    assert verify_property_exists("blocks[1].smart", True)
