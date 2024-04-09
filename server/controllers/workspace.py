@@ -387,6 +387,17 @@ class AppFolderController:
 
         app_id = self._create_default_workspace_files(app_label=app_label)
 
+        workspace_properties = self._get_workspace_properties()
+        workspace_data = workspace_properties.get("apps", [])
+        workspace_data.append(
+            {
+                "name": self.app_name,
+                "label": app_label if app_label else self.app_name,
+                "id": app_id,
+            }
+        )
+        self._write_workspace_properties(workspace_properties)
+
         return {"app_id": app_id}
 
     def delete_app(self, app_name: str):
