@@ -6,7 +6,6 @@ from requests import Response
 from server.constants import DROPBASE_API_URL, DROPBASE_TOKEN
 
 from .app import AppRouter
-from .auth import AuthRouter
 from .main_request import DropbaseSession
 from .misc import MiscRouter
 from .page import PageRouter
@@ -37,7 +36,6 @@ class DropbaseRouter:
         self.misc = MiscRouter(session=self.session)
         self.app = AppRouter(session=self.session)
         self.page = PageRouter(session=self.session)
-        self.auth = AuthRouter(session=self.session)
 
     def _response_interceptor(self, response: Response, *args, **kwargs):
         if response.status_code == 401:
