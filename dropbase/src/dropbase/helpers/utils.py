@@ -80,6 +80,9 @@ def _dict_from_pydantic_model(model):
 def get_empty_context(app_name: str, page_name: str):
     Context = get_state_context_model(app_name, page_name, "context")
     context = _dict_from_pydantic_model(Context)
+    Context(**context)
+
+    # return context # For c++ we return a dict
     return Context(**context)
 
 

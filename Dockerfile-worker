@@ -15,6 +15,11 @@ ADD requirements-worker-custom.txt requirements-worker-custom.txt
 RUN pip install -r requirements-worker.txt
 RUN pip install -r requirements-worker-custom.txt
 
+RUN apt-get update && apt-get install -y \
+    g++ \
+    nlohmann-json3-dev \
+    && rm -rf /var/lib/apt/lists/*
+
 # install dropbase package
 ADD dropbase/. dropbase/.
 RUN pip install -e dropbase/.

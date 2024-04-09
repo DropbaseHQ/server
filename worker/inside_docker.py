@@ -19,6 +19,8 @@ if __name__ == "__main__":
 
     if os.getenv("type") == "string":
         from dropbase.worker.run_python_string import run
+
+        # from dropbase.worker.run_cpp_string import run
     else:
         from dropbase.worker.run_python_file import run
 
