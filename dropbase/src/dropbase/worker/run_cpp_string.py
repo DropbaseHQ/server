@@ -12,45 +12,22 @@ load_dotenv()
 # Assuming 'r' and 'response' are initialized properly elsewhere
 
 
-def generate_cpp_map_init(context_data: dict, var_name: str = "context") -> str:
-    # Initialize the C++ map string
-    print(6.01)
-    print(context_data)
-    cpp_map_init = f"std::map<std::string, std::string> {var_name} = {{\n"
-    print(6.02)
-    print(cpp_map_init)
-
-    # Convert each key-value pair in the dictionary to a C++ map entry
-    map_entries = []
-    for key, value in context_data.items():
-        # Assuming values are strings or can be adequately represented as strings
-        entry = f'{{"{key}", "{value}"}}'
-        map_entries.append(entry)
-
-    print(6.03)
-    print(map_entries)
-    # Join all entries with commas and add them to the map initialization string
-    cpp_map_init += ",\n".join(map_entries)
-    print(6.04)
-    print(cpp_map_init)
-    # Close the map
-    cpp_map_init += "\n};"
-    print(6.05)
-
-    return cpp_map_init
-
-
 def write_file(file_code: str, state: dict, app_name: str, page_name: str, file_name: str = {}):
     headers = """
 #include <iostream>
+#include <nlohmann/json.hpp>
 #include <map>
 #include <string>
 """
     print(6.0)
-    python_context = get_empty_context(app_name, page_name)
+    context_model = get_empty_context(app_name, page_name)  # This is a Pydantic Model
+    python_context = context_model.dict()  # This is a dictionary
+    context_init_lines = json.dumps(python_context, indent=4)  # This is json
+    context_init = f"""std::string jsonData = R"json(
+    {context_init_lines})json";\nnlohmann::json context = nlohmann::json::parse(jsonData);"""
+
     print("python_context")
     print(python_context)
-    context_init = generate_cpp_map_init(python_context)
     print("context_init")
     print(context_init)
     print(6.1)
@@ -130,7 +107,8 @@ def run(r, response):
         print(10.2)
         print(result_json)
         result = json.loads(result_json)
-        python_context = get_empty_context(app_name, page_name)
+        context_model = get_empty_context(app_name, page_name)
+        python_context = context_model.dict()
         python_context.update(result)
         print(10.3)
         print(result)
