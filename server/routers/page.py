@@ -1,11 +1,10 @@
 import os
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter
 
 from dropbase.schemas.page import CreatePageRequest, PageProperties, RenamePageRequest
 from server.controllers.page import get_state_context, update_page_properties
 from server.controllers.workspace import AppFolderController
-from server.requests.dropbase_router import DropbaseRouter, get_dropbase_router
 
 router = APIRouter(
     prefix="/page", tags=["page"], responses={404: {"description": "Not found"}}
@@ -23,13 +22,11 @@ def get_st_cntxt(app_name: str, page_name: str):
 
 
 @router.post("/")
-def create_page_req(
-    request: CreatePageRequest, router: DropbaseRouter = Depends(get_dropbase_router)
-):
+def create_page_req(request: CreatePageRequest):
     r_path_to_workspace = os.path.join(os.path.dirname(__file__), "../../workspace")
     app_folder_controller = AppFolderController(request.app_name, r_path_to_workspace)
     return app_folder_controller.create_page(
-        router=router, page_name=request.page_name, page_label=request.page_label
+        page_name=request.page_name, page_label=request.page_label
     )
 
 
@@ -43,12 +40,10 @@ def rename_page_req(app_name: str, page_name: str, request: RenamePageRequest):
 
 
 @router.delete("/{app_name}/{page_name}")
-def delete_page_req(
-    app_name: str, page_name: str, router: DropbaseRouter = Depends(get_dropbase_router)
-):
+def delete_page_req(app_name: str, page_name: str):
     r_path_to_workspace = os.path.join(os.path.dirname(__file__), "../../workspace")
     app_folder_controller = AppFolderController(app_name, r_path_to_workspace)
-    return app_folder_controller.delete_page(page_name=page_name, router=router)
+    return app_folder_controller.delete_page(page_name=page_name)
 
 
 @router.put("/")

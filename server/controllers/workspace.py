@@ -181,29 +181,16 @@ class AppFolderController:
             # Create new app folder
             create_folder(path=self.app_folder_path)
             create_init_file(path=self.app_folder_path)
-            app_object = self._add_app_to_workspace_properties(
-                app_name=self.app_name, app_label=app_label
-            )
+
             new_app_properties = self._get_app_properties()
             create_file(
                 path=self.app_folder_path,
                 content=json.dumps(new_app_properties, indent=2),
                 file_name="properties.json",
             )
-            response = None
-
-            if response is not None and response.status_code != 200:
-                shutil.rmtree(self.app_folder_path)
-                self._remove_app_from_workspace_properties(self.app_name)
-                raise HTTPException(
-                    status_code=500, detail="Unable to create app folder"
-                )
 
             # Create new page folder with __init__.py
             self.create_page()
-            if hasattr(response, "json"):
-                response_body = response.json()
-                return response_body.get("id")
 
             return None
 
@@ -305,6 +292,7 @@ class AppFolderController:
 
         page_dir_path = f"workspace/{self.app_name}/{page_name}"
         create_state_context_files(page_dir_path, self.page_properties)
+        self._add_page_to_app_properties(page_name, page_label)
 
         return {"message": "Page created"}
 
@@ -327,7 +315,7 @@ class AppFolderController:
         self._write_app_properties_data(app_properties_data)
         return {"message": "Page renamed"}
 
-    def delete_page(self, page_name: str, router: DropbaseRouter):
+    def delete_page(self, page_name: str):
 
         # check properties.json first
         app_properties_data = self._get_app_properties_data()
