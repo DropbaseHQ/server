@@ -8,6 +8,7 @@ from server.controllers.connect import connect
 from server.controllers.properties import read_page_properties, update_properties
 from server.controllers.redis import r
 from server.controllers.run_sql import get_sql_from_file, render_sql
+from server.controllers.table_utils.convert import call_gpt
 from server.requests.dropbase_router import DropbaseRouter
 
 
@@ -53,16 +54,12 @@ def convert_sql_table(req: ConvertTableRequest, router: DropbaseRouter, job_id):
 
         check_for_duplicate_columns(column_names)
 
-        # get columns from file
-        get_smart_table_payload = {
-            "user_sql": user_sql,
-            "column_names": column_names,
-            "gpt_schema": gpt_schema,
-            "db_schema": db_schema,
-            "db_type": user_db.db_type,
-        }
-
-        resp = router.misc.get_smart_columns(get_smart_table_payload)
+        resp = call_gpt(
+            user_sql=user_sql,
+            column_names=column_names,
+            db_schema=db_schema,
+            db_type=user_db.db_type,
+        )
 
         if resp.status_code != 200:
             return resp
@@ -76,10 +73,14 @@ def convert_sql_table(req: ConvertTableRequest, router: DropbaseRouter, job_id):
 
         # validate columns
         validated = user_db._validate_smart_cols(smart_cols, user_sql)
-        column_props = [value for name, value in smart_cols.items() if name in validated]
+        column_props = [
+            value for name, value in smart_cols.items() if name in validated
+        ]
 
         for column in column_props:
-            column["display_type"] = user_db._detect_col_display_type(column["data_type"].lower())
+            column["display_type"] = user_db._detect_col_display_type(
+                column["data_type"].lower()
+            )
 
         # rereading properties
         properties = read_page_properties(req.app_name, req.page_name)
