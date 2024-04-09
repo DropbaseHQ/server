@@ -91,15 +91,12 @@ def get_user_apps():
 
 
 @router.post("/")
-def create_app_req(
-    req: CreateAppRequest,
-    router: DropbaseRouter = Depends(get_dropbase_router),
-):
+def create_app_req(req: CreateAppRequest):
     r_path_to_workspace = os.path.join(os.path.dirname(__file__), "../../workspace")
     app_folder_controller = AppFolderController(
         app_name=req.app_name, r_path_to_workspace=r_path_to_workspace
     )
-    return app_folder_controller.create_app(router=router, app_label=req.app_label)
+    return app_folder_controller.create_app(app_label=req.app_label)
 
 
 @router.put("/")
@@ -115,9 +112,7 @@ def rename_app_req(req: RenameAppRequest):
 
 
 @router.delete("/{app_name}")
-def delete_app_req(
-    app_name: str, router: DropbaseRouter = Depends(get_dropbase_router)
-):
+def delete_app_req(app_name: str):
     r_path_to_workspace = os.path.join(os.path.dirname(__file__), "../../workspace")
     app_folder_controller = AppFolderController(app_name, r_path_to_workspace)
-    return app_folder_controller.delete_app(app_name=app_name, router=router)
+    return app_folder_controller.delete_app(app_name=app_name)

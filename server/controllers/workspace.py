@@ -176,9 +176,7 @@ class AppFolderController:
                 break
         self._write_workspace_properties(workspace_properties)
 
-    def _create_default_workspace_files(
-        self, router: DropbaseRouter, app_label: str = None
-    ) -> str | None:
+    def _create_default_workspace_files(self, app_label: str = None) -> str | None:
         try:
             # Create new app folder
             create_folder(path=self.app_folder_path)
@@ -202,7 +200,7 @@ class AppFolderController:
                 )
 
             # Create new page folder with __init__.py
-            self.create_page(router=router)
+            self.create_page()
             if hasattr(response, "json"):
                 response_body = response.json()
                 return response_body.get("id")
@@ -255,7 +253,6 @@ class AppFolderController:
 
     def create_page(
         self,
-        router: DropbaseRouter = None,
         app_folder_path: str = None,
         page_name: str = None,
         page_label: str = None,
@@ -375,7 +372,7 @@ class AppFolderController:
         pages = [{"name": page} for page in page_names]
         return pages
 
-    def create_app(self, app_label: str = None, router: DropbaseRouter = None):
+    def create_app(self, app_label: str = None):
 
         if not validate_column_name(self.app_name):
             raise HTTPException(
@@ -400,13 +397,11 @@ class AppFolderController:
                 detail="Another app with the same label already exists",
             )
 
-        app_id = self._create_default_workspace_files(
-            router=router, app_label=app_label
-        )
+        app_id = self._create_default_workspace_files(app_label=app_label)
 
         return {"app_id": app_id}
 
-    def delete_app(self, app_name: str, router: DropbaseRouter):
+    def delete_app(self, app_name: str):
         app_path = os.path.join(self.r_path_to_workspace, app_name)
 
         with tempfile.NamedTemporaryFile() as temp_workspace_file:
