@@ -385,8 +385,8 @@ class AppFolderController:
                 detail="Another app with the same label already exists",
             )
 
-        app_id = self._create_default_workspace_files(app_label=app_label)
-
+        self._create_default_workspace_files(app_label=app_label)
+        app_id = str(uuid.uuid4())
         workspace_properties = self._get_workspace_properties()
         workspace_data = workspace_properties.get("apps", [])
         workspace_data.append(
