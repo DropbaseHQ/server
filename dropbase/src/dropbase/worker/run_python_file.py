@@ -6,6 +6,7 @@ import traceback
 from dotenv import load_dotenv
 
 from dropbase.helpers.dataframe import convert_df_to_resp_obj
+from server.controllers.display_rules import run_display_rule
 
 load_dotenv()
 
@@ -17,7 +18,9 @@ def get_function_by_name(app_name: str, page_name: str, function_name: str):
     return function
 
 
-def get_state(app_name: str, page_name: str, class_dict: dict, class_name: str = "State"):
+def get_state(
+    app_name: str, page_name: str, class_dict: dict, class_name: str = "State"
+):
     page_module = f"workspace.{app_name}.{page_name}"
     page = importlib.import_module(page_module)
     ClassName = getattr(page, class_name)
@@ -35,13 +38,16 @@ def run_python_data_fetcher(app_name: str, page_name: str, file: dict, state: di
 
 
 # for ui functions
-def run_python_ui(app_name: str, page_name: str, file: dict, state: dict, context: dict):
+def run_python_ui(
+    app_name: str, page_name: str, file: dict, state: dict, context: dict
+):
     state = get_state(app_name, page_name, state, "State")
     context = get_state(app_name, page_name, context, "Context")
     args = {"state": state, "context": context}
     function_name = get_function_by_name(app_name, page_name, file.get("name"))
     # call function
     context = function_name(**args)
+    context = run_display_rule(app_name, page_name, state, context)
     return context.dict()
 
 
