@@ -3,8 +3,8 @@ import os
 import sys
 from multiprocessing import Pipe, Process
 
+from dropbase.helpers.utils import get_state
 from server.constants import TASK_TIMEOUT, cwd
-from server.controllers.utils import get_state
 
 
 def verify_state(app_name: str, page_name: str, state: dict) -> bool:

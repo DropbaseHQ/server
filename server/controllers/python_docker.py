@@ -55,5 +55,5 @@ def run_container(env_vars: dict, docker_script: str = "inside_docker"):
         network="dropbase_default",
         working_dir="/app",
         detach=True,
-        auto_remove=True,
+        # auto_remove=True,
     )
