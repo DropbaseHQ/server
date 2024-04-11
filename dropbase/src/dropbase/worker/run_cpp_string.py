@@ -1,5 +1,6 @@
 import json
 import os
+import re
 import subprocess
 import uuid
 
@@ -10,6 +11,14 @@ from dropbase.worker.run_python_string import assign_last_expression
 
 load_dotenv()
 # Assuming 'r' and 'response' are initialized properly elsewhere
+
+
+def convert_to_brackets(match):
+    matched_string = match.group(0)
+    parts = matched_string.split(".")[1:]
+    bracket_notation = "context" + "".join([f'["{part}"]' for part in parts])
+
+    return bracket_notation
 
 
 def write_file(file_code: str, state: dict, app_name: str, page_name: str, file_name: str = {}):
@@ -42,14 +51,17 @@ def write_file(file_code: str, state: dict, app_name: str, page_name: str, file_
     # Construct the final C++ code string by combining file_code, the state and context init code, and test_code
     cpp_str = headers + "\n" + state_init + "\n\n" + context_init + "\n\n" + file_code + "\n\n"
     print(cpp_str)
+    pattern = r"context(\.\w+)+"
+    converted_string = re.sub(pattern, convert_to_brackets, cpp_str)
+    print(converted_string)
     print(6.5)
 
     with open(file_name, "w") as f:
         print(6.6)
-        f.write(cpp_str)
+        f.write(converted_string)
         print(6.7)
 
-    return cpp_str
+    return converted_string
 
 
 def run(r, response):
