@@ -87,6 +87,7 @@ class BaseColumnDefinedProperty(BaseModel):
 class OnEvent(BaseModel):
     type: Literal["widget", "table", "function"] = "function"
     value: str
+    file: Optional[str]
 
 
 class BaseContext(BaseModel):

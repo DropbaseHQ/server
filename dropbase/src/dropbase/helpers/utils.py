@@ -59,8 +59,10 @@ def process_query_result(res) -> pd.DataFrame:
     return df
 
 
-def get_function_by_name(app_name: str, page_name: str, function_name: str):
-    file_module = f"workspace.{app_name}.{page_name}.scripts.{function_name}"
+def get_function_by_name(
+    app_name: str, page_name: str, file_name: str, function_name: str
+):  # Very useful, we keep this the same, we just need to pass in the function name rather than the file name
+    file_module = f"workspace.{app_name}.{page_name}.scripts.{file_name}"
     scripts = importlib.import_module(file_module)
     importlib.reload(scripts)
     function = getattr(scripts, function_name)

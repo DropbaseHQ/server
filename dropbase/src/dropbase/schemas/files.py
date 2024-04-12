@@ -29,6 +29,7 @@ class CreateFile(BaseModel):
 # data files
 class DataFile(BaseModel):
     name: str = Field(regex=FILE_NAME_REGEX)
+    function: Optional[str]
     type: TypeEnum
     source: Optional[str]
     depends_on: Optional[List[str]]

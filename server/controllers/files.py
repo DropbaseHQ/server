@@ -86,6 +86,7 @@ class FileController:
         files = files_data["files"]
         functions = []
         for file in files:
+            file_name = file.split("/")[-1].split(".")[0]
             with open(file, "r") as source_file:
                 source_code = source_file.read()
 
@@ -104,7 +105,7 @@ class FileController:
                     returns_context = isinstance(node.returns, ast.Name) and node.returns.id == "Context"
 
                     if has_state_and_context and returns_context:
-                        functions.append(node.name)
+                        functions.append({"value": node.name, "type": "function", "file": file_name})
         return functions
 
     def create_file(self, req: CreateFile):
