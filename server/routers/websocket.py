@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, WebSocket
 
-from server.controllers.display_rules import run_display_rule
+from dropbase.helpers.display_rules import run_display_rule
 from server.requests.dropbase_router import DropbaseRouter, WSDropbaseRouterGetter
 
 router = APIRouter()

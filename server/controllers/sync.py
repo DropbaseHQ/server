@@ -1,10 +1,11 @@
 import logging
 import os
 import time
-from server.controllers.workspace import WorkspaceFolderController
+
+from dropbase.helpers.utils import check_if_object_exists
 from server.controllers.app import AppFolderController
+from server.controllers.workspace import WorkspaceFolderController
 from server.requests.dropbase_router import DropbaseRouter
-from server.controllers.utils import check_if_object_exists
 
 logger = logging.getLogger(__name__)
 cwd = os.getcwd()
@@ -22,9 +23,7 @@ def sync_with_dropbase(router: DropbaseRouter):
 
     # Get all workspace info, including workspace, apps, and their pages
     workspace_path = os.path.join(cwd, "workspace")
-    workspace_folder_controller = WorkspaceFolderController(
-        r_path_to_workspace=workspace_path
-    )
+    workspace_folder_controller = WorkspaceFolderController(r_path_to_workspace=workspace_path)
     workspace_props = workspace_folder_controller.get_workspace_properties()
     workspace_apps = workspace_props.get("apps", [])
     workspace_app_structure = []
@@ -82,9 +81,7 @@ def sync_with_dropbase(router: DropbaseRouter):
             app["status"] = "SYNCED"
             continue
 
-    workspace_folder_controller.write_workspace_properties(
-        {**workspace_props, "apps": properties}
-    )
+    workspace_folder_controller.write_workspace_properties({**workspace_props, "apps": properties})
 
 
 def auto_sync_demo(router: DropbaseRouter):
@@ -141,9 +138,7 @@ def auto_sync_demo(router: DropbaseRouter):
                     if not demo_exists:
                         apps.append(app_record)
 
-                workspace_folder_controller.write_workspace_properties(
-                    {**workspace_props, "apps": apps}
-                )
+                workspace_folder_controller.write_workspace_properties({**workspace_props, "apps": apps})
 
                 # sync pages
                 if check_if_object_exists("workspace/demo/properties.json"):

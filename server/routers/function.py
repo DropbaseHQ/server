@@ -3,12 +3,12 @@ import uuid
 
 from fastapi import APIRouter, Response
 
+from dropbase.helpers.utils import get_table_data_fetcher
 from dropbase.schemas.files import DataFile
 from dropbase.schemas.function import RunFunction
 from server.controllers.properties import read_page_properties
 from server.controllers.python_docker import run_container
 from server.controllers.redis import r
-from server.controllers.utils import get_table_data_fetcher
 
 router = APIRouter(
     prefix="/function",

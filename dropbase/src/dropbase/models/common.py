@@ -22,8 +22,6 @@ class ComponentDisplayProperties(BaseModel):
 
 class ColumnDisplayProperties(BaseModel):
     visible: Optional[bool]
-    message: Optional[str]
-    message_type: Optional[str]
 
 
 class PageDisplayProperties(BaseModel):

@@ -6,6 +6,7 @@ import traceback
 from dotenv import load_dotenv
 
 from dropbase.helpers.dataframe import convert_df_to_resp_obj
+from dropbase.helpers.display_rules import run_display_rule
 
 load_dotenv()
 
@@ -42,6 +43,7 @@ def run_python_ui(app_name: str, page_name: str, file: dict, state: dict, contex
     function_name = get_function_by_name(app_name, page_name, file.get("name"))
     # call function
     context = function_name(**args)
+    context = run_display_rule(app_name, page_name, state, context)
     return context.dict()
 
 
