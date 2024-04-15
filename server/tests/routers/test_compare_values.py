@@ -1,12 +1,6 @@
-import pytest
-import copy
-from server.controllers.display_rules import compare_values
-from server.tests.routers.test_components import base_data
 from datetime import datetime, timedelta
-from requests import Response
 
-
-# Tests the compare_values function in display_rules.py
+from dropbase.helpers.display_rules import compare_values
 
 
 def test_equals_operator_succeeds_when_equal():
@@ -17,7 +11,7 @@ def test_equals_operator_succeeds_when_equal():
 
     result = compare_values(target_value, operator, rule_value, target_type)
 
-    assert result == True
+    assert result is True
 
 
 def test_equals_operator_fails_when_not_equal():
@@ -28,7 +22,7 @@ def test_equals_operator_fails_when_not_equal():
 
     result = compare_values(target_value, operator, rule_value, target_type)
 
-    assert result == False
+    assert result is False
 
 
 def test_equals_operator_succeeds_with_string():
@@ -39,7 +33,7 @@ def test_equals_operator_succeeds_with_string():
 
     result = compare_values(target_value, operator, rule_value, target_type)
 
-    assert result == True
+    assert result is True
 
 
 def test_equals_operator_fails_with_string():
@@ -50,7 +44,7 @@ def test_equals_operator_fails_with_string():
 
     result = compare_values(target_value, operator, rule_value, target_type)
 
-    assert result == False
+    assert result is False
 
 
 def test_equals_operator_succeeds_with_boolean():
@@ -61,7 +55,7 @@ def test_equals_operator_succeeds_with_boolean():
 
     result = compare_values(target_value, operator, rule_value, target_type)
 
-    assert result == True
+    assert result is True
 
 
 def test_equals_operator_fails_with_boolean():
@@ -72,7 +66,7 @@ def test_equals_operator_fails_with_boolean():
 
     result = compare_values(target_value, operator, rule_value, target_type)
 
-    assert result == False
+    assert result is False
 
 
 def test_equals_operator_succeeds_with_date():
@@ -83,7 +77,7 @@ def test_equals_operator_succeeds_with_date():
 
     result = compare_values(target_value, operator, rule_value, target_type)
 
-    assert result == True
+    assert result is True
 
 
 def test_equals_operator_fails_with_date():
@@ -94,7 +88,7 @@ def test_equals_operator_fails_with_date():
 
     result = compare_values(target_value, operator, rule_value.timestamp(), target_type)
 
-    assert result == False
+    assert result is False
 
 
 def test_equals_operator_succeeds_with_mix_string_and_int():
@@ -105,7 +99,7 @@ def test_equals_operator_succeeds_with_mix_string_and_int():
 
     result = compare_values(target_value, operator, rule_value, target_type)
 
-    assert result == True
+    assert result is True
 
 
 def test_equals_operator_fails_with_mix_string_and_int():
@@ -116,7 +110,7 @@ def test_equals_operator_fails_with_mix_string_and_int():
 
     result = compare_values(target_value, operator, rule_value, target_type)
 
-    assert result == False
+    assert result is False
 
 
 def test_equals_operator_succeeds_with_mix_string_and_float():
@@ -127,7 +121,7 @@ def test_equals_operator_succeeds_with_mix_string_and_float():
 
     result = compare_values(target_value, operator, rule_value, target_type)
 
-    assert result == True
+    assert result is True
 
 
 def test_equals_operator_fails_with_mix_string_and_float():
@@ -138,7 +132,7 @@ def test_equals_operator_fails_with_mix_string_and_float():
 
     result = compare_values(target_value, operator, rule_value, target_type)
 
-    assert result == False
+    assert result is False
 
 
 def test_equals_operator_succeeds_with_mix_string_and_boolean():
@@ -149,7 +143,7 @@ def test_equals_operator_succeeds_with_mix_string_and_boolean():
 
     result = compare_values(target_value, operator, rule_value, target_type)
 
-    assert result == True
+    assert result is True
 
 
 def test_equals_operator_fails_with_mix_string_and_boolean():
@@ -160,7 +154,7 @@ def test_equals_operator_fails_with_mix_string_and_boolean():
 
     result = compare_values(target_value, operator, rule_value, target_type)
 
-    assert result == False
+    assert result is False
 
 
 def test_lt_operator_succeeds_when_less_than():
@@ -171,7 +165,7 @@ def test_lt_operator_succeeds_when_less_than():
 
     result = compare_values(target_value, operator, rule_value, target_type)
 
-    assert result == True
+    assert result is True
 
 
 def test_lt_operator_fails_when_equal():
@@ -182,7 +176,7 @@ def test_lt_operator_fails_when_equal():
 
     result = compare_values(target_value, operator, rule_value, target_type)
 
-    assert result == False
+    assert result is False
 
 
 # lte operator
@@ -194,7 +188,7 @@ def test_lte_operator_succeeds_when_less_than_or_equal():
 
     result = compare_values(target_value, operator, rule_value, target_type)
 
-    assert result == True
+    assert result is True
 
 
 def test_lte_operator_fails_when_greater_than():
@@ -205,7 +199,7 @@ def test_lte_operator_fails_when_greater_than():
 
     result = compare_values(target_value, operator, rule_value, target_type)
 
-    assert result == False
+    assert result is False
 
 
 def test_gt_operator_succeeds_when_greater_than():
@@ -216,7 +210,7 @@ def test_gt_operator_succeeds_when_greater_than():
 
     result = compare_values(target_value, operator, rule_value, target_type)
 
-    assert result == True
+    assert result is True
 
 
 def test_gt_operator_fails_when_equal():
@@ -227,7 +221,7 @@ def test_gt_operator_fails_when_equal():
 
     result = compare_values(target_value, operator, rule_value, target_type)
 
-    assert result == False
+    assert result is False
 
 
 def test_gte_operator_succeeds_when_greater_than_or_equal():
@@ -238,7 +232,7 @@ def test_gte_operator_succeeds_when_greater_than_or_equal():
 
     result = compare_values(target_value, operator, rule_value, target_type)
 
-    assert result == True
+    assert result is True
 
 
 def test_gte_operator_fails_when_less_than():
@@ -249,7 +243,7 @@ def test_gte_operator_fails_when_less_than():
 
     result = compare_values(target_value, operator, rule_value, target_type)
 
-    assert result == False
+    assert result is False
 
 
 def test_not_equals_operator():
@@ -260,7 +254,7 @@ def test_not_equals_operator():
 
     result = compare_values(target_value, operator, rule_value, target_type)
 
-    assert result == True
+    assert result is True
 
 
 def test_not_equals_operator_succeeds_when_not_equal():
@@ -271,7 +265,7 @@ def test_not_equals_operator_succeeds_when_not_equal():
 
     result = compare_values(target_value, operator, rule_value, target_type)
 
-    assert result == True
+    assert result is True
 
 
 def test_not_equals_operator_fails_when_equal():
@@ -282,7 +276,7 @@ def test_not_equals_operator_fails_when_equal():
 
     result = compare_values(target_value, operator, rule_value, target_type)
 
-    assert result == False
+    assert result is False
 
 
 def test_not_equals_operator_succeeds_with_string():
@@ -293,7 +287,7 @@ def test_not_equals_operator_succeeds_with_string():
 
     result = compare_values(target_value, operator, rule_value, target_type)
 
-    assert result == True
+    assert result is True
 
 
 def test_not_equals_operator_fails_with_string():
@@ -304,7 +298,7 @@ def test_not_equals_operator_fails_with_string():
 
     result = compare_values(target_value, operator, rule_value, target_type)
 
-    assert result == False
+    assert result is False
 
 
 def test_not_equals_operator_succeeds_with_boolean():
@@ -315,7 +309,7 @@ def test_not_equals_operator_succeeds_with_boolean():
 
     result = compare_values(target_value, operator, rule_value, target_type)
 
-    assert result == True
+    assert result is True
 
 
 def test_not_equals_operator_fails_with_boolean():
@@ -326,7 +320,7 @@ def test_not_equals_operator_fails_with_boolean():
 
     result = compare_values(target_value, operator, rule_value, target_type)
 
-    assert result == False
+    assert result is False
 
 
 def test_not_equals_operator_succeeds_with_date():
@@ -337,7 +331,7 @@ def test_not_equals_operator_succeeds_with_date():
 
     result = compare_values(target_value, operator, rule_value.timestamp(), target_type)
 
-    assert result == True
+    assert result is True
 
 
 def test_not_equals_operator_fails_with_date():
@@ -348,7 +342,7 @@ def test_not_equals_operator_fails_with_date():
 
     result = compare_values(target_value, operator, rule_value, target_type)
 
-    assert result == False
+    assert result is False
 
 
 def test_not_equals_operator_succeeds_with_mix_string_and_int():
@@ -359,7 +353,7 @@ def test_not_equals_operator_succeeds_with_mix_string_and_int():
 
     result = compare_values(target_value, operator, rule_value, target_type)
 
-    assert result == True
+    assert result is True
 
 
 def test_not_equals_operator_fails_with_mix_string_and_int():
@@ -370,7 +364,7 @@ def test_not_equals_operator_fails_with_mix_string_and_int():
 
     result = compare_values(target_value, operator, rule_value, target_type)
 
-    assert result == False
+    assert result is False
 
 
 def test_not_equals_operator_succeeds_with_mix_string_and_float():
@@ -381,7 +375,7 @@ def test_not_equals_operator_succeeds_with_mix_string_and_float():
 
     result = compare_values(target_value, operator, rule_value, target_type)
 
-    assert result == True
+    assert result is True
 
 
 def test_not_equals_operator_fails_with_mix_string_and_float():
@@ -392,7 +386,7 @@ def test_not_equals_operator_fails_with_mix_string_and_float():
 
     result = compare_values(target_value, operator, rule_value, target_type)
 
-    assert result == False
+    assert result is False
 
 
 def test_not_equals_operator_succeeds_with_mix_string_and_boolean():
@@ -403,7 +397,7 @@ def test_not_equals_operator_succeeds_with_mix_string_and_boolean():
 
     result = compare_values(target_value, operator, rule_value, target_type)
 
-    assert result == False
+    assert result is False
 
 
 def test_not_equals_operator_fails_with_mix_string_and_boolean():
@@ -414,4 +408,4 @@ def test_not_equals_operator_fails_with_mix_string_and_boolean():
 
     result = compare_values(target_value, operator, rule_value, target_type)
 
-    assert result == True
+    assert result is True

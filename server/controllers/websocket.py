@@ -1,6 +1,6 @@
 from fastapi import WebSocket
 
-from server.controllers.display_rules import run_display_rule
+from dropbase.helpers.display_rules import run_display_rule
 
 
 async def handle_websocket_requests(websocket: WebSocket):

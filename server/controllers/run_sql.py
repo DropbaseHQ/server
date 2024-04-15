@@ -5,12 +5,12 @@ import traceback
 from jinja2 import Environment
 
 from dropbase.helpers.dataframe import convert_df_to_resp_obj
+from dropbase.helpers.utils import get_state, process_query_result
 from dropbase.schemas.query import RunSQLRequestTask, RunSQLStringTask
 from server.constants import cwd
 from server.controllers.connect import connect
 from server.controllers.python_subprocess import verify_state
 from server.controllers.redis import r
-from server.controllers.utils import get_state, process_query_result
 
 
 def run_sql_query_from_string(args: RunSQLStringTask):

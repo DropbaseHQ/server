@@ -1,7 +1,7 @@
+from dropbase.helpers.utils import validate_column_name
 from dropbase.schemas.table import CommitTableColumnsRequest
 from server.controllers.page import get_page_state_context
 from server.controllers.properties import read_page_properties, update_properties
-from server.controllers.utils import validate_column_name
 
 
 def commit_table_columns(req: CommitTableColumnsRequest):
