@@ -67,7 +67,7 @@ def verify_worker_access_token(
     else:
         try:
             Authorize._access_cookie_key = WORKER_SL_TOKEN_NAME
-            Authorize._verify_and_get_jwt_in_cookies("access", Authorize._request)
+            Authorize._verify_and_get_jwt_in_cookies("access", request)
             worker_subject = Authorize.get_jwt_subject()
 
             server_claims = jwt.decode(access_token, verify=False)

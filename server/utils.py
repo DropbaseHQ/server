@@ -3,7 +3,7 @@ from fastapi import Depends
 
 
 def get_permission_dependency(action: str, resource: str):
-    if find_spec("server.auth2") is None:
+    if find_spec("server.auth") is None:
         return None
     from server.auth.dependency import CheckUserPermissions
 
@@ -12,6 +12,6 @@ def get_permission_dependency(action: str, resource: str):
 
 def get_permission_dependency_array(action: str, resource: str):
     dep = get_permission_dependency(action, resource)
-    if find_spec("server.auth2") is None:
+    if find_spec("server.auth") is None:
         return None
     return [dep]

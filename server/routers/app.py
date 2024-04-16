@@ -95,13 +95,12 @@ def get_user_apps(router: DropbaseRouter = Depends(get_dropbase_router)):
 @router.post("/", dependencies=get_permission_dependency_array("edit", "workspace"))
 def create_app_req(
     req: CreateAppRequest,
-    router: DropbaseRouter = Depends(get_dropbase_router),
 ):
     r_path_to_workspace = os.path.join(os.path.dirname(__file__), "../../workspace")
     app_folder_controller = AppFolderController(
         app_name=req.app_name, r_path_to_workspace=r_path_to_workspace
     )
-    return app_folder_controller.create_app(router=router, app_label=req.app_label)
+    return app_folder_controller.create_app(app_label=req.app_label)
 
 
 @router.put("/", dependencies=get_permission_dependency_array("edit", "app"))
