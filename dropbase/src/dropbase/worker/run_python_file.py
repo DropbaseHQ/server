@@ -7,6 +7,7 @@ from dotenv import load_dotenv
 
 from dropbase.helpers.dataframe import convert_df_to_resp_obj
 from dropbase.helpers.display_rules import run_display_rule
+from dropbase.helpers.utils import get_state_empty_context
 
 load_dotenv()
 
@@ -56,18 +57,16 @@ def run(r, response):
         file = json.loads(os.getenv("file"))
         job_id = os.getenv("job_id")
 
-        # run python script and get result
-        if file["type"] == "ui":
-            context = json.loads(os.getenv("context"))
-            result = run_python_ui(app_name, page_name, file, state, context)
-            response["type"] = "context"
-            response["context"] = result
-        elif file["type"] == "data_fetcher":
-            result = run_python_data_fetcher(app_name, page_name, file, state)
-            response["type"] = "table"
-            response["data"] = result["data"]
-            response["columns"] = result["columns"]
+        # get state and context
+        state, context = get_state_empty_context(app_name, page_name, state)
 
+        # run python script and get result
+        function_name = get_function_by_name(app_name, page_name, file.get("name"))
+        args = {"state": state, "context": context}
+        context = function_name(**args)
+
+        response["type"] = "context"
+        response["context"] = context.dict()
         response["message"] = "job completed"
         response["status_code"] = 200
     except Exception as e:

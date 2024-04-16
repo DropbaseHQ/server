@@ -4,14 +4,7 @@ import re
 from pathlib import Path
 
 import pandas as pd
-
-
-def get_function_by_name(app_name: str, page_name: str, function_name: str):
-    file_module = f"workspace.{app_name}.{page_name}.scripts.{function_name}"
-    scripts = importlib.import_module(file_module)
-    importlib.reload(scripts)
-    function = getattr(scripts, function_name)
-    return function
+from pydantic import BaseModel
 
 
 def get_state_context(app_name: str, page_name: str, state: dict, context: dict):
@@ -71,3 +64,35 @@ def read_page_properties(app_name: str, page_name: str):
     path = f"/workspace/{app_name}/{page_name}/properties.json"
     with open(path, "r") as f:
         return json.loads(f.read())
+
+
+def get_function_by_name(app_name: str, page_name: str, function_name: str):
+    file_module = f"workspace.{app_name}.{page_name}.scripts.{function_name}"
+    scripts = importlib.import_module(file_module)
+    importlib.reload(scripts)
+    function = getattr(scripts, function_name)
+    return function
+
+
+def _dict_from_pydantic_model(model):
+    data = {}
+    for name, field in model.__fields__.items():
+        if isinstance(field.outer_type_, type) and issubclass(field.outer_type_, BaseModel):
+            data[name] = _dict_from_pydantic_model(field.outer_type_)
+        else:
+            data[name] = field.default
+    return data
+
+
+def get_empty_context(app_name: str, page_name: str):
+    Context = get_state_context_model(app_name, page_name, "context")
+    context = _dict_from_pydantic_model(Context)
+    return Context(**context)
+
+
+def get_state_empty_context(app_name: str, page_name: str, state: dict):
+    State = get_state_context_model(app_name, page_name, "state")
+    Context = get_state_context_model(app_name, page_name, "context")
+    context = _dict_from_pydantic_model(Context)
+
+    return State(**state), Context(**context)

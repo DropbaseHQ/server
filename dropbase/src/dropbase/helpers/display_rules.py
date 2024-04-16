@@ -7,7 +7,7 @@ from typing import Any
 
 from dateutil.parser import parse
 
-from dropbase.helpers.utils import get_state_context_model
+from dropbase.helpers.utils import get_state_empty_context
 from dropbase.schemas.display_rules import DisplayRules
 
 logger = logging.getLogger(__name__)
@@ -192,13 +192,9 @@ def get_display_rules_from_comp_props(component_props):
     return component_display_rules
 
 
-def run_display_rule(app_name: str, page_name: str, state: dict, context: dict):
+def run_display_rule(app_name: str, page_name: str, state: dict):
     try:
-        State = get_state_context_model(app_name, page_name, "state")
-        Context = get_state_context_model(app_name, page_name, "context")
-
-        state = State(**state)
-        context = Context(**context)
+        state, context = get_state_empty_context(app_name=app_name, page_name=page_name, state=state)
 
         path = f"workspace/{app_name}/{page_name}/properties.json"
         with open(path, "r") as f:

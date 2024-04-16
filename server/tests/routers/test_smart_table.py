@@ -9,8 +9,9 @@ base_table_data = {
     "app_name": "dropbase_test_app",
     "page_name": "page1",
     "properties": {
-        "tables": [
+        "blocks": [
             {
+                "block_type": "table",
                 "label": "Table2",
                 "name": "table2",
                 "description": None,
@@ -54,6 +55,7 @@ base_table_data = {
                 ],
             },
             {
+                "block_type": "table",
                 "label": "Table3",
                 "name": "table3",
                 "description": None,
@@ -187,12 +189,12 @@ def test_convert_to_smart_table(test_client, mocker, mock_db, setup_tables):
     res_data = res.json()
 
     job_id = res_data["job_id"]
-    job_status = test_client.get(f"/query/status/{job_id}")
+    job_status = test_client.get(f"/status/{job_id}")
 
     # Assertions
     assert job_status.status_code == 200
     res_data["message"] == "job started"
-    assert verify_property_exists("tables[0].smart", True)
+    assert verify_property_exists("blocks[0].smart", True)
 
 
 @pytest.mark.parametrize("mock_db", ["mysql"], indirect=True)
@@ -223,12 +225,12 @@ def test_convert_to_smart_table_mysql(test_client, mocker, mock_db, setup_tables
     res_data = res.json()
 
     job_id = res_data["job_id"]
-    job_status = test_client.get(f"/query/status/{job_id}")
+    job_status = test_client.get(f"/status/{job_id}")
 
     # Assertions
     assert job_status.status_code == 200
     res_data["message"] == "job started"
-    assert verify_property_exists("tables[0].smart", True)
+    assert verify_property_exists("blocks[0].smart", True)
 
 
 @pytest.mark.parametrize("mock_db", ["postgres", "mysql", "snowflake", "sqlite"], indirect=True)
@@ -251,13 +253,13 @@ def test_convert_to_smart_table_duplicate_column_name_fail(test_client, mocker, 
     res_data = res.json()
 
     job_id = res_data["job_id"]
-    job_status = test_client.get(f"/query/status/{job_id}")
+    job_status = test_client.get(f"/status/{job_id}")
     status_data = job_status.json()
 
     # Assertions
     assert "Duplicate column name" in status_data["message"]
     assert status_data["type"] == "error"
-    assert verify_property_exists("tables[0].smart", False)
+    assert verify_property_exists("blocks[0].smart", False)
 
 
 @pytest.mark.parametrize("mock_db", ["postgres", "mysql", "snowflake", "sqlite"], indirect=True)
@@ -280,13 +282,13 @@ def test_convert_to_smart_table_banned_keyword_groupby_fail(test_client, mocker,
     res_data = res.json()
 
     job_id = res_data["job_id"]
-    job_status = test_client.get(f"/query/status/{job_id}")
+    job_status = test_client.get(f"/status/{job_id}")
     status_data = job_status.json()
 
     # Assertions
     assert "Must remove keyword GROUP BY to convert to smart table" in status_data["message"]
     assert status_data["type"] == "error"
-    assert verify_property_exists("tables[0].smart", False)
+    assert verify_property_exists("blocks[0].smart", False)
 
 
 @pytest.mark.parametrize("mock_db", ["postgres", "mysql", "snowflake", "sqlite"], indirect=True)
@@ -309,13 +311,13 @@ def test_convert_to_smart_table_banned_keyword_with_fail(test_client, mocker, mo
     res_data = res.json()
 
     job_id = res_data["job_id"]
-    job_status = test_client.get(f"/query/status/{job_id}")
+    job_status = test_client.get(f"/status/{job_id}")
     status_data = job_status.json()
 
     # Assertions
     assert "Must remove keyword WITH to convert to smart table" in status_data["message"]
     assert status_data["type"] == "error"
-    assert verify_property_exists("tables[0].smart", False)
+    assert verify_property_exists("blocks[0].smart", False)
 
 
 @pytest.mark.parametrize("mock_db", ["postgres", "mysql", "snowflake", "sqlite"], indirect=True)
@@ -336,13 +338,13 @@ def test_convert_to_smart_table_no_pk(test_client, mocker, mock_db, setup_tables
     res_data = res.json()
 
     job_id = res_data["job_id"]
-    job_status = test_client.get(f"/query/status/{job_id}")
+    job_status = test_client.get(f"/status/{job_id}")
 
     # Assertions
     assert job_status.status_code == 200
     res_data["message"] == "job started"
-    assert verify_property_exists("tables[0].smart", True)
-    assert verify_property_exists("tables[0].columns[1].editable", False)
+    assert verify_property_exists("blocks[0].smart", True)
+    assert verify_property_exists("blocks[0].columns[1].editable", False)
 
 
 @pytest.mark.parametrize("mock_db", ["postgres", "mysql", "snowflake", "sqlite"], indirect=True)
@@ -365,13 +367,13 @@ def test_convert_to_smart_table_empty_table_fail(test_client, mocker, mock_db, s
     res_data = res.json()
 
     job_id = res_data["job_id"]
-    job_status = test_client.get(f"/query/status/{job_id}")
+    job_status = test_client.get(f"/status/{job_id}")
     status_data = job_status.json()
 
     # Assertions
     assert "Can not convert empty table into smart table" in status_data["message"]
     assert status_data["type"] == "error"
-    assert verify_property_exists("tables[0].smart", False)
+    assert verify_property_exists("blocks[0].smart", False)
 
 
 @pytest.mark.parametrize("mock_db", ["postgres", "mysql", "snowflake", "sqlite"], indirect=True)
@@ -394,7 +396,7 @@ def test_convert_to_smart_table_in_parallel(test_client, mocker, mock_db, setup_
     res_data = res.json()
 
     job_id = res_data["job_id"]
-    job_status = test_client.get(f"/query/status/{job_id}")
+    job_status = test_client.get(f"/status/{job_id}")
 
     time.sleep(3)
 
@@ -406,12 +408,12 @@ def test_convert_to_smart_table_in_parallel(test_client, mocker, mock_db, setup_
     res_data_2 = res_2.json()
 
     job_id_2 = res_data_2["job_id"]
-    job_status_2 = test_client.get(f"/query/status/{job_id_2}")
+    job_status_2 = test_client.get(f"/status/{job_id_2}")
 
     # Assertions
     assert job_status.status_code == 200
     assert res_data["message"] == "job started"
-    assert verify_property_exists("tables[0].smart", True)
+    assert verify_property_exists("blocks[0].smart", True)
     assert job_status_2.status_code == 200
     assert res_data_2["message"] == "job started"
-    assert verify_property_exists("tables[1].smart", True)
+    assert verify_property_exists("blocks[1].smart", True)

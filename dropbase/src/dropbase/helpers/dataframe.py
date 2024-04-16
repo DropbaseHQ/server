@@ -6,27 +6,35 @@ import pandas as pd
 from dropbase.constants import INFER_TYPE_SAMPLE_SIZE
 
 
-def convert_df_to_resp_obj(df: pd.DataFrame, column_type: str) -> dict:
+def to_dtable(self, data_type: str = "python"):
+    return convert_df_to_resp_obj(self, data_type)
+
+
+# TODO: az rename this functions
+def convert_df_to_resp_obj(df: pd.DataFrame, data_type: str = "python") -> dict:
+    # TODO: az do we need column_type as input? where is it used?
     values = json.loads(df.to_json(orient="split", default_handler=str))
 
+    # sample down
     if len(df) > INFER_TYPE_SAMPLE_SIZE:
         df = df.sample(INFER_TYPE_SAMPLE_SIZE)
 
-    columns = get_column_types(df, column_type)
+    # infer column types
+    columns = get_column_types(df)
     values["columns"] = columns
+    values["type"] = data_type
     return values
 
 
-def get_column_types(df, column_type: str):
+def get_column_types(df):
     columns = []
     for col, dtype in df.dtypes.items():
-        col_type = str(dtype).lower()
+        data_type = str(dtype).lower()
         columns.append(
             {
                 "name": col,
-                "column_type": column_type,
-                "data_type": str(dtype),
-                "display_type": detect_col_type(col_type, df[col]),
+                "data_type": data_type,
+                "display_type": detect_col_type(data_type, df[col]),
             }
         )
     return columns
