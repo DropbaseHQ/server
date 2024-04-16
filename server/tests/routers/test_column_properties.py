@@ -262,4 +262,4 @@ def test_column_properties(test_client, mocker, mock_db, get_column_properties_d
 
     # Assert
     assert res.status_code == 200
-    assert res_data["message"] == "Properties updated successfully"
+    assert res_data["message"] == "success"
