@@ -102,6 +102,8 @@ class CheckUserPermissions:
         self.resource = resource
 
     def _get_app_id(self, request: Request):
+        if self.resource == self.WORKSPACE:
+            return None
         app_name = request.path_params.get("app_name")
         if app_name is None:
             app_name = get_resource_id_from_req_body("app_name", request)
@@ -122,6 +124,7 @@ class CheckUserPermissions:
     def _get_resource_permissions(
         self, request: Request, user_id: str, workspace_id: str
     ):
+
         if self.resource == self.WORKSPACE:
             return permissions_registry.get_user_workspace_permissions(
                 user_id=user_id, workspace_id=workspace_id
@@ -216,7 +219,6 @@ class CheckUserPermissions:
         if self.resource is None:
             logger.warning("No resource provided. Workspace assumed.")
             self.resource = "workspace"
-
         user_permissions = self._get_resource_permissions(
             request=request, user_id=user_id, workspace_id=workspace_id
         )

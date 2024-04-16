@@ -5,7 +5,11 @@ from fastapi import APIRouter, BackgroundTasks, Depends, Response
 
 from dropbase.helpers.utils import get_table_data_fetcher
 from dropbase.schemas.files import DataFile
-from dropbase.schemas.query import RunSQLRequestTask, RunSQLStringRequest, RunSQLStringTask
+from dropbase.schemas.query import (
+    RunSQLRequestTask,
+    RunSQLStringRequest,
+    RunSQLStringTask,
+)
 from dropbase.schemas.run_python import QueryPythonRequest, RunPythonStringRequestNew
 from dropbase.schemas.table import FilterSort
 from server.auth.dependency import CheckUserPermissions
@@ -13,13 +17,18 @@ from server.controllers.properties import read_page_properties
 from server.controllers.python_docker import run_container
 from server.controllers.redis import r
 from server.controllers.run_sql import run_sql_query, run_sql_query_from_string
+from server.utils import get_permission_dependency_array
 
-router = APIRouter(prefix="/query", tags=["query"], responses={404: {"description": "Not found"}})
+router = APIRouter(
+    prefix="/query",
+    tags=["query"],
+    responses={404: {"description": "Not found"}},
+    dependencies=get_permission_dependency_array(action="use", resource="app"),
+)
 
 
 @router.post(
     "/sql_string/",
-    dependencies=[Depends(CheckUserPermissions(action="use", resource=CheckUserPermissions.APP))],
 )
 async def run_sql_from_string_req(
     request: RunSQLStringRequest, response: Response, background_tasks: BackgroundTasks
@@ -78,7 +87,9 @@ async def run_python_string_test(req: RunPythonStringRequestNew, response: Respo
 
 
 @router.post("/")
-async def run_query(req: QueryPythonRequest, response: Response, background_tasks: BackgroundTasks):
+async def run_query(
+    req: QueryPythonRequest, response: Response, background_tasks: BackgroundTasks
+):
     try:
         properties = read_page_properties(req.app_name, req.page_name)
         file = get_table_data_fetcher(properties["files"], req.fetcher)
@@ -100,7 +111,9 @@ async def run_query(req: QueryPythonRequest, response: Response, background_task
             args["file"] = file
             args["state"] = req.state
             filter_sort = (
-                req.filter_sort if req.filter_sort is not None else FilterSort(filters=[], sorts=[])
+                req.filter_sort
+                if req.filter_sort is not None
+                else FilterSort(filters=[], sorts=[])
             )
             args["filter_sort"] = filter_sort
             args["job_id"] = job_id

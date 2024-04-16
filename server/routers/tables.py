@@ -10,8 +10,11 @@ from server.controllers.columns import commit_table_columns
 from server.controllers.redis import r
 from server.controllers.tables import convert_sql_table
 from server.requests.dropbase_router import DropbaseRouter, get_dropbase_router
+from server.utils import get_permission_dependency_array
 
-router = APIRouter(prefix="/tables", tags=["tables"], responses={404: {"description": "Not found"}})
+router = APIRouter(
+    prefix="/tables", tags=["tables"], responses={404: {"description": "Not found"}}
+)
 
 
 def convert_sql_table_sync_wrapper(req, router):
@@ -47,7 +50,7 @@ async def convert_sql_table_req(
 
 @router.post(
     "/commit/",
-    dependencies=[Depends(CheckUserPermissions(action="edit", resource=CheckUserPermissions.APP))],
+    dependencies=get_permission_dependency_array(action="edit", resource="app"),
 )
 def commit_table_columns_req(req: CommitTableColumnsRequest, response: Response):
     try:

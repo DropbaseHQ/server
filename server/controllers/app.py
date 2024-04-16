@@ -35,8 +35,8 @@ def get_workspace_apps(router: DropbaseRouter):
                 "pages": pages,
             }
         )
-    # return response
-    return parse_apps_permissions(response, router)
+    return response
+    # return parse_apps_permissions(response, router)
 
 
 def parse_apps_permissions(app_list, router: DropbaseRouter):

@@ -10,15 +10,17 @@ from dropbase.schemas.workspace import (
 from server.controllers.app import get_workspace_apps
 from server.controllers.workspace import AppFolderController, WorkspaceFolderController
 from server.requests.dropbase_router import DropbaseRouter, get_dropbase_router
+from server.utils import get_permission_dependency_array
 
 router = APIRouter(
     prefix="/app", tags=["app"], responses={404: {"description": "Not found"}}
 )
 
 
-@router.post("/sync_app")
+@router.post("/sync_app", dependencies=get_permission_dependency_array("edit", "app"))
 def sync_app_req(
-    request: SyncAppRequest, router: DropbaseRouter = Depends(get_dropbase_router)
+    request: SyncAppRequest,
+    router: DropbaseRouter = Depends(get_dropbase_router),
 ):
     try:
         path_to_workspace = os.path.join(os.path.dirname(__file__), "../../workspace")
@@ -85,12 +87,12 @@ def sync_app_req(
         raise HTTPException(status_code=500, detail="Unable to sync app with Dropbase")
 
 
-@router.get("/list/")
+@router.get("/list/", dependencies=get_permission_dependency_array("use", "workspace"))
 def get_user_apps(router: DropbaseRouter = Depends(get_dropbase_router)):
     return get_workspace_apps(router=router)
 
 
-@router.post("/")
+@router.post("/", dependencies=get_permission_dependency_array("edit", "workspace"))
 def create_app_req(
     req: CreateAppRequest,
     router: DropbaseRouter = Depends(get_dropbase_router),
@@ -102,7 +104,7 @@ def create_app_req(
     return app_folder_controller.create_app(router=router, app_label=req.app_label)
 
 
-@router.put("/")
+@router.put("/", dependencies=get_permission_dependency_array("edit", "app"))
 def rename_app_req(req: RenameAppRequest):
     # assert page does not exist
     path_to_workspace = os.path.join(os.path.dirname(__file__), "../../workspace")
@@ -114,7 +116,9 @@ def rename_app_req(req: RenameAppRequest):
     )
 
 
-@router.delete("/{app_name}")
+@router.delete(
+    "/{app_name}", dependencies=get_permission_dependency_array("edit", "app")
+)
 def delete_app_req(
     app_name: str, router: DropbaseRouter = Depends(get_dropbase_router)
 ):
