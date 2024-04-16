@@ -3,7 +3,7 @@ import copy
 import pytest
 
 base_data = {
-    "app_name": "test9",
+    "app_name": "dropbase_test_app",
     "page_name": "page1",
     "properties": {
         "blocks": [
@@ -203,7 +203,7 @@ def get_column_properties_data(request, test_client):
             "column_name": "int",
             "configurations": {
                 "integer": {
-                    "config_type": "int",
+                    "config_type": "integer",
                 }
             },
         },
