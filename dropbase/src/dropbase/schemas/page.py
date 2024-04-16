@@ -1,4 +1,4 @@
-from typing import List, Union
+from typing import List, Optional, Union
 
 from pydantic import BaseModel
 
@@ -24,27 +24,31 @@ from dropbase.schemas.files import DataFile
 
 class WidgetProperties(WidgetDefinedProperty):
     components: List[
-        Union[
-            InputDefinedProperty,
-            SelectDefinedProperty,
-            TextDefinedProperty,
-            ButtonDefinedProperty,
-            BooleanDefinedProperty,
+        Optional[
+            Union[
+                InputDefinedProperty,
+                SelectDefinedProperty,
+                TextDefinedProperty,
+                ButtonDefinedProperty,
+                BooleanDefinedProperty,
+            ]
         ]
-    ]
+    ] = []
 
 
 class TableProperties(TableDefinedProperty):
     columns: List[
-        Union[
-            PgColumnDefinedProperty,
-            SnowflakeColumnDefinedProperty,
-            MySqlColumnDefinedProperty,
-            SqliteColumnDefinedProperty,
-            PyColumnDefinedProperty,
-            ButtonColumnDefinedProperty,
+        Optional[
+            Union[
+                PgColumnDefinedProperty,
+                SnowflakeColumnDefinedProperty,
+                MySqlColumnDefinedProperty,
+                SqliteColumnDefinedProperty,
+                PyColumnDefinedProperty,
+                ButtonColumnDefinedProperty,
+            ]
         ]
-    ]
+    ] = []
 
 
 class Properties(BaseModel):

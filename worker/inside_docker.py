@@ -1,9 +1,16 @@
 import os
 
+import pandas as pd
 import redis
 from dotenv import load_dotenv
 
+from dropbase.helpers.dataframe import to_dtable
+
 load_dotenv()
+
+
+pd.DataFrame.to_dtable = to_dtable
+
 
 if __name__ == "__main__":
 

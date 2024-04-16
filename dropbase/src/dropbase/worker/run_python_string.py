@@ -11,8 +11,6 @@ import astor
 import pandas as pd
 from dotenv import load_dotenv
 
-from dropbase.helpers.dataframe import convert_df_to_resp_obj
-
 load_dotenv()
 
 
@@ -34,22 +32,22 @@ def assign_last_expression(script: str) -> str:
     return astor.to_source(module)
 
 
-def write_file(file_code: str, test_code: str, state: dict, context: dict = {}, file_name: str = {}):
+# TODO: move to class method
+def write_file(
+    file_code: str, test_code: str, state: dict, app_name: str, page_name: str, file_name: str = {}
+):
+    # TODO: can pass empty context directly since Context model is loaded in most cases
     python_str = file_code
     # NOTE: not all user functions will have state and context, so wrapping in try-except
     python_str += f"""
+from dropbase.helpers.utils import get_empty_context
+
+# initiate state model
 state = {state}
-context = {context}
+state = State(**state)
 
-try:
-    state = State(**state)
-except:
-    pass
-
-try:
-    context = Context(**context)
-except:
-    pass
+# initiate empty context model
+context = get_empty_context(app_name = "{app_name}", page_name = "{page_name}")
 """
     python_str += test_code
 
@@ -72,7 +70,8 @@ def run(r, response):
 
     try:
         state = json.loads(os.getenv("state") or "{}")
-        context = json.loads(os.getenv("context") or "{}")
+        app_name = os.getenv("app_name")
+        page_name = os.getenv("page_name")
         file_code = os.getenv("file_code")
         test_code = os.getenv("test_code")
 
@@ -80,7 +79,7 @@ def run(r, response):
         test_code = assign_last_expression(test_code)
 
         # write exec file
-        write_file(file_code, test_code, state, context, file_name)
+        write_file(file_code, test_code, state, app_name, page_name, file_name)
 
         # import temp file
         module_name = file_name.split(".")[0]  # this gets you "temp_file"
@@ -92,7 +91,8 @@ def run(r, response):
             response["context"] = result.dict()
             response["type"] = "context"
         elif isinstance(result, pd.DataFrame):
-            result = convert_df_to_resp_obj(result, "python")
+
+            result = result.to_dtable()
             response["data"] = result["data"]
             response["columns"] = result["columns"]
             response["type"] = "table"
