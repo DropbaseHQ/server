@@ -7,7 +7,7 @@ from dropbase.models.category import PropertyCategory
 
 
 class ConfigTypeEnum(str, Enum):
-    INT = "int"
+    INT = "integer"
     FLOAT = "float"
     CURRENCY = "currency"
     WEIGHT = "weight"
@@ -56,15 +56,27 @@ class WeightType(BaseModel):
 
 class IntegerTypes(BaseModel):
     integer: Optional[IntType]
-    float: Optional[FloatType]
     currency: Optional[CurrencyType]
-    weight: Optional[WeightType]
+    # weight: Optional[WeightType]x
 
     @root_validator
     def check_at_least_one(cls, values):
         # at least one of the fields is not None
         if not any(values.values()):
             raise ValidationError("At least one field must be provided.", IntegerTypes)
+        return values
+
+
+class FloatTypes(BaseModel):
+    float: Optional[FloatType]
+    currency: Optional[CurrencyType]
+    # weight: Optional[WeightType]x
+
+    @root_validator
+    def check_at_least_one(cls, values):
+        # at least one of the fields is not None
+        if not any(values.values()):
+            raise ValidationError("At least one field must be provided.", FloatTypes)
         return values
 
 
@@ -88,7 +100,7 @@ class TextTypes(BaseModel):
     def check_at_least_one(cls, values):
         # at least one of the fields is not None
         if not any(values.values()):
-            raise ValidationError("At least one field must be provided.", IntegerTypes)
+            raise ValidationError("At least one field must be provided.", TextTypes)
         return values
 
 
@@ -106,12 +118,13 @@ class ArrayTypes(BaseModel):
     def check_at_least_one(cls, values):
         # at least one of the fields is not None
         if not any(values.values()):
-            raise ValidationError("At least one field must be provided.", IntegerTypes)
+            raise ValidationError("At least one field must be provided.", ArrayTypes)
         return values
 
 
 class DisplayTypeConfigurations(BaseModel):
     integer: Optional[IntegerTypes]
+    float: Optional[FloatTypes]
     text: Optional[TextTypes]
     array: Optional[ArrayTypes]
 
@@ -143,8 +156,8 @@ class BaseColumnDefinedProperty(BaseModel):
     data_type: Annotated[Optional[str], PropertyCategory.default]
     display_type: Annotated[Optional[DisplayType], PropertyCategory.default]
     configurations: Annotated[
-        Optional[Union[IntegerTypes, TextTypes, ArrayTypes]],
-        PropertyCategory.default,  # ERROR!!! TextTypes is TAKEN AS Integer Types use ENUM
+        Optional[Union[IntegerTypes, FloatTypes, TextTypes, ArrayTypes]],
+        PropertyCategory.default,
     ]
 
 
