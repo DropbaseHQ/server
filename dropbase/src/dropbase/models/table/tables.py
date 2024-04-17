@@ -1,4 +1,4 @@
-from typing import Annotated, Any, List, Literal, Optional
+from typing import Annotated, Any, Dict, List, Literal, Optional, Union
 
 from pydantic import BaseModel
 
@@ -48,7 +48,7 @@ class TableDefinedProperty(BaseModel):
     description: Annotated[Optional[str], PropertyCategory.default]
 
     # data fetcher
-    fetcher: Annotated[Optional[str], PropertyCategory.default]
+    fetcher: Annotated[Optional[Union[str, Dict]], PropertyCategory.default]
     widget: Annotated[Optional[str], PropertyCategory.default]
 
     # settings

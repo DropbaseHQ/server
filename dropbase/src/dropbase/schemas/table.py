@@ -1,4 +1,4 @@
-from typing import Any, List, Literal, Optional
+from typing import Any, Dict, List, Literal, Optional, Union
 
 from pydantic import BaseModel, Field
 
@@ -31,7 +31,7 @@ class FilterSort(BaseModel):
 class TableBase(BaseModel):
     name: str
     type: Optional[str]
-    fetcher: Optional[str]
+    fetcher: Optional[Union[str, Dict]]
 
 
 class ConvertTableRequest(BaseModel):
