@@ -30,19 +30,9 @@ class AuthRouter:
             headers={"Authorization": f"Bearer {access_token}"},
         )
 
-    def check_permissions(self, app_id: str, access_token: str):
-        return self.session.post(
-            "check_permission",
-            headers={"Authorization": f"Bearer {access_token}"},
-            json={"app_id": app_id},
-        )
-
     @cached(cache=cache, key=mykey)
     def check_apps_permissions(self, app_ids: str):
         return self.session.post(
             "check_apps_permissions",
             json={"app_ids": app_ids},
         )
-
-    def get_worker_workspace(self):
-        return self.session.get("worker_workspace")

@@ -12,7 +12,6 @@ from dropbase.schemas.query import (
 )
 from dropbase.schemas.run_python import QueryPythonRequest, RunPythonStringRequestNew
 from dropbase.schemas.table import FilterSort
-from server.auth.dependency import CheckUserPermissions
 from server.controllers.properties import read_page_properties
 from server.controllers.python_docker import run_container
 from server.controllers.redis import r
