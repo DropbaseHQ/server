@@ -36,7 +36,7 @@ class FileController:
         if os.path.isdir(self.page_dir_path_backup):
             shutil.rmtree(self.page_dir_path_backup)
 
-    def get_all_files(self):
+    def get_all_files(self, python: bool = True, sql: bool = True):
         try:
             if not (
                 re.match(FILE_NAME_REGEX, self.app_name) and re.match(FILE_NAME_REGEX, self.page_name)
@@ -49,6 +49,11 @@ class FileController:
             py_files = glob.glob(os.path.join(dir_path, "*.py"))
             py_files = [file for file in py_files if not file.endswith("__init__.py")]
             sql_files = glob.glob(os.path.join(dir_path, "*.sql"))
+
+            if python and not sql:
+                return {"files": py_files}
+            if sql and not python:
+                return {"files": sql_files}
             return {"files": py_files + sql_files}
         except HTTPException as e:
             self._revert_backup()
@@ -82,10 +87,10 @@ class FileController:
             self._delete_backup()
 
     def get_functions(self):
-        files_data = self.get_python_files()  # files are a list of strings
-        files = files_data["files"]
         functions = []
-        for file in files:
+        python_data = self.get_all_files(sql=False)  # files are a list of strings
+        python_files = python_data["files"]
+        for file in python_files:
             file_name = file.split("/")[-1].split(".")[0]
             with open(file, "r") as source_file:
                 source_code = source_file.read()
@@ -106,6 +111,12 @@ class FileController:
 
                     if has_state_and_context and returns_context:
                         functions.append({"value": node.name, "type": "function", "file": file_name})
+
+        sql_data = self.get_all_files(python=False)
+        sql_files = sql_data["files"]
+        for file in sql_files:
+            file_name = file.split("/")[-1].split(".")[0]
+            functions.append({"value": file_name, "type": "sql"})
         return functions
 
     def create_file(self, req: CreateFile):

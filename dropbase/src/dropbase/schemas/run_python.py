@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Dict, Optional, Union
 
 from pydantic import BaseModel
 
@@ -25,6 +25,6 @@ class QueryPythonRequest(BaseModel):
     app_name: str
     page_name: str
     table_name: str
-    fetcher: str
+    fetcher: Union[str, Dict]
     filter_sort: Optional[FilterSort]
     state: dict
