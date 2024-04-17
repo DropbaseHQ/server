@@ -48,7 +48,7 @@ class TableDefinedProperty(BaseModel):
     description: Annotated[Optional[str], PropertyCategory.default]
 
     # data fetcher
-    data: Annotated[Optional[str], PropertyCategory.default]
+    fetcher: Annotated[Optional[str], PropertyCategory.default]
     widget: Annotated[Optional[str], PropertyCategory.default]
 
     # settings
