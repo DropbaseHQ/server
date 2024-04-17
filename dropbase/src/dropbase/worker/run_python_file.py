@@ -61,9 +61,9 @@ def run(r, response):
         state, context = get_state_empty_context(app_name, page_name, state)
 
         # run python script and get result
-        function_name = get_function_by_name(app_name, page_name, file.get("name"))
+        file_name = get_function_by_name(app_name, page_name, file.get("name"), file.get("function"))
         args = {"state": state, "context": context}
-        context = function_name(**args)
+        context = file_name(**args)
 
         response["type"] = "context"
         response["context"] = context.dict()

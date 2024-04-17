@@ -23,7 +23,11 @@ router = APIRouter(
 async def run_function_req(req: RunFunction, response: Response):
     try:
         properties = read_page_properties(req.app_name, req.page_name)
-        file = get_table_data_fetcher(properties["files"], req.function_name)
+        file = get_table_data_fetcher(properties["files"], req.file_name)
+
+        if req.function_name:
+            file["function"] = req.function_name
+
         if file is None:
             raise HTTPException(status_code=404, detail="Function not found")
 
