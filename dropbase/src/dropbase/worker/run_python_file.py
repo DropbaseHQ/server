@@ -7,16 +7,9 @@ from dotenv import load_dotenv
 
 from dropbase.helpers.dataframe import convert_df_to_resp_obj
 from dropbase.helpers.display_rules import run_display_rule
-from dropbase.helpers.utils import get_state_empty_context
+from dropbase.helpers.utils import get_function_by_name, get_state_empty_context
 
 load_dotenv()
-
-
-def get_function_by_name(app_name: str, page_name: str, function_name: str):
-    file_module = f"workspace.{app_name}.{page_name}.scripts.{function_name}"
-    scripts = importlib.import_module(file_module)
-    function = getattr(scripts, function_name)
-    return function
 
 
 def get_state(app_name: str, page_name: str, class_dict: dict, class_name: str = "State"):
@@ -30,7 +23,7 @@ def get_state(app_name: str, page_name: str, class_dict: dict, class_name: str =
 def run_python_data_fetcher(app_name: str, page_name: str, file: dict, state: dict):
     state = get_state(app_name, page_name, state, "State")
     args = {"state": state}
-    function_name = get_function_by_name(app_name, page_name, file.get("name"))
+    function_name = get_function_by_name(app_name, page_name, file.get("name"), file.get("function"))
     # call function
     df = function_name(**args)
     return convert_df_to_resp_obj(df, "python")
@@ -41,7 +34,7 @@ def run_python_ui(app_name: str, page_name: str, file: dict, state: dict, contex
     state = get_state(app_name, page_name, state, "State")
     context = get_state(app_name, page_name, context, "Context")
     args = {"state": state, "context": context}
-    function_name = get_function_by_name(app_name, page_name, file.get("name"))
+    function_name = get_function_by_name(app_name, page_name, file.get("name"), file.get("function"))
     # call function
     context = function_name(**args)
     context = run_display_rule(app_name, page_name, state, context)
