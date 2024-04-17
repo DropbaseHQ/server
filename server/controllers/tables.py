@@ -37,7 +37,7 @@ def convert_sql_table(req: ConvertTableRequest, router: DropbaseRouter, job_id):
     try:
         # get db schema
         properties = read_page_properties(req.app_name, req.page_name)
-        file = get_table_data_fetcher(properties["files"], req.table.fetcher)
+        file = get_table_data_fetcher(properties["files"], req.table.fetcher["value"])
         file = DataFile(**file)
 
         user_db = connect(file.source)
