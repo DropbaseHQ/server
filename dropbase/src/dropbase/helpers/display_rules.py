@@ -1,4 +1,5 @@
 import ast
+import json
 import logging
 from datetime import datetime
 from functools import reduce
@@ -8,7 +9,6 @@ from dateutil.parser import parse
 
 from dropbase.helpers.utils import get_state_empty_context
 from dropbase.schemas.display_rules import DisplayRules
-from server.controllers.properties import read_page_properties
 
 logger = logging.getLogger(__name__)
 
@@ -195,7 +195,11 @@ def get_display_rules_from_comp_props(component_props):
 def run_display_rule(app_name: str, page_name: str, state: dict):
     try:
         state, context = get_state_empty_context(app_name=app_name, page_name=page_name, state=state)
-        properties = read_page_properties(app_name, page_name)
+
+        path = f"workspace/{app_name}/{page_name}/properties.json"
+        with open(path, "r") as f:
+            properties = json.loads(f.read())
+
         block_properties = properties.get("blocks")
         display_rules = get_display_rules_from_comp_props(block_properties)
 

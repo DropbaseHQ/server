@@ -1,4 +1,5 @@
 import importlib
+import json
 import re
 from pathlib import Path
 
@@ -57,6 +58,12 @@ def process_query_result(res) -> pd.DataFrame:
     df = pd.DataFrame(res)
     df = clean_df(df)
     return df
+
+
+def read_page_properties(app_name: str, page_name: str):
+    path = f"/workspace/{app_name}/{page_name}/properties.json"
+    with open(path, "r") as f:
+        return json.loads(f.read())
 
 
 def get_function_by_name(

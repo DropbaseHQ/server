@@ -2,6 +2,7 @@ import time
 
 from fastapi import HTTPException
 
+from dropbase.helpers.display_rules import run_display_rule
 from dropbase.helpers.utils import (
     _dict_from_pydantic_model,
     get_empty_context,
@@ -9,7 +10,6 @@ from dropbase.helpers.utils import (
     validate_column_name,
 )
 from dropbase.schemas.page import PageProperties
-from server.controllers.display_rules import run_display_rule
 from server.controllers.properties import read_page_properties, update_properties
 
 

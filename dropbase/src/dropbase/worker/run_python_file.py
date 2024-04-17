@@ -1,12 +1,51 @@
+import importlib
 import json
 import os
 import traceback
 
 from dotenv import load_dotenv
 
-from dropbase.helpers.utils import get_function_by_name, get_state_empty_context
+from dropbase.helpers.dataframe import convert_df_to_resp_obj
+from dropbase.helpers.display_rules import run_display_rule
+from dropbase.helpers.utils import get_state_empty_context
 
 load_dotenv()
+
+
+def get_function_by_name(app_name: str, page_name: str, function_name: str):
+    file_module = f"workspace.{app_name}.{page_name}.scripts.{function_name}"
+    scripts = importlib.import_module(file_module)
+    function = getattr(scripts, function_name)
+    return function
+
+
+def get_state(app_name: str, page_name: str, class_dict: dict, class_name: str = "State"):
+    page_module = f"workspace.{app_name}.{page_name}"
+    page = importlib.import_module(page_module)
+    ClassName = getattr(page, class_name)
+    return ClassName(**class_dict)
+
+
+# run data fetcher code
+def run_python_data_fetcher(app_name: str, page_name: str, file: dict, state: dict):
+    state = get_state(app_name, page_name, state, "State")
+    args = {"state": state}
+    function_name = get_function_by_name(app_name, page_name, file.get("name"))
+    # call function
+    df = function_name(**args)
+    return convert_df_to_resp_obj(df, "python")
+
+
+# for ui functions
+def run_python_ui(app_name: str, page_name: str, file: dict, state: dict, context: dict):
+    state = get_state(app_name, page_name, state, "State")
+    context = get_state(app_name, page_name, context, "Context")
+    args = {"state": state, "context": context}
+    function_name = get_function_by_name(app_name, page_name, file.get("name"))
+    # call function
+    context = function_name(**args)
+    context = run_display_rule(app_name, page_name, state, context)
+    return context.dict()
 
 
 def run(r, response):

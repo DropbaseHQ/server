@@ -3,6 +3,6 @@
 # boto3==1.34.36
 # thefuzz==0.22.1
 # stripe==8.3.0
-Django==5.0.2
-django-grappelli==3.0.8
-djangorestframework==3.14.0
+# Django==5.0.2
+# django-grappelli==3.0.8
+# djangorestframework==3.14.0
