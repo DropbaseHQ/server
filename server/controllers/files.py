@@ -87,10 +87,9 @@ class FileController:
             self._delete_backup()
 
     def get_functions(self):
-        python_data = self.get_all_files(sql=False)  # files are a list of strings
-
-        python_files = python_data["files"]
         functions = []
+        python_data = self.get_all_files(sql=False)  # files are a list of strings
+        python_files = python_data["files"]
         for file in python_files:
             file_name = file.split("/")[-1].split(".")[0]
             with open(file, "r") as source_file:
