@@ -1,6 +1,7 @@
 from typing import Annotated, Any, Dict, List, Literal, Optional, Union
 
 from pydantic import BaseModel
+from pydantic.main import ModelMetaclass
 
 from dropbase.models.category import PropertyCategory
 
@@ -39,6 +40,7 @@ class TableContextProperty(BaseModel):
     message: Optional[str]
     message_type: Optional[str]
     reload: Annotated[Optional[bool], PropertyCategory.other] = False
+    # columns: Annotated[Optional[dict], PropertyCategory.other] = {}
 
 
 class TableDefinedProperty(BaseModel):
@@ -71,3 +73,5 @@ class TableDefinedProperty(BaseModel):
 
     type: Optional[Literal["python", "sql"]] = "sql"
     smart: Optional[bool] = False
+    columns: Optional[List] = []
+    context: ModelMetaclass = TableContextProperty

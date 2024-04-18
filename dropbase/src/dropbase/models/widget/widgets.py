@@ -1,6 +1,7 @@
 from typing import Annotated, Literal, Optional
 
 from pydantic import BaseModel
+from pydantic.main import ModelMetaclass
 
 from dropbase.models.category import PropertyCategory
 
@@ -8,6 +9,7 @@ from dropbase.models.category import PropertyCategory
 class WidgetContextProperty(BaseModel):
     message: Optional[str]
     message_type: Optional[str]
+    components: Optional[dict] = {}
 
 
 class WidgetDefinedProperty(BaseModel):
@@ -17,3 +19,5 @@ class WidgetDefinedProperty(BaseModel):
     description: Annotated[Optional[str], PropertyCategory.default]
     type: Annotated[Literal["base", "modal", "inline"], PropertyCategory.default] = "base"
     in_menu: Annotated[bool, PropertyCategory.default] = True
+    context: ModelMetaclass = WidgetContextProperty
+    components: Annotated[Optional[list], PropertyCategory.default] = []

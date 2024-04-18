@@ -1,6 +1,7 @@
 from typing import Annotated, Any, List, Literal, Optional
 
 from pydantic import BaseModel
+from pydantic.main import ModelMetaclass
 
 from dropbase.models.category import PropertyCategory
 from dropbase.models.common import ComponentDisplayProperties, OnEvent
@@ -27,7 +28,8 @@ class InputDefinedProperty(BaseModel):
     on_submit: Annotated[Optional[OnEvent], PropertyCategory.events]
 
     # internal
-    component_type: Literal["input"]
+    component_type: Literal["input"] = "input"
+    context: ModelMetaclass = InputContextProperty
 
     def __init__(self, **data):
         data.setdefault("data_type", "text")
