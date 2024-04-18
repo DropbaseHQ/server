@@ -48,6 +48,11 @@ app.add_middleware(
 
 # static file server for lsp
 app.mount("/workspace", NoCacheStaticFiles(directory="workspace"), name="workspace")
+
+if find_spec("server.auth"):
+    from server.auth.endpoints import premium_router
+
+    app.include_router(premium_router)
 # routes for resources
 app.include_router(routers.query_router)
 app.include_router(routers.function_router)
@@ -61,11 +66,6 @@ app.include_router(routers.health_router)
 app.include_router(routers.page_router)
 app.include_router(routers.websocket_router)
 app.include_router(routers.workspace_router)
-
-if find_spec("server.auth"):
-    from server.auth.endpoints import premium_router
-
-    app.include_router(premium_router)
 
 
 page_logger = logging.getLogger(__name__)

@@ -36,7 +36,7 @@ router = APIRouter(prefix="/user", tags=["user"])
 
 @router.get("/workspaces")
 def get_user_worpsaces(
-    db: Session = Depends(get_db), user: Any = Depends(get_current_user)
+    db: Session = Depends(get_db), user: User = Depends(get_current_user)
 ):
     return user_controller.get_user_workspaces(db, user_id=user.id)
 

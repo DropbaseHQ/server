@@ -9,7 +9,7 @@ from dropbase.schemas.page import PageProperties
 from server.controllers.properties import read_page_properties, update_properties
 
 
-def get_state_context(app_name, page_name, permissions):
+def get_state_context(app_name, page_name, permissions=None):
     try:
         state_context = get_page_state_context(app_name, page_name)
         state_context["properties"] = read_page_properties(app_name, page_name)
@@ -89,7 +89,9 @@ def get_page_state_context(app_name: str, page_name: str):
 def _dict_from_pydantic_model(model):
     data = {}
     for name, field in model.__fields__.items():
-        if isinstance(field.outer_type_, type) and issubclass(field.outer_type_, BaseModel):
+        if isinstance(field.outer_type_, type) and issubclass(
+            field.outer_type_, BaseModel
+        ):
             data[name] = _dict_from_pydantic_model(field.outer_type_)
         else:
             data[name] = field.default

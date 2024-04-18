@@ -88,8 +88,8 @@ def sync_app_req(
 
 
 @router.get("/list/", dependencies=get_permission_dependency_array("use", "workspace"))
-def get_user_apps(router: DropbaseRouter = Depends(get_dropbase_router)):
-    return get_workspace_apps(router=router)
+def get_user_apps():
+    return get_workspace_apps().get("apps")
 
 
 @router.post("/", dependencies=get_permission_dependency_array("edit", "workspace"))

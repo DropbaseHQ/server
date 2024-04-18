@@ -416,22 +416,13 @@ def delete_user(db: Session, user_id: UUID):
 
 
 def check_permissions(
-    db: Session, user: User, request: CheckPermissionRequest, workspace: Workspace
+    db: Session, user: User, request: CheckPermissionRequest, workspace_id: UUID
 ):
-    workspace_id = None
     app_id = request.app_id
-    if request.app_id:
-        app = crud.app.get(db=db, id=request.app_id)
-        if app.workspace_id:
-            workspace_id = app.workspace_id
-    else:
-        # Workspace_from_token
-        workspace_id = workspace.id
 
     permissions_dict = get_all_action_permissions(
         db, str(user.id), workspace_id, app_id
     )
-    print("permissions_dict", permissions_dict)
     return permissions_dict
 
 

@@ -10,6 +10,7 @@ from ..models import User
 from ..authentication import get_current_user
 from ..connect import get_db
 from ..permissions.casbin_utils import enforce_action
+from ..controllers import user as user_controller
 
 logger = logging.getLogger(__name__)
 
@@ -78,6 +79,7 @@ class AuthZDepFactory:
         if request.headers.get("content-type") == "application/json":
             body = asyncio.run(request.json())
             return body.get(resource_id_accessor)
+
         return None
 
     @staticmethod
@@ -152,6 +154,8 @@ class AuthZDepFactory:
             resource_workspace_id = self._get_resource_workspace_id(
                 db, resource_id, resource_type
             )
+        if request.headers.get("workspace-id"):
+            resource_workspace_id = request.headers.get("workspace-id")
 
         if resource_workspace_id is None:
             raise HTTPException(
@@ -228,5 +232,8 @@ class AuthZDepFactory:
 
             if not is_authorized:
                 self._raise_forbidden(user, resource_id)
+            return user_controller.check_permissions(
+                db=db, user=user, request=request, workspace_id=workspace_id
+            )
 
         return verify_user_can_act_on_resource

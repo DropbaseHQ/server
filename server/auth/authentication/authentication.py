@@ -2,6 +2,7 @@ import logging
 from fastapi import Depends, HTTPException, status, Request
 from fastapi_jwt_auth import AuthJWT
 from fastapi_jwt_auth.exceptions import JWTDecodeError
+from jwt.exceptions import InvalidSignatureError
 from passlib.context import CryptContext
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
@@ -15,13 +16,6 @@ logger = logging.getLogger(__name__)
 
 class Settings(BaseModel):
     authjwt_secret_key: str = "secret"
-    # Configure application to store and get JWT from cookies
-    # Disable CSRF Protection for this example. default is True
-    # authjwt_cookie_csrf_protect: bool = False
-    # authjwt_cookie_secure: bool = True
-    # authjwt_cookie_samesite: str = "none"
-    # authjwt_cookie_max_age: int = 60 * 60 * 24 * 7  # 7 days
-    # authjwt_cookie_domain: str = None if ENVIRONMENT == "local" else ".dropbase.io"
 
 
 @AuthJWT.load_config
@@ -41,6 +35,12 @@ def get_current_user(db: Session = Depends(get_db), Authorize: AuthJWT = Depends
                 detail="Signature has expired",
                 headers={"WWW-Authenticate": "Bearer"},
             )
+    except InvalidSignatureError as e:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid token",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
 
 
 # to get a string like this run:

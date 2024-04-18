@@ -8,8 +8,11 @@ from ..controllers.policy import (
 from ..permissions.casbin_utils import get_all_action_permissions
 from .. import crud
 from ..schemas import AppShareRequest
-
+from ..controllers.app import filter_apps
+from ..models import User
+from ..authorization import get_current_user
 from ..connect import get_db
+from server.controllers import app as app_controller
 
 router = APIRouter(prefix="/app", tags=["app"])
 
@@ -97,3 +100,12 @@ def get_app_access(app_id: UUID, db: Session = Depends(get_db)):
         "users": users_permissions,
         "groups": groups_permissions,
     }
+
+
+# Overrides the base default list endpoint
+@router.get("/list/")
+def get_apps(db: Session = Depends(get_db), user: User = Depends(get_current_user)):
+    response = app_controller.get_workspace_apps()
+    all_apps = response.get("apps")
+    workspace_id = response.get("workspace_id")
+    return filter_apps(db=db, apps=all_apps, workspace_id=workspace_id, user_id=user.id)
