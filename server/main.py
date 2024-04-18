@@ -1,7 +1,6 @@
 import asyncio
 import logging
 
-import requests
 from importlib.util import find_spec
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -78,13 +77,14 @@ async def websocket_disconnect_exception_handler(request, exc):
 
 # send health report to dropbase server
 async def send_report_continuously():
-    while True:
-        worker_status_url = (
-            DROPBASE_API_URL
-            + f"/worker/worker_status/{DROPBASE_TOKEN}/{WORKER_VERSION}"
-        )
-        requests.get(worker_status_url)
-        await asyncio.sleep(300)
+    # while True:
+    #     worker_status_url = (
+    #         DROPBASE_API_URL
+    #         + f"/worker/worker_status/{DROPBASE_TOKEN}/{WORKER_VERSION}"
+    #     )
+    #     requests.get(worker_status_url)
+    #     await asyncio.sleep(300)
+    pass
 
 
 @app.on_event("startup")

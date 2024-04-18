@@ -55,5 +55,4 @@ def get_st_cntxt(
         request=CheckPermissionRequest(app_id=app_id),
         workspace_id=request.headers.get("workspace-id"),
     )
-    print("permissions", permissions)
     return get_state_context(app_name, page_name, permissions.get("app_permissions"))

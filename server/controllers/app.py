@@ -8,7 +8,6 @@ from server.controllers.workspace import (
     WorkspaceFolderController,
 )
 from server.requests.dropbase_router import DropbaseRouter
-from server.utils import get_parsed_apps
 
 
 def get_workspace_apps():
