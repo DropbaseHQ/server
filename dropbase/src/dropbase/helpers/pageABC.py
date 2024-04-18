@@ -1,4 +1,5 @@
 import ast
+import importlib
 import subprocess
 from abc import ABC
 from pathlib import Path
@@ -8,25 +9,32 @@ import pandas as pd
 from datamodel_code_generator import generate
 from pydantic import Field, create_model
 
-from context import Context
 from dropbase.helpers.dataframe import to_dtable
+from dropbase.helpers.utils import get_state_context
 from dropbase.models.common import BaseContext
 from dropbase.models.table import TableDefinedProperty
 from dropbase.models.widget import WidgetDefinedProperty
-from page import PageProperties
-from state import State
 
 pd.DataFrame.to_dtable = to_dtable
 
 
 class PageABC(ABC):
-    def __init__(self, state: State, context: Context, page: PageProperties):
-        self.state = State(**state)
-        self.context = Context(**context)
+    def __init__(self, app_name: str, page_name: str, state: dict, context: dict, page: dict):
+        # get state and context
+        state, context = get_state_context(app_name, page_name, state, context)
+        module_path = f"workspace.{app_name}.{page_name}.schema"
+        module = importlib.import_module(module_path)
+        PageProperties = getattr(module, "PageProperties")
+
+        # set state and context
+        self.app_name = app_name
+        self.page_name = page_name
+        self.state = state
+        self.context = context
         self.page = PageProperties(**page)
 
     # generic methods used by dropbase
-    def get_table_data(self, table_name: str) -> Context:
+    def get_table_data(self, table_name: str):
         self.context.__getattribute__(table_name).data = getattr(self, f"get_{table_name}")().to_dtable()
         return self.context
 
@@ -46,57 +54,68 @@ class PageABC(ABC):
 
     def save_table_columns(self, table_name: str):
         # get table data
-        # data = self.get_table_data(table_name)
         data = getattr(self, f"get_{table_name}")().to_dtable()
         columns = data.get("columns")
         data_type = data.get("type")
+
         # update page properties file
-        update_table_columns(table_name, columns, data_type)
+        self.update_table_columns(table_name, columns, data_type)
+
+        # reload page
+        module = importlib.import_module("workspace.class_2.page1.properties")
+        page = getattr(module, "page")
+        self.page = page
 
         # generate new state and context files
-        compose_state_context_models()
+        compose_state_context_models(self.app_name, self.page_name, page)
         # maybe? generate new page class
 
+    def update_table_columns(self, table_name: str, columns: str, data_type: str):
+        columns_type = data_type_column_mapper.get(data_type)
+        filepath = f"workspace/{self.app_name}/{self.page_name}/properties.py"
+        with open(filepath, "r") as file:
+            script = file.read()
 
-def update_table_columns(table_name, columns, data_type, filepath="page.py"):
-    with open(filepath, "r") as file:
-        script = file.read()
+        parsed_code = ast.parse(script)
 
-    parsed_code = ast.parse(script)
+        for node in ast.walk(parsed_code):
+            if isinstance(node, ast.Assign):
+                name = node.targets[0].id
+                if name == table_name:
+                    call_node = node.value
+                    columns_node = None
+                    for keyword in call_node.keywords:
+                        if keyword.arg == "columns":
+                            columns_node = keyword
+                            break
+                    if columns_node is None:
+                        # Add columns keyword if it doesn't exist
+                        columns_node = ast.keyword(arg="columns", value=ast.List(elts=[]))
+                        call_node.keywords.append(columns_node)
 
-    for node in ast.walk(parsed_code):
-        if isinstance(node, ast.Assign):
-            name = node.targets[0].id
-            if name == table_name:
-                call_node = node.value
-                columns_node = None
-                for keyword in call_node.keywords:
-                    if keyword.arg == "columns":
-                        columns_node = keyword
-                        break
-                if columns_node is None:
-                    # Add columns keyword if it doesn't exist
-                    columns_node = ast.keyword(arg="columns", value=ast.List(elts=[]))
-                    call_node.keywords.append(columns_node)
+                    columns_node.value.elts = [
+                        ast.Call(
+                            func=ast.Name(id=columns_type, ctx=ast.Load()),
+                            args=[],
+                            keywords=[
+                                ast.keyword(arg=k, value=ast.Constant(value=v))
+                                for k, v in column.items()
+                            ],
+                        )
+                        for column in columns
+                    ]
 
-                columns_node.value.elts = [
-                    ast.Call(
-                        func=ast.Name(id="PyColumnDefinedProperty", ctx=ast.Load()),
-                        args=[],
-                        keywords=[
-                            ast.keyword(arg=k, value=ast.Constant(value=v)) for k, v in column.items()
-                        ],
-                    )
-                    for column in columns
-                ]
+        # convert back to python code
+        python_str = astor.to_source(parsed_code)
+        # write to a new file
+        with open(filepath, "w") as f:
+            f.write(python_str)
+        # format with black
+        subprocess.run(["black", filepath], check=True)
 
-    # convert back to python code
-    python_str = astor.to_source(parsed_code)
-    # write to a new file
-    with open(filepath, "w") as f:
-        f.write(python_str)
-    # format with black
-    subprocess.run(["black", filepath], check=True)
+
+# TODO: move to utils
+data_type_column_mapper = {"python": "PyColumnDefinedProperty"}
 
 
 def generate_context_model(page):
@@ -204,19 +223,20 @@ def compose_state_model(page):
     return create_model("State", **state)
 
 
-def compose_state_context_models():
-    from page import page
+def compose_state_context_models(app_name: str, page_name: str, page):
+
+    page_dir_path = f"workspace/{app_name}/{page_name}"
 
     Context = generate_context_model(page)
     State = compose_state_model(page)
     generate(
         input_=Context.schema_json(indent=2),
         input_file_type="json",
-        output=Path("context.py"),
+        output=Path(page_dir_path + "/context.py"),
     )
 
     generate(
         input_=State.schema_json(indent=2),
         input_file_type="json",
-        output=Path("state.py"),
+        output=Path(page_dir_path + "/state.py"),
     )

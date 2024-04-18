@@ -15,6 +15,7 @@ htmlcov
 .venv
 *node_modules/
 notebooks/
+backups/
 
 proxy/frpc
 workspace/*
