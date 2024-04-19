@@ -418,7 +418,9 @@ def delete_user(db: Session, user_id: UUID):
 def check_permissions(
     db: Session, user: User, request: CheckPermissionRequest, workspace_id: UUID
 ):
-    app_id = request.app_id
+    app_id = None
+    if hasattr(request, "app_id"):
+        app_id = request.app_id
 
     permissions_dict = get_all_action_permissions(
         db, str(user.id), workspace_id, app_id

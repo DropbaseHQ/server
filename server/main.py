@@ -6,7 +6,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from starlette.websockets import WebSocketDisconnect
-
+from server.utils import auth_module_is_installed
 from server import routers
 from server.constants import (
     CORS_ORIGINS,
@@ -48,7 +48,7 @@ app.add_middleware(
 # static file server for lsp
 app.mount("/workspace", NoCacheStaticFiles(directory="workspace"), name="workspace")
 
-if find_spec("server.auth"):
+if auth_module_is_installed:
     from server.auth.endpoints import premium_router
 
     app.include_router(premium_router)
