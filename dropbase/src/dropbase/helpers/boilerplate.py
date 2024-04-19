@@ -110,3 +110,15 @@ for importer, modname, ispkg in pkgutil.iter_modules([os.path.dirname(__file__)]
 page_init_boilerplate = """from .context import Context
 from .state import State
 """
+
+
+properties_json_boilerplate = """{
+    "table1":{
+        "name":"table1",
+        "label":"Table 1"
+    },
+    "widget1": {
+        "name": "widget1",
+        "label": "Widget 1"
+    }
+}"""
