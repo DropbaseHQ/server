@@ -1,33 +1,30 @@
-from typing import Any, Dict, Optional
+from typing import Dict, Optional, Union
 
 from pydantic import BaseModel
 
 from dropbase.schemas.table import FilterSort
 
 
-class QueryTablePayload(BaseModel):
-    context: Dict[str, Any]
-    state: Dict[str, Any]
-
-
 class RunPythonStringRequest(BaseModel):
     app_name: str
     page_name: str
     python_string: str
-    payload: QueryTablePayload
+    state: dict
     file: dict
 
 
 class RunPythonStringRequestNew(BaseModel):
+    app_name: str
+    page_name: str
     file_code: str
     test_code: str
     state: dict
-    context: dict
 
 
 class QueryPythonRequest(BaseModel):
     app_name: str
     page_name: str
-    fetcher: str
+    table_name: str
+    fetcher: Union[str, Dict]
     filter_sort: Optional[FilterSort]
     state: dict

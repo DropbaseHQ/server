@@ -5,7 +5,6 @@ from dropbase.helpers.utils import get_table_data_fetcher
 from dropbase.schemas.files import DataFile
 from dropbase.schemas.table import ConvertTableRequest
 from server.controllers.connect import connect
-from server.controllers.page import get_page_state_context
 from server.controllers.properties import read_page_properties, update_properties
 from server.controllers.redis import r
 from server.controllers.run_sql import get_sql_from_file, render_sql
@@ -38,7 +37,7 @@ def convert_sql_table(req: ConvertTableRequest, router: DropbaseRouter, job_id):
     try:
         # get db schema
         properties = read_page_properties(req.app_name, req.page_name)
-        file = get_table_data_fetcher(properties["files"], req.table.fetcher)
+        file = get_table_data_fetcher(properties["files"], req.table.fetcher["value"])
         file = DataFile(**file)
 
         user_db = connect(file.source)
@@ -93,10 +92,8 @@ def convert_sql_table(req: ConvertTableRequest, router: DropbaseRouter, job_id):
         update_properties(req.app_name, req.page_name, properties)
 
         r.set(job_id, json.dumps(response))
-
         response["status_code"] = 200
-
-        return get_page_state_context(req.app_name, req.page_name)
+        return response
 
     except Exception as e:
         response["message"] = str(e)

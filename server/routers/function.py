@@ -1,11 +1,12 @@
 import json
 import uuid
 
-from fastapi import APIRouter, Response
+from fastapi import APIRouter, HTTPException, Response
 
 from dropbase.helpers.utils import get_table_data_fetcher
 from dropbase.schemas.files import DataFile
 from dropbase.schemas.function import RunFunction
+from dropbase.schemas.run_python import RunPythonStringRequestNew
 from server.controllers.properties import read_page_properties
 from server.controllers.python_docker import run_container
 from server.controllers.redis import r
@@ -19,14 +20,18 @@ router = APIRouter(
 )
 
 
+# run function
 @router.post("/")
 async def run_function_req(req: RunFunction, response: Response):
     try:
         properties = read_page_properties(req.app_name, req.page_name)
-        file = get_table_data_fetcher(properties["files"], req.function_name)
+        file = get_table_data_fetcher(properties["files"], req.file_name)
+
+        if req.function_name:
+            file["function"] = req.function_name
+
         if file is None:
-            response.status_code = 404
-            return {"message": "function not found"}
+            raise HTTPException(status_code=404, detail="Function not found")
 
         file = DataFile(**file)
 
@@ -35,8 +40,7 @@ async def run_function_req(req: RunFunction, response: Response):
             "app_name": req.app_name,
             "page_name": req.page_name,
             "file": json.dumps(file.dict()),
-            "state": json.dumps(req.payload.state),
-            "context": json.dumps(req.payload.context),
+            "state": json.dumps(req.state),
             "job_id": job_id,
             "type": "file",
         }
@@ -57,6 +61,40 @@ async def run_function_req(req: RunFunction, response: Response):
         response.status_code = status_code
         reponse_payload.pop("status_code")
         return reponse_payload
+    except HTTPException:
+        raise
     except Exception as e:
-        response.status_code = 500
-        return {"message": str(e)}
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.post("/string/")
+async def run_python_string(req: RunPythonStringRequestNew, response: Response):
+    try:
+        job_id = uuid.uuid4().hex
+        env_vars = {
+            "file_code": req.file_code,
+            "test_code": req.test_code,
+            "app_name": req.app_name,
+            "page_name": req.page_name,
+            "state": json.dumps(req.state),
+            "job_id": job_id,
+            "type": "string",
+        }
+        run_container(env_vars)
+
+        status_code = 202
+        reponse_payload = {
+            "message": "job started",
+            "status_code": status_code,
+            "job_id": job_id,
+        }
+
+        # set initial status to pending
+        r.set(job_id, json.dumps(reponse_payload))
+        r.expire(job_id, 300)  # timeout in 5 minutes
+
+        response.status_code = status_code
+        reponse_payload.pop("status_code")
+        return reponse_payload
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))

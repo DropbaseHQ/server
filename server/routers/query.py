@@ -10,10 +10,9 @@ from dropbase.schemas.query import (
     RunSQLStringRequest,
     RunSQLStringTask,
 )
-from dropbase.schemas.run_python import QueryPythonRequest, RunPythonStringRequestNew
+from dropbase.schemas.run_python import QueryPythonRequest
 from dropbase.schemas.table import FilterSort
 from server.controllers.properties import read_page_properties
-from server.controllers.python_docker import run_container
 from server.controllers.redis import r
 from server.controllers.run_sql import run_sql_query, run_sql_query_from_string
 from server.utils import get_permission_dependency_array
@@ -26,10 +25,52 @@ router = APIRouter(
 )
 
 
-@router.post(
-    "/sql_string/",
-)
-async def run_sql_from_string_req(
+@router.post("/")
+async def run_sql(
+    req: QueryPythonRequest, response: Response, background_tasks: BackgroundTasks
+):
+    try:
+        properties = read_page_properties(req.app_name, req.page_name)
+        file = get_table_data_fetcher(properties["files"], req.fetcher)
+        file = DataFile(**file)
+        job_id = uuid.uuid4().hex
+        filter_sort = (
+            req.filter_sort if req.filter_sort else FilterSort(filters=[], sorts=[])
+        )
+
+        # called internally, so can pass objects directly
+        args = RunSQLRequestTask(
+            app_name=req.app_name,
+            page_name=req.page_name,
+            table_name=req.table_name,
+            file=file,
+            filter_sort=filter_sort,
+            state=req.state,
+            job_id=job_id,
+        )
+        background_tasks.add_task(run_sql_query, args)
+
+        status_code = 202
+        reponse_payload = {
+            "message": "job started",
+            "status_code": status_code,
+            "job_id": job_id,
+        }
+
+        # set initial status to pending
+        r.set(job_id, json.dumps(reponse_payload))
+        r.expire(job_id, 300)  # timeout in 5 minutes
+
+        response.status_code = status_code
+        reponse_payload.pop("status_code")
+        return reponse_payload
+    except Exception as e:
+        response.status_code = 500
+        return {"message": str(e)}
+
+
+@router.post("/string/")
+async def run_sql_from_string(
     request: RunSQLStringRequest, response: Response, background_tasks: BackgroundTasks
 ):
     job_id = uuid.uuid4().hex
@@ -50,102 +91,3 @@ async def run_sql_from_string_req(
     response.status_code = status_code
     reponse_payload.pop("status_code")
     return reponse_payload
-
-
-@router.post("/python_string/")
-async def run_python_string_test(req: RunPythonStringRequestNew, response: Response):
-    try:
-        job_id = uuid.uuid4().hex
-        env_vars = {
-            "file_code": req.file_code,
-            "test_code": req.test_code,
-            "state": json.dumps(req.state),
-            "context": json.dumps(req.context),
-            "job_id": job_id,
-            "type": "string",
-        }
-        run_container(env_vars)
-
-        status_code = 202
-        reponse_payload = {
-            "message": "job started",
-            "status_code": status_code,
-            "job_id": job_id,
-        }
-
-        # set initial status to pending
-        r.set(job_id, json.dumps(reponse_payload))
-        r.expire(job_id, 300)  # timeout in 5 minutes
-
-        response.status_code = status_code
-        reponse_payload.pop("status_code")
-        return reponse_payload
-    except Exception as e:
-        response.status_code = 500
-        return {"message": str(e)}
-
-
-@router.post("/")
-async def run_query(
-    req: QueryPythonRequest, response: Response, background_tasks: BackgroundTasks
-):
-    try:
-        properties = read_page_properties(req.app_name, req.page_name)
-        file = get_table_data_fetcher(properties["files"], req.fetcher)
-        file = DataFile(**file)
-        job_id = uuid.uuid4().hex
-        args = {
-            "app_name": req.app_name,
-            "page_name": req.page_name,
-            "job_id": job_id,
-            "type": "file",
-        }
-        if file.type == "data_fetcher":
-            # need to turn into json to pass to docker container as environment variables
-            args["file"] = json.dumps(file.dict())
-            args["state"] = json.dumps(req.state)
-            run_container(env_vars=args)
-        else:
-            # called internally, so can pass objects directly
-            args["file"] = file
-            args["state"] = req.state
-            filter_sort = (
-                req.filter_sort
-                if req.filter_sort is not None
-                else FilterSort(filters=[], sorts=[])
-            )
-            args["filter_sort"] = filter_sort
-            args["job_id"] = job_id
-            args = RunSQLRequestTask(**args)
-            background_tasks.add_task(run_sql_query, args)
-
-        status_code = 202
-        reponse_payload = {
-            "message": "job started",
-            "status_code": status_code,
-            "job_id": job_id,
-        }
-
-        # set initial status to pending
-        r.set(job_id, json.dumps(reponse_payload))
-        r.expire(job_id, 300)  # timeout in 5 minutes
-
-        response.status_code = status_code
-        reponse_payload.pop("status_code")
-        return reponse_payload
-    except Exception as e:
-        response.status_code = 500
-        return {"message": str(e)}
-
-
-@router.get("/status/{job_id}")
-async def get_job_status(job_id: str, response: Response, use_cache=False):
-    result_json = r.get(job_id)
-    if result_json:
-        result = json.loads(result_json.decode("utf-8"))
-        response.status_code = result.get("status_code")
-        result.pop("status_code")
-        return result
-    else:
-        response.status_code = 404
-        return {"message": "job not found"}

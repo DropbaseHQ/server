@@ -19,6 +19,7 @@ class RunSQLStringTask(RunSQLStringRequest):
 class RunSQLRequestTask(BaseModel):
     app_name: str
     page_name: str
+    table_name: str
     file: DataFile
     filter_sort: FilterSort
     state: dict

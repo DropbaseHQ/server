@@ -2,7 +2,7 @@ import json
 import uuid
 
 import anyio
-from fastapi import APIRouter, BackgroundTasks, Depends, Response
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Response
 
 from dropbase.schemas.table import CommitTableColumnsRequest, ConvertTableRequest
 from server.controllers.columns import commit_table_columns
@@ -54,6 +54,7 @@ async def convert_sql_table_req(
 def commit_table_columns_req(req: CommitTableColumnsRequest, response: Response):
     try:
         return commit_table_columns(req)
+    except HTTPException:
+        raise
     except Exception as e:
-        response.status_code = 500
-        return {"error": str(e)}
+        raise HTTPException(status_code=500, detail=str(e))

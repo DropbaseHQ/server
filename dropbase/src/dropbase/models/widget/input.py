@@ -24,7 +24,7 @@ class InputDefinedProperty(BaseModel):
     display_rules: Annotated[Optional[List[dict]], PropertyCategory.display_rules]
 
     # events
-    on_change: Annotated[Optional[OnEvent], PropertyCategory.events]
+    on_submit: Annotated[Optional[OnEvent], PropertyCategory.events]
 
     # internal
     component_type: Literal["input"]

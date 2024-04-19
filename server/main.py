@@ -65,6 +65,7 @@ app.include_router(routers.health_router)
 app.include_router(routers.page_router)
 app.include_router(routers.websocket_router)
 app.include_router(routers.workspace_router)
+app.include_router(routers.status_router)
 
 
 page_logger = logging.getLogger(__name__)
@@ -90,3 +91,11 @@ async def send_report_continuously():
 @app.on_event("startup")
 async def startup_event():
     asyncio.create_task(send_report_continuously())
+
+
+# register to_dtype function to pandas DataFrame
+import pandas as pd
+
+from dropbase.helpers.dataframe import to_dtable
+
+pd.DataFrame.to_dtable = to_dtable

@@ -17,6 +17,11 @@ def get_page_permissions(action: str = "use"):
     return get_permission_dependency_array(action, "app")
 
 
+@router.get("/{app_name}/{page_name}/init", dependencies=get_page_permissions("use"))
+def get_init_st_cntxt(app_name: str, page_name: str, permissions: dict = get_page_permissions("use")[0]):
+    return get_state_context(app_name, page_name, permissions, initial=True)
+
+
 @router.get("/{app_name}/{page_name}", dependencies=get_page_permissions("use"))
 def get_st_cntxt(app_name: str, page_name: str):
     return get_state_context(app_name, page_name)

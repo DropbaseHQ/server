@@ -1,4 +1,4 @@
-from typing import Annotated, Any, List, Literal, Optional
+from typing import Annotated, Any, Dict, List, Literal, Optional, Union
 
 from pydantic import BaseModel
 
@@ -21,7 +21,21 @@ class PinnedFilter(BaseModel):
     condition: Literal["=", ">", "<", ">=", "<=", "like", "in"]
 
 
+class TableColumn(BaseModel):
+    name: str
+    column_type: str
+    data_type: str
+    display_type: str
+
+
+class TableData(BaseModel):
+    type: Optional[Literal["python", "postgres", "mysql", "snowflake", "sqlite"]]
+    columns: Optional[List[TableColumn]]
+    data: Optional[List[List[Any]]]
+
+
 class TableContextProperty(BaseModel):
+    data: Optional[TableData]
     message: Optional[str]
     message_type: Optional[str]
     reload: Annotated[Optional[bool], PropertyCategory.other] = False
@@ -34,7 +48,7 @@ class TableDefinedProperty(BaseModel):
     description: Annotated[Optional[str], PropertyCategory.default]
 
     # data fetcher
-    fetcher: Annotated[Optional[str], PropertyCategory.default]
+    fetcher: Annotated[Optional[Union[str, Dict]], PropertyCategory.default]
     widget: Annotated[Optional[str], PropertyCategory.default]
 
     # settings
@@ -50,10 +64,10 @@ class TableDefinedProperty(BaseModel):
     filters: Annotated[Optional[List[PinnedFilter]], PropertyCategory.other]
 
     # internal
-    w: Annotated[Optional[int], PropertyCategory.internal]
-    h: Annotated[Optional[int], PropertyCategory.internal]
-    x: Annotated[Optional[int], PropertyCategory.internal]
-    y: Annotated[Optional[int], PropertyCategory.internal]
+    w: Annotated[Optional[int], PropertyCategory.internal] = 0
+    h: Annotated[Optional[int], PropertyCategory.internal] = 0
+    x: Annotated[Optional[int], PropertyCategory.internal] = 1
+    y: Annotated[Optional[int], PropertyCategory.internal] = 4
 
     type: Optional[Literal["python", "sql"]] = "sql"
     smart: Optional[bool] = False
