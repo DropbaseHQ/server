@@ -6,7 +6,7 @@ from dropbase.schemas.page import CreatePageRequest, PageProperties, RenamePageR
 from server.controllers.page import get_state_context, update_page_properties
 from server.controllers.workspace import AppFolderController
 from server.requests.dropbase_router import DropbaseRouter, get_dropbase_router
-from server.utils import get_permission_dependency_array, get_permission_dependency
+from server.utils import get_permission_dependency_array
 
 router = APIRouter(
     prefix="/page", tags=["page"], responses={404: {"description": "Not found"}}
@@ -18,7 +18,9 @@ def get_page_permissions(action: str = "use"):
 
 
 @router.get("/{app_name}/{page_name}/init", dependencies=get_page_permissions("use"))
-def get_init_st_cntxt(app_name: str, page_name: str, permissions: dict = get_page_permissions("use")[0]):
+def get_init_st_cntxt(
+    app_name: str, page_name: str, permissions: dict = get_page_permissions("use")
+):
     return get_state_context(app_name, page_name, permissions, initial=True)
 
 
