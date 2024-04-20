@@ -1,16 +1,13 @@
-import ast
-import importlib
-import subprocess
 from abc import ABC
 from pathlib import Path
 
-import astor
 import pandas as pd
 from datamodel_code_generator import generate
 from pydantic import Field, create_model
 
+# import json
 from dropbase.helpers.dataframe import to_dtable
-from dropbase.helpers.utils import get_state_context
+from dropbase.helpers.utils import get_page_properties, get_state_context  # read_page_properties,
 from dropbase.models.common import BaseContext
 from dropbase.models.table import TableDefinedProperty
 from dropbase.models.widget import WidgetDefinedProperty
@@ -19,19 +16,24 @@ pd.DataFrame.to_dtable = to_dtable
 
 
 class PageABC(ABC):
-    def __init__(self, app_name: str, page_name: str, state: dict, context: dict, page: dict):
+    def __init__(self, app_name: str, page_name: str, state: dict, context: dict):
+
         # get state and context
         state, context = get_state_context(app_name, page_name, state, context)
-        module_path = f"workspace.{app_name}.{page_name}.schema"
-        module = importlib.import_module(module_path)
-        PageProperties = getattr(module, "PageProperties")
+
+        # set page
+        self.page = get_page_properties(app_name, page_name)
 
         # set state and context
         self.app_name = app_name
         self.page_name = page_name
         self.state = state
         self.context = context
-        self.page = PageProperties(**page)
+
+    def reload_page(self):
+        page = get_page_properties(self.app_name, self.page_name)
+        self.page = page
+        return self.page
 
     # generic methods used by dropbase
     def get_table_data(self, table_name: str):
@@ -52,66 +54,29 @@ class PageABC(ABC):
                 tables.append(key)
         return tables
 
-    def save_table_columns(self, table_name: str):
-        # get table data
-        data = getattr(self, f"get_{table_name}")().to_dtable()
-        columns = data.get("columns")
-        data_type = data.get("type")
+    # def save_table_columns(self, table_name: str):
+    #     # get table data
+    #     data = getattr(self, f"get_{table_name}")().to_dtable()
+    #     columns = data.get("columns")
 
-        # update page properties file
-        self.update_table_columns(table_name, columns, data_type)
+    #     # update page properties file
+    #     self.update_table_columns(table_name, columns)
 
-        # reload page
-        module = importlib.import_module("workspace.class_2.page1.properties")
-        page = getattr(module, "page")
-        self.page = page
+    #     # reload page
+    #     page = get_page_properties(self.app_name, self.page_name)
 
-        # generate new state and context files
-        compose_state_context_models(self.app_name, self.page_name, page)
-        # maybe? generate new page class
+    #     # generate new state and context files
 
-    def update_table_columns(self, table_name: str, columns: str, data_type: str):
-        columns_type = data_type_column_mapper.get(data_type)
-        filepath = f"workspace/{self.app_name}/{self.page_name}/properties.py"
-        with open(filepath, "r") as file:
-            script = file.read()
+    #     # TODO: call page_controller and update page
+    #     compose_state_context_models(self.app_name, self.page_name, page)
+    #     # maybe? generate new page class
 
-        parsed_code = ast.parse(script)
-
-        for node in ast.walk(parsed_code):
-            if isinstance(node, ast.Assign):
-                name = node.targets[0].id
-                if name == table_name:
-                    call_node = node.value
-                    columns_node = None
-                    for keyword in call_node.keywords:
-                        if keyword.arg == "columns":
-                            columns_node = keyword
-                            break
-                    if columns_node is None:
-                        # Add columns keyword if it doesn't exist
-                        columns_node = ast.keyword(arg="columns", value=ast.List(elts=[]))
-                        call_node.keywords.append(columns_node)
-
-                    columns_node.value.elts = [
-                        ast.Call(
-                            func=ast.Name(id=columns_type, ctx=ast.Load()),
-                            args=[],
-                            keywords=[
-                                ast.keyword(arg=k, value=ast.Constant(value=v))
-                                for k, v in column.items()
-                            ],
-                        )
-                        for column in columns
-                    ]
-
-        # convert back to python code
-        python_str = astor.to_source(parsed_code)
-        # write to a new file
-        with open(filepath, "w") as f:
-            f.write(python_str)
-        # format with black
-        subprocess.run(["black", filepath], check=True)
+    # def update_table_columns(self, table_name: str, columns: list):
+    #     properties = read_page_properties(self.app_name, self.page_name)
+    #     filepath = f"workspace/{self.app_name}/{self.page_name}/properties.json"
+    #     properties.get(table_name)["columns"] = columns
+    #     with open(filepath, "w") as f:
+    #         f.write(json.dumps(properties))
 
 
 # TODO: move to utils

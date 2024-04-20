@@ -1,9 +1,10 @@
-from typing import Annotated, Literal, Optional
+from typing import Annotated, List, Literal, Optional, Union
 
 from pydantic import BaseModel
 from pydantic.main import ModelMetaclass
 
 from dropbase.models.category import PropertyCategory
+from dropbase.models.widget import ButtonDefinedProperty, InputDefinedProperty
 
 
 class WidgetContextProperty(BaseModel):
@@ -20,4 +21,7 @@ class WidgetDefinedProperty(BaseModel):
     type: Annotated[Literal["base", "modal", "inline"], PropertyCategory.default] = "base"
     in_menu: Annotated[bool, PropertyCategory.default] = True
     context: ModelMetaclass = WidgetContextProperty
-    components: Annotated[Optional[list], PropertyCategory.default] = []
+    components: Annotated[
+        Optional[List[Union[InputDefinedProperty, ButtonDefinedProperty]]],
+        PropertyCategory.default,
+    ] = []

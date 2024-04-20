@@ -4,6 +4,9 @@ from pydantic import BaseModel
 from pydantic.main import ModelMetaclass
 
 from dropbase.models.category import PropertyCategory
+from dropbase.models.table.button_column import ButtonColumnDefinedProperty
+from dropbase.models.table.pg_column import PgColumnDefinedProperty
+from dropbase.models.table.py_column import PyColumnDefinedProperty
 
 
 class Filter(BaseModel):
@@ -73,5 +76,16 @@ class TableDefinedProperty(BaseModel):
 
     type: Optional[Literal["python", "sql"]] = "sql"
     smart: Optional[bool] = False
-    columns: Optional[List] = []
     context: ModelMetaclass = TableContextProperty
+    columns: Annotated[
+        Optional[
+            List[
+                Union[
+                    PgColumnDefinedProperty,
+                    PyColumnDefinedProperty,
+                    ButtonColumnDefinedProperty,
+                ]
+            ]
+        ],
+        PropertyCategory.default,
+    ] = []

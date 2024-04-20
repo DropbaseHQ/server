@@ -3,7 +3,7 @@ from typing import Annotated, Literal
 from pydantic.main import ModelMetaclass
 
 from dropbase.models.category import PropertyCategory
-from dropbase.models.common import BaseColumnDefinedProperty, ColumnDisplayProperties, ColumnTypeEnum
+from dropbase.models.common import BaseColumnDefinedProperty, ColumnDisplayProperties
 
 
 class PgColumnContextProperty(ColumnDisplayProperties):
@@ -25,7 +25,7 @@ class PgColumnDefinedProperty(BaseColumnDefinedProperty):
     edit_keys: Annotated[list, PropertyCategory.internal] = []
 
     # internal
-    column_type: Annotated[Literal[ColumnTypeEnum.PG], PropertyCategory.internal] = ColumnTypeEnum.PG
+    column_type: Annotated[Literal["postgres"], PropertyCategory.internal] = "postgres"
 
     # visibility
     hidden: Annotated[bool, PropertyCategory.default] = False

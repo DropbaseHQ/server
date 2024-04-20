@@ -1,12 +1,13 @@
 import ast
 import copy
-import importlib
+import json
 import os
 
 import astor
 
 from dropbase.helpers.boilerplate import *
 from dropbase.helpers.pageABC import compose_state_context_models
+from dropbase.helpers.utils import get_page_properties, read_page_properties
 from dropbase.models import *
 
 
@@ -15,15 +16,12 @@ class PageController:
         self.app_name = app_name
         self.page_name = page_name
         self.page_path = f"workspace/{self.app_name}/{self.page_name}"
-        self.page = None
+        self.page = get_page_properties(app_name, page_name)
 
     def reload_page(self):
-        module_path = f"workspace.{self.app_name}.{self.page_name}.properties"
-        page_module = importlib.import_module(module_path)
-        importlib.reload(page_module)
-        page = getattr(page_module, "page")
+        page = get_page_properties(self.app_name, self.page_name)
         self.page = page
-        return page
+        return self.page
 
     def create_dirs(self, create_app=False):
         if create_app:
@@ -54,8 +52,8 @@ class PageController:
             f.write(boilerplate)
 
     def create_properties(self):
-        with open(self.page_path + "/properties.py", "w") as f:
-            f.write(properties_boilerplate)
+        with open(self.page_path + "/properties.json", "w") as f:
+            f.write(properties_json_boilerplate)
 
     def update_base_class(self):
         base_methods = ""
@@ -141,6 +139,24 @@ class PageController:
 
         with open(self.page_path + "/__init__.py", "w") as f:
             f.write(page_init_boilerplate)
+
+    def save_table_columns(self, table_name: str):
+        # get table data
+        data = getattr(self, f"get_{table_name}")().to_dtable()
+        columns = data.get("columns")
+
+        # update page properties file
+        self.update_table_columns(table_name, columns)
+
+        # update page scripts
+        self.update_page()
+
+    def update_table_columns(self, table_name: str, columns: list):
+        properties = read_page_properties(self.app_name, self.page_name)
+        filepath = f"workspace/{self.app_name}/{self.page_name}/properties.json"
+        properties.get(table_name)["columns"] = columns
+        with open(filepath, "w") as f:
+            f.write(json.dumps(properties))
 
     def create_app(self):
         self.create_dirs(create_app=True)

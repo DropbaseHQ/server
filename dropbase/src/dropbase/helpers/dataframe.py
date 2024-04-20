@@ -20,13 +20,13 @@ def convert_df_to_resp_obj(df: pd.DataFrame, data_type: str = "python") -> dict:
         df = df.sample(INFER_TYPE_SAMPLE_SIZE)
 
     # infer column types
-    columns = get_column_types(df)
+    columns = get_column_types(df, column_type=data_type)
     values["columns"] = columns
     values["type"] = data_type
     return values
 
 
-def get_column_types(df):
+def get_column_types(df, column_type="python"):
     columns = []
     for col, dtype in df.dtypes.items():
         data_type = str(dtype).lower()
@@ -35,6 +35,7 @@ def get_column_types(df):
                 "name": col,
                 "data_type": data_type,
                 "display_type": detect_col_type(data_type, df[col]),
+                "column_type": column_type,
             }
         )
     return columns
