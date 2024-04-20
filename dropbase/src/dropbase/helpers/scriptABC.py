@@ -1,3 +1,4 @@
+import importlib
 from abc import ABC
 from pathlib import Path
 
@@ -6,7 +7,7 @@ from datamodel_code_generator import generate
 from pydantic import Field, create_model
 
 from dropbase.helpers.dataframe import to_dtable
-from dropbase.helpers.utils import get_page_properties, get_state_context
+from dropbase.helpers.utils import _dict_from_pydantic_model, get_page_properties
 from dropbase.models.common import BaseContext
 from dropbase.models.table import TableDefinedProperty
 from dropbase.models.widget import WidgetDefinedProperty
@@ -19,10 +20,19 @@ class ScriptABC(ABC):
     handles user script execution, running functions
     """
 
-    def __init__(self, app_name: str, page_name: str, state: dict, context: dict):
+    def __init__(self, app_name: str, page_name: str, state: dict):
 
-        # get state and context
-        state, context = get_state_context(app_name, page_name, state, context)
+        # load state and context
+        page_path = f"workspace.{app_name}.{page_name}"
+        state_context_module = importlib.import_module(page_path)
+        importlib.reload(state_context_module)
+        # init state
+        State = getattr(state_context_module, "State")
+        state = State(**state)
+        # init context
+        Context = getattr(state_context_module, "Context")
+        context = _dict_from_pydantic_model(Context)
+        context = Context(**context)
 
         # set page
         self.page = get_page_properties(app_name, page_name)

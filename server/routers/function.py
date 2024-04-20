@@ -5,7 +5,7 @@ from fastapi import APIRouter, HTTPException, Response
 
 from dropbase.helpers.utils import get_table_data_fetcher, read_page_properties
 from dropbase.schemas.files import DataFile
-from dropbase.schemas.function import RunFunction
+from dropbase.schemas.function import RunClass, RunFunction
 from dropbase.schemas.run_python import RunPythonStringRequestNew
 from server.controllers.python_docker import run_container
 from server.controllers.redis import r
@@ -15,6 +15,42 @@ router = APIRouter(
     tags=["function"],
     responses={404: {"description": "Not found"}},
 )
+
+
+# run function
+@router.post("/class")
+async def run_class_req(req: RunClass, response: Response):
+    try:
+        job_id = uuid.uuid4().hex
+        env_vars = {
+            "app_name": req.app_name,
+            "page_name": req.page_name,
+            "action": req.action,
+            "target": req.target,
+            "state": json.dumps(req.state),
+            "job_id": job_id,
+        }
+        # start a job
+        run_container(env_vars)
+
+        status_code = 202
+        reponse_payload = {
+            "message": "Job started",
+            "status_code": status_code,
+            "job_id": job_id,
+        }
+
+        # set initial status to pending
+        r.set(job_id, json.dumps(reponse_payload))
+        r.expire(job_id, 300)  # timeout in 5 minutes
+
+        print("set job_id", job_id, "to pending")
+
+        response.status_code = status_code
+        reponse_payload.pop("status_code")
+        return reponse_payload
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 # run function
