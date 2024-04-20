@@ -1,6 +1,6 @@
 import json
 
-from server.controllers.properties import read_page_properties
+from dropbase.helpers.utils import read_page_properties
 
 
 def get_value_from_json_path(data, json_path):

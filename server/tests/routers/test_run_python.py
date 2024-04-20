@@ -5,9 +5,8 @@ import time
 
 from dotenv import load_dotenv
 
-from dropbase.helpers.utils import get_table_data_fetcher
+from dropbase.helpers.utils import get_table_data_fetcher, read_page_properties
 from dropbase.schemas.files import DataFile
-from server.controllers.properties import read_page_properties
 from server.tests.utils import setup_redis  # noqa
 
 load_dotenv()

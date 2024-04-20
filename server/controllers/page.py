@@ -7,10 +7,18 @@ from dropbase.helpers.utils import (
     _dict_from_pydantic_model,
     get_empty_context,
     get_state_context_model,
+    read_page_properties,
     validate_column_name,
 )
 from dropbase.schemas.page import PageProperties
-from server.controllers.properties import read_page_properties, update_properties
+from server.controllers.properties import update_properties
+
+
+def get_page(app_name: str, page_name: str, initial=False):
+    page_props = get_page_state_context(app_name, page_name, initial)
+    properties = read_page_properties(app_name, page_name)
+    page_props["properties"] = properties
+    return page_props
 
 
 def update_page_properties(req: PageProperties):

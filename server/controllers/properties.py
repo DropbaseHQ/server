@@ -37,12 +37,6 @@ def update_properties(app_name: str, page_name: str, properties: dict, update_mo
             shutil.rmtree(page_dir_path_backup)
 
 
-def read_page_properties(app_name: str, page_name: str):
-    path = cwd + f"/workspace/{app_name}/{page_name}/properties.json"
-    with open(path, "r") as f:
-        return json.loads(f.read())
-
-
 def write_page_properties(app_name: str, page_name: str, properties: dict):
     path = cwd + f"/workspace/{app_name}/{page_name}/properties.json"
     with open(path, "w") as f:

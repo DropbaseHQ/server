@@ -59,14 +59,10 @@ class Properties(BaseModel):
 class PageProperties(BaseModel):
     app_name: str
     page_name: str
-    properties: Properties
+    properties: dict
 
 
 class CreatePageRequest(BaseModel):
     app_name: str
     page_name: str
     page_label: str
-
-
-class RenamePageRequest(BaseModel):
-    new_page_label: str

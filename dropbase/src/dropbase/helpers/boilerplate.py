@@ -1,5 +1,4 @@
 # base class boilerplates
-
 table_methods_base = """
     @abstractmethod
     def get_{0}(self) -> pd.DataFrame:
@@ -26,11 +25,11 @@ input_methods_base = """
 base_class = """
 from abc import abstractmethod
 import pandas as pd
-from dropbase.helpers.pageABC import PageABC
+from dropbase.helpers.scriptABC import ScriptABC
 from .context import Context
 
 
-class PageBase(PageABC):
+class ScriptBase(ScriptABC):
 {0}"""
 
 
@@ -42,10 +41,9 @@ from dropbase.models.table import TableDefinedProperty
 from dropbase.models.widget import WidgetDefinedProperty
 
 
-class PageProperties(BaseModel):
+class Properties(BaseModel):
     table1: TableDefinedProperty
     widget1: WidgetDefinedProperty
-
 """
 # update
 schema_boilerplate_create = """from pydantic import BaseModel
@@ -54,7 +52,7 @@ from dropbase.models.table import TableDefinedProperty
 from dropbase.models.widget import WidgetDefinedProperty
 
 
-class PageProperties(BaseModel):
+class Properties(BaseModel):
 """
 
 
@@ -62,34 +60,33 @@ class PageProperties(BaseModel):
 # create
 main_class = """
 import pandas as pd
-from ..base_class import PageBase
+from ..base_class import ScriptBase
 from ..context import Context
 
 
-class Page(PageBase):
-{0}
+class Script(ScriptBase):{0}
 """
-table_methods_main = "    def get_{0}(self) -> pd.DataFrame:\n        # TODO: implement this method\n        return pd.DataFrame()\n\n"
-button_methods_main = "    def on_click_{0}(self) -> Context:\n        # TODO: implement this method\n        return self.context\n\n"
-input_methods_main = "    def on_enter_{0}(self) -> Context:\n        # TODO: implement this method\n        return self.context\n\n"
+table_methods_main = "\n\n    def get_{0}(self) -> pd.DataFrame:\n        # TODO: implement this method\n        return pd.DataFrame()"
+button_methods_main = "\n\n    def on_click_{0}(self) -> Context:\n        # TODO: implement this method\n        return self.context"
+input_methods_main = "\n\n    def on_enter_{0}(self) -> Context:\n        # TODO: implement this method\n        return self.context"
 
 # update
-update_table_methods_main = "def get_{0}(self) -> pd.DataFrame:\n    # TODO: implement this method\n    return pd.DataFrame()\n\n"
+update_table_methods_main = "\n\ndef get_{0}(self) -> pd.DataFrame:\n    # TODO: implement this method\n    return pd.DataFrame()"
 update_button_methods_main = (
-    "def on_click_{0}(self) -> Context:\n    # TODO: implement this method\n    return self.context\n\n"
+    "\n\ndef on_click_{0}(self) -> Context:\n    # TODO: implement this method\n    return self.context"
 )
 update_input_methods_main = (
-    "def on_enter_{0}(self) -> Context:\n    # TODO: implement this method\n    return self.context\n\n"
+    "\n\ndef on_enter_{0}(self) -> Context:\n    # TODO: implement this method\n    return self.context"
 )
 
 
 # properties boilerplate
 properties_boilerplate = """from dropbase.models import *
-from .schema import PageProperties
+from .schema import Properties
 
 table1 = TableDefinedProperty(label="Table 1", name="table1")
 widget1 = WidgetDefinedProperty(label="Widget 1", name="widget1")
-page = PageProperties(table1=table1, widget1=widget1)
+page = Properties(table1=table1, widget1=widget1)
 
 """
 
@@ -122,3 +119,10 @@ properties_json_boilerplate = """{
         "label": "Widget 1"
     }
 }"""
+
+
+app_properties_boilerplate = {
+    "page1": {
+        "label": "Page1",
+    }
+}

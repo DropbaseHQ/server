@@ -5,9 +5,8 @@ import pandas as pd
 from datamodel_code_generator import generate
 from pydantic import Field, create_model
 
-# import json
 from dropbase.helpers.dataframe import to_dtable
-from dropbase.helpers.utils import get_page_properties, get_state_context  # read_page_properties,
+from dropbase.helpers.utils import get_page_properties, get_state_context
 from dropbase.models.common import BaseContext
 from dropbase.models.table import TableDefinedProperty
 from dropbase.models.widget import WidgetDefinedProperty
@@ -15,7 +14,11 @@ from dropbase.models.widget import WidgetDefinedProperty
 pd.DataFrame.to_dtable = to_dtable
 
 
-class PageABC(ABC):
+class ScriptABC(ABC):
+    """
+    handles user script execution, running functions
+    """
+
     def __init__(self, app_name: str, page_name: str, state: dict, context: dict):
 
         # get state and context
@@ -53,30 +56,6 @@ class PageABC(ABC):
             if isinstance(values, TableDefinedProperty):
                 tables.append(key)
         return tables
-
-    # def save_table_columns(self, table_name: str):
-    #     # get table data
-    #     data = getattr(self, f"get_{table_name}")().to_dtable()
-    #     columns = data.get("columns")
-
-    #     # update page properties file
-    #     self.update_table_columns(table_name, columns)
-
-    #     # reload page
-    #     page = get_page_properties(self.app_name, self.page_name)
-
-    #     # generate new state and context files
-
-    #     # TODO: call page_controller and update page
-    #     compose_state_context_models(self.app_name, self.page_name, page)
-    #     # maybe? generate new page class
-
-    # def update_table_columns(self, table_name: str, columns: list):
-    #     properties = read_page_properties(self.app_name, self.page_name)
-    #     filepath = f"workspace/{self.app_name}/{self.page_name}/properties.json"
-    #     properties.get(table_name)["columns"] = columns
-    #     with open(filepath, "w") as f:
-    #         f.write(json.dumps(properties))
 
 
 # TODO: move to utils

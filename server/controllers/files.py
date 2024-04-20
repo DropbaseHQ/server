@@ -8,9 +8,10 @@ from uuid import uuid4
 from fastapi import HTTPException
 
 from dropbase.constants import FILE_NAME_REGEX
+from dropbase.helpers.utils import read_page_properties
 from dropbase.schemas.files import CreateFile, DeleteFile, RenameFile, UpdateFile
 from server.constants import cwd
-from server.controllers.properties import read_page_properties, write_page_properties
+from server.controllers.properties import write_page_properties
 
 
 class FileController:
@@ -133,7 +134,12 @@ class FileController:
 
             # update properties file
             self.properties["files"].append(
-                {"name": req.name, "type": req.type, "source": req.source, "depends_on": []}
+                {
+                    "name": req.name,
+                    "type": req.type,
+                    "source": req.source,
+                    "depends_on": [],
+                }
             )
 
             # update properties file

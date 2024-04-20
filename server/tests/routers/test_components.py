@@ -1,7 +1,7 @@
 import copy
 import time
 
-from server.controllers.properties import read_page_properties
+from dropbase.helpers.utils import read_page_properties
 from server.tests.verify_property_exists import get_objects_child_prop
 from server.tests.verify_state_and_context import verify_object_in_state_context
 

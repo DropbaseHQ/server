@@ -1,55 +1,47 @@
-import os
+from fastapi import APIRouter
 
-from fastapi import APIRouter, Depends
+from dropbase.schemas.page import CreatePageRequest, PageProperties
+from server.controllers.page import get_page
+from server.controllers.page_controller import PageController
 
-from dropbase.schemas.page import CreatePageRequest, PageProperties, RenamePageRequest
-from server.auth.dependency import CheckUserPermissions
-from server.controllers.page import get_state_context, update_page_properties
-from server.controllers.workspace import AppFolderController
-from server.requests.dropbase_router import DropbaseRouter, get_dropbase_router
+def_responses = {404: {"description": "Not found"}}
 
-router = APIRouter(prefix="/page", tags=["page"], responses={404: {"description": "Not found"}})
+router = APIRouter(prefix="/page", tags=["page"], responses=def_responses)
 
 
-def get_page_permissions(action: str = "use"):
-    return [Depends(CheckUserPermissions(action=action, resource=CheckUserPermissions.APP))]
+@router.get("/{app_name}/{page_name}/init")
+def get_page_init_req(app_name: str, page_name: str):
+    return get_page(app_name, page_name, initial=True)
 
 
-@router.get("/{app_name}/{page_name}/init", dependencies=get_page_permissions("use"))
-def get_init_st_cntxt(app_name: str, page_name: str, permissions: dict = get_page_permissions("use")[0]):
-    return get_state_context(app_name, page_name, permissions, initial=True)
+@router.get("/{app_name}/{page_name}")
+def get_page_req(app_name: str, page_name: str):
+    return get_page(app_name, page_name)
 
 
-@router.get("/{app_name}/{page_name}", dependencies=get_page_permissions("use"))
-def get_st_cntxt(app_name: str, page_name: str, permissions: dict = get_page_permissions("use")[0]):
-    return get_state_context(app_name, page_name, permissions)
+@router.post("/")
+def create_page_req(request: CreatePageRequest):
+    pageController = PageController(request.app_name, request.page_name)
+    pageController.create_page(request.page_label)
+    return {"message": "success"}
 
 
-@router.post("/", dependencies=get_page_permissions("edit"))
-def create_page_req(request: CreatePageRequest, router: DropbaseRouter = Depends(get_dropbase_router)):
-    r_path_to_workspace = os.path.join(os.path.dirname(__file__), "../../workspace")
-    app_folder_controller = AppFolderController(request.app_name, r_path_to_workspace)
-    return app_folder_controller.create_page(
-        router=router, page_name=request.page_name, page_label=request.page_label
-    )
+@router.put("/")
+def update_page_req(request: PageProperties):
+    pageController = PageController(request.app_name, request.page_name)
+    pageController.update_page(request.properties)
+    return {"message": "success"}
 
 
-@router.put("/{app_name}/{page_name}", dependencies=get_page_permissions("edit"))
-def rename_page_req(app_name: str, page_name: str, request: RenamePageRequest):
-    r_path_to_workspace = os.path.join(os.path.dirname(__file__), "../../workspace")
-    app_folder_controller = AppFolderController(app_name, r_path_to_workspace)
-    return app_folder_controller.rename_page(page_name=page_name, new_page_label=request.new_page_label)
+@router.put("/rename/")
+def rename_page_req(request: CreatePageRequest):
+    pageController = PageController(request.app_name, request.page_name)
+    pageController.update_page_to_app_properties(request.page_label)
+    return {"message": "success"}
 
 
-@router.delete("/{app_name}/{page_name}", dependencies=get_page_permissions("edit"))
-def delete_page_req(
-    app_name: str, page_name: str, router: DropbaseRouter = Depends(get_dropbase_router)
-):
-    r_path_to_workspace = os.path.join(os.path.dirname(__file__), "../../workspace")
-    app_folder_controller = AppFolderController(app_name, r_path_to_workspace)
-    return app_folder_controller.delete_page(page_name=page_name, router=router)
-
-
-@router.put("/", dependencies=get_page_permissions("edit"))
-def cud_page_props(req: PageProperties):
-    return update_page_properties(req)
+@router.delete("/{app_name}/{page_name}")
+def delete_page_req(app_name: str, page_name: str):
+    pageController = PageController(app_name, page_name)
+    pageController.delete_page()
+    return {"message": "success"}

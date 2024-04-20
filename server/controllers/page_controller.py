@@ -2,12 +2,18 @@ import ast
 import copy
 import json
 import os
+import shutil
 
 import astor
 
 from dropbase.helpers.boilerplate import *
-from dropbase.helpers.pageABC import compose_state_context_models
-from dropbase.helpers.utils import get_page_properties, read_page_properties
+from dropbase.helpers.scriptABC import compose_state_context_models
+from dropbase.helpers.utils import (
+    get_page_properties,
+    get_page_properties_schema,
+    read_app_properties,
+    read_page_properties,
+)
 from dropbase.models import *
 
 
@@ -16,7 +22,7 @@ class PageController:
         self.app_name = app_name
         self.page_name = page_name
         self.page_path = f"workspace/{self.app_name}/{self.page_name}"
-        self.page = get_page_properties(app_name, page_name)
+        self.page = None
 
     def reload_page(self):
         page = get_page_properties(self.app_name, self.page_name)
@@ -51,9 +57,38 @@ class PageController:
         with open(self.page_path + "/schema.py", "w") as f:
             f.write(boilerplate)
 
-    def create_properties(self):
+    def create_page_properties(self):
         with open(self.page_path + "/properties.json", "w") as f:
             f.write(properties_json_boilerplate)
+
+    def create_app_init_properties(self):
+        # assuming page name is page1 by default
+        with open(f"workspace/{self.app_name}/properties.json", "w") as f:
+            f.write(json.dumps(app_properties_boilerplate))
+
+    def update_page_to_app_properties(self, page_label: str):
+        app_properties = read_app_properties(self.app_name)
+        app_properties[self.page_name] = {"label": page_label}
+        with open(f"workspace/{self.app_name}/properties.json", "w") as f:
+            f.write(json.dumps(app_properties))
+
+    def remove_page_from_app_properties(self):
+        app_properties = read_app_properties(self.app_name)
+        app_properties.pop(self.page_name)
+        with open(f"workspace/{self.app_name}/properties.json", "w") as f:
+            f.write(json.dumps(app_properties))
+
+    def update_properties(self, properties: dict):
+        # assert properties are valid
+        Properties = get_page_properties_schema(self.app_name, self.page_name)
+        Properties(**properties)
+
+        # write properties to file
+        with open(self.page_path + "/properties.json", "w") as f:
+            f.write(json.dumps(properties))
+
+        # update schema
+        self.update_page()
 
     def update_base_class(self):
         base_methods = ""
@@ -140,14 +175,9 @@ class PageController:
         with open(self.page_path + "/__init__.py", "w") as f:
             f.write(page_init_boilerplate)
 
-    def save_table_columns(self, table_name: str):
-        # get table data
-        data = getattr(self, f"get_{table_name}")().to_dtable()
-        columns = data.get("columns")
-
+    def save_table_columns(self, table_name: str, columns: list):
         # update page properties file
         self.update_table_columns(table_name, columns)
-
         # update page scripts
         self.update_page()
 
@@ -160,18 +190,20 @@ class PageController:
 
     def create_app(self):
         self.create_dirs(create_app=True)
+        self.create_page_properties()
+        self.create_app_init_properties()
         self.create_schema()
-        self.create_properties()
         page = self.reload_page()
         compose_state_context_models(self.app_name, self.page_name, page)
         self.update_base_class()
         self.create_main_class()
         self.add_init()
 
-    def create_page(self):
+    def create_page(self, page_label: str):
         self.create_dirs()
         self.create_schema()
-        self.create_properties()
+        self.create_page_properties()
+        self.update_page_to_app_properties(page_label)
         page = self.reload_page()
         compose_state_context_models(self.app_name, self.page_name, page)
         self.update_base_class()
@@ -184,6 +216,11 @@ class PageController:
         compose_state_context_models(self.app_name, self.page_name, page)
         self.update_base_class()
         self.update_main_class()
+
+    def delete_page(self):
+        page_folder_path = f"workspace/{self.app_name}/{self.page_name}"
+        shutil.rmtree(page_folder_path)
+        self.remove_page_from_app_properties()
 
 
 def get_incoming_methods(page):

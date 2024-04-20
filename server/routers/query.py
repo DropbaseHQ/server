@@ -3,13 +3,12 @@ import uuid
 
 from fastapi import APIRouter, BackgroundTasks, Depends, Response
 
-from dropbase.helpers.utils import get_table_data_fetcher
+from dropbase.helpers.utils import get_table_data_fetcher, read_page_properties
 from dropbase.schemas.files import DataFile
 from dropbase.schemas.query import RunSQLRequestTask, RunSQLStringRequest, RunSQLStringTask
 from dropbase.schemas.run_python import QueryPythonRequest
 from dropbase.schemas.table import FilterSort
 from server.auth.dependency import CheckUserPermissions
-from server.controllers.properties import read_page_properties
 from server.controllers.redis import r
 from server.controllers.run_sql import run_sql_query, run_sql_query_from_string
 
@@ -38,7 +37,11 @@ async def run_sql(req: QueryPythonRequest, response: Response, background_tasks:
         background_tasks.add_task(run_sql_query, args)
 
         status_code = 202
-        reponse_payload = {"message": "job started", "status_code": status_code, "job_id": job_id}
+        reponse_payload = {
+            "message": "job started",
+            "status_code": status_code,
+            "job_id": job_id,
+        }
 
         # set initial status to pending
         r.set(job_id, json.dumps(reponse_payload))
@@ -64,7 +67,11 @@ async def run_sql_from_string(
     background_tasks.add_task(run_sql_query_from_string, args)
 
     status_code = 202
-    reponse_payload = {"message": "job started", "status_code": status_code, "job_id": job_id}
+    reponse_payload = {
+        "message": "job started",
+        "status_code": status_code,
+        "job_id": job_id,
+    }
 
     # set initial status to pending
     r.set(job_id, json.dumps(reponse_payload))

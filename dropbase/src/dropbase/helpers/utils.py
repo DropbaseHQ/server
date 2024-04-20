@@ -65,22 +65,26 @@ def read_page_properties(app_name: str, page_name: str):
     with open(path, "r") as f:
         return json.loads(f.read())
 
-        # path = f"workspace/{self.app_name}/{self.page_name}/properties.json"
-        # with open(path, "r") as f:
-        #     properties = json.loads(f.read())
+
+def read_app_properties(app_name: str):
+    path = f"workspace/{app_name}/properties.json"
+    with open(path, "r") as f:
+        return json.loads(f.read())
 
 
-def get_page_properties(app_name: str, page_name: str):
-    properties = read_page_properties(app_name, page_name)
-
+def get_page_properties_schema(app_name: str, page_name: str):
     # load page schema
     module_path = f"workspace.{app_name}.{page_name}.schema"
     page_module = importlib.import_module(module_path)
     importlib.reload(page_module)
-    PageProperties = getattr(page_module, "PageProperties")
+    return getattr(page_module, "Properties")
 
+
+def get_page_properties(app_name: str, page_name: str):
+    properties = read_page_properties(app_name, page_name)
+    Properties = get_page_properties_schema(app_name, page_name)
     # create page object
-    return PageProperties(**properties)
+    return Properties(**properties)
 
 
 def get_function_by_name(app_name: str, page_name: str, file_name: str, function_name: str):
