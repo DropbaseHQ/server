@@ -18,6 +18,14 @@ def convert_sql_table_sync_wrapper(req, router):
     anyio.run(convert_sql_table, req, router)
 
 
+# TODO: move to respective controllers
+# @router.get("/{app_name}/{page_name}/{table_name}")
+# def get_page_req(app_name: str, page_name: str, table_name: str):
+#     pageController = PageController(app_name, page_name)
+#     pageController.
+#     return get_page(app_name, page_name)
+
+
 @router.post("/convert/")
 async def convert_sql_table_req(
     req: ConvertTableRequest,

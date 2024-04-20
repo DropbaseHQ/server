@@ -2,29 +2,44 @@ import os
 
 from fastapi import APIRouter, Depends, HTTPException
 
-from dropbase.schemas.workspace import (
-    CreateAppRequest,
-    RenameAppRequest,
-    SyncAppRequest,
-)
-from server.controllers.app import get_workspace_apps
+from dropbase.schemas.workspace import CreateAppRequest, RenameAppRequest, SyncAppRequest
+from server.controllers.app import AppController, get_workspace_apps
+from server.controllers.page_controller import PageController
 from server.controllers.workspace import AppFolderController, WorkspaceFolderController
 from server.requests.dropbase_router import DropbaseRouter, get_dropbase_router
 
-router = APIRouter(
-    prefix="/app", tags=["app"], responses={404: {"description": "Not found"}}
-)
+router = APIRouter(prefix="/app", tags=["app"], responses={404: {"description": "Not found"}})
+
+
+@router.post("/")
+def create_app_req(request: CreateAppRequest):
+    appController = AppController(request.app_name)
+    appController.create_app(app_label=request.app_label)
+    pageController = PageController(request.app_name, "page1")
+    pageController.create_page("Page 1")
+    return {"message": "success"}
+
+
+@router.put("/")
+def rename_app_req(req: RenameAppRequest):
+    # assert page does not exist
+    path_to_workspace = os.path.join(os.path.dirname(__file__), "../../workspace")
+    workspace_folder_controller = WorkspaceFolderController(r_path_to_workspace=path_to_workspace)
+    return workspace_folder_controller.update_app_info(app_id=req.app_id, new_label=req.new_label)
+
+
+@router.delete("/{app_name}")
+def delete_app_req(app_name: str):
+    r_path_to_workspace = os.path.join(os.path.dirname(__file__), "../../workspace")
+    app_folder_controller = AppFolderController(app_name, r_path_to_workspace)
+    return app_folder_controller.delete_app(app_name=app_name, router=router)
 
 
 @router.post("/sync_app")
-def sync_app_req(
-    request: SyncAppRequest, router: DropbaseRouter = Depends(get_dropbase_router)
-):
+def sync_app_req(request: SyncAppRequest, router: DropbaseRouter = Depends(get_dropbase_router)):
     try:
         path_to_workspace = os.path.join(os.path.dirname(__file__), "../../workspace")
-        workspace_folder_controller = WorkspaceFolderController(
-            r_path_to_workspace=path_to_workspace
-        )
+        workspace_folder_controller = WorkspaceFolderController(r_path_to_workspace=path_to_workspace)
         workspace_props = workspace_folder_controller.get_workspace_properties()
         workspace_apps = workspace_props.get("apps", [])
         target_app = None
@@ -32,10 +47,7 @@ def sync_app_req(
             if app.get("name") == request.app_name:
                 target_app = app
                 break
-        if (
-            target_app.get("status", None) is None
-            or target_app.get("status") == "SYNCED"
-        ):
+        if target_app.get("status", None) is None or target_app.get("status") == "SYNCED":
             return {"message": "App is already synced"}
 
         app_folder_controller = AppFolderController(
@@ -67,9 +79,7 @@ def sync_app_req(
 
                 app_properties = app_folder_controller._get_app_properties_data()
                 if response_pages is not None and len(response_pages) > 0:
-                    combined_page_info = zip(
-                        app_properties.get("pages"), response_pages
-                    )
+                    combined_page_info = zip(app_properties.get("pages"), response_pages)
                     for local_page, remote_page in combined_page_info:
                         local_page["id"] = remote_page.get("id")
                         local_page["status"] = "SYNCED"
@@ -88,36 +98,3 @@ def sync_app_req(
 @router.get("/list/")
 def get_user_apps(router: DropbaseRouter = Depends(get_dropbase_router)):
     return get_workspace_apps(router=router)
-
-
-@router.post("/")
-def create_app_req(
-    req: CreateAppRequest,
-    router: DropbaseRouter = Depends(get_dropbase_router),
-):
-    r_path_to_workspace = os.path.join(os.path.dirname(__file__), "../../workspace")
-    app_folder_controller = AppFolderController(
-        app_name=req.app_name, r_path_to_workspace=r_path_to_workspace
-    )
-    return app_folder_controller.create_app(router=router, app_label=req.app_label)
-
-
-@router.put("/")
-def rename_app_req(req: RenameAppRequest):
-    # assert page does not exist
-    path_to_workspace = os.path.join(os.path.dirname(__file__), "../../workspace")
-    workspace_folder_controller = WorkspaceFolderController(
-        r_path_to_workspace=path_to_workspace
-    )
-    return workspace_folder_controller.update_app_info(
-        app_id=req.app_id, new_label=req.new_label
-    )
-
-
-@router.delete("/{app_name}")
-def delete_app_req(
-    app_name: str, router: DropbaseRouter = Depends(get_dropbase_router)
-):
-    r_path_to_workspace = os.path.join(os.path.dirname(__file__), "../../workspace")
-    app_folder_controller = AppFolderController(app_name, r_path_to_workspace)
-    return app_folder_controller.delete_app(app_name=app_name, router=router)

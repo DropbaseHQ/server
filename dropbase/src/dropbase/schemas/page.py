@@ -66,3 +66,18 @@ class CreatePageRequest(BaseModel):
     app_name: str
     page_name: str
     page_label: str
+
+
+class SaveTableColumns(BaseModel):
+    app_name: str
+    page_name: str
+    table_name: str
+    columns: list
+    # List[
+    #     Union[
+    #         PyColumnDefinedProperty,
+    #         PgColumnDefinedProperty,
+    #         SnowflakeColumnDefinedProperty,
+    #         MySqlColumnDefinedProperty,
+    #     ]
+    # ]

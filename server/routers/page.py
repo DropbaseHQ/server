@@ -1,6 +1,6 @@
 from fastapi import APIRouter
 
-from dropbase.schemas.page import CreatePageRequest, PageProperties
+from dropbase.schemas.page import CreatePageRequest, PageProperties, SaveTableColumns
 from server.controllers.page import get_page
 from server.controllers.page_controller import PageController
 
@@ -29,7 +29,7 @@ def create_page_req(request: CreatePageRequest):
 @router.put("/")
 def update_page_req(request: PageProperties):
     pageController = PageController(request.app_name, request.page_name)
-    pageController.update_page(request.properties)
+    pageController.update_page_properties(request.properties)
     return {"message": "success"}
 
 
@@ -44,4 +44,11 @@ def rename_page_req(request: CreatePageRequest):
 def delete_page_req(app_name: str, page_name: str):
     pageController = PageController(app_name, page_name)
     pageController.delete_page()
+    return {"message": "success"}
+
+
+@router.post("/save_table_columns/")
+def save_table_columns_req(request: SaveTableColumns):
+    pageController = PageController(request.app_name, request.page_name)
+    pageController.save_table_columns(request.table_name, request.columns)
     return {"message": "success"}

@@ -29,10 +29,7 @@ class PageController:
         self.page = page
         return self.page
 
-    def create_dirs(self, create_app=False):
-        if create_app:
-            # create app
-            os.mkdir(f"workspace/{self.app_name}")
+    def create_page_dirs(self):
         # create page
         os.mkdir(self.page_path)
         # create scripts
@@ -64,28 +61,28 @@ class PageController:
     def create_app_init_properties(self):
         # assuming page name is page1 by default
         with open(f"workspace/{self.app_name}/properties.json", "w") as f:
-            f.write(json.dumps(app_properties_boilerplate))
+            f.write(json.dumps(app_properties_boilerplate, indent=2))
 
     def update_page_to_app_properties(self, page_label: str):
         app_properties = read_app_properties(self.app_name)
         app_properties[self.page_name] = {"label": page_label}
         with open(f"workspace/{self.app_name}/properties.json", "w") as f:
-            f.write(json.dumps(app_properties))
+            f.write(json.dumps(app_properties, indent=2))
 
     def remove_page_from_app_properties(self):
         app_properties = read_app_properties(self.app_name)
         app_properties.pop(self.page_name)
         with open(f"workspace/{self.app_name}/properties.json", "w") as f:
-            f.write(json.dumps(app_properties))
+            f.write(json.dumps(app_properties, indent=2))
 
-    def update_properties(self, properties: dict):
+    def update_page_properties(self, properties: dict):
         # assert properties are valid
         Properties = get_page_properties_schema(self.app_name, self.page_name)
         Properties(**properties)
 
         # write properties to file
         with open(self.page_path + "/properties.json", "w") as f:
-            f.write(json.dumps(properties))
+            f.write(json.dumps(properties, indent=2))
 
         # update schema
         self.update_page()
@@ -136,12 +133,12 @@ class PageController:
 
         # get existing methods
         for node in module.body:
-            if isinstance(node, ast.ClassDef) and node.name == "Page":
+            if isinstance(node, ast.ClassDef) and node.name == "Script":
                 existing_methods = [n.name for n in node.body if isinstance(n, ast.FunctionDef)]
 
         # compare existing methods with incoming methods
         for node in module.body:
-            if isinstance(node, ast.ClassDef) and node.name == "Page":
+            if isinstance(node, ast.ClassDef) and node.name == "Script":
                 # Remove methods in existing_methods but not in incoming_methods
                 node.body = [
                     n
@@ -182,25 +179,15 @@ class PageController:
         self.update_page()
 
     def update_table_columns(self, table_name: str, columns: list):
+        # TODO: validate columns here
         properties = read_page_properties(self.app_name, self.page_name)
         filepath = f"workspace/{self.app_name}/{self.page_name}/properties.json"
         properties.get(table_name)["columns"] = columns
         with open(filepath, "w") as f:
-            f.write(json.dumps(properties))
-
-    def create_app(self):
-        self.create_dirs(create_app=True)
-        self.create_page_properties()
-        self.create_app_init_properties()
-        self.create_schema()
-        page = self.reload_page()
-        compose_state_context_models(self.app_name, self.page_name, page)
-        self.update_base_class()
-        self.create_main_class()
-        self.add_init()
+            f.write(json.dumps(properties, indent=2))
 
     def create_page(self, page_label: str):
-        self.create_dirs()
+        self.create_page_dirs()
         self.create_schema()
         self.create_page_properties()
         self.update_page_to_app_properties(page_label)
