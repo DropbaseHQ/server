@@ -42,13 +42,21 @@ class PageController:
 
     def update_schema(self):
         boilerplate = copy.copy(schema_boilerplate_create)
-        # add properties
-        for key, value in self.page:
-            if isinstance(value, WidgetDefinedProperty):
-                class_name = "WidgetDefinedProperty"
-            if isinstance(value, TableDefinedProperty):
+        # schema should be updated based on properties
+        properties = read_page_properties(self.app_name, self.page_name)
+        for key, value in properties.items():
+            if "columns" in value:
                 class_name = "TableDefinedProperty"
+            if "components" in value:
+                class_name = "WidgetDefinedProperty"
             boilerplate += f"    {key}: {class_name}\n"
+        # add properties
+        # for key, value in self.page:
+        #     if isinstance(value, WidgetDefinedProperty):
+        #         class_name = "WidgetDefinedProperty"
+        #     if isinstance(value, TableDefinedProperty):
+        #         class_name = "TableDefinedProperty"
+        #     boilerplate += f"    {key}: {class_name}\n"
 
         # write file
         with open(self.page_path + "/schema.py", "w") as f:
@@ -77,8 +85,8 @@ class PageController:
 
     def update_page_properties(self, properties: dict):
         # assert properties are valid
-        Properties = get_page_properties_schema(self.app_name, self.page_name)
-        Properties(**properties)
+        # Properties = get_page_properties_schema(self.app_name, self.page_name)
+        # Properties(**properties)
 
         # write properties to file
         with open(self.page_path + "/properties.json", "w") as f:
@@ -198,8 +206,8 @@ class PageController:
         self.add_init()
 
     def update_page(self):
-        page = self.reload_page()
         self.update_schema()
+        page = self.reload_page()
         compose_state_context_models(self.app_name, self.page_name, page)
         self.update_base_class()
         self.update_main_class()
