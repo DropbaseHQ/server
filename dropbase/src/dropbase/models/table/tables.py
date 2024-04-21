@@ -7,6 +7,7 @@ from dropbase.models.category import PropertyCategory
 from dropbase.models.table.button_column import ButtonColumnDefinedProperty
 from dropbase.models.table.pg_column import PgColumnDefinedProperty
 from dropbase.models.table.py_column import PyColumnDefinedProperty
+from dropbase.models.table.sqlite_column import SqliteColumnDefinedProperty
 
 
 class Filter(BaseModel):
@@ -78,14 +79,13 @@ class TableDefinedProperty(BaseModel):
     smart: Optional[bool] = False
     context: ModelMetaclass = TableContextProperty
     columns: Annotated[
-        Optional[
-            List[
-                Union[
-                    PgColumnDefinedProperty,
-                    PyColumnDefinedProperty,
-                    ButtonColumnDefinedProperty,
-                ]
+        List[
+            Union[
+                PgColumnDefinedProperty,
+                PyColumnDefinedProperty,
+                ButtonColumnDefinedProperty,
+                SqliteColumnDefinedProperty,
             ]
         ],
         PropertyCategory.default,
-    ] = []
+    ]

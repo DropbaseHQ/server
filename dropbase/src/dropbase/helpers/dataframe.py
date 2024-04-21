@@ -7,6 +7,10 @@ from dropbase.constants import INFER_TYPE_SAMPLE_SIZE
 
 
 def to_dtable(self, data_type: str = "python"):
+    # dropbase_data_type is a metadata we add to the dataframe to keep track of the source type
+    # for example if it's originated from querying sqlite, it will be "sqlite"
+    if "dropbase_data_type" in self.__dict__:
+        data_type = self.dropbase_data_type
     return convert_df_to_resp_obj(self, data_type)
 
 

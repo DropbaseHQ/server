@@ -8,12 +8,7 @@ import astor
 
 from dropbase.helpers.boilerplate import *
 from dropbase.helpers.scriptABC import compose_state_context_models
-from dropbase.helpers.utils import (
-    get_page_properties,
-    get_page_properties_schema,
-    read_app_properties,
-    read_page_properties,
-)
+from dropbase.helpers.utils import get_page_properties, read_app_properties, read_page_properties
 from dropbase.models import *
 
 
@@ -50,13 +45,6 @@ class PageController:
             if "components" in value:
                 class_name = "WidgetDefinedProperty"
             boilerplate += f"    {key}: {class_name}\n"
-        # add properties
-        # for key, value in self.page:
-        #     if isinstance(value, WidgetDefinedProperty):
-        #         class_name = "WidgetDefinedProperty"
-        #     if isinstance(value, TableDefinedProperty):
-        #         class_name = "TableDefinedProperty"
-        #     boilerplate += f"    {key}: {class_name}\n"
 
         # write file
         with open(self.page_path + "/schema.py", "w") as f:
@@ -84,9 +72,10 @@ class PageController:
             f.write(json.dumps(app_properties, indent=2))
 
     def update_page_properties(self, properties: dict):
-        # assert properties are valid
-        # Properties = get_page_properties_schema(self.app_name, self.page_name)
-        # Properties(**properties)
+        """
+        NOTE: properties are not validated against Properties schema since
+        if component is removed from incoming properties, Properties will fail the validation
+        """
 
         # write properties to file
         with open(self.page_path + "/properties.json", "w") as f:

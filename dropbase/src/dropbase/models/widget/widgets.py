@@ -22,6 +22,6 @@ class WidgetDefinedProperty(BaseModel):
     in_menu: Annotated[bool, PropertyCategory.default] = True
     context: ModelMetaclass = WidgetContextProperty
     components: Annotated[
-        Optional[List[Union[InputDefinedProperty, ButtonDefinedProperty]]],
+        List[Union[InputDefinedProperty, ButtonDefinedProperty]],
         PropertyCategory.default,
-    ] = []
+    ]
