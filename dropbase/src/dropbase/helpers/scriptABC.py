@@ -34,8 +34,8 @@ class ScriptABC(ABC):
         context = _dict_from_pydantic_model(Context)
         context = Context(**context)
 
-        # set page
-        self.page = get_page_properties(app_name, page_name)
+        # set properties
+        self.properties = get_page_properties(app_name, page_name)
 
         # set state and context
         self.app_name = app_name
@@ -43,10 +43,10 @@ class ScriptABC(ABC):
         self.state = state
         self.context = context
 
-    def reload_page(self):
-        page = get_page_properties(self.app_name, self.page_name)
-        self.page = page
-        return self.page
+    def reload_properties(self):
+        properties = get_page_properties(self.app_name, self.page_name)
+        self.properties = properties
+        return self.properties
 
     # generic methods used by dropbase
     def get_table_data(self, table_name: str):
@@ -62,7 +62,7 @@ class ScriptABC(ABC):
 
     def get_table_names(self):
         tables = []
-        for key, values in self.page:
+        for key, values in self.properties:
             if isinstance(values, TableDefinedProperty):
                 tables.append(key)
         return tables
@@ -72,9 +72,9 @@ class ScriptABC(ABC):
 data_type_column_mapper = {"python": "PyColumnDefinedProperty"}
 
 
-def generate_context_model(page):
+def generate_context_model(properties):
     context = {}
-    for key, value in page:
+    for key, value in properties:
         class_name = key.capitalize() + "Context"
         props = {}
 
@@ -135,10 +135,10 @@ def column_state_type_mapper(state_type: str):
             return str
 
 
-def compose_state_model(page):
+def compose_state_model(properties):
     state = {}
     non_editable_components = ["button", "text"]
-    for key, value in page:
+    for key, value in properties:
         class_name = key.capitalize() + "State"
         props = {}
         if isinstance(value, WidgetDefinedProperty):
@@ -177,12 +177,12 @@ def compose_state_model(page):
     return create_model("State", **state)
 
 
-def compose_state_context_models(app_name: str, page_name: str, page):
+def compose_state_context_models(app_name: str, page_name: str, properties):
 
     page_dir_path = f"workspace/{app_name}/{page_name}"
 
-    Context = generate_context_model(page)
-    State = compose_state_model(page)
+    Context = generate_context_model(properties)
+    State = compose_state_model(properties)
     generate(
         input_=Context.schema_json(indent=2),
         input_file_type="json",

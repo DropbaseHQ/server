@@ -56,6 +56,7 @@ class Database(ABC):
             result = pd.DataFrame(result)
             # IMPORTANT! adding metadata to the response dataframe so we can track the source type
             result.dropbase_data_type = self.db_type
+            # NOTE: maybe we can add source name as well to enable smart table features
             return result
         except SQLAlchemyError as e:
             self.session.rollback()  # Rollback the session on error.

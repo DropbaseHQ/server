@@ -1,5 +1,7 @@
 import ast
 import copy
+import importlib
+import inspect
 import json
 import os
 import shutil
@@ -17,12 +19,13 @@ class PageController:
         self.app_name = app_name
         self.page_name = page_name
         self.page_path = f"workspace/{self.app_name}/{self.page_name}"
-        self.page = None
+        self.page_module_path = f"workspace.{self.app_name}.{self.page_name}"
+        self.properties = None
 
-    def reload_page(self):
-        page = get_page_properties(self.app_name, self.page_name)
-        self.page = page
-        return self.page
+    def reload_properties(self):
+        properties = get_page_properties(self.app_name, self.page_name)
+        self.properties = properties
+        return self.properties
 
     def create_page_dirs(self):
         # create page
@@ -86,9 +89,11 @@ class PageController:
 
     def update_base_class(self):
         base_methods = ""
-        for key, values in self.page:
+        for key, values in self.properties:
             if isinstance(values, TableDefinedProperty):
                 base_methods += table_methods_base.format(key)
+                for column in values.columns:
+                    base_methods += column_methods_base.format(key, column.name)
             if isinstance(values, WidgetDefinedProperty):
                 for component in values.components:
                     if isinstance(component, ButtonDefinedProperty):
@@ -103,24 +108,57 @@ class PageController:
 
     def create_main_class(self):
         user_methods = ""
-        for key, values in self.page:
+        for key, values in self.properties:
             if isinstance(values, TableDefinedProperty):
                 user_methods += table_methods_main.format(key)
             if isinstance(values, WidgetDefinedProperty):
                 for component in values.components:
                     if isinstance(component, ButtonDefinedProperty):
                         user_methods += button_methods_main.format(component.name)
-                    elif isinstance(component, InputDefinedProperty):
-                        user_methods += input_methods_main.format(component.name)
+                    # NOTE: making on input enter optional
+                    # elif isinstance(component, InputDefinedProperty):
+                    #     user_methods += input_methods_main.format(component.name)
 
         main_class_str = main_class.format(user_methods)
 
         with open(self.page_path + "/scripts/main.py", "w") as f:
             f.write(main_class_str)
 
+    def get_script_methods(self):
+        script_path = f"{self.page_module_path}.scripts.main"
+        script_path_module = importlib.import_module(script_path)
+        importlib.reload(script_path_module)
+        Script = getattr(script_path_module, "Script")
+        return [
+            m
+            for m, f in inspect.getmembers(Script, predicate=inspect.isfunction)
+            if f.__module__ == Script.__module__
+        ]
+
+    def get_base_methods(self):
+        script_path = f"{self.page_module_path}.base_class"
+        script_path_module = importlib.import_module(script_path)
+        importlib.reload(script_path_module)
+        ScriptBase = getattr(script_path_module, "ScriptBase")
+        return [method for method in dir(ScriptBase) if not method.startswith("_")]
+
+    def get_base_abstract_methods(self):
+        script_path = f"{self.page_module_path}.base_class"
+        script_path_module = importlib.import_module(script_path)
+        importlib.reload(script_path_module)
+        ScriptBase = getattr(script_path_module, "ScriptBase")
+        abstract_methods = []
+        for name, method in inspect.getmembers(ScriptBase, predicate=inspect.isfunction):
+            if hasattr(method, "__isabstractmethod__") and method.__isabstractmethod__:
+                abstract_methods.append(name)
+        return abstract_methods
+
     def update_main_class(self):
 
-        incoming_methods = get_incoming_methods(self.page)
+        # incoming_methods = get_incoming_methods(self.properties)
+
+        # get all methods in base class
+        # get required methods in base class
 
         file_path = self.page_path + "/scripts/main.py"
 
@@ -128,31 +166,45 @@ class PageController:
         with open(file_path, "r") as f:
             module = ast.parse(f.read())
 
+        existing_methods = self.get_script_methods()
+        base_methods = self.get_base_methods()
+        requires_methods = compose_requires_methods(self.properties)
+
         # get existing methods
-        for node in module.body:
-            if isinstance(node, ast.ClassDef) and node.name == "Script":
-                existing_methods = [n.name for n in node.body if isinstance(n, ast.FunctionDef)]
+        # for node in module.body:
+        #     if isinstance(node, ast.ClassDef) and node.name == "Script":
+        #         existing_methods = [
+        #             n.name for n in node.body if isinstance(n, ast.FunctionDef)
+        #         ]
 
         # compare existing methods with incoming methods
         for node in module.body:
             if isinstance(node, ast.ClassDef) and node.name == "Script":
-                # Remove methods in existing_methods but not in incoming_methods
+                """
+                TODO: handle this later
+                IMPORTANT this will remove all the custom methods user has added
+                that are not part of base class
+                """
+                # Remove methods in existing_methods but not in base_methods
                 node.body = [
                     n
                     for n in node.body
                     if not (
                         isinstance(n, ast.FunctionDef)
-                        and n.name in existing_methods
-                        and n.name not in incoming_methods
+                        # and n.name in existing_methods
+                        and n.name not in base_methods
                     )
                 ]
-                # Check for methods to add
-                for method_name, method_body in incoming_methods.items():
-                    method_exists = any(
-                        isinstance(n, ast.FunctionDef) and n.name == method_name for n in node.body
-                    )
-                    # Add method if it doesn't exist
-                    if not method_exists:
+
+                # Check for required methods to add
+                for method_name, method_body in requires_methods.items():
+                    if method_name not in existing_methods:
+                        # method_exists = any(
+                        #     isinstance(n, ast.FunctionDef) and n.name == method_name
+                        #     for n in node.body
+                        # )
+                        # Add method if it doesn't exist
+                        # if not method_exists:
                         # Create a dummy FunctionDef node
                         new_method_node = ast.parse(method_body).body[0]
                         node.body.append(new_method_node)
@@ -188,16 +240,16 @@ class PageController:
         self.create_schema()
         self.create_page_properties()
         self.update_page_to_app_properties(page_label)
-        page = self.reload_page()
-        compose_state_context_models(self.app_name, self.page_name, page)
+        properties = self.reload_properties()
+        compose_state_context_models(self.app_name, self.page_name, properties)
         self.update_base_class()
         self.create_main_class()
         self.add_init()
 
     def update_page(self):
         self.update_schema()
-        page = self.reload_page()
-        compose_state_context_models(self.app_name, self.page_name, page)
+        properties = self.reload_properties()
+        compose_state_context_models(self.app_name, self.page_name, properties)
         self.update_base_class()
         self.update_main_class()
 
@@ -207,18 +259,29 @@ class PageController:
         self.remove_page_from_app_properties()
 
 
-def get_incoming_methods(page):
-    incoming_methods = {}
-    for key, values in page:
+def compose_requires_methods(properties):
+    # get all
+    # get required
+    required_methods = {}
+    for key, values in properties:
         if isinstance(values, TableDefinedProperty):
             name = f"get_{key}"
-            incoming_methods[name] = update_table_methods_main.format(key)
+            required_methods[name] = update_table_methods_main.format(key)
+            # NOTE: column methods are not reqiured, so we're not adding them to incoming methods
+            # for column in values.columns:
+            #     name = f"update_{key}_{column.name}"
+            #     required_methods[name] = update_column_methods_main.format(
+            #         key, column.name
+            #     )
         if isinstance(values, WidgetDefinedProperty):
             for component in values.components:
                 if isinstance(component, ButtonDefinedProperty):
                     name = f"on_click_{component.name}"
-                    incoming_methods[name] = update_button_methods_main.format(component.name)
-                elif isinstance(component, InputDefinedProperty):
-                    name = f"on_enter_{component.name}"
-                    incoming_methods[name] = update_input_methods_main.format(component.name)
-    return incoming_methods
+                    required_methods[name] = update_button_methods_main.format(component.name)
+                # NOTE: making on input enter optional
+                # elif isinstance(component, InputDefinedProperty):
+                #     name = f"on_enter_{component.name}"
+                #     required_methods[name] = update_input_methods_main.format(
+                #         component.name
+                #     )
+    return required_methods
