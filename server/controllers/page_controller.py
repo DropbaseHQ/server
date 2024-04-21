@@ -115,9 +115,6 @@ class PageController:
                 for component in values.components:
                     if isinstance(component, ButtonDefinedProperty):
                         user_methods += button_methods_main.format(component.name)
-                    # NOTE: making on input enter optional
-                    # elif isinstance(component, InputDefinedProperty):
-                    #     user_methods += input_methods_main.format(component.name)
 
         main_class_str = main_class.format(user_methods)
 
@@ -155,11 +152,6 @@ class PageController:
 
     def update_main_class(self):
 
-        # incoming_methods = get_incoming_methods(self.properties)
-
-        # get all methods in base class
-        # get required methods in base class
-
         file_path = self.page_path + "/scripts/main.py"
 
         # Parse the existing code
@@ -168,14 +160,7 @@ class PageController:
 
         existing_methods = self.get_script_methods()
         base_methods = self.get_base_methods()
-        requires_methods = compose_requires_methods(self.properties)
-
-        # get existing methods
-        # for node in module.body:
-        #     if isinstance(node, ast.ClassDef) and node.name == "Script":
-        #         existing_methods = [
-        #             n.name for n in node.body if isinstance(n, ast.FunctionDef)
-        #         ]
+        requires_methods = self.get_require_base_methods()
 
         # compare existing methods with incoming methods
         for node in module.body:
@@ -199,13 +184,6 @@ class PageController:
                 # Check for required methods to add
                 for method_name, method_body in requires_methods.items():
                     if method_name not in existing_methods:
-                        # method_exists = any(
-                        #     isinstance(n, ast.FunctionDef) and n.name == method_name
-                        #     for n in node.body
-                        # )
-                        # Add method if it doesn't exist
-                        # if not method_exists:
-                        # Create a dummy FunctionDef node
                         new_method_node = ast.parse(method_body).body[0]
                         node.body.append(new_method_node)
 
@@ -258,30 +236,15 @@ class PageController:
         shutil.rmtree(page_folder_path)
         self.remove_page_from_app_properties()
 
-
-def compose_requires_methods(properties):
-    # get all
-    # get required
-    required_methods = {}
-    for key, values in properties:
-        if isinstance(values, TableDefinedProperty):
-            name = f"get_{key}"
-            required_methods[name] = update_table_methods_main.format(key)
-            # NOTE: column methods are not reqiured, so we're not adding them to incoming methods
-            # for column in values.columns:
-            #     name = f"update_{key}_{column.name}"
-            #     required_methods[name] = update_column_methods_main.format(
-            #         key, column.name
-            #     )
-        if isinstance(values, WidgetDefinedProperty):
-            for component in values.components:
-                if isinstance(component, ButtonDefinedProperty):
-                    name = f"on_click_{component.name}"
-                    required_methods[name] = update_button_methods_main.format(component.name)
-                # NOTE: making on input enter optional
-                # elif isinstance(component, InputDefinedProperty):
-                #     name = f"on_enter_{component.name}"
-                #     required_methods[name] = update_input_methods_main.format(
-                #         component.name
-                #     )
-    return required_methods
+    def get_require_base_methods(self):
+        required_methods = {}
+        for key, values in self.properties:
+            if isinstance(values, TableDefinedProperty):
+                name = f"get_{key}"
+                required_methods[name] = update_table_methods_main.format(key)
+            if isinstance(values, WidgetDefinedProperty):
+                for component in values.components:
+                    if isinstance(component, ButtonDefinedProperty):
+                        name = f"on_click_{component.name}"
+                        required_methods[name] = update_button_methods_main.format(component.name)
+        return required_methods

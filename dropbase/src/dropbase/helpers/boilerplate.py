@@ -69,17 +69,12 @@ from ..context import Context
 
 class Script(ScriptBase):{0}
 """
-table_methods_main = "\n\n    def get_{0}(self) -> pd.DataFrame:\n        # TODO: implement this method\n        return pd.DataFrame()"
-button_methods_main = "\n\n    def on_click_{0}(self) -> Context:\n        # TODO: implement this method\n        return self.context"
-# input_methods_main = "\n\n    def on_enter_{0}(self) -> Context:\n        # TODO: implement this method\n        return self.context"
+table_methods_main = "\n\n    def get_{0}(self) -> pd.DataFrame:\n        # TODO: implement this method\n        return pd.DataFrame()"  # noqa
+button_methods_main = "\n\n    def on_click_{0}(self) -> Context:\n        # TODO: implement this method\n        return self.context"  # noqa
 
 # update
-update_table_methods_main = "\n\ndef get_{0}(self) -> pd.DataFrame:\n    # TODO: implement this method\n    return pd.DataFrame()"
-update_button_methods_main = (
-    "\n\ndef on_click_{0}(self) -> Context:\n    # TODO: implement this method\n    return self.context"
-)
-# update_column_methods_main = "\n\ndef update_{0}_{1}(self) -> Context:\n    # TODO: implement this method\n    return self.context"
-# update_input_methods_main = "\n\ndef on_enter_{0}(self) -> Context:\n    # TODO: implement this method\n    return self.context"
+update_table_methods_main = "\n\ndef get_{0}(self) -> pd.DataFrame:\n    # TODO: implement this method\n    return pd.DataFrame()"  # noqa
+update_button_methods_main = "\n\ndef on_click_{0}(self) -> Context:\n    # TODO: implement this method\n    return self.context"  # noqa
 
 
 # properties boilerplate
