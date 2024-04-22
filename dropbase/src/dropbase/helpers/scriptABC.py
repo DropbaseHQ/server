@@ -1,5 +1,5 @@
 import importlib
-from abc import ABC
+from abc import ABC, abstractmethod
 from pathlib import Path
 
 import pandas as pd
@@ -11,8 +11,43 @@ from dropbase.helpers.utils import _dict_from_pydantic_model, get_page_propertie
 from dropbase.models.common import BaseContext
 from dropbase.models.table import TableDefinedProperty
 from dropbase.models.widget import WidgetDefinedProperty
+from dropbase.schemas.edit_cell import CellEdit
 
 pd.DataFrame.to_dtable = to_dtable
+
+
+class WidgetBase(ABC):
+    def __init__(self):
+        self.app_name = self.app_name
+        self.page_name = self.page_name
+        self.state = self.state
+        self.context = self.context
+
+
+class TableBase(ABC):
+    def __init__(self):
+        self.app_name = self.app_name
+        self.page_name = self.page_name
+        self.state = self.state
+        self.context = self.context
+
+    @abstractmethod
+    def get_data(self):
+        pass
+
+    def udpate_row(self, edits: list[CellEdit]):
+        pass
+
+    def create_row(self, row: dict):
+        pass
+
+    def delete_row(self, row: dict):
+        pass
+
+    def handle_updates(self, updates: list):
+        for update in updates:
+            self.update_row(update)
+        return self.context
 
 
 class ScriptABC(ABC):
