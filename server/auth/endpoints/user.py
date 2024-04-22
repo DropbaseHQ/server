@@ -46,20 +46,6 @@ def register_user(request: CreateUserRequest, db: Session = Depends(get_db)):
     return user_controller.register_user(db, request)
 
 
-@router.post("/power_create")
-def power_register_user(request: PowerCreateUserRequest, db: Session = Depends(get_db)):
-    return user_controller.power_create_user(db, request)
-
-
-@router.post("/registerGoogle")
-def register_google_user(
-    request: CreateGoogleUserRequest,
-    db: Session = Depends(get_db),
-    Authorize: AuthJWT = Depends(),
-):
-    return user_controller.register_google_user(db, Authorize, request)
-
-
 @router.post("/verify")
 def verify_user(token: str, user_id: UUID, db: Session = Depends(get_db)):
     return user_controller.verify_user(db, token, user_id)
@@ -77,15 +63,6 @@ def login_user(
     request: LoginUser, db: Session = Depends(get_db), Authorize: AuthJWT = Depends()
 ):
     return user_controller.login_user(db, Authorize, request)
-
-
-@router.post("/loginGoogle")
-def login_google_user(
-    request: LoginGoogleUser,
-    db: Session = Depends(get_db),
-    Authorize: AuthJWT = Depends(),
-):
-    return user_controller.login_google_user(db, Authorize, request)
 
 
 @router.delete("/logout")
@@ -168,19 +145,3 @@ def update_policy_for_user(
     user_id: UUID, request: UpdateUserPolicyRequest, db: Session = Depends(get_db)
 ):
     return user_controller.update_policy(db, user_id, request)
-
-
-@router.post("/check_permission")
-def check_permission(
-    request: CheckPermissionRequest,
-    db: Session = Depends(get_db),
-    user: User = Depends(get_current_user),
-):
-    return user_controller.check_permissions(db, user, request)
-
-
-@router.get("/github_auth/{code}")
-def github_auth(
-    code: str, db: Session = Depends(get_db), Authorize: AuthJWT = Depends()
-):
-    return user_controller.github_auth(db, Authorize, code)

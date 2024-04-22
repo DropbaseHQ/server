@@ -27,17 +27,6 @@ def get_user_tokens_in_workspace(
     workspace_id: UUID, user_id: UUID, db: Session = Depends(get_db)
 ):
     return crud.token.get_user_tokens_in_workspace(db, workspace_id)
-    # return [
-    #     {
-    #         "token": token.token,
-    #         "token_id": token.id,
-    #         "is_selected": token.is_selected,
-    #         "owner_selected": token.is_selected and token.user_id == owner_id,
-    #         "name": token.name,
-    #         "region": token.region,
-    #     }
-    #     for token in crud.token.get_user_tokens_in_workspace(db, workspace_id, user_id)
-    # ]
 
 
 @router.get("/{token}")

@@ -92,13 +92,3 @@ def update_workspace(
 @router.delete("/{workspace_id}")
 def delete_workspace(workspace_id: UUID, db: Session = Depends(get_db)):
     return workspace_controller.delete_workspace(db, workspace_id)
-
-
-@router.post("/{workspace_id}/request_cloud")
-def request_cloud(
-    workspace_id: UUID,
-    request: RequestCloud,
-    db: Session = Depends(get_db),
-    user=Depends(get_current_user),
-):
-    return workspace_controller.request_cloud(db, user, workspace_id, request)
