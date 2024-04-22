@@ -8,8 +8,9 @@ from server.requests.dropbase_router import DropbaseRouter
 
 
 class AppController:
-    def __init__(self, app_name: str) -> None:
+    def __init__(self, app_name: str, app_label: str) -> None:
         self.app_name = app_name
+        self.app_label = app_label
         self.app_path = f"workspace/{self.app_name}"
         self.app = None
 
@@ -21,13 +22,24 @@ class AppController:
         with open(f"workspace/{self.app_name}/properties.json", "w") as f:
             f.write(json.dumps(app_properties_boilerplate, indent=2))
 
+    def add_app_to_workspace(self):
+        with open("workspace/properties.json", "r") as f:
+            workspace_properties = json.loads(f.read())
+        apps = workspace_properties.get("apps", [])
+        app = {"name": self.app_name, "label": self.app_label}
+        apps.append(app)
+        workspace_properties["apps"] = apps
+        with open("workspace/properties.json", "w") as file:
+            file.write(json.dumps(workspace_properties, indent=2))
+
     def delete_app(self):
         os.rmdir(self.app_path)
 
-    def create_app(self, app_label: str):
+    def create_app(self):
         # TODO: handle workspace properties
         self.create_dirs()
         self.create_app_init_properties()
+        self.add_app_to_workspace()
         return {"message": "success"}
 
 

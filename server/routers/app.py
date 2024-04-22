@@ -13,8 +13,8 @@ router = APIRouter(prefix="/app", tags=["app"], responses={404: {"description": 
 
 @router.post("/")
 def create_app_req(request: CreateAppRequest):
-    appController = AppController(request.app_name)
-    appController.create_app(app_label=request.app_label)
+    appController = AppController(request.app_name, request.app_label)
+    appController.create_app()
     pageController = PageController(request.app_name, "page1")
     pageController.create_page("Page 1")
     return {"message": "success"}

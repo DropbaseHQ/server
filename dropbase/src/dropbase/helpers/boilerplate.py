@@ -109,11 +109,15 @@ from .state import State
 properties_json_boilerplate = """{
     "table1":{
         "name":"table1",
-        "label":"Table 1"
+        "label":"Table 1",
+        "block_type": "table",
+        "columns": []
     },
     "widget1": {
         "name": "widget1",
-        "label": "Widget 1"
+        "label": "Widget 1",
+        "block_type": "widget",
+        "components": []
     }
 }"""
 
