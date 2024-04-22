@@ -7,7 +7,6 @@ from server.controllers.workspace import (
     get_subdirectories,
     WorkspaceFolderController,
 )
-from server.requests.dropbase_router import DropbaseRouter
 
 
 def get_workspace_apps():

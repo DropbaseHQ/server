@@ -1,7 +1,6 @@
 from fastapi import APIRouter, Depends, WebSocket
 from fastapi_jwt_auth import AuthJWT
 from dropbase.helpers.display_rules import run_display_rule
-from server.requests.dropbase_router import DropbaseRouter, WSDropbaseRouterGetter
 from server.utils import auth_module_is_installed
 
 router = APIRouter()
@@ -40,7 +39,11 @@ async def websocket_endpoint(
         if data["type"] == "display_rule":
             state_context = data["state_context"]
             state = state_context["state"]
-            payload = {"app_name": data["app_name"], "page_name": data["page_name"], "state": state}
+            payload = {
+                "app_name": data["app_name"],
+                "page_name": data["page_name"],
+                "state": state,
+            }
             context = run_display_rule(**payload)
             await websocket.send_json({"context": context})
         else:

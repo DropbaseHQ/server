@@ -8,7 +8,6 @@ from dropbase.schemas.table import CommitTableColumnsRequest, ConvertTableReques
 from server.controllers.columns import commit_table_columns
 from server.controllers.redis import r
 from server.controllers.tables import convert_sql_table
-from server.requests.dropbase_router import DropbaseRouter, get_dropbase_router
 from server.utils import get_permission_dependency_array
 
 router = APIRouter(
@@ -25,11 +24,10 @@ async def convert_sql_table_req(
     req: ConvertTableRequest,
     response: Response,
     background_tasks: BackgroundTasks,
-    router: DropbaseRouter = Depends(get_dropbase_router),
 ):
 
     job_id = uuid.uuid4().hex
-    background_tasks.add_task(convert_sql_table, req, router, job_id)
+    background_tasks.add_task(convert_sql_table, req, job_id)
 
     status_code = 202
     reponse_payload = {

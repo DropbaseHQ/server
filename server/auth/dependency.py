@@ -10,11 +10,6 @@ from sqlalchemy.orm import Session
 
 from server.auth.permissions_registry import permissions_registry
 from server.controllers.workspace import WorkspaceFolderController
-from server.requests.dropbase_router import (
-    DropbaseRouter,
-    get_dropbase_router,
-    get_server_access_header,
-)
 from .authentication import get_current_user
 from .models import User
 from .controllers import user as user_controller
