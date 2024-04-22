@@ -1,4 +1,5 @@
 import random
+import secrets
 from datetime import datetime, timedelta
 from urllib.parse import parse_qs, urlencode, urlparse, urlunparse
 from uuid import UUID
@@ -155,19 +156,8 @@ def register_user(db: Session, request: CreateUserRequest):
             confirmation_token=confirmation_token,
             onboarded=False,
         )
-        user = crud.user.create(db, obj_in=user_obj, auto_commit=False)
-        db.flush()
+        crud.user.create(db, obj_in=user_obj, auto_commit=False)
 
-        confirmation_link = (
-            f"{CLIENT_URL}/email-confirmation/{confirmation_token}/{user.id}"
-        )
-        # send_email(
-        #     email_name="verifyEmail",
-        #     email_params={
-        #         "email": user.email,
-        #         "url": confirmation_link,
-        #     },
-        # )
         db.commit()
         return {"message": "User successfully registered"}
     except Exception as e:
