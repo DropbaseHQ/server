@@ -6,10 +6,6 @@ from dropbase.models.category import PropertyCategory
 from dropbase.models.common import BaseColumnDefinedProperty, ColumnDisplayProperties, ColumnTypeEnum
 
 
-class SqliteColumnContextProperty(ColumnDisplayProperties):
-    pass
-
-
 class SqliteColumnDefinedProperty(BaseColumnDefinedProperty):
 
     database_name: Annotated[str, PropertyCategory.view_only] = None
@@ -33,4 +29,4 @@ class SqliteColumnDefinedProperty(BaseColumnDefinedProperty):
     hidden: Annotated[bool, PropertyCategory.default] = False
     editable: Annotated[bool, PropertyCategory.default] = False
 
-    context: ModelMetaclass = SqliteColumnContextProperty
+    context: ModelMetaclass = ColumnDisplayProperties

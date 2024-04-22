@@ -1,4 +1,4 @@
-from typing import Annotated, Any, Dict, List, Literal, Optional, Union
+from typing import Annotated, Any, List, Literal, Optional, Union
 
 from pydantic import BaseModel
 from pydantic.main import ModelMetaclass
@@ -44,27 +44,20 @@ class TableContextProperty(BaseModel):
     message: Optional[str]
     message_type: Optional[str]
     reload: Annotated[Optional[bool], PropertyCategory.other] = False
-    # columns: Annotated[Optional[dict], PropertyCategory.other] = {}
 
 
 class TableDefinedProperty(BaseModel):
-    block_type: Literal["table"] = "table"
+    block_type: Literal["table"]
     label: Annotated[str, PropertyCategory.default]
     name: Annotated[str, PropertyCategory.default]
     description: Annotated[Optional[str], PropertyCategory.default]
 
-    # data fetcher
-    fetcher: Annotated[Optional[Union[str, Dict]], PropertyCategory.default]
+    # header widget
     widget: Annotated[Optional[str], PropertyCategory.default]
 
     # settings
 
     size: Annotated[Optional[int], PropertyCategory.default] = 10
-
-    # actions
-    # TODO: implement these
-    # on_row_change: Annotated[Optional[str], PropertyCategory.events]
-    # on_row_selection: Annotated[Optional[str], PropertyCategory.events]
 
     # table filters
     filters: Annotated[Optional[List[PinnedFilter]], PropertyCategory.other]

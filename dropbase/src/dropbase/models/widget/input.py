@@ -7,15 +7,13 @@ from dropbase.models.category import PropertyCategory
 from dropbase.models.common import ComponentDisplayProperties, OnEvent
 
 
-class InputContextProperty(ComponentDisplayProperties):
-    pass
-
-
 class InputDefinedProperty(BaseModel):
+    component_type: Literal["input"]
     label: Annotated[str, PropertyCategory.default]
     name: Annotated[str, PropertyCategory.default]
     data_type: Annotated[
-        Literal["text", "integer", "float", "datetime", "date", "time"], PropertyCategory.default
+        Literal["text", "integer", "float", "datetime", "date", "time"],
+        PropertyCategory.default,
     ]
     placeholder: Annotated[Optional[str], PropertyCategory.default]
     default: Annotated[Optional[Any], PropertyCategory.default]
@@ -28,8 +26,7 @@ class InputDefinedProperty(BaseModel):
     on_submit: Annotated[Optional[OnEvent], PropertyCategory.events]
 
     # internal
-    component_type: Literal["input"] = "input"
-    context: ModelMetaclass = InputContextProperty
+    context: ModelMetaclass = ComponentDisplayProperties
 
     def __init__(self, **data):
         data.setdefault("data_type", "text")

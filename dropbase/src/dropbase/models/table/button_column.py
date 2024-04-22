@@ -1,13 +1,10 @@
 from typing import Annotated, Literal, Optional
 
 from pydantic import BaseModel
+from pydantic.main import ModelMetaclass
 
 from dropbase.models.category import PropertyCategory
 from dropbase.models.common import ColumnDisplayProperties, OnEvent
-
-
-class ButtonColumnContextProperty(ColumnDisplayProperties):
-    pass
 
 
 class ButtonColumnDefinedProperty(BaseModel):
@@ -36,3 +33,6 @@ class ButtonColumnDefinedProperty(BaseModel):
 
     # visibility
     hidden: Annotated[bool, PropertyCategory.default] = False
+
+    # internal
+    context: ModelMetaclass = ColumnDisplayProperties

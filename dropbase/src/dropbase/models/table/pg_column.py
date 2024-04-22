@@ -6,10 +6,6 @@ from dropbase.models.category import PropertyCategory
 from dropbase.models.common import BaseColumnDefinedProperty, ColumnDisplayProperties
 
 
-class PgColumnContextProperty(ColumnDisplayProperties):
-    pass
-
-
 class PgColumnDefinedProperty(BaseColumnDefinedProperty):
 
     schema_name: Annotated[str, PropertyCategory.view_only] = None
@@ -30,4 +26,4 @@ class PgColumnDefinedProperty(BaseColumnDefinedProperty):
     # visibility
     hidden: Annotated[bool, PropertyCategory.default] = False
     editable: Annotated[bool, PropertyCategory.default] = False
-    context: ModelMetaclass = PgColumnContextProperty
+    context: ModelMetaclass = ColumnDisplayProperties

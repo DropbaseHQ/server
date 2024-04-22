@@ -1,13 +1,10 @@
 from typing import Annotated, Any, List, Literal, Optional
 
 from pydantic import BaseModel
+from pydantic.main import ModelMetaclass
 
 from dropbase.models.category import PropertyCategory
 from dropbase.models.common import ComponentDisplayProperties, OnEvent
-
-
-class BooleanContextProperty(ComponentDisplayProperties):
-    pass
 
 
 class BooleanDefinedProperty(BaseModel):
@@ -25,3 +22,5 @@ class BooleanDefinedProperty(BaseModel):
     # internal
     data_type: Literal["boolean"] = "boolean"
     component_type: Literal["boolean"]
+
+    context: ModelMetaclass = ComponentDisplayProperties
