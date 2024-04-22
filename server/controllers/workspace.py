@@ -154,10 +154,11 @@ class AppFolderController:
 
     def _add_app_to_workspace_properties(self, app_name: str, app_label: str = None):
         workspace_properties = self._get_workspace_properties()
+        app_id = str(uuid.uuid4())
         app_object = {
             "name": app_name,
             "label": app_label if app_label else app_name,
-            "id": str(uuid.uuid4()),
+            "id": app_id,
         }
         if "apps" in workspace_properties:
             workspace_properties["apps"].append(app_object)
@@ -180,7 +181,7 @@ class AppFolderController:
             # Create new app folder
             create_folder(path=self.app_folder_path)
             create_init_file(path=self.app_folder_path)
-            self._add_app_to_workspace_properties(
+            app_object = self._add_app_to_workspace_properties(
                 app_name=self.app_name, app_label=app_label
             )
             new_app_properties = self._get_app_properties()
@@ -193,7 +194,7 @@ class AppFolderController:
             # Create new page folder with __init__.py
             self.create_page()
 
-            return None
+            return app_object
 
         except Exception:
             raise HTTPException(status_code=500, detail="Unable to create app folder")
@@ -386,9 +387,9 @@ class AppFolderController:
                 detail="Another app with the same label already exists",
             )
 
-        app_id = self._create_default_workspace_files(app_label=app_label)
+        app_object = self._create_default_workspace_files(app_label=app_label)
 
-        return {"app_id": app_id}
+        return app_object
 
     def delete_app(self, app_name: str):
         app_path = os.path.join(self.r_path_to_workspace, app_name)

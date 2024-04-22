@@ -1,6 +1,7 @@
+import os
 from uuid import UUID
 from pydantic import BaseModel
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Request, HTTPException
 from sqlalchemy.orm import Session
 from ..controllers.policy import (
     PolicyUpdater,
@@ -13,6 +14,9 @@ from ..models import User
 from ..authorization import get_current_user
 from ..connect import get_db
 from server.controllers import app as app_controller
+from server.utils import get_permission_dependency_array
+from dropbase.schemas.workspace import CreateAppRequest
+from server.controllers.workspace import AppFolderController, WorkspaceFolderController
 
 router = APIRouter(prefix="/app", tags=["app"])
 
@@ -109,3 +113,37 @@ def get_apps(db: Session = Depends(get_db), user: User = Depends(get_current_use
     all_apps = response.get("apps")
     workspace_id = response.get("workspace_id")
     return filter_apps(db=db, apps=all_apps, workspace_id=workspace_id, user_id=user.id)
+
+
+@router.post("/", dependencies=get_permission_dependency_array("edit", "workspace"))
+def create_app_req(
+    request: Request, req: CreateAppRequest, db: Session = Depends(get_db)
+):
+    r_path_to_workspace = os.path.join(os.path.dirname(__file__), "../../../workspace")
+    app_folder_controller = AppFolderController(
+        app_name=req.app_name, r_path_to_workspace=r_path_to_workspace
+    )
+    workspace_id = request.headers.get("workspace-id")
+    if not workspace_id:
+        raise HTTPException(status_code=400, detail="No workspace id header provided")
+    app_object = app_folder_controller.create_app(app_label=req.app_label)
+
+    new_app = crud.app.create(db, obj_in={**app_object, "workspace_id": workspace_id})
+    return new_app
+
+
+@router.delete(
+    "/{app_name}", dependencies=get_permission_dependency_array("edit", "app")
+)
+def delete_app_req(request: Request, app_name: str, db: Session = Depends(get_db)):
+    r_path_to_workspace = os.path.join(os.path.dirname(__file__), "../../../workspace")
+    app_folder_controller = AppFolderController(app_name, r_path_to_workspace)
+    app_folder_controller.delete_app(app_name=app_name)
+    workspace_id = request.headers.get("workspace-id")
+    if not workspace_id:
+        raise HTTPException(status_code=400, detail="No workspace id header provided")
+    app_to_delete = crud.app.get_app_by_name(
+        db=db, app_name=app_name, workspace_id=workspace_id
+    )
+    crud.app.remove(db, id=app_to_delete.id)
+    return {"message": "App deleted successfully"}
