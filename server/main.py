@@ -3,6 +3,8 @@ import logging
 
 from importlib.util import find_spec
 from fastapi import FastAPI
+from fastapi.responses import JSONResponse
+from fastapi_jwt_auth.exceptions import AuthJWTException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from starlette.websockets import WebSocketDisconnect
@@ -52,6 +54,14 @@ if auth_module_is_installed:
     from server.auth.endpoints import premium_router
 
     app.include_router(premium_router)
+
+    @app.exception_handler(AuthJWTException)
+    async def authjwt_exception_handler(_, exc: AuthJWTException):
+        return JSONResponse(
+            status_code=exc.status_code, content={"detail": exc.message}
+        )
+
+
 # routes for resources
 app.include_router(routers.query_router)
 app.include_router(routers.function_router)
