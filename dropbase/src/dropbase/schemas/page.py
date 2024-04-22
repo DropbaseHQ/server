@@ -73,11 +73,3 @@ class SaveTableColumns(BaseModel):
     page_name: str
     table_name: str
     columns: list
-    # List[
-    #     Union[
-    #         PyColumnDefinedProperty,
-    #         PgColumnDefinedProperty,
-    #         SnowflakeColumnDefinedProperty,
-    #         MySqlColumnDefinedProperty,
-    #     ]
-    # ]

@@ -26,6 +26,7 @@ def run(r, response):
         script = Script(app_name, page_name, state)
 
         # run function
+        # TODO: make actions more generalizable
         new_context = script.__getattribute__(action)(target)
 
         response["type"] = "context"

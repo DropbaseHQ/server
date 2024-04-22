@@ -1,3 +1,4 @@
+# TODO: delete, being replaced by state_context in dropbase package
 from pathlib import Path
 
 from datamodel_code_generator import generate
