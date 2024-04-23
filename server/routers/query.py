@@ -5,25 +5,38 @@ from fastapi import APIRouter, BackgroundTasks, Depends, Response
 
 from dropbase.helpers.utils import get_table_data_fetcher
 from dropbase.schemas.files import DataFile
-from dropbase.schemas.query import RunSQLRequestTask, RunSQLStringRequest, RunSQLStringTask
+from dropbase.schemas.query import (
+    RunSQLRequestTask,
+    RunSQLStringRequest,
+    RunSQLStringTask,
+)
 from dropbase.schemas.run_python import QueryPythonRequest
 from dropbase.schemas.table import FilterSort
-from server.auth.dependency import CheckUserPermissions
 from server.controllers.properties import read_page_properties
 from server.controllers.redis import r
 from server.controllers.run_sql import run_sql_query, run_sql_query_from_string
+from server.utils import get_permission_dependency_array
 
-router = APIRouter(prefix="/query", tags=["query"], responses={404: {"description": "Not found"}})
+router = APIRouter(
+    prefix="/query",
+    tags=["query"],
+    responses={404: {"description": "Not found"}},
+    dependencies=get_permission_dependency_array(action="use", resource="app"),
+)
 
 
 @router.post("/")
-async def run_sql(req: QueryPythonRequest, response: Response, background_tasks: BackgroundTasks):
+async def run_sql(
+    req: QueryPythonRequest, response: Response, background_tasks: BackgroundTasks
+):
     try:
         properties = read_page_properties(req.app_name, req.page_name)
         file = get_table_data_fetcher(properties["files"], req.fetcher)
         file = DataFile(**file)
         job_id = uuid.uuid4().hex
-        filter_sort = req.filter_sort if req.filter_sort else FilterSort(filters=[], sorts=[])
+        filter_sort = (
+            req.filter_sort if req.filter_sort else FilterSort(filters=[], sorts=[])
+        )
 
         # called internally, so can pass objects directly
         args = RunSQLRequestTask(
@@ -38,7 +51,11 @@ async def run_sql(req: QueryPythonRequest, response: Response, background_tasks:
         background_tasks.add_task(run_sql_query, args)
 
         status_code = 202
-        reponse_payload = {"message": "job started", "status_code": status_code, "job_id": job_id}
+        reponse_payload = {
+            "message": "job started",
+            "status_code": status_code,
+            "job_id": job_id,
+        }
 
         # set initial status to pending
         r.set(job_id, json.dumps(reponse_payload))
@@ -52,10 +69,7 @@ async def run_sql(req: QueryPythonRequest, response: Response, background_tasks:
         return {"message": str(e)}
 
 
-@router.post(
-    "/string/",
-    dependencies=[Depends(CheckUserPermissions(action="use", resource=CheckUserPermissions.APP))],
-)
+@router.post("/string/")
 async def run_sql_from_string(
     request: RunSQLStringRequest, response: Response, background_tasks: BackgroundTasks
 ):
@@ -64,7 +78,11 @@ async def run_sql_from_string(
     background_tasks.add_task(run_sql_query_from_string, args)
 
     status_code = 202
-    reponse_payload = {"message": "job started", "status_code": status_code, "job_id": job_id}
+    reponse_payload = {
+        "message": "job started",
+        "status_code": status_code,
+        "job_id": job_id,
+    }
 
     # set initial status to pending
     r.set(job_id, json.dumps(reponse_payload))

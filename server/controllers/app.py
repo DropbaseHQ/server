@@ -2,11 +2,14 @@ import json
 import os
 
 from server.constants import cwd
-from server.controllers.workspace import AppFolderController, get_subdirectories
-from server.requests.dropbase_router import DropbaseRouter
+from server.controllers.workspace import (
+    AppFolderController,
+    get_subdirectories,
+    WorkspaceFolderController,
+)
 
 
-def get_workspace_apps(router: DropbaseRouter):
+def get_workspace_apps():
     folder_path = os.path.join(cwd, "workspace")
     apps = []
     if os.path.exists(os.path.join(folder_path, "properties.json")):
@@ -35,23 +38,10 @@ def get_workspace_apps(router: DropbaseRouter):
                 "pages": pages,
             }
         )
-    # return response
-    return parse_apps_permissions(response, router)
+    workspace_folder_controller = WorkspaceFolderController(
+        r_path_to_workspace=os.path.join(cwd, "workspace")
+    )
+    workspace_props = workspace_folder_controller.get_workspace_properties()
+    return {"apps": response, "workspace_id": workspace_props.get("id")}
 
-
-def parse_apps_permissions(app_list, router: DropbaseRouter):
-
-    app_ids = [app.get("id") for app in app_list]
-    permissions_response = router.auth.check_apps_permissions(app_ids=app_ids).json()
-
-    filtered_apps = []
-    for app in app_list:
-        if app.get("id") is None:
-            filtered_apps.append(app)
-
-        if app.get("id") in permissions_response:
-            if not permissions_response.get(app.get("id")):
-                continue
-            filtered_apps.append(app)
-
-    return filtered_apps
+    # return parse_apps_permissions(response, router)

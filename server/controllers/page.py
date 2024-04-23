@@ -13,6 +13,23 @@ from dropbase.schemas.page import PageProperties
 from server.controllers.properties import read_page_properties, update_properties
 
 
+def get_state_context(app_name, page_name, permissions=None):
+    try:
+        state_context = get_page_state_context(app_name, page_name)
+        state_context["properties"] = read_page_properties(app_name, page_name)
+        return {"state_context": state_context, "permissions": permissions}
+    except Exception:
+        # in cases where there are some hanging files/dirs from update properties step
+        # wait for a second for files to clear up and try again
+        try:
+            time.sleep(1)
+            state_context = get_page_state_context(app_name, page_name)
+            state_context["properties"] = read_page_properties(app_name, page_name)
+            return {"state_context": state_context, "permissions": permissions}
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=str(e))
+
+
 def update_page_properties(req: PageProperties):
     try:
         # validate properties
@@ -68,7 +85,13 @@ def validate_property_names(properties: dict):
                     raise Exception("Invalid component names present in the table")
 
 
-def get_state_context(app_name, page_name, permissions, initial=False):
+def get_state_context(app_name, page_name, all_permissions=None, initial=False):
+    permissions = None
+    if all_permissions is not None:
+        if isinstance(all_permissions, dict):
+            permissions = all_permissions.get("app_permissions")
+        elif isinstance(all_permissions, list):
+            permissions = all_permissions[0]
     try:
         state_context = get_page_state_context(app_name, page_name, initial)
         state_context["properties"] = read_page_properties(app_name, page_name)

@@ -5,10 +5,15 @@ from server.settings import config
 
 cwd = os.getcwd()
 
+GPT_MODEL = "gpt-3.5-turbo"
+GPT_TEMPERATURE = 0.0
 
 DROPBASE_TOKEN = config.get("dropbase_token")
 DROPBASE_API_URL = config.get("dropbase_api_url") or "https://api.dropbase.io"
-CORS_ORIGINS = config.get("cors_origins") or ["http://localhost:3030", "http://www.localhost:3030"]
+CORS_ORIGINS = config.get("cors_origins") or [
+    "http://localhost:3030",
+    "http://www.localhost:3030",
+]
 TASK_TIMEOUT = config.get("task_timeout") or 60
 DATA_PREVIEW_SIZE = 100
 INFER_TYPE_SAMPLE_SIZE = 50

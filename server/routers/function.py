@@ -10,11 +10,13 @@ from dropbase.schemas.run_python import RunPythonStringRequestNew
 from server.controllers.properties import read_page_properties
 from server.controllers.python_docker import run_container
 from server.controllers.redis import r
+from server.utils import get_permission_dependency_array
 
 router = APIRouter(
     prefix="/function",
     tags=["function"],
     responses={404: {"description": "Not found"}},
+    dependencies=get_permission_dependency_array(action="use", resource="app"),
 )
 
 

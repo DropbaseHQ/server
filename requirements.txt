@@ -13,3 +13,9 @@ redis==5.0.1
 python-dotenv==1.0.0
 cachetools==5.3.3
 dropbase==0.3.3
+openai==0.28.0
+sqlalchemy==1.4.46
+psycopg2-binary==2.9.5
+bcrypt==4.0.1
+fastapi-jwt-auth==0.5.0
+casbin==1.31.0
