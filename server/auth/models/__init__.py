@@ -3,7 +3,6 @@ from .group import Group
 from .policy import Policy
 from .reset_token import ResetToken
 from .role import Role
-from .token import Token
 from .user import User
 from .user_group import UserGroup
 from .user_role import UserRole
