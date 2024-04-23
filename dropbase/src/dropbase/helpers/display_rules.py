@@ -169,14 +169,16 @@ def display_rule(state, context, rules: DisplayRules):
                 component_visible = rule_applies
 
         # the resulting state of the component is defined by the final rule resulting condition
-        set_by_path(context, f"{component_display_rules.component}.visible", component_visible)
+        set_by_path(
+            context, f"{component_display_rules.component}.visible", component_visible
+        )
 
     return context.dict()
 
 
-def get_display_rules_from_comp_props(component_props):
+def get_display_rules_from_comp_props(component_props: dict):
     component_display_rules = []
-    for data in component_props:
+    for data in component_props.values():
         widget_name = data.get("name")
         if not data.get("components"):
             continue
@@ -194,14 +196,14 @@ def get_display_rules_from_comp_props(component_props):
 
 def run_display_rule(app_name: str, page_name: str, state: dict):
     try:
-        state, context = get_state_empty_context(app_name=app_name, page_name=page_name, state=state)
+        state, context = get_state_empty_context(
+            app_name=app_name, page_name=page_name, state=state
+        )
 
         path = f"workspace/{app_name}/{page_name}/properties.json"
         with open(path, "r") as f:
             properties = json.loads(f.read())
-
-        block_properties = properties.get("blocks")
-        display_rules = get_display_rules_from_comp_props(block_properties)
+        display_rules = get_display_rules_from_comp_props(properties)
 
         rules = DisplayRules(display_rules=display_rules)
         return display_rule(state, context, rules)
