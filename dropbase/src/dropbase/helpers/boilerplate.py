@@ -1,18 +1,3 @@
-# base class boilerplates
-base_class_base = """from abc import abstractmethod
-from dropbase.helpers.tableABC import TableABC
-from dropbase.helpers.widgetABC import WidgetABC
-from .context import Context
-
-"""
-
-button_methods_base = """
-    @abstractmethod
-    def on_click_{0}(self) -> Context:
-        pass
-"""
-
-
 # schema boilerplates
 schema_boilerplate_init = """from dropbase.helpers.pageABC import PageABC
 from .scripts.main import *  # noqa, here we're importing all user defined classes
@@ -43,15 +28,6 @@ class Properties(BaseModel):
     table1: TableDefinedProperty
     widget1: WidgetDefinedProperty
 """
-# update
-schema_boilerplate_create = """from pydantic import BaseModel
-
-from dropbase.models.table import TableDefinedProperty
-from dropbase.models.widget import WidgetDefinedProperty
-
-
-class Properties(BaseModel):
-"""
 
 
 # main boilerplates
@@ -80,11 +56,6 @@ from ..context import Context
 
 class Script(ScriptBase):{0}
 """
-table_methods_main = "\n\n    def get_{0}(self) -> pd.DataFrame:\n        # TODO: implement this method\n        return pd.DataFrame()"  # noqa
-button_methods_main = "\n\n    def on_click_{0}(self) -> Context:\n        # TODO: implement this method\n        return self.context"  # noqa
-
-# update
-update_table_methods_main = "\n\ndef get_{0}(self) -> pd.DataFrame:\n    # TODO: implement this method\n    return pd.DataFrame()"  # noqa
 update_button_methods_main = "\n\ndef on_click_{0}(self) -> Context:\n    # TODO: implement this method\n    return self.context"  # noqa
 
 

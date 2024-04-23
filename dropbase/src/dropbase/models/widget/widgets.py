@@ -4,7 +4,13 @@ from pydantic import BaseModel
 from pydantic.main import ModelMetaclass
 
 from dropbase.models.category import PropertyCategory
-from dropbase.models.widget import ButtonDefinedProperty, InputDefinedProperty
+from dropbase.models.widget import (
+    BooleanDefinedProperty,
+    ButtonDefinedProperty,
+    InputDefinedProperty,
+    SelectDefinedProperty,
+    TextDefinedProperty,
+)
 
 
 class WidgetContextProperty(BaseModel):
@@ -22,6 +28,14 @@ class WidgetDefinedProperty(BaseModel):
     in_menu: Annotated[bool, PropertyCategory.default] = True
     context: ModelMetaclass = WidgetContextProperty
     components: Annotated[
-        List[Union[InputDefinedProperty, ButtonDefinedProperty]],
+        List[
+            Union[
+                ButtonDefinedProperty,
+                InputDefinedProperty,
+                SelectDefinedProperty,
+                TextDefinedProperty,
+                BooleanDefinedProperty,
+            ]
+        ],
         PropertyCategory.default,
     ]

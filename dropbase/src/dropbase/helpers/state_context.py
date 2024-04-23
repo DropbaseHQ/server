@@ -66,6 +66,8 @@ def compose_state_model(properties):
                 )
         else:
             for column in value.columns:
+                if column.column_type == "button_column":
+                    continue
                 # skip non-editable columns
                 if not column.display_type:
                     continue
