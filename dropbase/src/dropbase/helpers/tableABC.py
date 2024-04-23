@@ -22,8 +22,7 @@ class TableABC(ABC):
     def get_data(self):
         pass
 
-    @abstractmethod
-    def update_row(self, edits: list[CellEdit]):
+    def update(self, edits: list[CellEdit]):
         pass
 
     def create_row(self, row: dict):
@@ -35,10 +34,6 @@ class TableABC(ABC):
     # generic methods used by dropbase
     def get_table_data(self):
         self.context.__getattribute__(self.name).data = self.get_data().to_dtable()
-        return self.context
-
-    def update_table(self, edits: list[CellEdit]):
-        self.context = self.update_row(edits)
         return self.context
 
     def load_page(self):

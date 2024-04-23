@@ -33,7 +33,7 @@ async def run_class_req(req: RunClass, response: Response):
             "job_id": job_id,
         }
 
-        if req.action == "update_table":
+        if req.action == "update":
             env_vars["edits"] = req.edits
 
         print("job ID: ", job_id)
