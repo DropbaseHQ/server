@@ -7,4 +7,3 @@ from .worker import *
 from .workspace import *
 from .app import *
 from .page import *
-from .url_mapping import *
