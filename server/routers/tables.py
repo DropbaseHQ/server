@@ -5,11 +5,10 @@ import anyio
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Response
 
 from dropbase.schemas.table import CommitTableColumnsRequest, ConvertTableRequest
-from server.auth.dependency import CheckUserPermissions
 from server.controllers.columns import commit_table_columns
 from server.controllers.redis import r
 from server.controllers.tables import convert_sql_table
-from server.requests.dropbase_router import DropbaseRouter, get_dropbase_router
+from server.utils import get_permission_dependency_array
 
 router = APIRouter(prefix="/tables", tags=["tables"], responses={404: {"description": "Not found"}})
 
@@ -31,11 +30,10 @@ async def convert_sql_table_req(
     req: ConvertTableRequest,
     response: Response,
     background_tasks: BackgroundTasks,
-    router: DropbaseRouter = Depends(get_dropbase_router),
 ):
 
     job_id = uuid.uuid4().hex
-    background_tasks.add_task(convert_sql_table, req, router, job_id)
+    background_tasks.add_task(convert_sql_table, req, job_id)
 
     status_code = 202
     reponse_payload = {
@@ -55,7 +53,7 @@ async def convert_sql_table_req(
 
 @router.post(
     "/commit/",
-    dependencies=[Depends(CheckUserPermissions(action="edit", resource=CheckUserPermissions.APP))],
+    dependencies=get_permission_dependency_array(action="edit", resource="app"),
 )
 def commit_table_columns_req(req: CommitTableColumnsRequest, response: Response):
     try:

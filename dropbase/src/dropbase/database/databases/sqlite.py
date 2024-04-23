@@ -330,6 +330,8 @@ class SqliteDatabase(Database):
         if pagination:
             offset = pagination.page * pagination.page_size
             filter_sql += f"LIMIT {pagination.page_size + 1} OFFSET {offset}"
+            offset = pagination.page * pagination.page_size
+            filter_sql += f"LIMIT {pagination.page_size + 1} OFFSET {offset}"
 
         return filter_sql, filter_values
 

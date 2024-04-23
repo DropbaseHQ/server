@@ -14,7 +14,6 @@ def run(r, response):
         app_name = os.getenv("app_name")
         page_name = os.getenv("page_name")
         state = json.loads(os.getenv("state"))
-        job_id = os.getenv("job_id")
         action = os.getenv("action")
         target = os.getenv("target")
 
@@ -49,5 +48,5 @@ def run(r, response):
         response["status_code"] = 500
     finally:
         # send result to redis
-        r.set(job_id, json.dumps(response))
-        r.expire(job_id, 60)
+        r.set(os.getenv("job_id"), json.dumps(response))
+        r.expire(os.getenv("job_id"), 60)
