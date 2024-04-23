@@ -1,5 +1,6 @@
 from fastapi import APIRouter, Depends, WebSocket
 from fastapi_jwt_auth import AuthJWT
+
 from dropbase.helpers.display_rules import run_display_rule
 from server.utils import auth_module_is_installed
 
@@ -7,10 +8,7 @@ router = APIRouter()
 
 
 @router.websocket("/ws")
-async def websocket_endpoint(
-    websocket: WebSocket,
-    Authorize: AuthJWT = Depends(),
-):
+async def websocket_endpoint(websocket: WebSocket, Authorize: AuthJWT = Depends()):
     await websocket.accept()
     while True:
         data = await websocket.receive_json()
@@ -24,7 +22,7 @@ async def websocket_endpoint(
                         setattr(websocket, "authenticated", True)
                         await websocket.send_json({"authenticated": True})
 
-                    except Exception as e:
+                    except Exception:
                         await websocket.send_json({"authenticated": False})
 
                 else:
@@ -45,7 +43,7 @@ async def websocket_endpoint(
                 "state": state,
             }
             context = run_display_rule(**payload)
-            await websocket.send_json({"context": context})
+            await websocket.send_json({"context": context.dict()})
         else:
             message = data.get("message")
             await websocket.send_json({"message": f"You sent: {message}"})

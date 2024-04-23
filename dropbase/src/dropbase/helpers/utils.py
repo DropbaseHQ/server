@@ -4,7 +4,10 @@ import re
 from pathlib import Path
 
 import pandas as pd
-from pydantic import BaseModel
+from pydantic import BaseModel, create_model
+
+from dropbase.models.table import TableDefinedProperty
+from dropbase.models.widget import WidgetDefinedProperty
 
 
 def get_state_context(app_name: str, page_name: str, state: dict, context: dict):
@@ -70,12 +73,6 @@ def read_app_properties(app_name: str):
     path = f"workspace/{app_name}/properties.json"
     with open(path, "r") as f:
         return json.loads(f.read())
-
-
-from pydantic import create_model
-
-from dropbase.models.table import TableDefinedProperty
-from dropbase.models.widget import WidgetDefinedProperty
 
 
 def compose_properties_schema(properties: dict):
