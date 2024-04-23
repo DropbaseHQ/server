@@ -30,6 +30,10 @@ async def run_class_req(req: RunClass, response: Response):
             "state": json.dumps(req.state),
             "job_id": job_id,
         }
+
+        if req.action == "update_table":
+            env_vars["edits"] = req.edits
+
         # start a job
         run_container(env_vars)
 

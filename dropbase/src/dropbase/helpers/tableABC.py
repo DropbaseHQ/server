@@ -38,7 +38,7 @@ class TableABC(ABC):
         return self.context
 
     def update_table(self, edits: list[CellEdit]):
-        self.context.__getattribute__(self.name).data = self.update_row().to_dtable()
+        self.context = self.update_row(edits)
         return self.context
 
     def load_page(self):

@@ -66,7 +66,7 @@ table_class_boilerplate = """class {0}(TableABC):
         # Add your code here
         return pd.DataFrame()
 
-    def update_data(self) -> Context:
+    def update_row(self, edits: List[CellEdit) -> Context:
         # Add your code here
         return self.context
 """
@@ -131,7 +131,7 @@ def get_data(self) -> pd.DataFrame:
     # Add your code here
     return pd.DataFrame()"""
 
-update_data_template = """
-def update_data(self, edits: List[CellEdit]) -> Context:
+update_row_template = """
+def update_row(self, edits: List[CellEdit]) -> Context:
     # Add your code here
     return self.context"""

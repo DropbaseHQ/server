@@ -40,6 +40,48 @@ class PostgresDatabase(Database):
             self.commit()
         return [dict(x) for x in result.fetchall()]
 
+    def update_value(self, edit: CellEdit):
+        try:
+            columns_name = edit.column_name
+            # NOTE: client sends columns as a list of column objects. we need to convert it to a dict
+            columns_dict = {col.column_name: col for col in edit.columns}
+            column = columns_dict[columns_name]
+
+            if "DATE" in edit.data_type or "TIMESTAMP" in edit.data_type:
+                # new_value will be epoch time in ms, convert it to sec first then create datetime
+                edit.new_value = datetime.fromtimestamp(edit.new_value // 1000, timezone.utc)
+
+            values = {
+                "new_value": edit.new_value,
+                "old_value": edit.old_value,
+            }
+            prim_key_list = []
+            edit_keys = column.edit_keys
+            for key in edit_keys:
+                pk_col = columns_dict[key]
+                prim_key_list.append(f"{pk_col.column_name} = :{pk_col.column_name}")
+                values[pk_col.column_name] = edit.row[pk_col.name]
+            prim_key_str = " AND ".join(prim_key_list)
+
+            sql = f"""UPDATE "{column.schema_name}"."{column.table_name}"
+           SET {column.column_name} = :new_value
+           WHERE {prim_key_str}"""
+
+            # TODO: add check for prev column value
+            # AND {column.column_name} = :old_value
+
+            with self.engine.connect() as conn:
+                result = conn.execute(text(sql), values)
+                conn.commit()
+                if result.rowcount == 0:
+                    raise Exception("No rows were updated")
+            return f"Updated {edit.column_name} from {edit.old_value} to {edit.new_value}", True
+        except Exception as e:
+            return (
+                f"Failed to update {edit.column_name} from {edit.old_value} to {edit.new_value}. Error: {str(e)}",  # noqa
+                False,
+            )
+
     def select(self, table: str, where_clause: str = None, values: dict = None):
         if where_clause:
             sql = f"""SELECT * FROM {self.schema}.{table} WHERE {where_clause};"""
@@ -219,48 +261,6 @@ class PostgresDatabase(Database):
 
     def _get_table_path(self, col_data: PgColumnDefinedProperty) -> str:
         return f"{col_data.schema_name}.{col_data.table_name}"
-
-    def _update_value(self, edit: CellEdit):
-        try:
-            columns_name = edit.column_name
-            # NOTE: client sends columns as a list of column objects. we need to convert it to a dict
-            columns_dict = {col.column_name: col for col in edit.columns}
-            column = columns_dict[columns_name]
-
-            if "DATE" in edit.data_type or "TIMESTAMP" in edit.data_type:
-                # new_value will be epoch time in ms, convert it to sec first then create datetime
-                edit.new_value = datetime.fromtimestamp(edit.new_value // 1000, timezone.utc)
-
-            values = {
-                "new_value": edit.new_value,
-                "old_value": edit.old_value,
-            }
-            prim_key_list = []
-            edit_keys = column.edit_keys
-            for key in edit_keys:
-                pk_col = columns_dict[key]
-                prim_key_list.append(f"{pk_col.column_name} = :{pk_col.column_name}")
-                values[pk_col.column_name] = edit.row[pk_col.name]
-            prim_key_str = " AND ".join(prim_key_list)
-
-            sql = f"""UPDATE "{column.schema_name}"."{column.table_name}"
-           SET {column.column_name} = :new_value
-           WHERE {prim_key_str}"""
-
-            # TODO: add check for prev column value
-            # AND {column.column_name} = :old_value
-
-            with self.engine.connect() as conn:
-                result = conn.execute(text(sql), values)
-                conn.commit()
-                if result.rowcount == 0:
-                    raise Exception("No rows were updated")
-            return f"Updated {edit.column_name} from {edit.old_value} to {edit.new_value}", True
-        except Exception as e:
-            return (
-                f"Failed to update {edit.column_name} from {edit.old_value} to {edit.new_value}. Error: {str(e)}",  # noqa
-                False,
-            )
 
     def _run_query(self, sql: str, values: dict):
         with self.engine.connect().execution_options(autocommit=True) as conn:

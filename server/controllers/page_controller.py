@@ -96,9 +96,9 @@ class PageController:
                         if not get_data_present:
                             new_method_node = ast.parse(get_data_template).body[0]
                             node.body.append(new_method_node)
-                        update_data_present = "update_data" in [n.name for n in node.body]
-                        if not update_data_present:
-                            new_method_node = ast.parse(update_data_template).body[0]
+                        update_row_present = "update_row" in [n.name for n in node.body]
+                        if not update_row_present:
+                            new_method_node = ast.parse(update_row_template).body[0]
                             node.body.append(new_method_node)
 
                     if base_name == "TableABC" or base_name == "WidgetABC":

@@ -1,4 +1,8 @@
+from typing import Optional
+
 from pydantic import BaseModel
+
+from dropbase.schemas.edit_cell import CellEdit
 
 
 class RunFunction(BaseModel):
@@ -15,3 +19,4 @@ class RunClass(BaseModel):
     action: str
     target: str
     state: dict
+    edits: Optional[CellEdit]

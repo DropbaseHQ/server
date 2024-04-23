@@ -70,6 +70,10 @@ class Database(ABC):
     def update(self, table: str, keys: dict, values: dict, auto_commit: bool = False):
         pass
 
+    @abstractmethod  # maybe name this better very similar to update
+    def update_value(self, edit: CellEdit):
+        pass
+
     @abstractmethod
     def select(self, table: str, where_clause: str = None, values: dict = None):
         pass
@@ -102,10 +106,6 @@ class Database(ABC):
 
     @abstractmethod
     def _validate_smart_cols(self, smart_cols: dict[str, dict], user_sql: str):
-        pass
-
-    @abstractmethod
-    def _update_value(self, edit: CellEdit):
         pass
 
     @abstractmethod
