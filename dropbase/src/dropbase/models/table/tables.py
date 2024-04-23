@@ -57,7 +57,7 @@ class TableDefinedProperty(BaseModel):
 
     # settings
 
-    size: Annotated[Optional[int], PropertyCategory.default] = 10
+    size: Annotated[Optional[int], PropertyCategory.default] = 20
 
     # table filters
     filters: Annotated[Optional[List[PinnedFilter]], PropertyCategory.other]

@@ -12,7 +12,6 @@ from server.utils import get_permission_dependency_array
 from .. import crud
 from ..authorization import get_current_user
 from ..connect import get_db
-from ..controllers.app import filter_apps
 from ..controllers.policy import PolicyUpdater
 from ..models import User
 from ..permissions.casbin_utils import get_all_action_permissions
