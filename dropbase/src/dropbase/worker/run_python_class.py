@@ -19,15 +19,20 @@ def run(r, response):
         target = os.getenv("target")
 
         # run python script and get result
-        script_path = f"workspace.{app_name}.{page_name}.scripts.main"
+        # sample path: from workspace.class_9.page1.schema import Script
+        script_path = f"workspace.{app_name}.{page_name}.schema"
         page_module = importlib.import_module(script_path)
         importlib.reload(page_module)
         Script = getattr(page_module, "Script")
+
         script = Script(app_name, page_name, state)
 
         # run function
         # TODO: make actions more generalizable
-        new_context = script.__getattribute__(action)(target)
+        if action == "get_table_data":
+            new_context = script.__getattribute__(target).__getattribute__("get_table_data")()
+        else:
+            new_context = script.__getattribute__(action)(target)
 
         response["type"] = "context"
         response["context"] = new_context.dict()

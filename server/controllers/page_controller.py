@@ -36,22 +36,22 @@ class PageController:
     def create_schema(self):
         # create page schema
         with open(self.page_path + "/schema.py", "w") as f:
-            f.write(schema_boilerplate)
+            f.write(schema_boilerplate_init)
 
-    def update_schema(self):
-        boilerplate = copy.copy(schema_boilerplate_create)
-        # schema should be updated based on properties
-        properties = read_page_properties(self.app_name, self.page_name)
-        for key, value in properties.items():
-            if "columns" in value:
-                class_name = "TableDefinedProperty"
-            if "components" in value:
-                class_name = "WidgetDefinedProperty"
-            boilerplate += f"    {key}: {class_name}\n"
+    # def update_schema(self):
+    #     boilerplate = copy.copy(schema_boilerplate_create)
+    #     # schema should be updated based on properties
+    #     properties = read_page_properties(self.app_name, self.page_name)
+    #     for key, value in properties.items():
+    #         if "columns" in value:
+    #             class_name = "TableDefinedProperty"
+    #         if "components" in value:
+    #             class_name = "WidgetDefinedProperty"
+    #         boilerplate += f"    {key}: {class_name}\n"
 
-        # write file
-        with open(self.page_path + "/schema.py", "w") as f:
-            f.write(boilerplate)
+    #     # write file
+    #     with open(self.page_path + "/schema.py", "w") as f:
+    #         f.write(boilerplate)
 
     def create_page_properties(self):
         with open(self.page_path + "/properties.json", "w") as f:
@@ -62,7 +62,7 @@ class PageController:
         with open(f"workspace/{self.app_name}/properties.json", "w") as f:
             f.write(json.dumps(app_properties_boilerplate, indent=2))
 
-    def update_page_to_app_properties(self, page_label: str):
+    def add_page_to_app_properties(self, page_label: str):
         app_properties = read_app_properties(self.app_name)
         app_properties[self.page_name] = {"label": page_label}
         with open(f"workspace/{self.app_name}/properties.json", "w") as f:
@@ -87,39 +87,43 @@ class PageController:
         # update schema
         self.update_page()
 
-    def update_base_class(self):
-        base_methods = ""
-        for key, values in self.properties:
-            if isinstance(values, TableDefinedProperty):
-                base_methods += table_methods_base.format(key)
-                for column in values.columns:
-                    base_methods += column_methods_base.format(key, column.name)
-            if isinstance(values, WidgetDefinedProperty):
-                for component in values.components:
-                    if isinstance(component, ButtonDefinedProperty):
-                        base_methods += button_methods_base.format(component.name)
-                    elif isinstance(component, InputDefinedProperty):
-                        base_methods += input_methods_base.format(component.name)
+    # def update_base_class(self):
+    #     table_base_methods = ""
+    #     widget_base_methods = ""
+    #     for _, values in self.properties:
+    #         if isinstance(values, TableDefinedProperty):
+    #             """
+    #             table methods are added in TableABC class
+    #             here, we only need to add a method if it's a button column
+    #             """
+    #             for column in values.columns:
+    #                 if isinstance(column, ButtonColumnDefinedProperty):
+    #                     table_base_methods += button_methods_base.format(column.name)
+    #         if isinstance(values, WidgetDefinedProperty):
+    #             for component in values.components:
+    #                 if isinstance(component, ButtonDefinedProperty):
+    #                     widget_base_methods += button_methods_base.format(
+    #                         component.name
+    #                     )
 
-        base_class_str = base_class.format(base_methods)
+    #     base_class_str = base_class_base + "\n\n" + "class TableBase(TableABC):\n"
+    #     if len(table_base_methods) > 0:
+    #         base_class_str += table_base_methods
+    #     else:
+    #         base_class_str += "    pass\n"
 
-        with open(self.page_path + "/base_class.py", "w") as f:
-            f.write(base_class_str)
+    #     base_class_str += "\n\n" + "class WidgetBase(WidgetABC):\n"
+    #     if len(widget_base_methods) > 0:
+    #         base_class_str += widget_base_methods
+    #     else:
+    #         base_class_str += "    pass\n"
+
+    #     with open(self.page_path + "/base_class.py", "w") as f:
+    #         f.write(base_class_str)
 
     def create_main_class(self):
-        user_methods = ""
-        for key, values in self.properties:
-            if isinstance(values, TableDefinedProperty):
-                user_methods += table_methods_main.format(key)
-            if isinstance(values, WidgetDefinedProperty):
-                for component in values.components:
-                    if isinstance(component, ButtonDefinedProperty):
-                        user_methods += button_methods_main.format(component.name)
-
-        main_class_str = main_class.format(user_methods)
-
         with open(self.page_path + "/scripts/main.py", "w") as f:
-            f.write(main_class_str)
+            f.write(main_class_init)
 
     def get_script_methods(self):
         script_path = f"{self.page_module_path}.scripts.main"
@@ -151,48 +155,30 @@ class PageController:
         return abstract_methods
 
     def update_main_class(self):
-
         file_path = self.page_path + "/scripts/main.py"
 
         # Parse the existing code
         with open(file_path, "r") as f:
             module = ast.parse(f.read())
 
-        existing_methods = self.get_script_methods()
-        base_methods = self.get_base_methods()
-        requires_methods = self.get_require_base_methods()
-
-        # compare existing methods with incoming methods
         for node in module.body:
-            if isinstance(node, ast.ClassDef) and node.name == "Script":
-                """
-                TODO: handle this later
-                IMPORTANT this will remove all the custom methods user has added
-                that are not part of base class
-                """
-                # Remove methods in existing_methods but not in base_methods
-                node.body = [
-                    n
-                    for n in node.body
-                    if not (
-                        isinstance(n, ast.FunctionDef)
-                        # and n.name in existing_methods
-                        and n.name not in base_methods
-                    )
-                ]
-
-                # Check for required methods to add
-                for method_name, method_body in requires_methods.items():
-                    if method_name not in existing_methods:
-                        new_method_node = ast.parse(method_body).body[0]
-                        node.body.append(new_method_node)
+            if isinstance(node, ast.ClassDef):
+                for base in node.bases:
+                    base_name = base.attr if isinstance(base, ast.Attribute) else base.id
+                    if base_name == "TableBase":
+                        # make sure get_table is defined
+                        print("table ", node.name)
+                        get_data_present = "get_data" in [n.name for n in node.body]
+                        if not get_data_present:
+                            print("ADDing new one")
+                            new_method_node = ast.parse(get_data_template).body[0]
+                            node.body.append(new_method_node)
 
         modified_code = astor.to_source(module)
-
-        with open(file_path, "w") as f:
+        with open("test.py", "w") as f:
             f.write(modified_code)
 
-    def add_init(self):
+    def add_inits(self):
         with open(f"workspace/{self.app_name}/__init__.py", "w") as f:
             f.write(app_init_boilerplate)
 
@@ -217,18 +203,18 @@ class PageController:
         self.create_page_dirs()
         self.create_schema()
         self.create_page_properties()
-        self.update_page_to_app_properties(page_label)
+        self.add_page_to_app_properties(page_label)
         properties = self.reload_properties()
         compose_state_context_models(self.app_name, self.page_name, properties)
-        self.update_base_class()
+        # self.update_base_class()
         self.create_main_class()
-        self.add_init()
+        self.add_inits()
 
     def update_page(self):
-        self.update_schema()
+        # self.update_schema()
         properties = self.reload_properties()
         compose_state_context_models(self.app_name, self.page_name, properties)
-        self.update_base_class()
+        # self.update_base_class()
         self.update_main_class()
 
     def delete_page(self):

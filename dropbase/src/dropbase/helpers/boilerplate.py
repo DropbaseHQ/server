@@ -1,42 +1,37 @@
 # base class boilerplates
-table_methods_base = """
-    @abstractmethod
-    def get_{0}(self) -> pd.DataFrame:
-        pass
+base_class_base = """from abc import abstractmethod
+from dropbase.helpers.tableABC import TableABC
+from dropbase.helpers.widgetABC import WidgetABC
+from .context import Context
 
-    def update_{0}(self) -> Context:
-        pass
+"""
 
-    def delete_{0}(self) -> Context:
-        pass
-"""
-column_methods_base = """
-    def update_{0}_{1}(self) -> Context:
-        pass
-"""
 button_methods_base = """
     @abstractmethod
     def on_click_{0}(self) -> Context:
         pass
 """
 
-input_methods_base = """
-    def on_enter_{0}(self) -> Context:
-        pass
-"""
-
-base_class = """
-from abc import abstractmethod
-import pandas as pd
-from dropbase.helpers.scriptABC import ScriptABC
-from .context import Context
-
-
-class ScriptBase(ScriptABC):
-{0}"""
-
 
 # schema boilerplates
+schema_boilerplate_init = """from dropbase.helpers.pageABC import PageABC
+from .scripts.main import *  # noqa, here we're importing all user defined classes
+
+
+class Script(PageABC):
+    def __init__(self, app_name, page_name, state):
+        super().__init__(app_name, page_name, state)
+        kwards = {
+            "app_name": self.app_name,
+            "page_name": self.page_name,
+            "state": self.state,
+            "context": self.context,
+        }
+        for key, _ in self.properties:
+            class_name = key.capitalize()
+            class_ = globals()[class_name]  # Get the actual class name from globals
+            self.__dict__[key] = class_(**kwards, name=key)
+"""
 # create
 schema_boilerplate = """from pydantic import BaseModel
 
@@ -61,6 +56,22 @@ class Properties(BaseModel):
 
 # main boilerplates
 # create
+main_class_init = """import pandas as pd
+from dropbase.helpers.tableABC import TableABC
+from dropbase.helpers.widgetABC import WidgetABC
+from ..context import Context
+
+
+class Table1(TableABC):
+
+    def get_data(self) -> pd.DataFrame:
+        # TODO: implement this method
+        return pd.DataFrame()
+
+
+class Widget1(WidgetABC):
+    pass
+"""
 main_class = """
 import pandas as pd
 from ..base_class import ScriptBase
@@ -127,3 +138,8 @@ app_properties_boilerplate = {
         "label": "Page1",
     }
 }
+
+get_data_template = """
+def get_data(self) -> pd.DataFrame:
+    # Add your code here
+    return pd.DataFrame()"""
