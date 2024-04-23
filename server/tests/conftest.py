@@ -6,8 +6,9 @@ import pytest_postgresql.factories
 from fastapi.testclient import TestClient
 from pytest_mysql import factories
 
+from dropbase.helpers.utils import read_page_properties
 from server.auth.dependency import CheckUserPermissions
-from server.controllers.properties import read_page_properties, update_properties
+from server.controllers.properties import update_properties
 from server.controllers.workspace import WorkspaceFolderController
 from server.main import app
 from server.requests.dropbase_router import WSDropbaseRouterGetter, get_dropbase_router

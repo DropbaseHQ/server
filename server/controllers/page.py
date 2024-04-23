@@ -7,10 +7,18 @@ from dropbase.helpers.utils import (
     _dict_from_pydantic_model,
     get_empty_context,
     get_state_context_model,
+    read_page_properties,
     validate_column_name,
 )
 from dropbase.schemas.page import PageProperties
-from server.controllers.properties import read_page_properties, update_properties
+from server.controllers.properties import update_properties
+
+
+def get_page(app_name: str, page_name: str, initial=False):
+    page_props = get_page_state_context(app_name, page_name, initial)
+    properties = read_page_properties(app_name, page_name)
+    page_props["properties"] = properties
+    return page_props
 
 
 def get_state_context(app_name, page_name, permissions=None):
@@ -85,27 +93,27 @@ def validate_property_names(properties: dict):
                     raise Exception("Invalid component names present in the table")
 
 
-def get_state_context(app_name, page_name, all_permissions=None, initial=False):
-    permissions = None
-    if all_permissions is not None:
-        if isinstance(all_permissions, dict):
-            permissions = all_permissions.get("app_permissions")
-        elif isinstance(all_permissions, list):
-            permissions = all_permissions[0]
-    try:
-        state_context = get_page_state_context(app_name, page_name, initial)
-        state_context["properties"] = read_page_properties(app_name, page_name)
-        return {"state_context": state_context, "permissions": permissions}
-    except Exception:
-        try:
-            # in cases where there are some hanging files/dirs from update properties step
-            # wait for a second for files to clear up and try again
-            time.sleep(1)
-            state_context = get_page_state_context(app_name, page_name)
-            state_context["properties"] = read_page_properties(app_name, page_name)
-            return {"state_context": state_context, "permissions": permissions}
-        except Exception as e:
-            raise HTTPException(status_code=500, detail=str(e))
+# def get_state_context(app_name, page_name, all_permissions=None, initial=False):
+#     permissions = None
+#     if all_permissions is not None:
+#         if isinstance(all_permissions, dict):
+#             permissions = all_permissions.get("app_permissions")
+#         elif isinstance(all_permissions, list):
+#             permissions = all_permissions[0]
+#     try:
+#         state_context = get_page_state_context(app_name, page_name, initial)
+#         state_context["properties"] = read_page_properties(app_name, page_name)
+#         return {"state_context": state_context, "permissions": permissions}
+#     except Exception:
+#         try:
+#             # in cases where there are some hanging files/dirs from update properties step
+#             # wait for a second for files to clear up and try again
+#             time.sleep(1)
+#             state_context = get_page_state_context(app_name, page_name)
+#             state_context["properties"] = read_page_properties(app_name, page_name)
+#             return {"state_context": state_context, "permissions": permissions}
+#         except Exception as e:
+#             raise HTTPException(status_code=500, detail=str(e))
 
 
 def get_page_state_context(app_name: str, page_name: str, initial=False):

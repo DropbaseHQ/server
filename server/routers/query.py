@@ -1,18 +1,13 @@
 import json
 import uuid
 
-from fastapi import APIRouter, BackgroundTasks, Depends, Response
+from fastapi import APIRouter, BackgroundTasks, Response
 
-from dropbase.helpers.utils import get_table_data_fetcher
+from dropbase.helpers.utils import get_table_data_fetcher, read_page_properties
 from dropbase.schemas.files import DataFile
-from dropbase.schemas.query import (
-    RunSQLRequestTask,
-    RunSQLStringRequest,
-    RunSQLStringTask,
-)
+from dropbase.schemas.query import RunSQLRequestTask, RunSQLStringRequest, RunSQLStringTask
 from dropbase.schemas.run_python import QueryPythonRequest
 from dropbase.schemas.table import FilterSort
-from server.controllers.properties import read_page_properties
 from server.controllers.redis import r
 from server.controllers.run_sql import run_sql_query, run_sql_query_from_string
 from server.utils import get_permission_dependency_array
@@ -26,17 +21,13 @@ router = APIRouter(
 
 
 @router.post("/")
-async def run_sql(
-    req: QueryPythonRequest, response: Response, background_tasks: BackgroundTasks
-):
+async def run_sql(req: QueryPythonRequest, response: Response, background_tasks: BackgroundTasks):
     try:
         properties = read_page_properties(req.app_name, req.page_name)
         file = get_table_data_fetcher(properties["files"], req.fetcher)
         file = DataFile(**file)
         job_id = uuid.uuid4().hex
-        filter_sort = (
-            req.filter_sort if req.filter_sort else FilterSort(filters=[], sorts=[])
-        )
+        filter_sort = req.filter_sort if req.filter_sort else FilterSort(filters=[], sorts=[])
 
         # called internally, so can pass objects directly
         args = RunSQLRequestTask(

@@ -1,5 +1,6 @@
 import logging
-from fastapi import Depends, HTTPException, status, Request
+
+from fastapi import Depends, HTTPException, Request, status
 from fastapi_jwt_auth import AuthJWT
 from fastapi_jwt_auth.exceptions import JWTDecodeError
 from jwt.exceptions import InvalidSignatureError
@@ -8,8 +9,8 @@ from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
 from .. import crud
-from ..models import Workspace
 from ..connect import get_db
+from ..models import Workspace
 
 logger = logging.getLogger(__name__)
 
@@ -35,7 +36,7 @@ def get_current_user(db: Session = Depends(get_db), Authorize: AuthJWT = Depends
                 detail="Signature has expired",
                 headers={"WWW-Authenticate": "Bearer"},
             )
-    except InvalidSignatureError as e:
+    except InvalidSignatureError:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid token",

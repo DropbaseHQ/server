@@ -1,16 +1,14 @@
 from typing import Annotated, List, Literal, Optional
 
 from pydantic import BaseModel
+from pydantic.main import ModelMetaclass
 
 from dropbase.models.category import PropertyCategory
 from dropbase.models.common import ComponentDisplayProperties, OnEvent
 
 
-class ButtonContextProperty(ComponentDisplayProperties):
-    pass
-
-
 class ButtonDefinedProperty(BaseModel):
+    component_type: Literal["button"]
     label: Annotated[str, PropertyCategory.default]
     name: Annotated[str, PropertyCategory.default]
     color: Annotated[
@@ -36,4 +34,4 @@ class ButtonDefinedProperty(BaseModel):
     display_rules: Annotated[Optional[List[dict]], PropertyCategory.display_rules]
 
     # internal
-    component_type: Literal["button"]
+    context: ModelMetaclass = ComponentDisplayProperties

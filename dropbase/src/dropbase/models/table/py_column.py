@@ -1,11 +1,9 @@
 from typing import Annotated, Literal
 
+from pydantic.main import ModelMetaclass
+
 from dropbase.models.category import PropertyCategory
 from dropbase.models.common import BaseColumnDefinedProperty, ColumnDisplayProperties
-
-
-class PyColumnContextProperty(ColumnDisplayProperties):
-    pass
 
 
 class PyColumnDefinedProperty(BaseColumnDefinedProperty):
@@ -14,3 +12,4 @@ class PyColumnDefinedProperty(BaseColumnDefinedProperty):
 
     # visibility
     hidden: Annotated[bool, PropertyCategory.default] = False
+    context: ModelMetaclass = ColumnDisplayProperties

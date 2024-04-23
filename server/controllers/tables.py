@@ -1,17 +1,15 @@
 import json
 import re
-import openai
-from typing import Any, Dict, Optional
-from pydantic import BaseModel
-from dropbase.helpers.utils import get_table_data_fetcher
+
+from dropbase.helpers.utils import get_table_data_fetcher, read_page_properties
 from dropbase.schemas.files import DataFile
 from dropbase.schemas.table import ConvertTableRequest
 from server.controllers.connect import connect
-from server.controllers.properties import read_page_properties, update_properties
+from server.controllers.properties import update_properties
 from server.controllers.redis import r
 from server.controllers.run_sql import get_sql_from_file, render_sql
-from server.controllers.table_utils.gpt_controls import call_gpt
 from server.controllers.table_utils.convert import fill_smart_cols_data
+from server.controllers.table_utils.gpt_controls import call_gpt
 
 
 def check_for_duplicate_columns(column_names):
@@ -57,13 +55,13 @@ def convert_sql_table(req: ConvertTableRequest, job_id):
         check_for_duplicate_columns(column_names)
 
         # get columns from file
-        get_smart_table_payload = {
-            "user_sql": user_sql,
-            "column_names": column_names,
-            "gpt_schema": gpt_schema,
-            "db_schema": db_schema,
-            "db_type": user_db.db_type,
-        }
+        # get_smart_table_payload = {
+        #     "user_sql": user_sql,
+        #     "column_names": column_names,
+        #     "gpt_schema": gpt_schema,
+        #     "db_schema": db_schema,
+        #     "db_type": user_db.db_type,
+        # }
 
         smart_col_paths = call_gpt(
             user_sql=user_sql,
@@ -85,14 +83,10 @@ def convert_sql_table(req: ConvertTableRequest, job_id):
 
         # validate columns
         validated = user_db._validate_smart_cols(smart_cols, user_sql)
-        column_props = [
-            value for name, value in smart_cols.items() if name in validated
-        ]
+        column_props = [value for name, value in smart_cols.items() if name in validated]
 
         for column in column_props:
-            column["display_type"] = user_db._detect_col_display_type(
-                column["data_type"].lower()
-            )
+            column["display_type"] = user_db._detect_col_display_type(column["data_type"].lower())
 
         # rereading properties
         properties = read_page_properties(req.app_name, req.page_name)

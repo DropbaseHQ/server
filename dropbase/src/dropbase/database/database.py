@@ -1,13 +1,17 @@
 from abc import ABC, abstractmethod
 from typing import List
 
+import pandas as pd
 from sqlalchemy.engine import create_engine
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import scoped_session, sessionmaker
 from sqlalchemy.sql import text
 
+from dropbase.helpers.dataframe import to_dtable
 from dropbase.schemas.edit_cell import CellEdit
 from dropbase.schemas.table import TableFilter, TablePagination, TableSort
+
+pd.DataFrame.to_dtable = to_dtable
 
 
 class Database(ABC):
@@ -44,11 +48,15 @@ class Database(ABC):
             self.session.rollback()  # Roll back the session on error.
             raise e  # Propagate the error.
 
-    def query(self, sql: str):
+    def query(self, sql: str) -> pd.DataFrame:
         try:
             result_proxy = self.session.execute(text(sql))
             result = [dict(row) for row in result_proxy.fetchall()]
             result_proxy.close()
+            result = pd.DataFrame(result)
+            # IMPORTANT! adding metadata to the response dataframe so we can track the source type
+            result.dropbase_data_type = self.db_type
+            # NOTE: maybe we can add source name as well to enable smart table features
             return result
         except SQLAlchemyError as e:
             self.session.rollback()  # Rollback the session on error.
@@ -76,7 +84,11 @@ class Database(ABC):
 
     @abstractmethod
     def filter_and_sort(
-        self, table: str, filter_clauses: list, sort_by: str = None, ascending: bool = True
+        self,
+        table: str,
+        filter_clauses: list,
+        sort_by: str = None,
+        ascending: bool = True,
     ):
         pass
 

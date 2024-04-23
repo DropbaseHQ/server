@@ -1,24 +1,12 @@
+# TODO: delete, being replaced by state_context in dropbase package
 from pathlib import Path
 
 from datamodel_code_generator import generate
 from pydantic import Field, create_model
 
-from dropbase.models.common import BaseContext
+from dropbase.models.common import BaseContext, ColumnDisplayProperties, ComponentDisplayProperties
 from dropbase.models.table import TableContextProperty
-from dropbase.models.table.button_column import ButtonColumnContextProperty
-from dropbase.models.table.mysql_column import MySqlColumnContextProperty
-from dropbase.models.table.pg_column import PgColumnContextProperty
-from dropbase.models.table.py_column import PyColumnContextProperty
-from dropbase.models.table.snowflake_column import SnowflakeColumnContextProperty
-from dropbase.models.table.sqlite_column import SqliteColumnContextProperty
-from dropbase.models.widget import (
-    BooleanContextProperty,
-    ButtonContextProperty,
-    InputContextProperty,
-    SelectContextProperty,
-    TextContextProperty,
-    WidgetContextProperty,
-)
+from dropbase.models.widget import SelectContextProperty, WidgetContextProperty
 
 
 def column_state_type_mapper(state_type: str):
@@ -53,25 +41,6 @@ def component_state_type_mapper(input_type: str):
             return str
 
 
-context_model_mapper = {
-    "button": ButtonContextProperty,
-    "boolean": BooleanContextProperty,
-    "input": InputContextProperty,
-    "select": SelectContextProperty,
-    "text": TextContextProperty,
-}
-
-
-column_context_model_mapper = {
-    "postgres": PgColumnContextProperty,
-    "mysql": MySqlColumnContextProperty,
-    "snowflake": SnowflakeColumnContextProperty,
-    "sqlite": SqliteColumnContextProperty,
-    "python": PyColumnContextProperty,
-    "button_column": ButtonColumnContextProperty,
-}
-
-
 def compose_context_model(components):
     context = {}
     for component in components:
@@ -85,7 +54,10 @@ def compose_context_model(components):
             base_model = WidgetContextProperty
             for widget_component in component["components"]:
                 component_type = widget_component.get("component_type")
-                BaseProperty = context_model_mapper.get(component_type)
+                if component_type == "select":
+                    BaseProperty = SelectContextProperty
+                else:
+                    BaseProperty = ComponentDisplayProperties
                 # create component context class
                 props[widget_component["name"]] = (BaseProperty, ...)
 
@@ -93,8 +65,7 @@ def compose_context_model(components):
             child = "columns"
             base_model = TableContextProperty
             for column in component["columns"]:
-                BaseProperty = column_context_model_mapper.get(column.get("column_type"))
-                # create column context class
+                BaseProperty = ColumnDisplayProperties
                 props[column["name"]] = (BaseProperty, ...)
 
         child_class_name = name.capitalize() + child.capitalize() + "Context"

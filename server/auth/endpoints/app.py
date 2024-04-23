@@ -1,22 +1,22 @@
-import os
 from uuid import UUID
+
+from fastapi import APIRouter, Depends, HTTPException, Request
 from pydantic import BaseModel
-from fastapi import APIRouter, Depends, Request, HTTPException
 from sqlalchemy.orm import Session
-from ..controllers.policy import (
-    PolicyUpdater,
-)
-from ..permissions.casbin_utils import get_all_action_permissions
+
+from dropbase.schemas.workspace import CreateAppRequest
+from server.controllers.app import AppController, get_workspace_apps
+from server.controllers.page_controller import PageController
+from server.utils import get_permission_dependency_array
+
 from .. import crud
-from ..schemas import AppShareRequest
-from ..controllers.app import filter_apps
-from ..models import User
 from ..authorization import get_current_user
 from ..connect import get_db
-from server.controllers import app as app_controller
-from server.utils import get_permission_dependency_array
-from dropbase.schemas.workspace import CreateAppRequest
-from server.controllers.workspace import AppFolderController, WorkspaceFolderController
+from ..controllers.app import filter_apps
+from ..controllers.policy import PolicyUpdater
+from ..models import User
+from ..permissions.casbin_utils import get_all_action_permissions
+from ..schemas import AppShareRequest
 
 router = APIRouter(prefix="/app", tags=["app"])
 
@@ -53,12 +53,8 @@ def share_app(app_id: UUID, request: AppShareRequest, db: Session = Depends(get_
 @router.get("/{app_id}/has_access")
 def get_app_access(app_id: UUID, db: Session = Depends(get_db)):
     app = crud.app.get_object_by_id_or_404(db=db, id=app_id)
-    workspace_users = crud.workspace.get_workspace_users(
-        db=db, workspace_id=app.workspace_id
-    )
-    workspace_groups = crud.workspace.get_workspace_groups(
-        db=db, workspace_id=app.workspace_id
-    )
+    workspace_users = crud.workspace.get_workspace_users(db=db, workspace_id=app.workspace_id)
+    workspace_groups = crud.workspace.get_workspace_groups(db=db, workspace_id=app.workspace_id)
 
     def get_highest_permissions_for_list(workspace_subjects):
         final_app_permissions = []
@@ -109,41 +105,38 @@ def get_app_access(app_id: UUID, db: Session = Depends(get_db)):
 # Overrides the base default list endpoint
 @router.get("/list/")
 def get_apps(db: Session = Depends(get_db), user: User = Depends(get_current_user)):
-    response = app_controller.get_workspace_apps()
-    all_apps = response.get("apps")
-    workspace_id = response.get("workspace_id")
-    return filter_apps(db=db, apps=all_apps, workspace_id=workspace_id, user_id=user.id)
+    return get_workspace_apps().get("apps")
 
 
 @router.post("/", dependencies=get_permission_dependency_array("edit", "workspace"))
-def create_app_req(
-    request: Request, req: CreateAppRequest, db: Session = Depends(get_db)
-):
-    r_path_to_workspace = os.path.join(os.path.dirname(__file__), "../../../workspace")
-    app_folder_controller = AppFolderController(
-        app_name=req.app_name, r_path_to_workspace=r_path_to_workspace
-    )
+def create_app_req(request: Request, req: CreateAppRequest, db: Session = Depends(get_db)):
     workspace_id = request.headers.get("workspace-id")
     if not workspace_id:
         raise HTTPException(status_code=400, detail="No workspace id header provided")
-    app_object = app_folder_controller.create_app(app_label=req.app_label)
 
+    appController = AppController(req.app_name, req.app_label)
+    appController.create_app()
+    pageController = PageController(req.app_name, "page1")
+    pageController.create_page("Page 1")
+    app_object = {
+        "name": req.app_name,
+        "label": req.app_label,
+        "description": "",
+        "workspace_id": workspace_id,
+    }
     new_app = crud.app.create(db, obj_in={**app_object, "workspace_id": workspace_id})
     return new_app
 
 
-@router.delete(
-    "/{app_name}", dependencies=get_permission_dependency_array("edit", "app")
-)
+@router.delete("/{app_name}", dependencies=get_permission_dependency_array("edit", "app"))
 def delete_app_req(request: Request, app_name: str, db: Session = Depends(get_db)):
-    r_path_to_workspace = os.path.join(os.path.dirname(__file__), "../../../workspace")
-    app_folder_controller = AppFolderController(app_name, r_path_to_workspace)
-    app_folder_controller.delete_app(app_name=app_name)
     workspace_id = request.headers.get("workspace-id")
     if not workspace_id:
         raise HTTPException(status_code=400, detail="No workspace id header provided")
-    app_to_delete = crud.app.get_app_by_name(
-        db=db, app_name=app_name, workspace_id=workspace_id
-    )
+
+    appController = AppController(app_name, "")
+    appController.delete_app()
+
+    app_to_delete = crud.app.get_app_by_name(db=db, app_name=app_name, workspace_id=workspace_id)
     crud.app.remove(db, id=app_to_delete.id)
     return {"message": "App deleted successfully"}

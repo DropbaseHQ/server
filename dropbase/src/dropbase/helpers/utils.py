@@ -61,14 +61,55 @@ def process_query_result(res) -> pd.DataFrame:
 
 
 def read_page_properties(app_name: str, page_name: str):
-    path = f"/workspace/{app_name}/{page_name}/properties.json"
+    path = f"workspace/{app_name}/{page_name}/properties.json"
     with open(path, "r") as f:
         return json.loads(f.read())
 
 
-def get_function_by_name(
-    app_name: str, page_name: str, file_name: str, function_name: str
-):  # Very useful, we keep this the same, we just need to pass in the function name rather than the file name
+def read_app_properties(app_name: str):
+    path = f"workspace/{app_name}/properties.json"
+    with open(path, "r") as f:
+        return json.loads(f.read())
+
+
+from pydantic import create_model
+
+from dropbase.models.table import TableDefinedProperty
+from dropbase.models.widget import WidgetDefinedProperty
+
+
+def compose_properties_schema(properties: dict):
+    block_type_mapping = {
+        "table": TableDefinedProperty,
+        "widget": WidgetDefinedProperty,
+    }
+
+    # compose fields for pydantic model
+    fields = {}
+    for key, value in properties.items():
+        block_type = value["block_type"]
+        fields[key] = (block_type_mapping[block_type], ...)
+
+    return create_model("Properties", **fields)
+
+
+def get_page_properties_schema(app_name: str, page_name: str):
+    # load page schema
+    module_path = f"workspace.{app_name}.{page_name}.schema"
+    page_module = importlib.import_module(module_path)
+    importlib.reload(page_module)
+    return getattr(page_module, "Properties")
+
+
+def get_page_properties(app_name: str, page_name: str):
+    properties = read_page_properties(app_name, page_name)
+    Properties = compose_properties_schema(properties)
+    # create page object
+    return Properties(**properties)
+
+
+def get_function_by_name(app_name: str, page_name: str, file_name: str, function_name: str):
+    # need to pass in the function name rather than the file name
     file_module = f"workspace.{app_name}.{page_name}.scripts.{file_name}"
     scripts = importlib.import_module(file_module)
     importlib.reload(scripts)

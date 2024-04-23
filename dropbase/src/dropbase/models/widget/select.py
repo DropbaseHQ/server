@@ -1,6 +1,7 @@
 from typing import Annotated, Any, Dict, List, Literal, Optional
 
 from pydantic import BaseModel
+from pydantic.main import ModelMetaclass
 
 from dropbase.models.category import PropertyCategory
 from dropbase.models.common import ComponentDisplayProperties, OnEvent
@@ -11,6 +12,7 @@ class SelectContextProperty(ComponentDisplayProperties):
 
 
 class SelectDefinedProperty(BaseModel):
+    component_type: Literal["select"]
     label: Annotated[str, PropertyCategory.default]
     name: Annotated[str, PropertyCategory.default]
 
@@ -31,7 +33,7 @@ class SelectDefinedProperty(BaseModel):
     display_rules: Annotated[Optional[List[dict]], PropertyCategory.display_rules]
 
     # internal
-    component_type: Literal["select"]
+    context: ModelMetaclass = SelectContextProperty
 
     def __init__(self, **data):
         data.setdefault("data_type", "string")

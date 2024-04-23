@@ -74,7 +74,11 @@ class SqliteDatabase(Database):
         return res.rowcount
 
     def filter_and_sort(
-        self, table: str, filter_clauses: list = None, sort_by: str = None, ascending: bool = True
+        self,
+        table: str,
+        filter_clauses: list = None,
+        sort_by: str = None,
+        ascending: bool = True,
     ):
         sql = f"""SELECT * FROM {table}"""
         if filter_clauses:
@@ -99,7 +103,12 @@ class SqliteDatabase(Database):
         }
 
         for database in databases:
-            ignore_schemas = ["information_schema", "sqlite", "performance_schema", "sys"]
+            ignore_schemas = [
+                "information_schema",
+                "sqlite",
+                "performance_schema",
+                "sys",
+            ]
             if database in ignore_schemas:
                 continue
 
@@ -155,9 +164,9 @@ class SqliteDatabase(Database):
         user_sql = f"SELECT * FROM ({user_sql}) AS q LIMIT 1"
         with self.engine.connect().execution_options(autocommit=True) as conn:
             col_names = list(conn.execute(text(user_sql)).keys())
-            cleaned_col_names = _remove_numerical_suffixes(
-                col_names
-            )  # SQLITE automatically appends suffixes :1, :2 to manage duplicate column names, which will interfere with detecting duplicates
+            cleaned_col_names = _remove_numerical_suffixes(col_names)
+            # SQLITE automatically appends suffixes :1, :2 to manage duplicate column names,
+            # which will interfere with detecting duplicates
         return cleaned_col_names
 
     def _validate_smart_cols(self, smart_cols: dict[str, dict], user_sql: str) -> list[str]:  # noqa
@@ -202,7 +211,7 @@ class SqliteDatabase(Database):
                     if res[0][0] is None:
                         raise Exception("Can not convert empty table into smart table")
                     raise Exception("Invalid column")
-            except (SQLAlchemyError):
+            except SQLAlchemyError:
                 continue
         return validated
 
@@ -253,7 +262,10 @@ class SqliteDatabase(Database):
                 conn.commit()
                 if result.rowcount == 0:
                     raise Exception("No rows were updated")
-            return f"Updated {edit.column_name} from {edit.old_value} to {edit.new_value}", True
+            return (
+                f"Updated {edit.column_name} from {edit.old_value} to {edit.new_value}",
+                True,
+            )
         except Exception as e:
             return (
                 f"Failed to update {edit.column_name} from {edit.old_value} to {edit.new_value}. Error: {str(e)}",  # noqa
@@ -316,9 +328,8 @@ class SqliteDatabase(Database):
         filter_sql += "\n"
 
         if pagination:
-            filter_sql += (
-                f"LIMIT {pagination.page_size + 1} OFFSET {pagination.page * pagination.page_size}"
-            )
+            offset = pagination.page * pagination.page_size
+            filter_sql += f"LIMIT {pagination.page_size + 1} OFFSET {offset}"
 
         return filter_sql, filter_values
 

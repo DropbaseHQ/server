@@ -1,16 +1,14 @@
 from typing import Annotated, Dict, List, Literal, Optional
 
 from pydantic import BaseModel
+from pydantic.main import ModelMetaclass
 
 from dropbase.models.category import PropertyCategory
 from dropbase.models.common import ComponentDisplayProperties
 
 
-class TextContextProperty(ComponentDisplayProperties):
-    pass
-
-
 class TextDefinedProperty(BaseModel):
+    component_type: Literal["text"]
     name: Annotated[str, PropertyCategory.default]
     text: Annotated[str, PropertyCategory.default]
     size: Annotated[Optional[Literal["small", "medium", "large"]], PropertyCategory.default]
@@ -36,4 +34,4 @@ class TextDefinedProperty(BaseModel):
     display_rules: Annotated[Optional[List[Dict]], PropertyCategory.display_rules]
 
     # internal
-    component_type: Literal["text"]
+    context: ModelMetaclass = ComponentDisplayProperties
