@@ -1,4 +1,5 @@
 from abc import ABC, abstractmethod
+from typing import List
 
 import pandas as pd
 
@@ -21,7 +22,8 @@ class TableABC(ABC):
     def get_data(self):
         pass
 
-    def udpate_row(self, edits: list[CellEdit]):
+    @abstractmethod
+    def update_row(self, edits: list[CellEdit]):
         pass
 
     def create_row(self, row: dict):
@@ -30,14 +32,13 @@ class TableABC(ABC):
     def delete_row(self, row: dict):
         pass
 
-    def handle_updates(self, updates: list):
-        for update in updates:
-            self.update_row(update)
-        return self.context
-
     # generic methods used by dropbase
     def get_table_data(self):
         self.context.__getattribute__(self.name).data = self.get_data().to_dtable()
+        return self.context
+
+    def update_table(self, edits: list[CellEdit]):
+        self.context.__getattribute__(self.name).data = self.update_row().to_dtable()
         return self.context
 
     def load_page(self):

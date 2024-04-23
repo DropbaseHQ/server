@@ -33,8 +33,10 @@ class Properties(BaseModel):
 # main boilerplates
 # create
 main_class_init = """import pandas as pd
+from typing import List
 from dropbase.helpers.tableABC import TableABC
 from dropbase.helpers.widgetABC import WidgetABC
+from dropbase.schemas.edit_cell import CellEdit
 from ..context import Context
 
 
@@ -63,6 +65,10 @@ table_class_boilerplate = """class {0}(TableABC):
     def get_data(self) -> pd.DataFrame:
         # Add your code here
         return pd.DataFrame()
+
+    def update_data(self) -> Context:
+        # Add your code here
+        return self.context
 """
 
 widget_class_boilerplate = """class {0}(WidgetABC):
@@ -124,3 +130,8 @@ get_data_template = """
 def get_data(self) -> pd.DataFrame:
     # Add your code here
     return pd.DataFrame()"""
+
+update_data_template = """
+def update_data(self, edits: List[CellEdit]) -> Context:
+    # Add your code here
+    return self.context"""

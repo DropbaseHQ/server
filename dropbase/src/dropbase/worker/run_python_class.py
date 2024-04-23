@@ -31,6 +31,8 @@ def run(r, response):
         # TODO: make actions more generalizable
         if action == "get_table_data":
             new_context = script.__getattribute__(target).__getattribute__("get_table_data")()
+        elif action == "update_table":
+            new_context = script.__getattribute__(target).__getattribute__("update_table")()
         else:
             new_context = script.__getattribute__(action)(target)
 
