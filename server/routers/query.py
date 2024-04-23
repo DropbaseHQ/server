@@ -1,18 +1,23 @@
 import json
 import uuid
 
-from fastapi import APIRouter, BackgroundTasks, Depends, Response
+from fastapi import APIRouter, BackgroundTasks, Response
 
 from dropbase.helpers.utils import get_table_data_fetcher, read_page_properties
 from dropbase.schemas.files import DataFile
 from dropbase.schemas.query import RunSQLRequestTask, RunSQLStringRequest, RunSQLStringTask
 from dropbase.schemas.run_python import QueryPythonRequest
 from dropbase.schemas.table import FilterSort
-from server.auth.dependency import CheckUserPermissions
 from server.controllers.redis import r
 from server.controllers.run_sql import run_sql_query, run_sql_query_from_string
+from server.utils import get_permission_dependency_array
 
-router = APIRouter(prefix="/query", tags=["query"], responses={404: {"description": "Not found"}})
+router = APIRouter(
+    prefix="/query",
+    tags=["query"],
+    responses={404: {"description": "Not found"}},
+    dependencies=get_permission_dependency_array(action="use", resource="app"),
+)
 
 
 @router.post("/")
@@ -55,10 +60,7 @@ async def run_sql(req: QueryPythonRequest, response: Response, background_tasks:
         return {"message": str(e)}
 
 
-@router.post(
-    "/string/",
-    dependencies=[Depends(CheckUserPermissions(action="use", resource=CheckUserPermissions.APP))],
-)
+@router.post("/string/")
 async def run_sql_from_string(
     request: RunSQLStringRequest, response: Response, background_tasks: BackgroundTasks
 ):

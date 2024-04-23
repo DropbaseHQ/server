@@ -9,11 +9,13 @@ from dropbase.schemas.function import RunClass, RunFunction
 from dropbase.schemas.run_python import RunPythonStringRequestNew
 from server.controllers.python_docker import run_container
 from server.controllers.redis import r
+from server.utils import get_permission_dependency_array
 
 router = APIRouter(
     prefix="/function",
     tags=["function"],
     responses={404: {"description": "Not found"}},
+    dependencies=get_permission_dependency_array(action="use", resource="app"),
 )
 
 
@@ -30,6 +32,7 @@ async def run_class_req(req: RunClass, response: Response):
             "state": json.dumps(req.state),
             "job_id": job_id,
         }
+        print("job ID: ", job_id)
         # start a job
         run_container(env_vars)
 

@@ -1,14 +1,21 @@
 import asyncio
 import logging
 
-import requests
+from importlib.util import find_spec
 from fastapi import FastAPI
+from fastapi.responses import JSONResponse
+from fastapi_jwt_auth.exceptions import AuthJWTException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from starlette.websockets import WebSocketDisconnect
-
+from server.utils import auth_module_is_installed
 from server import routers
-from server.constants import CORS_ORIGINS, DROPBASE_API_URL, DROPBASE_TOKEN, WORKER_VERSION
+from server.constants import (
+    CORS_ORIGINS,
+    DROPBASE_API_URL,
+    DROPBASE_TOKEN,
+    WORKER_VERSION,
+)
 
 
 # to disable cache for static files
@@ -42,6 +49,19 @@ app.add_middleware(
 
 # static file server for lsp
 app.mount("/workspace", NoCacheStaticFiles(directory="workspace"), name="workspace")
+
+if auth_module_is_installed:
+    from server.auth.endpoints import premium_router
+
+    app.include_router(premium_router)
+
+    @app.exception_handler(AuthJWTException)
+    async def authjwt_exception_handler(_, exc: AuthJWTException):
+        return JSONResponse(
+            status_code=exc.status_code, content={"detail": exc.message}
+        )
+
+
 # routes for resources
 app.include_router(routers.query_router)
 app.include_router(routers.function_router)
@@ -68,10 +88,14 @@ async def websocket_disconnect_exception_handler(request, exc):
 
 # send health report to dropbase server
 async def send_report_continuously():
-    while True:
-        worker_status_url = DROPBASE_API_URL + f"/worker/worker_status/{DROPBASE_TOKEN}/{WORKER_VERSION}"
-        requests.get(worker_status_url)
-        await asyncio.sleep(300)
+    # while True:
+    #     worker_status_url = (
+    #         DROPBASE_API_URL
+    #         + f"/worker/worker_status/{DROPBASE_TOKEN}/{WORKER_VERSION}"
+    #     )
+    #     requests.get(worker_status_url)
+    #     await asyncio.sleep(300)
+    pass
 
 
 @app.on_event("startup")
