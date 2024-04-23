@@ -1,5 +1,3 @@
-import secrets
-
 from sqlalchemy.orm import Session
 
 from ... import crud
@@ -76,16 +74,6 @@ class WorkspaceCreator:
             auto_commit=False,
         )
         self.db.flush()
-        crud.files.create(
-            self.db,
-            obj_in={
-                "name": "data",
-                "page_id": demo_page.id,
-                "type": "data_fetcher",
-            },
-            auto_commit=False,
-        )
-        self.db.flush()
         table_property = {"name": "table1", "code": "", "type": "postgres"}
         crud.tables.create(
             self.db,
@@ -99,27 +87,11 @@ class WorkspaceCreator:
 
         return demo_app
 
-    def _create_token(self):
-        token = secrets.token_urlsafe(32)
-        new_token = crud.token.create(
-            self.db,
-            obj_in={
-                "token": token,
-                "name": "default",
-                "workspace_id": self.workspace_id,
-                "is_active": True,
-            },
-            auto_commit=False,
-        )
-        self.db.flush()
-        return new_token
-
     def create(self, workspace_name: str = None, auto_commit: bool = False):
         try:
             workspace = self._create_workspace(workspace_name=workspace_name)
             admin_role = self._create_user_role()
             self._create_default_user_policies(admin_role_id=admin_role.role_id)
-            self._create_token()
             if auto_commit:
                 self.db.commit()
             return workspace
