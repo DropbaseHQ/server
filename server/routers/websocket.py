@@ -43,7 +43,7 @@ async def websocket_endpoint(websocket: WebSocket, Authorize: AuthJWT = Depends(
                 "state": state,
             }
             context = run_display_rule(**payload)
-            await websocket.send_json({"context": context.dict()})
+            await websocket.send_json({"context": context})
         else:
             message = data.get("message")
             await websocket.send_json({"message": f"You sent: {message}"})
