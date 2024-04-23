@@ -88,6 +88,16 @@ update_table_methods_main = "\n\ndef get_{0}(self) -> pd.DataFrame:\n    # TODO:
 update_button_methods_main = "\n\ndef on_click_{0}(self) -> Context:\n    # TODO: implement this method\n    return self.context"  # noqa
 
 
+table_class_boilerplate = """class {0}(TableABC):
+    def get_data(self) -> pd.DataFrame:
+        # Add your code here
+        return pd.DataFrame()
+"""
+
+widget_class_boilerplate = """class {0}(WidgetABC):
+    pass
+"""
+
 # properties boilerplate
 properties_boilerplate = """from dropbase.models import *
 from .schema import Properties

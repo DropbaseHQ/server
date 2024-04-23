@@ -38,21 +38,6 @@ class PageController:
         with open(self.page_path + "/schema.py", "w") as f:
             f.write(schema_boilerplate_init)
 
-    # def update_schema(self):
-    #     boilerplate = copy.copy(schema_boilerplate_create)
-    #     # schema should be updated based on properties
-    #     properties = read_page_properties(self.app_name, self.page_name)
-    #     for key, value in properties.items():
-    #         if "columns" in value:
-    #             class_name = "TableDefinedProperty"
-    #         if "components" in value:
-    #             class_name = "WidgetDefinedProperty"
-    #         boilerplate += f"    {key}: {class_name}\n"
-
-    #     # write file
-    #     with open(self.page_path + "/schema.py", "w") as f:
-    #         f.write(boilerplate)
-
     def create_page_properties(self):
         with open(self.page_path + "/properties.json", "w") as f:
             f.write(properties_json_boilerplate)
@@ -155,28 +140,49 @@ class PageController:
         return abstract_methods
 
     def update_main_class(self):
+
+        required_classes = self.get_require_classes()
+
         file_path = self.page_path + "/scripts/main.py"
 
         # Parse the existing code
         with open(file_path, "r") as f:
             module = ast.parse(f.read())
 
+        visited_classes = []
+        for node in module.body:
+            if isinstance(node, ast.ClassDef):
+                visited_classes.append(node.name)
+                for base in node.bases:
+                    base_name = base.attr if isinstance(base, ast.Attribute) else base.id
+                    if base_name == "TableABC":
+                        # make sure get_table is defined
+                        get_data_present = "get_data" in [n.name for n in node.body]
+                        if not get_data_present:
+                            new_method_node = ast.parse(get_data_template).body[0]
+                            node.body.append(new_method_node)
+
+        # add missing classes
+        for req_class in required_classes:
+            if req_class not in visited_classes:
+                new_class_node = ast.parse(required_classes[req_class]).body[0]
+                module.body.append(new_class_node)
+
+        # removed deleted classes
         for node in module.body:
             if isinstance(node, ast.ClassDef):
                 for base in node.bases:
                     base_name = base.attr if isinstance(base, ast.Attribute) else base.id
-                    if base_name == "TableBase":
-                        # make sure get_table is defined
-                        print("table ", node.name)
-                        get_data_present = "get_data" in [n.name for n in node.body]
-                        if not get_data_present:
-                            print("ADDing new one")
-                            new_method_node = ast.parse(get_data_template).body[0]
-                            node.body.append(new_method_node)
+                    if base_name == "TableABC" or base_name == "WidgetABC":
+                        if node.name not in required_classes:
+                            print("removing ", node.name)
+                            module.body.remove(node)
 
         modified_code = astor.to_source(module)
-        with open("test.py", "w") as f:
+        with open(file_path, "w") as f:
             f.write(modified_code)
+        # with open("test.py", "w") as f:
+        #     f.write(modified_code)
 
     def add_inits(self):
         with open(f"workspace/{self.app_name}/__init__.py", "w") as f:
@@ -221,6 +227,16 @@ class PageController:
         page_folder_path = f"workspace/{self.app_name}/{self.page_name}"
         shutil.rmtree(page_folder_path)
         self.remove_page_from_app_properties()
+
+    def get_require_classes(self):
+        required_classes = {}
+        for key, values in self.properties:
+            class_name = key.capitalize()
+            if isinstance(values, TableDefinedProperty):
+                required_classes[class_name] = table_class_boilerplate.format(class_name)
+            if isinstance(values, WidgetDefinedProperty):
+                required_classes[class_name] = widget_class_boilerplate.format(class_name)
+        return required_classes
 
     def get_require_base_methods(self):
         required_methods = {}
