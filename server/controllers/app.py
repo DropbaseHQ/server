@@ -3,11 +3,7 @@ import os
 
 from dropbase.helpers.boilerplate import app_properties_boilerplate
 from server.constants import cwd
-from server.controllers.workspace import (
-    AppFolderController,
-    WorkspaceFolderController,
-    get_subdirectories,
-)
+from server.controllers.workspace import WorkspaceFolderController, get_subdirectories
 
 
 class AppController:
@@ -45,6 +41,21 @@ class AppController:
         self.add_app_to_workspace()
         return {"message": "success"}
 
+    def get_pages(self):
+        if os.path.exists(os.path.join(self.app_path, "properties.json")):
+            return [{"name": p} for p in self._get_app_properties_data().keys()]
+
+        page_names = get_subdirectories(self.app_path)
+        pages = [{"name": page} for page in page_names]
+        return pages
+
+    def _get_app_properties_data(self):
+        path_to_app_properties = os.path.join(self.app_path, "properties.json")
+        if not os.path.exists(path_to_app_properties):
+            return None
+        with open(path_to_app_properties, "r") as file:
+            return json.load(file)
+
 
 def get_workspace_apps():
     folder_path = os.path.join(cwd, "workspace")
@@ -62,8 +73,8 @@ def get_workspace_apps():
         if not os.path.exists(os.path.join(folder_path, app.get("name"))):
             continue
 
-        app_folder_controller = AppFolderController(app.get("name"), folder_path)
-        pages = app_folder_controller.get_pages()
+        app_controller = AppController(app.get("name"), app.get("label"))
+        pages = app_controller.get_pages()
         response.append(
             {
                 "name": app.get("name"),
