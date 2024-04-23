@@ -37,6 +37,44 @@ class MySqlDatabase(Database):
             self.commit()
         return result.rowcount  # MySQL doesn't support RETURNING *, so we can't directly return row data
 
+    def update_value(self, edit: CellEdit):
+        try:
+            columns_name = edit.column_name
+            # NOTE: client sends columns as a list of column objects. we need to convert it to a dict
+            columns_dict = {col.column_name: col for col in edit.columns}
+            column = columns_dict[columns_name]
+
+            new_value = edit.new_value
+            if "date" in edit.data_type.lower() and isinstance(new_value, int):
+                # convert miliseconds to seconds
+                new_value = new_value / 1000 if new_value > 10**10 else new_value
+                new_value = datetime.datetime.utcfromtimestamp(new_value).strftime("%Y-%m-%d %H:%M:%S")
+
+            values = {"new_value": new_value}
+            prim_key_list = []
+            edit_keys = column.edit_keys
+            for key in edit_keys:
+                pk_col = columns_dict[key]
+                prim_key_list.append(f"{pk_col.column_name} = :{pk_col.column_name}")
+                values[pk_col.column_name] = edit.row[pk_col.name]
+            prim_key_str = " AND ".join(prim_key_list)
+
+            sql = f"""UPDATE `{column.table_name}`
+            SET {column.column_name} = :new_value
+            WHERE {prim_key_str}"""
+
+            with self.engine.connect() as conn:
+                result = conn.execute(text(sql), values)
+                conn.commit()
+                if result.rowcount == 0:
+                    raise Exception("No rows were updated")
+            return f"Updated {edit.column_name} from {edit.old_value} to {edit.new_value}", True
+        except Exception as e:
+            return (
+                f"Failed to update {edit.column_name} from {edit.old_value} to {edit.new_value}. Error: {str(e)}",  # noqa
+                False,
+            )
+
     def select(self, table: str, where_clause: str = None, values: dict = None):
         if where_clause:
             sql = f"""SELECT * FROM {table} WHERE {where_clause};"""
@@ -218,44 +256,6 @@ class MySqlDatabase(Database):
 
     def _get_table_path(self, col_data: MySqlColumnDefinedProperty) -> str:
         return f"{col_data.table_name}"
-
-    def _update_value(self, edit: CellEdit):
-        try:
-            columns_name = edit.column_name
-            # NOTE: client sends columns as a list of column objects. we need to convert it to a dict
-            columns_dict = {col.column_name: col for col in edit.columns}
-            column = columns_dict[columns_name]
-
-            new_value = edit.new_value
-            if "date" in edit.data_type.lower() and isinstance(new_value, int):
-                # convert miliseconds to seconds
-                new_value = new_value / 1000 if new_value > 10**10 else new_value
-                new_value = datetime.datetime.utcfromtimestamp(new_value).strftime("%Y-%m-%d %H:%M:%S")
-
-            values = {"new_value": new_value}
-            prim_key_list = []
-            edit_keys = column.edit_keys
-            for key in edit_keys:
-                pk_col = columns_dict[key]
-                prim_key_list.append(f"{pk_col.column_name} = :{pk_col.column_name}")
-                values[pk_col.column_name] = edit.row[pk_col.name]
-            prim_key_str = " AND ".join(prim_key_list)
-
-            sql = f"""UPDATE `{column.table_name}`
-            SET {column.column_name} = :new_value
-            WHERE {prim_key_str}"""
-
-            with self.engine.connect() as conn:
-                result = conn.execute(text(sql), values)
-                conn.commit()
-                if result.rowcount == 0:
-                    raise Exception("No rows were updated")
-            return f"Updated {edit.column_name} from {edit.old_value} to {edit.new_value}", True
-        except Exception as e:
-            return (
-                f"Failed to update {edit.column_name} from {edit.old_value} to {edit.new_value}. Error: {str(e)}",  # noqa
-                False,
-            )
 
     def _run_query(self, sql: str, values: dict):
         with self.engine.connect().execution_options(autocommit=True) as conn:
