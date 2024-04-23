@@ -2,8 +2,10 @@ import ast
 import json
 import os
 import shutil
+import tempfile
 
 import astor
+from fastapi import HTTPException
 
 from dropbase.helpers.boilerplate import *
 from dropbase.helpers.state_context import compose_state_context_models, get_page_state_context
@@ -62,9 +64,25 @@ class PageController:
         if component is removed from incoming properties, Properties will fail the validation
         """
 
-        # write properties to file
-        with open(self.page_path + "/properties.json", "w") as f:
-            f.write(json.dumps(properties, indent=2))
+        backup_path = f"{self.page_path}_backup"
+
+        # create a backup by copying entire directory (including subdirectories)
+        shutil.copytree(self.page_path, backup_path)
+
+        try:
+            # write properties to file
+            with open(self.page_path + "/properties.json", "w") as f:
+                f.write(json.dumps(properties, indent=2))
+        except Exception as e:
+            # on failure, delete edited directory
+            shutil.rmtree(self.page_path)
+            # rename backup directory to original name
+            os.rename(backup_path, self.page_path)
+            raise e
+        finally:
+            # if no exception occurred, you can remove the backup
+            if os.path.isdir(backup_path):
+                shutil.rmtree(backup_path)
 
         # update schema
         self.update_page()
@@ -169,7 +187,19 @@ class PageController:
 
     def delete_page(self):
         page_folder_path = f"workspace/{self.app_name}/{self.page_name}"
-        shutil.rmtree(page_folder_path)
+        with tempfile.TemporaryDirectory() as backup_dir:
+            # delete page folder
+            shutil.copytree(
+                page_folder_path,
+                backup_dir,
+                dirs_exist_ok=True,
+            )
+            try:
+                shutil.rmtree(page_folder_path)
+            except Exception:
+                shutil.copytree(backup_dir, page_folder_path, dirs_exist_ok=True)
+                raise HTTPException(status_code=500, detail="Failed to delete page")
+
         self.remove_page_from_app_properties()
 
     def get_require_classes(self):
