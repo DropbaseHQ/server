@@ -1,5 +1,9 @@
 import json
 import os
+import shutil
+import tempfile
+
+from fastapi import HTTPException
 
 from dropbase.helpers.boilerplate import app_properties_boilerplate
 from server.constants import cwd
@@ -36,7 +40,18 @@ class AppController:
             file.write(json.dumps(workspace_properties, indent=2))
 
     def delete_app(self):
-        os.rmdir(self.app_path)
+        with tempfile.TemporaryDirectory() as backup_dir:
+            if os.path.exists(self.app_path):
+                shutil.copytree(self.app_path, backup_dir, dirs_exist_ok=True)
+
+                try:
+                    shutil.rmtree(self.app_path)
+                except Exception:
+                    shutil.copytree(backup_dir, self.app_path, dirs_exist_ok=True)
+                    raise HTTPException(status_code=500, detail="Failed to delete app")
+
+            else:
+                raise HTTPException(status_code=400, detail="App does not exist")
 
     def create_app(self):
         # TODO: handle workspace properties
