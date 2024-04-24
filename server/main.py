@@ -12,7 +12,7 @@ from starlette.websockets import WebSocketDisconnect
 # NOTE: we might not need this here and only in worker docker since sqls are no longer running in server
 from dropbase.helpers.dataframe import to_dtable
 from server import routers
-from server.constants import CORS_ORIGINS
+from server.constants import CORS_ORIGINS, WORKER_VERSION
 from server.utils import auth_module_is_installed
 
 pd.DataFrame.to_dtable = to_dtable
@@ -73,6 +73,12 @@ app.include_router(routers.page_router)
 app.include_router(routers.websocket_router)
 app.include_router(routers.workspace_router)
 app.include_router(routers.status_router)
+
+
+# health check
+@app.get("/health/")
+async def health_check():
+    return {"status": "ok", "version": WORKER_VERSION}
 
 
 page_logger = logging.getLogger(__name__)

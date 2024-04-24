@@ -15,7 +15,8 @@ def run(r, response):
         page_name = os.getenv("page_name")
         state = json.loads(os.getenv("state"))
         action = os.getenv("action")
-        target = os.getenv("target")
+        resource = os.getenv("resource")
+        component = os.getenv("component")
 
         # run python script and get result
         # sample path: from workspace.class_9.page1.schema import Script
@@ -29,12 +30,12 @@ def run(r, response):
         # run function
         # TODO: make actions more generalizable
         if action == "get_table_data":
-            new_context = script.__getattribute__(target).get_table_data()
+            new_context = script.__getattribute__(resource).get_table_data()
         elif action == "update":
             edits = os.getenv("edits")
-            new_context = script.__getattribute__(target).update(edits)
+            new_context = script.__getattribute__(resource).update(edits)
         else:
-            new_context = script.__getattribute__(target).__getattribute__(action)()
+            new_context = script.__getattribute__(resource).__getattribute__(component)()
 
         response["type"] = "context"
         response["context"] = new_context.dict()
