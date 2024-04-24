@@ -29,13 +29,13 @@ def run(r, response):
 
         # run function
         # TODO: make actions more generalizable
-        if action == "get_table_data":
+        if action == "get_data":
             new_context = script.__getattribute__(resource).get_table_data()
         elif action == "update":
             edits = os.getenv("edits")
             new_context = script.__getattribute__(resource).update(edits)
         else:
-            new_context = script.__getattribute__(resource).__getattribute__(component)()
+            new_context = script.__getattribute__(resource).__getattribute__(f"{action}{component}")()
 
         response["type"] = "context"
         response["context"] = new_context.dict()
