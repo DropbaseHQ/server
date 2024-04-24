@@ -1,7 +1,6 @@
 from fastapi import APIRouter
 
 from dropbase.schemas.page import CreatePageRequest, PageProperties, SaveTableColumns
-from server.controllers.page import get_page
 from server.controllers.page_controller import PageController
 from server.utils import get_permission_dependency_array
 
@@ -16,12 +15,14 @@ def get_page_permissions(action: str = "use"):
 
 @router.get("/{app_name}/{page_name}/init", dependencies=get_page_permissions("use"))
 def get_page_init_req(app_name: str, page_name: str):
-    return get_page(app_name, page_name, initial=True)
+    pageController = PageController(app_name, page_name)
+    return pageController.get_page(initial=True)
 
 
 @router.get("/{app_name}/{page_name}", dependencies=get_page_permissions("use"))
 def get_page_req(app_name: str, page_name: str):
-    return get_page(app_name, page_name)
+    pageController = PageController(app_name, page_name)
+    return pageController.get_page()
 
 
 @router.post("/", dependencies=get_page_permissions("edit"))

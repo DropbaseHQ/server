@@ -1,16 +1,10 @@
 import asyncio
 import os
 
-from fastapi import APIRouter, Depends, HTTPException, Request
+from fastapi import APIRouter, HTTPException, Request
 
-from server.controllers.page import get_state_context
 from server.controllers.workspace import WorkspaceFolderController
-from server.utils import get_permission_dependency, get_permission_dependency_array
-
-from ..authentication import get_current_user
-from ..connect import get_db
-from ..controllers import user as user_controller
-from ..schemas import CheckPermissionRequest
+from server.utils import get_permission_dependency_array
 
 router = APIRouter(prefix="/page", tags=["page"])
 
@@ -41,21 +35,3 @@ def get_app_id(request: Request):
             detail=(f"App {app_name} either does not exist or has no id."),
         )
     return app_id
-
-
-# @router.get("/{app_name}/{page_name}", dependencies=get_page_permissions("use"))
-# def get_st_cntxt(
-#     request: Request,
-#     app_name: str,
-#     page_name: str,
-#     db=Depends(get_db),
-#     user=Depends(get_current_user),
-# ):
-#     app_id = get_app_id(request)
-#     permissions = user_controller.check_permissions(
-#         db=db,
-#         user=user,
-#         request=CheckPermissionRequest(app_id=app_id),
-#         workspace_id=request.headers.get("workspace-id"),
-#     )
-#     return get_state_context(app_name, page_name, permissions)

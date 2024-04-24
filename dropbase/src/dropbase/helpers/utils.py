@@ -10,15 +10,6 @@ from dropbase.models.table import TableDefinedProperty
 from dropbase.models.widget import WidgetDefinedProperty
 
 
-def get_state_context(app_name: str, page_name: str, state: dict, context: dict):
-    page_module = f"workspace.{app_name}.{page_name}"
-    page = importlib.import_module(page_module)
-    importlib.reload(page)
-    State = getattr(page, "State")
-    Context = getattr(page, "Context")
-    return State(**state), Context(**context)
-
-
 def get_state(app_name: str, page_name: str, state: dict):
     page_module = f"workspace.{app_name}.{page_name}"
     page = importlib.import_module(page_module)

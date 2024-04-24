@@ -6,8 +6,8 @@ import uuid
 
 from fastapi import HTTPException
 
+from dropbase.helpers.state_context import create_state_context_files
 from dropbase.helpers.utils import check_if_object_exists, validate_column_name
-from server.controllers.generate_models import create_state_context_files
 
 APP_PROPERTIES_TEMPLATE = {
     "pages": [],
@@ -32,17 +32,13 @@ class WorkspaceFolderController:
         self.r_path_to_workspace = r_path_to_workspace
 
     def write_workspace_properties(self, workspace_properties: dict):
-        workspace_properties_path = os.path.join(
-            self.r_path_to_workspace, "properties.json"
-        )
+        workspace_properties_path = os.path.join(self.r_path_to_workspace, "properties.json")
         with open(workspace_properties_path, "w") as file:
             json.dump(workspace_properties, file, indent=2)
 
     def get_workspace_properties(self):
         if os.path.exists(os.path.join(self.r_path_to_workspace, "properties.json")):
-            with open(
-                os.path.join(self.r_path_to_workspace, "properties.json"), "r"
-            ) as file:
+            with open(os.path.join(self.r_path_to_workspace, "properties.json"), "r") as file:
 
                 props = json.load(file)
                 # return props.get("apps", [])
@@ -81,9 +77,7 @@ class WorkspaceFolderController:
         existing_app_labels = [a["label"] for a in workspace_apps]
 
         if new_label in existing_app_labels:
-            raise HTTPException(
-                status_code=400, detail="Another app with the same label already exists"
-            )
+            raise HTTPException(status_code=400, detail="Another app with the same label already exists")
 
         app_info = {**target_app, "label": new_label}
         workspace_props = self.get_workspace_properties()
@@ -121,18 +115,14 @@ class AppFolderController:
             json.dump(app_properties_data, file, indent=2)
 
     def _get_workspace_properties(self):
-        workspace_properties_path = os.path.join(
-            self.r_path_to_workspace, "properties.json"
-        )
+        workspace_properties_path = os.path.join(self.r_path_to_workspace, "properties.json")
         if not os.path.exists(workspace_properties_path):
             return None
         with open(workspace_properties_path, "r") as file:
             return json.load(file)
 
     def _write_workspace_properties(self, workspace_properties: dict):
-        workspace_properties_path = os.path.join(
-            self.r_path_to_workspace, "properties.json"
-        )
+        workspace_properties_path = os.path.join(self.r_path_to_workspace, "properties.json")
         with open(workspace_properties_path, "w") as file:
             json.dump(workspace_properties, file, indent=2)
 
@@ -219,9 +209,7 @@ class AppFolderController:
         created_app_names = get_subdirectories(self.r_path_to_workspace)
         app_info = []
         for app_name in created_app_names:
-            app_properties = os.path.join(
-                self.r_path_to_workspace, app_name, "properties.json"
-            )
+            app_properties = os.path.join(self.r_path_to_workspace, app_name, "properties.json")
             if not os.path.exists(app_properties):
                 app_info.append({"name": app_name, "label": app_name, "id": None})
                 continue
@@ -378,9 +366,7 @@ class AppFolderController:
 
         self.create_workspace_properties()
 
-        existing_app_labels = [
-            a["label"] for a in self._get_workspace_properties()["apps"]
-        ]
+        existing_app_labels = [a["label"] for a in self._get_workspace_properties()["apps"]]
         if app_label is not None and app_label in existing_app_labels:
             raise HTTPException(
                 status_code=400,
@@ -395,9 +381,7 @@ class AppFolderController:
         app_path = os.path.join(self.r_path_to_workspace, app_name)
 
         with tempfile.NamedTemporaryFile() as temp_workspace_file:
-            workspace_properties_path = os.path.join(
-                self.r_path_to_workspace, "properties.json"
-            )
+            workspace_properties_path = os.path.join(self.r_path_to_workspace, "properties.json")
             if not os.path.exists(workspace_properties_path):
                 return
 
@@ -410,10 +394,8 @@ class AppFolderController:
                     if not workspace_properties:
                         return
 
-                    app_id = None
                     for app in workspace_properties["apps"]:
                         if app["name"] == app_name:
-                            app_id = app.get("id", None)
                             workspace_properties["apps"].remove(app)
                             break
 

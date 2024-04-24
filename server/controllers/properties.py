@@ -2,9 +2,9 @@ import json
 import os
 import shutil
 
+from dropbase.helpers.state_context import create_state_context_files
 from dropbase.schemas.page import Properties
 from server.constants import cwd
-from server.controllers.generate_models import create_state_context_files
 
 
 def update_properties(app_name: str, page_name: str, properties: dict, update_modes: bool = True):
