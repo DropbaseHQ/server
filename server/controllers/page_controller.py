@@ -6,7 +6,7 @@ import shutil
 import astor
 
 from dropbase.helpers.boilerplate import *
-from dropbase.helpers.state_context import compose_state_context_models
+from dropbase.helpers.state_context import compose_state_context_models, get_page_state_context
 from dropbase.helpers.utils import get_page_properties, read_app_properties, read_page_properties
 from dropbase.models import *
 
@@ -203,6 +203,45 @@ class PageController:
                         )
         return required_methods
 
+    def get_page(self, initial=False):
+        self.reload_properties()
+        response = get_page_state_context(self.app_name, self.page_name, initial)
+        # get methods
+        response["properties"] = self.properties
+        response["methods"] = self.get_main_class_methods()
+        return response
+
+    def get_main_class_methods(self):
+        file_path = self.page_path + "/scripts/main.py"
+        with open(file_path, "r") as f:
+            module = ast.parse(f.read())
+
+        class_methods = {}
+        for node in module.body:
+            if isinstance(node, ast.ClassDef):
+                for base in node.bases:
+                    base_name = base.attr if isinstance(base, ast.Attribute) else base.id
+                    if base_name in ["TableABC", "WidgetABC"]:
+                        class_name = node.name.lower()
+                        for n in node.body:
+                            if isinstance(n, ast.FunctionDef):
+                                if class_name not in class_methods:
+                                    class_methods[class_name] = {}
+
+                                # check for base component methods
+                                parse_component_methods(n.name, "on_click_", class_name, class_methods)
+                                parse_component_methods(n.name, "on_select_", class_name, class_methods)
+                                parse_component_methods(n.name, "on_enter_", class_name, class_methods)
+
+                                # check for base table methods
+                                # get data, udpate, delete, add
+                                if n.name in ["get_data", "update", "delete", "add"]:
+                                    if "methods" not in class_methods[class_name]:
+                                        class_methods[class_name]["methods"] = []
+                                    class_methods[class_name]["methods"].append(n.name)
+
+        return class_methods
+
     def _backup_and_write(self, file, contents):
         backup_path = f"{self.page_path}_backup"
 
@@ -223,3 +262,12 @@ class PageController:
             # if no exception occurred, you can remove the backup
             if os.path.isdir(backup_path):
                 shutil.rmtree(backup_path)
+
+
+# helper functions
+def parse_component_methods(method_name: str, method_type: str, class_name: str, class_methods: dict):
+    if method_type in method_name:
+        component_name = method_name.split(method_type)[1]
+        if component_name not in class_methods[class_name]:
+            class_methods[class_name][component_name] = []
+        class_methods[class_name][component_name].append(method_type)
