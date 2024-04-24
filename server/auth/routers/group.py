@@ -4,6 +4,8 @@ from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
 from .. import crud
+from ..authorization import RESOURCES, AuthZDepFactory, get_current_user
+from ..connect import get_db
 from ..controllers.group import GroupController
 from ..controllers.group import get_group as c_get_group
 from ..models import User
@@ -16,8 +18,6 @@ from ..schemas.group import (
     UpdateGroup,
     UpdateGroupPolicyRequest,
 )
-from ..authorization import RESOURCES, AuthZDepFactory, get_current_user
-from ..connect import get_db
 
 group_authorizer = AuthZDepFactory(default_resource_type=RESOURCES.WORKSPACE)
 
@@ -64,9 +64,7 @@ def add_user_to_group(
     db: Session = Depends(get_db),
     user: User = Depends(get_current_user),
 ):
-    return GroupController.add_user(
-        db=db, user=user, group_id=group_id, user_id=request.user_id
-    )
+    return GroupController.add_user(db=db, user=user, group_id=group_id, user_id=request.user_id)
 
 
 @router.post("/remove_user/{group_id}")
@@ -76,15 +74,11 @@ def remove_user_from_group(
     db: Session = Depends(get_db),
     user: User = Depends(get_current_user),
 ):
-    return GroupController.remove_user(
-        db=db, user=user, group_id=group_id, user_id=request.user_id
-    )
+    return GroupController.remove_user(db=db, user=user, group_id=group_id, user_id=request.user_id)
 
 
 @router.post("/add_policies/{group_id}")
-def add_policies_to_group(
-    group_id: UUID, request: AddGroupPolicyRequest, db: Session = Depends(get_db)
-):
+def add_policies_to_group(group_id: UUID, request: AddGroupPolicyRequest, db: Session = Depends(get_db)):
     return GroupController.add_policies(db, group_id, request)
 
 

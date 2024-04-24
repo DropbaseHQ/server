@@ -54,15 +54,6 @@ def convert_sql_table(req: ConvertTableRequest, job_id):
 
         check_for_duplicate_columns(column_names)
 
-        # get columns from file
-        # get_smart_table_payload = {
-        #     "user_sql": user_sql,
-        #     "column_names": column_names,
-        #     "gpt_schema": gpt_schema,
-        #     "db_schema": db_schema,
-        #     "db_type": user_db.db_type,
-        # }
-
         smart_col_paths = call_gpt(
             user_sql=user_sql,
             column_names=column_names,

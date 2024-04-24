@@ -1,3 +1,4 @@
+# TODO: DELETE ME IS SQL IS NOT RUNNIGN FROM SERVER
 import importlib
 import os
 import sys

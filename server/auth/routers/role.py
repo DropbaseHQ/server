@@ -4,9 +4,9 @@ from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
 from .. import crud
-from ..schemas.role import CreateRole, UpdateRole
 from ..authorization import RESOURCES, AuthZDepFactory
 from ..connect import get_db
+from ..schemas.role import CreateRole, UpdateRole
 
 role_authorizer = AuthZDepFactory(default_resource_type=RESOURCES.WORKSPACE)
 

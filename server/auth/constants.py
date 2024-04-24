@@ -1,11 +1,6 @@
-import os
+from server.settings import config
 
-from dotenv import load_dotenv
-
-load_dotenv()
-
-ENCRYPT_SECRET = os.environ.get("ENCRYPT_SECRET")
-CLIENT_URL = os.environ.get("CLIENT_URL")
+CLIENT_URL = config.get("client_url") or "http://localhost:3030"
 
 GPT_MODEL = "gpt-3.5-turbo"
 GPT_TEMPERATURE = 0.0

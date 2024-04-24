@@ -39,10 +39,3 @@ class ConvertTableRequest(BaseModel):
     page_name: str = Field(regex=FILE_NAME_REGEX)
     table: TableBase
     state: dict
-
-
-class CommitTableColumnsRequest(BaseModel):
-    app_name: str = Field(regex=FILE_NAME_REGEX)
-    page_name: str = Field(regex=FILE_NAME_REGEX)
-    table: TableBase
-    columns: List[dict]

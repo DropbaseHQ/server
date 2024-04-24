@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter
 
 from dropbase.schemas.files import CreateFile, DeleteFile, RenameFile, UpdateFile
 from server.controllers.files import FileController

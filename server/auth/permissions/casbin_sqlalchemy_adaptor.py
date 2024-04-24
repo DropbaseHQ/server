@@ -6,11 +6,11 @@ Small changes made to make it work with our project.
 from contextlib import contextmanager
 
 from casbin import persist
-from sqlalchemy import Column, Integer, String, create_engine, or_
+from sqlalchemy import create_engine, or_
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 
-from ..models import Policy, Role
+from ..models import Policy
 
 Base = declarative_base()
 
@@ -73,11 +73,7 @@ class Adapter(persist.Adapter, persist.adapters.UpdateAdapter):
     def load_policy(self, model):
         """loads all policy rules from the storage."""
         with self._session_scope() as session:
-            lines = (
-                session.query(self._db_class)
-                .filter(self._db_class.workspace_id == None)
-                .all()
-            )
+            lines = session.query(self._db_class).filter(self._db_class.workspace_id is None).all()
             for line in lines:
                 persist.load_policy_line(str(line), model)
 
@@ -98,9 +94,7 @@ class Adapter(persist.Adapter, persist.adapters.UpdateAdapter):
     def filter_query(self, querydb, filter):
         for attr in ("ptype", "v0", "v1", "v2", "v3", "v4", "v5"):
             if len(getattr(filter, attr)) > 0:
-                querydb = querydb.filter(
-                    getattr(self._db_class, attr).in_(getattr(filter, attr))
-                )
+                querydb = querydb.filter(getattr(self._db_class, attr).in_(getattr(filter, attr)))
         return querydb.order_by(self._db_class.id)
 
     def _save_policy_line(self, ptype, rule):
@@ -151,9 +145,7 @@ class Adapter(persist.Adapter, persist.adapters.UpdateAdapter):
             query = query.filter(self._db_class.ptype == ptype)
             rules = zip(*rules)
             for i, rule in enumerate(rules):
-                query = query.filter(
-                    or_(getattr(self._db_class, "v{}".format(i)) == v for v in rule)
-                )
+                query = query.filter(or_(getattr(self._db_class, "v{}".format(i)) == v for v in rule))
             query.delete()
 
     def remove_filtered_policy(self, sec, ptype, field_index, *field_values):
@@ -175,9 +167,7 @@ class Adapter(persist.Adapter, persist.adapters.UpdateAdapter):
 
         return True if r > 0 else False
 
-    def update_policy(
-        self, sec: str, ptype: str, old_rule: [str], new_rule: [str]
-    ) -> None:
+    def update_policy(self, sec: str, ptype: str, old_rule: [str], new_rule: [str]) -> None:
         """
         Update the old_rule with the new_rule in the database (storage).
 
@@ -212,12 +202,8 @@ class Adapter(persist.Adapter, persist.adapters.UpdateAdapter):
         self,
         sec: str,
         ptype: str,
-        old_rules: [
-            [str],
-        ],
-        new_rules: [
-            [str],
-        ],
+        old_rules: [[str]],
+        new_rules: [[str]],
     ) -> None:
         """
         Update the old_rules with the new_rules in the database (storage).
@@ -255,9 +241,7 @@ class Adapter(persist.Adapter, persist.adapters.UpdateAdapter):
         with self._session_scope() as session:
             # Load old policies
 
-            query = session.query(self._db_class).filter(
-                self._db_class.ptype == filter.ptype
-            )
+            query = session.query(self._db_class).filter(self._db_class.ptype == filter.ptype)
             filtered_query = self.filter_query(query, filter)
             old_rules = filtered_query.all()
 

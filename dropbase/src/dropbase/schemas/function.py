@@ -17,6 +17,7 @@ class RunClass(BaseModel):
     app_name: str
     page_name: str
     action: str
-    target: str
+    resource: str
+    component: Optional[str]
     state: dict
     edits: Optional[CellEdit]

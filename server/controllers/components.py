@@ -38,6 +38,7 @@ component_property_types = {
 }
 
 
+# TODO: THIS IS A HELPER, MOVE TO HERLPSERS
 def get_component_properties(compnent_type: str):  # this needs to be modified to support mysql
     response = {}
     if compnent_type == "all":
@@ -59,12 +60,6 @@ def parse_prop(prop, key, model_schema):
         for each_prop in prop["anyOf"]:
             prop["type"].append(parse_prop(each_prop, key, model_schema))
         prop.pop("anyOf")
-
-    # if "allOf" in prop:
-    #     prop["type"] = []
-    #     for each_prop in prop["allOf"]:
-    #         prop["type"].append(parse_prop(each_prop, key, model_schema))
-    #     prop.pop("allOf")
 
     if "$ref" in prop:
         path = prop["$ref"][2:].split("/")

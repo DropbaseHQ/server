@@ -1,3 +1,4 @@
+# @JON: DO WE STILL NEED THIS MODEL?? THERE IS NO SCHEMA ASSOCIATED WITH IT
 from sqlalchemy import TIMESTAMP, Column, ForeignKey, String
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.sql import func, text

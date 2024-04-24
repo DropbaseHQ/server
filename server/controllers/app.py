@@ -89,5 +89,3 @@ def get_workspace_apps():
     )
     workspace_props = workspace_folder_controller.get_workspace_properties()
     return {"apps": response, "workspace_id": workspace_props.get("id")}
-
-    # return parse_apps_permissions(response, router)
