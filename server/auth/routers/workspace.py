@@ -1,4 +1,5 @@
 # @JON: CAN YOU REVIEW THIS FILE. I DON'T THINK WE NEED MOST OF THESE
+# Removed some endpoints but, kept the ones we need
 from uuid import UUID
 
 from fastapi import APIRouter, Depends
