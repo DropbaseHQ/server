@@ -32,29 +32,31 @@ class PageController:
 
     def create_schema(self):
         # create page schema
-        with open(self.page_path + "/schema.py", "w") as f:
-            f.write(schema_boilerplate_init)
+        self._backup_and_write(self.page_path + "/schema.py", schema_boilerplate_init)
 
     def create_page_properties(self):
-        with open(self.page_path + "/properties.json", "w") as f:
-            f.write(properties_json_boilerplate)
+        self._backup_and_write(self.page_path + "/properties.json", properties_json_boilerplate)
 
     def create_app_init_properties(self):
         # assuming page name is page1 by default
-        with open(f"workspace/{self.app_name}/properties.json", "w") as f:
-            f.write(json.dumps(app_properties_boilerplate, indent=2))
+        self._backup_and_write(
+            f"workspace/{self.app_name}/properties.json",
+            json.dumps(app_properties_boilerplate, indent=2),
+        )
 
     def add_page_to_app_properties(self, page_label: str):
         app_properties = read_app_properties(self.app_name)
         app_properties[self.page_name] = {"label": page_label}
-        with open(f"workspace/{self.app_name}/properties.json", "w") as f:
-            f.write(json.dumps(app_properties, indent=2))
+        self._backup_and_write(
+            f"workspace/{self.app_name}/properties.json", json.dumps(app_properties, indent=2)
+        )
 
     def remove_page_from_app_properties(self):
         app_properties = read_app_properties(self.app_name)
         app_properties.pop(self.page_name)
-        with open(f"workspace/{self.app_name}/properties.json", "w") as f:
-            f.write(json.dumps(app_properties, indent=2))
+        self._backup_and_write(
+            f"workspace/{self.app_name}/properties.json", json.dumps(app_properties, indent=2)
+        )
 
     def update_page_properties(self, properties: dict):
         """
@@ -62,32 +64,13 @@ class PageController:
         if component is removed from incoming properties, Properties will fail the validation
         """
 
-        backup_path = f"{self.page_path}_backup"
-
-        # create a backup by copying entire directory (including subdirectories)
-        shutil.copytree(self.page_path, backup_path)
-
-        try:
-            # write properties to file
-            with open(self.page_path + "/properties.json", "w") as f:
-                f.write(json.dumps(properties, indent=2))
-        except Exception as e:
-            # on failure, delete edited directory
-            shutil.rmtree(self.page_path)
-            # rename backup directory to original name
-            os.rename(backup_path, self.page_path)
-            raise e
-        finally:
-            # if no exception occurred, you can remove the backup
-            if os.path.isdir(backup_path):
-                shutil.rmtree(backup_path)
+        self._backup_and_write(self.page_path + "/properties.json", json.dumps(properties, indent=2))
 
         # update schema
         self.update_page()
 
     def create_main_class(self):
-        with open(self.page_path + "/scripts/main.py", "w") as f:
-            f.write(main_class_init)
+        self._backup_and_write(self.page_path + "/scripts/main.py", main_class_init)
 
     def update_main_class(self):
 
@@ -144,15 +127,11 @@ class PageController:
                             module.body.remove(node)
 
         modified_code = astor.to_source(module)
-        with open(file_path, "w") as f:
-            f.write(modified_code)
+        self._backup_and_write(file_path, modified_code)
 
     def add_inits(self):
-        with open(f"workspace/{self.app_name}/__init__.py", "w") as f:
-            f.write(app_init_boilerplate)
-
-        with open(self.page_path + "/__init__.py", "w") as f:
-            f.write(page_init_boilerplate)
+        self._backup_and_write(f"workspace/{self.app_name}/__init__.py", app_init_boilerplate)
+        self._backup_and_write(self.page_path + "/__init__.py", page_init_boilerplate)
 
     def save_table_columns(self, table_name: str, columns: list):
         # update page properties file
@@ -165,8 +144,8 @@ class PageController:
         properties = read_page_properties(self.app_name, self.page_name)
         filepath = f"workspace/{self.app_name}/{self.page_name}/properties.json"
         properties.get(table_name)["columns"] = columns
-        with open(filepath, "w") as f:
-            f.write(json.dumps(properties, indent=2))
+
+        self._backup_and_write(filepath, page_init_boilerplate)
 
     def create_page(self, page_label: str):
         self.create_page_dirs()
@@ -262,6 +241,27 @@ class PageController:
                                     class_methods[class_name]["methods"].append(n.name)
 
         return class_methods
+
+    def _backup_and_write(self, file, contents):
+        backup_path = f"{self.page_path}_backup"
+
+        # create a backup by copying entire directory (including subdirectories)
+        shutil.copytree(self.page_path, backup_path)
+
+        try:
+            # write properties to file
+            with open(file, "w") as f:
+                f.write(contents)
+        except Exception as e:
+            # on failure, delete edited directory
+            shutil.rmtree(self.page_path)
+            # rename backup directory to original name
+            os.rename(backup_path, self.page_path)
+            raise e
+        finally:
+            # if no exception occurred, you can remove the backup
+            if os.path.isdir(backup_path):
+                shutil.rmtree(backup_path)
 
 
 # helper functions
