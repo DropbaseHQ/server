@@ -187,19 +187,7 @@ class PageController:
 
     def delete_page(self):
         page_folder_path = f"workspace/{self.app_name}/{self.page_name}"
-        with tempfile.TemporaryDirectory() as backup_dir:
-            # delete page folder
-            shutil.copytree(
-                page_folder_path,
-                backup_dir,
-                dirs_exist_ok=True,
-            )
-            try:
-                shutil.rmtree(page_folder_path)
-            except Exception:
-                shutil.copytree(backup_dir, page_folder_path, dirs_exist_ok=True)
-                raise HTTPException(status_code=500, detail="Failed to delete page")
-
+        shutil.rmtree(page_folder_path)
         self.remove_page_from_app_properties()
 
     def get_require_classes(self):
