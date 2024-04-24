@@ -145,7 +145,7 @@ class PageController:
         filepath = f"workspace/{self.app_name}/{self.page_name}/properties.json"
         properties.get(table_name)["columns"] = columns
 
-        self._backup_and_write(filepath, page_init_boilerplate)
+        self._backup_and_write(filepath, json.dumps(properties, indent=2))
 
     def create_page(self, page_label: str):
         self.create_page_dirs()
