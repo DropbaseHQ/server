@@ -1,9 +1,6 @@
 import json
 import os
 import shutil
-import tempfile
-
-from fastapi import HTTPException
 
 from dropbase.helpers.boilerplate import app_properties_boilerplate
 from server.constants import cwd
