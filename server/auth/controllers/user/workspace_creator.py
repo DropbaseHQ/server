@@ -54,39 +54,6 @@ class WorkspaceCreator:
             auto_commit=False,
         )
 
-    def _create_demo_app(self):
-        demo_app = crud.app.create(
-            self.db,
-            obj_in={
-                "name": "demo",
-                "workspace_id": self.workspace_id,
-                "is_draft": False,
-            },
-            auto_commit=False,
-        )
-        self.db.flush()
-        demo_page = crud.page.create(
-            self.db,
-            obj_in={
-                "name": "page1",
-                "app_id": demo_app.id,
-            },
-            auto_commit=False,
-        )
-        self.db.flush()
-        table_property = {"name": "table1", "code": "", "type": "postgres"}
-        crud.tables.create(
-            self.db,
-            obj_in={
-                "name": "table1",
-                "page_id": demo_page.id,
-                "property": table_property,
-            },
-            auto_commit=False,
-        )
-
-        return demo_app
-
     def create(self, workspace_name: str = None, auto_commit: bool = False):
         try:
             workspace = self._create_workspace(workspace_name=workspace_name)
