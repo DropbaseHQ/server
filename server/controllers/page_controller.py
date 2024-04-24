@@ -236,7 +236,8 @@ class PageController:
                                 # check for base component methods
                                 parse_component_methods(n.name, "on_click_", class_name, class_methods)
                                 parse_component_methods(n.name, "on_select_", class_name, class_methods)
-                                parse_component_methods(n.name, "on_enter_", class_name, class_methods)
+                                parse_component_methods(n.name, "on_submit_", class_name, class_methods)
+                                parse_component_methods(n.name, "on_toggle_", class_name, class_methods)
 
                                 # check for base table methods
                                 # get data, udpate, delete, add
