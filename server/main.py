@@ -1,21 +1,21 @@
-import asyncio
 import logging
 
-from importlib.util import find_spec
+import pandas as pd
 from fastapi import FastAPI
-from fastapi.responses import JSONResponse
-from fastapi_jwt_auth.exceptions import AuthJWTException
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
+from fastapi_jwt_auth.exceptions import AuthJWTException
 from starlette.websockets import WebSocketDisconnect
-from server.utils import auth_module_is_installed
+
+# register to_dtype function to pandas DataFrame
+# NOTE: we might not need this here and only in worker docker since sqls are no longer running in server
+from dropbase.helpers.dataframe import to_dtable
 from server import routers
-from server.constants import (
-    CORS_ORIGINS,
-    DROPBASE_API_URL,
-    DROPBASE_TOKEN,
-    WORKER_VERSION,
-)
+from server.constants import CORS_ORIGINS
+from server.utils import auth_module_is_installed
+
+pd.DataFrame.to_dtable = to_dtable
 
 
 # to disable cache for static files
@@ -51,15 +51,13 @@ app.add_middleware(
 app.mount("/workspace", NoCacheStaticFiles(directory="workspace"), name="workspace")
 
 if auth_module_is_installed:
-    from server.auth.endpoints import premium_router
+    from server.auth.routers import premium_router
 
     app.include_router(premium_router)
 
     @app.exception_handler(AuthJWTException)
     async def authjwt_exception_handler(_, exc: AuthJWTException):
-        return JSONResponse(
-            status_code=exc.status_code, content={"detail": exc.message}
-        )
+        return JSONResponse(status_code=exc.status_code, content={"detail": exc.message})
 
 
 # routes for resources
@@ -71,7 +69,6 @@ app.include_router(routers.tables_router)
 app.include_router(routers.component_router)
 app.include_router(routers.app_router)
 app.include_router(routers.edit_cell_router)
-app.include_router(routers.health_router)
 app.include_router(routers.page_router)
 app.include_router(routers.websocket_router)
 app.include_router(routers.workspace_router)
@@ -86,26 +83,7 @@ async def websocket_disconnect_exception_handler(request, exc):
     page_logger.info("WebSocket connection closed")
 
 
-# send health report to dropbase server
-async def send_report_continuously():
-    # while True:
-    #     worker_status_url = (
-    #         DROPBASE_API_URL
-    #         + f"/worker/worker_status/{DROPBASE_TOKEN}/{WORKER_VERSION}"
-    #     )
-    #     requests.get(worker_status_url)
-    #     await asyncio.sleep(300)
-    pass
-
-
 @app.on_event("startup")
 async def startup_event():
-    asyncio.create_task(send_report_continuously())
-
-
-# register to_dtype function to pandas DataFrame
-import pandas as pd
-
-from dropbase.helpers.dataframe import to_dtable
-
-pd.DataFrame.to_dtable = to_dtable
+    # TODO: add health check here
+    pass

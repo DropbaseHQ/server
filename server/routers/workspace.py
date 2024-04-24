@@ -1,6 +1,6 @@
 import os
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter
 
 from dropbase.helpers.utils import check_if_object_exists
 from server.controllers.workspace import WorkspaceFolderController

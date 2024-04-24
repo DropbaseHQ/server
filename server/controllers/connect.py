@@ -1,4 +1,4 @@
-# todo: group with dropbase package connect
+# TODO: MOVE TO DROPBASE PACKAGE OR DELETE IF SQL QUERY FROM SERVER IS NOT SUPPORTED
 from dropbase.database.databases.mysql import MySqlDatabase
 from dropbase.database.databases.postgres import PostgresDatabase
 from dropbase.database.databases.snowflake import SnowflakeDatabase
