@@ -23,14 +23,28 @@ class AppController:
             f.write(json.dumps(app_properties_boilerplate, indent=2))
 
     def add_app_to_workspace(self):
-        with open("workspace/properties.json", "r") as f:
+        properties_file = "workspace/properties.json"
+        with open(properties_file, "r") as f:
             workspace_properties = json.loads(f.read())
         apps = workspace_properties.get("apps", [])
         app = {"name": self.app_name, "label": self.app_label}
         apps.append(app)
         workspace_properties["apps"] = apps
-        with open("workspace/properties.json", "w") as file:
-            file.write(json.dumps(workspace_properties, indent=2))
+
+        backup_file = "workspace/properties_backup.json"
+
+        shutil.copy2(properties_file, backup_file)
+
+        try:
+            with open(properties_file, "w") as file:
+                file.write(json.dumps(workspace_properties, indent=2))
+        except Exception as e:
+            os.remove(properties_file)
+            os.rename(backup_file, properties_file)
+            raise e
+        finally:
+            if os.path.isfile(backup_file):
+                os.remove(backup_file)
 
     def delete_app(self):
         shutil.rmtree(self.app_path)
