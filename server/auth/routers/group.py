@@ -4,7 +4,7 @@ from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
 from .. import crud
-from ..authorization import RESOURCES, AuthZDepFactory, get_current_user
+from ..authorization import RESOURCES, AuthZDepFactory, get_current_user, ACTIONS
 from ..connect import get_db
 from ..controllers.group import GroupController
 from ..controllers.group import get_group as c_get_group
@@ -34,7 +34,16 @@ def get_group_users(group_id: UUID, db: Session = Depends(get_db)):
     return GroupController.get_group_users(db, group_id)
 
 
-@router.post("/")
+@router.post(
+    "/",
+    dependencies=[
+        Depends(
+            group_authorizer.use_params(
+                resource_type=RESOURCES.WORKSPACE, action=ACTIONS.OWN
+            )
+        )
+    ],
+)
 def create_group(
     request: CreateGroup,
     db: Session = Depends(get_db),
@@ -43,12 +52,30 @@ def create_group(
     return GroupController.create_group(db=db, request=request, user=user)
 
 
-@router.put("/{group_id}")
+@router.put(
+    "/{group_id}",
+    dependencies=[
+        Depends(
+            group_authorizer.use_params(
+                resource_type=RESOURCES.WORKSPACE, action=ACTIONS.OWN
+            )
+        )
+    ],
+)
 def update_group(group_id: UUID, request: UpdateGroup, db: Session = Depends(get_db)):
     return crud.group.update_by_pk(db=db, pk=group_id, obj_in=request)
 
 
-@router.delete("/{group_id}")
+@router.delete(
+    "/{group_id}",
+    dependencies=[
+        Depends(
+            group_authorizer.use_params(
+                resource_type=RESOURCES.WORKSPACE, action=ACTIONS.OWN
+            )
+        )
+    ],
+)
 def delete_group(
     group_id: UUID,
     db: Session = Depends(get_db),
@@ -57,39 +84,90 @@ def delete_group(
     return GroupController.delete_group(db=db, group_id=group_id, user=user)
 
 
-@router.post("/add_user/{group_id}")
+@router.post(
+    "/add_user/{group_id}",
+    dependencies=[
+        Depends(
+            group_authorizer.use_params(
+                resource_type=RESOURCES.WORKSPACE, action=ACTIONS.OWN
+            )
+        )
+    ],
+)
 def add_user_to_group(
     group_id: UUID,
     request: AddUser,
     db: Session = Depends(get_db),
     user: User = Depends(get_current_user),
 ):
-    return GroupController.add_user(db=db, user=user, group_id=group_id, user_id=request.user_id)
+    return GroupController.add_user(
+        db=db, user=user, group_id=group_id, user_id=request.user_id
+    )
 
 
-@router.post("/remove_user/{group_id}")
+@router.post(
+    "/remove_user/{group_id}",
+    dependencies=[
+        Depends(
+            group_authorizer.use_params(
+                resource_type=RESOURCES.WORKSPACE, action=ACTIONS.OWN
+            )
+        )
+    ],
+)
 def remove_user_from_group(
     group_id: UUID,
     request: RemoveUser,
     db: Session = Depends(get_db),
     user: User = Depends(get_current_user),
 ):
-    return GroupController.remove_user(db=db, user=user, group_id=group_id, user_id=request.user_id)
+    return GroupController.remove_user(
+        db=db, user=user, group_id=group_id, user_id=request.user_id
+    )
 
 
-@router.post("/add_policies/{group_id}")
-def add_policies_to_group(group_id: UUID, request: AddGroupPolicyRequest, db: Session = Depends(get_db)):
+@router.post(
+    "/add_policies/{group_id}",
+    dependencies=[
+        Depends(
+            group_authorizer.use_params(
+                resource_type=RESOURCES.WORKSPACE, action=ACTIONS.OWN
+            )
+        )
+    ],
+)
+def add_policies_to_group(
+    group_id: UUID, request: AddGroupPolicyRequest, db: Session = Depends(get_db)
+):
     return GroupController.add_policies(db, group_id, request)
 
 
-@router.post("/remove_policies/{group_id}")
+@router.post(
+    "/remove_policies/{group_id}",
+    dependencies=[
+        Depends(
+            group_authorizer.use_params(
+                resource_type=RESOURCES.WORKSPACE, action=ACTIONS.OWN
+            )
+        )
+    ],
+)
 def remove_policies_from_group(
     group_id: UUID, request: RemoveGroupPolicyRequest, db: Session = Depends(get_db)
 ):
     return GroupController.remove_policies(db, group_id, request)
 
 
-@router.post("/update_policy/{group_id}")
+@router.post(
+    "/update_policy/{group_id}",
+    dependencies=[
+        Depends(
+            group_authorizer.use_params(
+                resource_type=RESOURCES.WORKSPACE, action=ACTIONS.OWN
+            )
+        )
+    ],
+)
 def update_policy_from_group(
     group_id: UUID, request: UpdateGroupPolicyRequest, db: Session = Depends(get_db)
 ):
