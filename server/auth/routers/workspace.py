@@ -6,7 +6,7 @@ from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
 
-from ..authorization import RESOURCES, AuthZDepFactory
+from ..authorization import RESOURCES, AuthZDepFactory, ACTIONS
 from ..connect import get_db
 from ..controllers import workspace as workspace_controller
 from ..schemas.workspace import (
@@ -34,7 +34,16 @@ def get_workspace_groups(workspace_id: UUID, db: Session = Depends(get_db)):
     return workspace_controller.get_workspace_groups(db, workspace_id=workspace_id)
 
 
-@router.post("/{workspace_id}/add_user")
+@router.post(
+    "/{workspace_id}/add_user",
+    dependencies=[
+        Depends(
+            workspace_authorizer.use_params(
+                resource_type=RESOURCES.WORKSPACE, action=ACTIONS.OWN
+            )
+        )
+    ],
+)
 def add_user_to_workspace(
     workspace_id: UUID, request: AddUserRequest, db: Session = Depends(get_db)
 ):
@@ -43,7 +52,16 @@ def add_user_to_workspace(
     )
 
 
-@router.post("/{workspace_id}/remove_user")
+@router.post(
+    "/{workspace_id}/remove_user",
+    dependencies=[
+        Depends(
+            workspace_authorizer.use_params(
+                resource_type=RESOURCES.WORKSPACE, action=ACTIONS.OWN
+            )
+        )
+    ],
+)
 def remove_user_from_workspace(
     workspace_id: UUID, request: RemoveUserRequest, db: Session = Depends(get_db)
 ):
@@ -52,13 +70,31 @@ def remove_user_from_workspace(
     )
 
 
-@router.put("/{workspace_id}/user_role")
+@router.put(
+    "/{workspace_id}/user_role",
+    dependencies=[
+        Depends(
+            workspace_authorizer.use_params(
+                resource_type=RESOURCES.WORKSPACE, action=ACTIONS.OWN
+            )
+        )
+    ],
+)
 def update_user_role_in_workspace(
     workspace_id: UUID, request: UpdateUserRoleRequest, db: Session = Depends(get_db)
 ):
     return workspace_controller.update_user_role_in_workspace(db, workspace_id, request)
 
 
-@router.delete("/{workspace_id}")
+@router.delete(
+    "/{workspace_id}",
+    dependencies=[
+        Depends(
+            workspace_authorizer.use_params(
+                resource_type=RESOURCES.WORKSPACE, action=ACTIONS.OWN
+            )
+        )
+    ],
+)
 def delete_workspace(workspace_id: UUID, db: Session = Depends(get_db)):
     return workspace_controller.delete_workspace(db, workspace_id)
