@@ -125,25 +125,12 @@ class FileController:
             # set file paths
             self._set_file_name(req.name, req.type)
 
-            # Check for duplicate file names in properties
+            # Check for duplicate file names
             self._check_for_duplicate_file_names(req.name)
 
             # update file content
             boilerplate_code = compose_boilerplate_code(req)
             self._write_file(boilerplate_code)
-
-            # update properties file
-            self.properties["files"].append(
-                {
-                    "name": req.name,
-                    "type": req.type,
-                    "source": req.source,
-                    "depends_on": [],
-                }
-            )
-
-            # update properties file
-            self._update_properties()
 
             return {"status": "success"}
         except HTTPException as e:
@@ -172,14 +159,6 @@ class FileController:
             if self.file_ext == ".py":
                 self._rename_function_in_file()
 
-            for file in self.properties["files"]:
-                if file["name"] == self.file_name:
-                    file["name"] = self.new_name
-                    break
-
-            # update properties file
-            self._update_properties(mode="rename")
-
             return {"status": "success"}
         except HTTPException as e:
             self._revert_backup()
@@ -198,25 +177,6 @@ class FileController:
             # update file content
             self._write_file(req.code)
 
-            # get depends on tables
-            depends_on = req.depends_on if req.depends_on else []
-            if req.type == "sql":
-                depends_on_tables = self._get_depend_table_names(user_sql=req.code)
-                tables = {p["name"]: p for p in self.properties["blocks"] if p["block_type"] == "table"}
-                for table_name in depends_on_tables:
-                    if tables.get(table_name):
-                        depends_on.append(table_name)
-
-            # update file property in properties.json
-            for file in self.properties["files"]:
-                if file["name"] == req.file_name:
-                    file["source"] = req.source
-                    file["type"] = req.type
-                    file["depends_on"] = depends_on
-                    break
-
-            # update properties file
-            self._update_properties()
             return {"status": "success"}
         except HTTPException as e:
             self._revert_backup()
@@ -242,8 +202,6 @@ class FileController:
                     self.properties["files"].remove(file)
                     break
 
-            # update properties file
-            self._update_properties(mode="delete")
             return {"status": "success"}
         except HTTPException as e:
             self._revert_backup()
@@ -275,19 +233,6 @@ class FileController:
         with open(self.file_path, "w") as f:
             f.write(code)
 
-    def _update_properties(self, mode: str = "update"):
-        if mode == "rename":
-            # find old file name in table fetcher in properties and update it
-            for block in self.properties["blocks"]:
-                if block["block_type"] == "table" and block.get("fetcher") == self.file_name:
-                    block["fetcher"] = self.new_name
-        elif mode == "delete":
-            # find file name in table fetcher in properties and delete it
-            for block in self.properties["blocks"]:
-                if block["block_type"] == "table" and block.get("fetcher") == self.file_name:
-                    block["fetcher"] = ""
-        write_page_properties(self.app_name, self.page_name, self.properties)
-
     def _rename_function_in_file(self):
         # get file mame without extension
         old_name = self.file_name
@@ -311,7 +256,7 @@ class FileController:
             file.write(new_code)
 
     def _check_for_duplicate_file_names(self, file_name: str):
-        file_names = [file["name"] for file in self.properties["files"]]
+        file_names = os.listdir(os.path.join(self.page_dir_path, "scripts"))
         if file_name in file_names:
             raise HTTPException(status_code=400, detail="File with the same name already exists")
 
