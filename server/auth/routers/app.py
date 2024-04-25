@@ -10,6 +10,7 @@ from server.controllers.page_controller import PageController
 from server.utils import get_permission_dependency_array
 
 from .. import crud
+from ..controllers.app import filter_apps
 from ..authorization import get_current_user
 from ..connect import get_db
 from ..controllers.policy import PolicyUpdater
@@ -52,8 +53,12 @@ def share_app(app_id: UUID, request: AppShareRequest, db: Session = Depends(get_
 @router.get("/{app_id}/has_access")
 def get_app_access(app_id: UUID, db: Session = Depends(get_db)):
     app = crud.app.get_object_by_id_or_404(db=db, id=app_id)
-    workspace_users = crud.workspace.get_workspace_users(db=db, workspace_id=app.workspace_id)
-    workspace_groups = crud.workspace.get_workspace_groups(db=db, workspace_id=app.workspace_id)
+    workspace_users = crud.workspace.get_workspace_users(
+        db=db, workspace_id=app.workspace_id
+    )
+    workspace_groups = crud.workspace.get_workspace_groups(
+        db=db, workspace_id=app.workspace_id
+    )
 
     def get_highest_permissions_for_list(workspace_subjects):
         final_app_permissions = []
@@ -104,11 +109,16 @@ def get_app_access(app_id: UUID, db: Session = Depends(get_db)):
 # Overrides the base default list endpoint
 @router.get("/list/")
 def get_apps(db: Session = Depends(get_db), user: User = Depends(get_current_user)):
-    return get_workspace_apps().get("apps")
+    response = get_workspace_apps()
+    all_apps = response.get("apps")
+    workspace_id = response.get("workspace_id")
+    return filter_apps(db=db, apps=all_apps, workspace_id=workspace_id, user_id=user.id)
 
 
 @router.post("/", dependencies=get_permission_dependency_array("edit", "workspace"))
-def create_app_req(request: Request, req: CreateAppRequest, db: Session = Depends(get_db)):
+def create_app_req(
+    request: Request, req: CreateAppRequest, db: Session = Depends(get_db)
+):
     workspace_id = request.headers.get("workspace-id")
     if not workspace_id:
         raise HTTPException(status_code=400, detail="No workspace id header provided")
@@ -127,7 +137,9 @@ def create_app_req(request: Request, req: CreateAppRequest, db: Session = Depend
     return new_app
 
 
-@router.delete("/{app_name}", dependencies=get_permission_dependency_array("edit", "app"))
+@router.delete(
+    "/{app_name}", dependencies=get_permission_dependency_array("edit", "app")
+)
 def delete_app_req(request: Request, app_name: str, db: Session = Depends(get_db)):
     workspace_id = request.headers.get("workspace-id")
     if not workspace_id:
@@ -136,6 +148,8 @@ def delete_app_req(request: Request, app_name: str, db: Session = Depends(get_db
     appController = AppController(app_name, "")
     appController.delete_app()
 
-    app_to_delete = crud.app.get_app_by_name(db=db, app_name=app_name, workspace_id=workspace_id)
+    app_to_delete = crud.app.get_app_by_name(
+        db=db, app_name=app_name, workspace_id=workspace_id
+    )
     crud.app.remove(db, id=app_to_delete.id)
     return {"message": "App deleted successfully"}
