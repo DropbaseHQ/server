@@ -226,33 +226,45 @@ class PageController:
             if isinstance(node, ast.ClassDef):
                 for base in node.bases:
                     base_name = base.attr if isinstance(base, ast.Attribute) else base.id
-                    if base_name in ["TableABC", "WidgetABC"]:
+                    if base_name == "TableABC":
                         class_name = node.name.lower()
                         for n in node.body:
                             if isinstance(n, ast.FunctionDef):
                                 if class_name not in class_methods:
-                                    class_methods[class_name] = {}
-
-                                # check for base component methods
-                                parse_component_methods(n.name, "on_click_", class_name, class_methods)
-                                parse_component_methods(n.name, "on_select_", class_name, class_methods)
-                                parse_component_methods(n.name, "on_submit_", class_name, class_methods)
-                                parse_component_methods(n.name, "on_toggle_", class_name, class_methods)
-
-                                # check for base table methods
-                                # get data, udpate, delete, add
+                                    class_methods[class_name] = {
+                                        "columns": {},
+                                        "header": {},
+                                        "footer": {},
+                                        "methods": [],
+                                    }
+                                # parse component methods
+                                parse_component_methods(n.name, class_name, class_methods, "table")
+                                # parse table methods
                                 if n.name in ["get_data", "update", "delete", "add"]:
-                                    if "methods" not in class_methods[class_name]:
-                                        class_methods[class_name]["methods"] = []
                                     class_methods[class_name]["methods"].append(n.name)
+
+                    if base_name == "WidgetABC":
+                        class_name = node.name.lower()
+                        for n in node.body:
+                            if isinstance(n, ast.FunctionDef):
+                                if class_name not in class_methods:
+                                    class_methods[class_name] = {"components"}
+                                # parse component methods
+                                parse_component_methods(n.name, class_name, class_methods, "widget")
 
         return class_methods
 
 
 # helper functions
-def parse_component_methods(method_name: str, method_type: str, class_name: str, class_methods: dict):
-    if method_type in method_name:
-        component_name = method_name.split(method_type)[1]
-        if component_name not in class_methods[class_name]:
-            class_methods[class_name][component_name] = []
-        class_methods[class_name][component_name].append(method_type)
+def parse_component_methods(method_name: str, class_name: str, class_methods: dict, class_type: str):
+    # check header
+    sections = ["header", "footer", "columns"] if class_type == "table" else ["components"]
+    methods = ["on_click", "on_select", "on_toggle", "on_submit"]
+    for section in sections:
+        if method_name.startswith(f"{section}_"):
+            for method in methods:
+                if method_name.endswith(f"_{method}"):
+                    component_name = method_name.split(f"{section}_")[1].split(f"_{method}")[0]
+                    if component_name not in class_methods[class_name][section]:
+                        class_methods[class_name][section][component_name] = []
+                    class_methods[class_name][section][component_name].append(method)

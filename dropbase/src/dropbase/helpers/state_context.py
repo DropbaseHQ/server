@@ -52,15 +52,15 @@ def generate_context_model(properties):
             footer_class_name = key.capitalize() + "FooterContext"
             footer_class = create_model(footer_class_name, **footer_dir)
 
-        locals()[class_name] = create_model(
-            class_name,
-            **{
-                "columns": (columns_class, ...),
-                "header": (header_class, ...),
-                "footer": (footer_class, ...),
-            },
-            __base__=value.context,
-        )
+            locals()[class_name] = create_model(
+                class_name,
+                **{
+                    "columns": (columns_class, ...),
+                    "header": (header_class, ...),
+                    "footer": (footer_class, ...),
+                },
+                __base__=value.context,
+            )
 
         # add each table context class into main context class
         context[key] = (locals()[class_name], ...)
