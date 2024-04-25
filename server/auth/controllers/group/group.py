@@ -185,7 +185,6 @@ class GroupController:
 
     @staticmethod
     def delete_group(db: Session, user: User, group_id: str):
-        require_group_leader(db, group_id, user)
         try:
             # Delete user group associations
             db.query(UserGroup).filter(UserGroup.group_id == str(group_id)).delete()
