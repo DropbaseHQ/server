@@ -102,10 +102,3 @@ class TableDefinedProperty(BaseModel):
         ],
         PropertyCategory.default,
     ]
-
-    # TODO: remove these
-    widget: Annotated[Optional[str], PropertyCategory.default]
-    size: Annotated[Optional[int], PropertyCategory.default] = 20
-    filters: Annotated[Optional[List[PinnedFilter]], PropertyCategory.other]
-    type: Optional[Literal["python", "sql"]] = "python"
-    smart: Optional[bool] = False
