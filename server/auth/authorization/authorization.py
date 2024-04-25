@@ -42,6 +42,7 @@ resource_query_mapper = {
     RESOURCES.ROLE: crud.user_role,
     RESOURCES.USER: crud.user,
     RESOURCES.WORKSPACE: crud.workspace,
+    RESOURCES.APP: crud.app,
 }
 request_action_mapper = {
     "GET": ACTIONS.USE,
@@ -145,17 +146,18 @@ class AuthZDepFactory:
         resource_workspace_id = None
         resource_id = self._get_resource_id(resource_id_accessor, request)
         if resource_id is False:
-            resource_workspace_id = self._get_resource_id_from_req_body(
-                "workspace_id", request
-            )
+            if request.headers.get("workspace-id"):
+                resource_workspace_id = request.headers.get("workspace-id")
+            if resource_workspace_id is None:
+                resource_workspace_id = self._get_resource_id_from_req_body(
+                    "workspace_id", request
+                )
             if resource_workspace_id is None:
                 return None, None, None, None
         else:
             resource_workspace_id = self._get_resource_workspace_id(
                 db, resource_id, resource_type
             )
-        if request.headers.get("workspace-id"):
-            resource_workspace_id = request.headers.get("workspace-id")
 
         if resource_workspace_id is None:
             raise HTTPException(
