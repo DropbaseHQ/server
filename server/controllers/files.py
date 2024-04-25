@@ -11,7 +11,6 @@ from dropbase.constants import FILE_NAME_REGEX
 from dropbase.helpers.utils import read_page_properties
 from dropbase.schemas.files import CreateFile, DeleteFile, RenameFile, UpdateFile
 from server.constants import cwd
-from server.controllers.properties import write_page_properties
 
 
 class FileController:
