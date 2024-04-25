@@ -17,9 +17,9 @@ def connect(name: str):
 
     match creds.get("type"):
         case "postgres":
-            return PostgresDatabase(creds_dict, schema=schema_name)
+            return PostgresDatabase(creds_dict, schema=schema_name, source_name=name)
         case "pg":
-            return PostgresDatabase(creds_dict, schema=schema_name)
+            return PostgresDatabase(creds_dict, schema=schema_name, source_name=name)
         case "mysql":
             return MySqlDatabase(creds_dict)
         case "snowflake":

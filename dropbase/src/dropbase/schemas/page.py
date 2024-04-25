@@ -68,8 +68,17 @@ class CreatePageRequest(BaseModel):
     page_label: str
 
 
+class SaveTableColumnProperties(BaseModel):
+    name: str
+    data_type: str
+    display_type: str
+    column_type: str
+    source_name: str
+    # schema_name: Optional[str]
+
+
 class SaveTableColumns(BaseModel):
     app_name: str
     page_name: str
     table_name: str
-    columns: list
+    columns: list  # TODO: Define this model (it contains name, data_type, display_type, column_type, and newly added source_name + optiona schema_name)

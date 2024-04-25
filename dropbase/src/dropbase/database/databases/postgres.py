@@ -1,6 +1,8 @@
+import re
 from datetime import datetime, timezone
 from typing import List
 
+import pandas as pd
 from sqlalchemy.engine import URL
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.inspection import inspect
@@ -13,8 +15,8 @@ from dropbase.schemas.table import TableFilter, TablePagination, TableSort
 
 
 class PostgresDatabase(Database):
-    def __init__(self, creds: dict, schema: str = "public"):
-        super().__init__(creds)
+    def __init__(self, creds: dict, source_name: str, schema: str = "public"):
+        super().__init__(creds, source_name)
         self.schema = schema
         self.db_type = "postgres"
 
@@ -376,3 +378,37 @@ def _get_slow_sql(
        ELSE false
        END;
    """
+
+
+# NOTE: currently DOES NOT support joined tables with the same column name, though I don't think we support this in the first place
+def transform_sql(sql_query: str, schema_info: dict) -> str:
+    pattern = r"\bFROM\b\s+(\w+)\s*(\w+)?|\bJOIN\b\s+(\w+)\s*(\w+)?"
+    matches = re.findall(pattern, sql_query, re.IGNORECASE)
+
+    tables = [item for sublist in matches for item in sublist if item]
+    it = iter(tables)
+    table_aliases = dict(zip(it, it))
+
+    if "SELECT *" in sql_query:
+        all_columns = []
+        for table, alias in table_aliases.items():
+            if table in schema_info:
+                expanded_columns = [f"{alias or table}.{col}" for col in schema_info[table]]
+                all_columns.extend(expanded_columns)
+        if all_columns:
+            sql_query = re.sub(
+                r"\bSELECT \*\b", f'SELECT {", ".join(all_columns)}', sql_query, flags=re.IGNORECASE
+            )
+
+    return sql_query
+
+
+def parse_sql_tables_columns(sql_query: str, schema_info: dict) -> dict:
+    sql_query = transform_sql(sql_query, schema_info)
+    table_column_map = {}
+    # match columns explicitly defined as table.column, the reason we don't support joined tables with same column name is because we would override it in the dictionary, as it can't contain the same key with different values
+    column_pattern = r"\b(\w+)\.(\w+)\b"
+    columns = re.findall(column_pattern, sql_query)
+    for table, col in columns:
+        table_column_map[col] = table
+    return table_column_map

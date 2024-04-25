@@ -69,7 +69,7 @@ class TableDefinedProperty(BaseModel):
     y: Annotated[Optional[int], PropertyCategory.internal] = 4
 
     type: Optional[Literal["python", "sql"]] = "sql"
-    smart: Optional[bool] = False
+    smart: Optional[bool] = True
     context: ModelMetaclass = TableContextProperty
     columns: Annotated[
         List[

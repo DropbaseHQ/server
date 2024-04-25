@@ -34,14 +34,18 @@ def get_column_types(df, column_type="python"):
     columns = []
     for col, dtype in df.dtypes.items():
         data_type = str(dtype).lower()
-        columns.append(
-            {
-                "name": col,
-                "data_type": data_type,
-                "display_type": detect_col_type(data_type, df[col]),
-                "column_type": column_type,
-            }
-        )
+        col_dict = {
+            "name": col,
+            "data_type": data_type,
+            "display_type": detect_col_type(data_type, df[col]),
+            "column_type": column_type,
+            "source_name": df[col].attrs["source_name"],
+        }
+
+        if "schema_name" in df[col].attrs:
+            col_dict["schema_name"] = df[col].attrs["schema_name"]
+
+        columns.append(col_dict)
     return columns
 
 

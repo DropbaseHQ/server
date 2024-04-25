@@ -1,4 +1,4 @@
-from typing import Annotated, Literal
+from typing import Annotated, Literal, Optional
 
 from pydantic.main import ModelMetaclass
 
@@ -7,7 +7,7 @@ from dropbase.models.common import BaseColumnDefinedProperty, ColumnDisplayPrope
 
 
 class PgColumnDefinedProperty(BaseColumnDefinedProperty):
-
+    source_name: Optional[str] = None
     schema_name: Annotated[str, PropertyCategory.view_only] = None
     table_name: Annotated[str, PropertyCategory.view_only] = None
     column_name: Annotated[str, PropertyCategory.view_only] = None
