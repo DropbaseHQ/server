@@ -1,6 +1,6 @@
 from fastapi import APIRouter
 
-from dropbase.schemas.files import CreateFile, DeleteFile, RenameFile, UpdateFile
+from dropbase.schemas.files import UpdateFile
 from server.controllers.files import FileController
 from server.utils import get_permission_dependency_array
 
@@ -12,28 +12,10 @@ router = APIRouter(
 )
 
 
-@router.post("/")
-def create_file_req(req: CreateFile):
-    file = FileController(req.app_name, req.page_name)
-    return file.create_file(req)
-
-
-@router.put("/rename")
-def rename_file_req(req: RenameFile):
-    file = FileController(req.app_name, req.page_name)
-    return file.rename_file(req)
-
-
 @router.put("/{function_name}")
 def update_file_req(function_name: str, req: UpdateFile):
     file = FileController(req.app_name, req.page_name)
     return file.update_file(req)
-
-
-@router.delete("/")
-def delete_file_req(req: DeleteFile):
-    file = FileController(req.app_name, req.page_name)
-    return file.delete_file(req)
 
 
 @router.get("/all/{app_name}/{page_name}/")
