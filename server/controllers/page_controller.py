@@ -248,7 +248,7 @@ class PageController:
                         for n in node.body:
                             if isinstance(n, ast.FunctionDef):
                                 if class_name not in class_methods:
-                                    class_methods[class_name] = {"components"}
+                                    class_methods[class_name] = {"components": {}}
                                 # parse component methods
                                 parse_component_methods(n.name, class_name, class_methods, "widget")
 
