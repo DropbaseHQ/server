@@ -18,25 +18,47 @@ def generate_context_model(properties):
     context = {}
     for key, value in properties:
         class_name = key.capitalize() + "Context"
-        props = {}
 
         # create components contexts
         if isinstance(value, WidgetDefinedProperty):
-            child = "components"
+            components_dir = {}
             for component in value.components:
-                props[component.name] = (component.context, ...)
+                components_dir[component.name] = (component.context, ...)
+            components_class_name = key.capitalize() + "ComponentsContext"
+            components_class = create_model(components_class_name, **components_dir)
+
+            locals()[class_name] = create_model(
+                class_name,
+                **{"components": (components_class, ...)},
+                __base__=value.context,
+            )
         else:
-            child = "columns"
+            # create table context model
+            columns_dir = {}
             for column in value.columns:
-                props[column.name] = (column.context, ...)
+                columns_dir[column.name] = (column.context, ...)
+            columns_class_name = key.capitalize() + "ColumnsContext"
+            columns_class = create_model(columns_class_name, **columns_dir)
 
-        child_class_name = key.capitalize() + child.capitalize() + "Context"
-        child_class = create_model(child_class_name, **props)
+            header_dir = {}
+            for component in value.header:
+                header_dir[component.name] = (component.context, ...)
+            header_class_name = key.capitalize() + "HeaderContext"
+            header_class = create_model(header_class_name, **header_dir)
 
-        # create table context class
+            footer_dir = {}
+            for component in value.footer:
+                footer_dir[component.name] = (component.context, ...)
+            footer_class_name = key.capitalize() + "FooterContext"
+            footer_class = create_model(footer_class_name, **footer_dir)
+
         locals()[class_name] = create_model(
             class_name,
-            **{child: (child_class, ...)},
+            **{
+                "columns": (columns_class, ...),
+                "header": (header_class, ...),
+                "footer": (footer_class, ...),
+            },
             __base__=value.context,
         )
 
@@ -45,47 +67,78 @@ def generate_context_model(properties):
     return create_model("Context", **context, __base__=BaseContext)
 
 
+non_editable_components = ["button", "text"]
+
+
+def compose_components_dir(components):
+    components_dir = {}
+    for component in components:
+        # for widget_component in component.get("components"):
+        # skip non-editable components, like text and button
+        if component.component_type in non_editable_components:
+            continue
+
+        if component.component_type == "select" and component.multiple:
+            component.data_type = "string_array"
+
+        component_type = component_state_type_mapper(component.data_type)
+        # state is pulled from ComponentDefined class
+        components_dir[component.name] = (
+            component_type,
+            Field(default=None),
+        )
+    return components_dir
+
+
+def compose_column_dir(columns):
+    columns_dir = {}
+    for column in columns:
+        if column.column_type == "button_column":
+            continue
+        # skip non-editable columns
+        if not column.display_type:
+            continue
+
+        column_type = column_state_type_mapper(column.display_type)
+        columns_dir[column.name] = (
+            column_type,
+            Field(default=None),
+        )
+    return columns_dir
+
+
 def compose_state_model(properties):
     state = {}
-    non_editable_components = ["button", "text"]
     for key, value in properties:
         class_name = key.capitalize() + "State"
-        props = {}
         if isinstance(value, WidgetDefinedProperty):
-            for component in value.components:
-                # for widget_component in component.get("components"):
-                # skip non-editable components, like text and button
-                if component.component_type in non_editable_components:
-                    continue
-
-                if component.component_type == "select" and component.multiple:
-                    component.data_type = "string_array"
-
-                component_type = component_state_type_mapper(component.data_type)
-                # state is pulled from ComponentDefined class
-                props[component.name] = (
-                    component_type,
-                    Field(default=None),
-                )
+            # props["component"] = {}
+            components_dir = compose_components_dir(value.components)
+            components_class_name = key.capitalize() + "ComponentsState"
+            components_class = create_model(components_class_name, **components_dir)
+            locals()[class_name] = create_model(class_name, **{"components": (components_class, ...)})
         else:
-            for column in value.columns:
-                if column.column_type == "button_column":
-                    continue
-                # skip non-editable columns
-                if not column.display_type:
-                    continue
+            header_dir = compose_components_dir(value.header)
+            header_class_name = key.capitalize() + "HeaderState"
+            header_class = create_model(header_class_name, **header_dir)
 
-                column_type = column_state_type_mapper(column.display_type)
-                # state is pulled from ComponentDefined class
-                props[column.name] = (
-                    column_type,
-                    Field(default=None),
-                )
+            footer_dir = compose_components_dir(value.footer)
+            footer_class_name = key.capitalize() + "FooterState"
+            footer_class = create_model(footer_class_name, **footer_dir)
 
-        locals()[class_name] = create_model(class_name, **props)
+            columns_dir = compose_column_dir(value.columns)
+            columns_class_name = key.capitalize() + "ColumnsState"
+            columns_class = create_model(columns_class_name, **columns_dir)
+
+            locals()[class_name] = create_model(
+                class_name,
+                **{
+                    "columns": (columns_class, ...),
+                    "header": (header_class, ...),
+                    "footer": (footer_class, ...),
+                },
+            )
         state[key] = (locals()[class_name], ...)
-
-    # compose State
     return create_model("State", **state)
 
 
