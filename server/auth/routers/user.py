@@ -21,12 +21,18 @@ from ..schemas.user import (
     UpdateUser,
     UpdateUserPolicyRequest,
 )
+from ..authorization import RESOURCES, AuthZDepFactory
+
 
 router = APIRouter(prefix="/user", tags=["user"])
 
+user_authorizer = AuthZDepFactory(default_resource_type=RESOURCES.WORKSPACE)
+
 
 @router.get("/workspaces")
-def get_user_worpsaces(db: Session = Depends(get_db), user: User = Depends(get_current_user)):
+def get_user_worpsaces(
+    db: Session = Depends(get_db), user: User = Depends(get_current_user)
+):
     return user_controller.get_user_workspaces(db, user_id=user.id)
 
 
@@ -41,12 +47,16 @@ def verify_user(token: str, user_id: UUID, db: Session = Depends(get_db)):
 
 
 @router.post("/resend_confirmation_email")
-def resend_confirmation_email(request: ResendConfirmationEmailRequest, db: Session = Depends(get_db)):
+def resend_confirmation_email(
+    request: ResendConfirmationEmailRequest, db: Session = Depends(get_db)
+):
     return user_controller.resend_confirmation_email(db, request.email)
 
 
 @router.post("/login")
-def login_user(request: LoginUser, db: Session = Depends(get_db), Authorize: AuthJWT = Depends()):
+def login_user(
+    request: LoginUser, db: Session = Depends(get_db), Authorize: AuthJWT = Depends()
+):
     return user_controller.login_user(db, Authorize, request)
 
 
@@ -61,7 +71,9 @@ def refresh_token(Authorize: AuthJWT = Depends()):
 
 
 @router.post("/request_reset_password")
-def request_reset_password(request: RequestResetPassword, db: Session = Depends(get_db)):
+def request_reset_password(
+    request: RequestResetPassword, db: Session = Depends(get_db)
+):
     return user_controller.request_reset_password(db, request)
 
 
@@ -92,7 +104,9 @@ def get_user(db: Session = Depends(get_db), user: User = Depends(get_current_use
 
 @router.post("/")
 def create_user(request: CreateUser, db: Session = Depends(get_db)):
-    raise HTTPException(status_code=501, detail="Endpoint POST /user is not implemented")
+    raise HTTPException(
+        status_code=501, detail="Endpoint POST /user is not implemented"
+    )
 
 
 @router.put("/{user_id}")
@@ -108,16 +122,27 @@ def delete_user(user_id: UUID, db: Session = Depends(get_db)):
 
 
 @router.post("/add_policies/{user_id}")
-def add_policies_to_user(user_id: UUID, request: AddPolicyRequest, db: Session = Depends(get_db)):
+def add_policies_to_user(
+    user_id: UUID, request: AddPolicyRequest, db: Session = Depends(get_db)
+):
     return user_controller.add_policy(db, user_id, request)
 
 
 @router.post("/remove_policies/{user_id}")
-def remove_policies_from_user(user_id: UUID, request: AddPolicyRequest, db: Session = Depends(get_db)):
+def remove_policies_from_user(
+    user_id: UUID, request: AddPolicyRequest, db: Session = Depends(get_db)
+):
     return user_controller.remove_policy(db, user_id, request)
 
 
-@router.post("/update_policy/{user_id}")
+@router.post(
+    "/update_policy/{user_id}",
+    dependencies=[
+        Depends(
+            user_authorizer.use_params(resource_type=RESOURCES.WORKSPACE, action="own")
+        )
+    ],
+)
 def update_policy_for_user(
     user_id: UUID, request: UpdateUserPolicyRequest, db: Session = Depends(get_db)
 ):
