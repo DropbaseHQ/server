@@ -28,14 +28,6 @@ class FileController:
         self.page_dir_path_backup = f"{self.page_dir_path}_{uuid4().hex}"
         shutil.copytree(self.page_dir_path, self.page_dir_path_backup)
 
-    def _revert_backup(self):
-        shutil.rmtree(self.page_dir_path)
-        os.rename(self.page_dir_path_backup, self.page_dir_path)
-
-    def _delete_backup(self):
-        if os.path.isdir(self.page_dir_path_backup):
-            shutil.rmtree(self.page_dir_path_backup)
-
     def get_all_files(self, python: bool = True, sql: bool = True):
         try:
             if not (
@@ -145,6 +137,14 @@ class FileController:
             raise HTTPException(status_code=500, detail=str(e))
         finally:
             self._delete_backup()
+
+    def _revert_backup(self):
+        shutil.rmtree(self.page_dir_path)
+        os.rename(self.page_dir_path_backup, self.page_dir_path)
+
+    def _delete_backup(self):
+        if os.path.isdir(self.page_dir_path_backup):
+            shutil.rmtree(self.page_dir_path_backup)
 
     def update_file(self, req: UpdateFile):
         try:
