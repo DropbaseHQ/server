@@ -22,7 +22,6 @@ class CreateFile(BaseModel):
     source: Optional[str]
     depends_on: Optional[List[str]] = []
 
-
 # data files
 class DataFile(BaseModel):
     name: str = Field(regex=FILE_NAME_REGEX)
@@ -40,18 +39,3 @@ class UpdateFile(BaseModel):
     source: Optional[str]
     type: TypeEnum
     depends_on: Optional[List[str]]
-
-
-class RenameFile(BaseModel):
-    old_name: str = Field(regex=FILE_NAME_REGEX)
-    new_name: str = Field(regex=FILE_NAME_REGEX)
-    app_name: str = Field(regex=FILE_NAME_REGEX)
-    page_name: str = Field(regex=FILE_NAME_REGEX)
-    type: TypeEnum
-
-
-class DeleteFile(BaseModel):
-    app_name: str = Field(regex=FILE_NAME_REGEX)
-    page_name: str = Field(regex=FILE_NAME_REGEX)
-    file_name: str = Field(regex=FILE_NAME_REGEX)
-    type: TypeEnum
