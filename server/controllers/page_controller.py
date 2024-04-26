@@ -32,24 +32,23 @@ class PageController:
 
     def create_schema(self):
         # create page schema
-        self._backup_and_write(self.page_path + "/schema.py", schema_boilerplate_init)
+        with open(self.page_path + "/schema.py", "w") as f:
+            f.write(schema_boilerplate_init)
 
     def create_page_properties(self):
-        self._backup_and_write(self.page_path + "/properties.json", properties_json_boilerplate)
+        with open(self.page_path + "/properties.json", "w") as f:
+            f.write(properties_json_boilerplate)
 
     def create_app_init_properties(self):
         # assuming page name is page1 by default
-        self._backup_and_write(
-            f"workspace/{self.app_name}/properties.json",
-            json.dumps(app_properties_boilerplate, indent=2),
-        )
+        with open(f"workspace/{self.app_name}/properties.json", "w") as f:
+            f.write(json.dumps(app_properties_boilerplate, indent=2))
 
     def add_page_to_app_properties(self, page_label: str):
         app_properties = read_app_properties(self.app_name)
         app_properties[self.page_name] = {"label": page_label}
-        self._backup_and_write(
-            f"workspace/{self.app_name}/properties.json", json.dumps(app_properties, indent=2)
-        )
+        with open(f"workspace/{self.app_name}/properties.json", "w") as f:
+            f.write(json.dumps(app_properties, indent=2))
 
     def remove_page_from_app_properties(self):
         app_properties = read_app_properties(self.app_name)
@@ -70,7 +69,8 @@ class PageController:
         self.update_page()
 
     def create_main_class(self):
-        self._backup_and_write(self.page_path + "/scripts/main.py", main_class_init)
+        with open(self.page_path + "/scripts/main.py", "w") as f:
+            f.write(main_class_init)
 
     def update_main_class(self):
 
@@ -130,8 +130,11 @@ class PageController:
         self._backup_and_write(file_path, modified_code)
 
     def add_inits(self):
-        self._backup_and_write(f"workspace/{self.app_name}/__init__.py", app_init_boilerplate)
-        self._backup_and_write(self.page_path + "/__init__.py", page_init_boilerplate)
+        with open(f"workspace/{self.app_name}/__init__.py", "w") as f:
+            f.write(app_init_boilerplate)
+
+        with open(self.page_path + "/__init__.py", "w") as f:
+            f.write(page_init_boilerplate)
 
     def save_table_columns(self, table_name: str, columns: list):
         # update page properties file
@@ -148,14 +151,30 @@ class PageController:
         self._backup_and_write(filepath, json.dumps(properties, indent=2))
 
     def create_page(self, page_label: str):
-        self.create_page_dirs()
-        self.create_schema()
-        self.create_page_properties()
-        self.add_page_to_app_properties(page_label)
-        properties = self.reload_properties()
-        compose_state_context_models(self.app_name, self.page_name, properties)
-        self.create_main_class()
-        self.add_inits()
+        backup_path = f"{self.page_path}_backup"
+
+        # create a backup by copying entire directory (including subdirectories)
+        shutil.copytree(self.page_path, backup_path)
+
+        try:
+            self.create_page_dirs()
+            self.create_schema()
+            self.create_page_properties()
+            self.add_page_to_app_properties(page_label)
+            properties = self.reload_properties()
+            compose_state_context_models(self.app_name, self.page_name, properties)
+            self.create_main_class()
+            self.add_inits()
+        except Exception as e:
+            # on failure, delete edited directory
+            shutil.rmtree(self.page_path)
+            # rename backup directory to original name
+            os.rename(backup_path, self.page_path)
+            raise e
+        finally:
+            # if no exception occurred, you can remove the backup
+            if os.path.isdir(backup_path):
+                shutil.rmtree(backup_path)
 
     def update_page(self):
         properties = self.reload_properties()
