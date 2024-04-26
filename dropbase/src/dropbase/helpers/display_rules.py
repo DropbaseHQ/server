@@ -14,7 +14,10 @@ logger = logging.getLogger(__name__)
 
 
 def get_by_path(root, items):
-    return reduce(lambda x, y: getattr(x, y), items.split("."), root)
+    try:
+        return reduce(lambda x, y: getattr(x, y), items.split("."), root)
+    except AttributeError:
+        return None
 
 
 def set_by_path(root, items, value):
@@ -135,11 +138,13 @@ def display_rule(state, context, rules: DisplayRules):
             # is a value in the target that matches the rule, the component should
             # not be visible
             target_widget = rule.target.split(".")[0]
-            target_component = rule.target.split(".")[1]
+            target_section = rule.target.split(".")[1]
+            target_component = rule.target.split(".")[2]
 
             target_widget_context = getattr(context, target_widget)
-            if hasattr(target_widget_context, "components"):
-                components_context = getattr(target_widget_context, "components")
+            """if a component depends on another component that is hidden, it should be hidden even if display rule is true"""
+            if hasattr(target_widget_context, target_section):
+                components_context = getattr(target_widget_context, target_section)
                 component_context = getattr(components_context, target_component)
 
                 if component_context.visible is False:
@@ -169,9 +174,7 @@ def display_rule(state, context, rules: DisplayRules):
                 component_visible = rule_applies
 
         # the resulting state of the component is defined by the final rule resulting condition
-        set_by_path(
-            context, f"{component_display_rules.component}.visible", component_visible
-        )
+        set_by_path(context, f"{component_display_rules.component}.visible", component_visible)
 
     return context.dict()
 
@@ -195,11 +198,8 @@ def get_display_rules_from_comp_props(component_props: dict):
 
 
 def run_display_rule(app_name: str, page_name: str, state: dict):
+    state, context = get_state_empty_context(app_name=app_name, page_name=page_name, state=state)
     try:
-        state, context = get_state_empty_context(
-            app_name=app_name, page_name=page_name, state=state
-        )
-
         path = f"workspace/{app_name}/{page_name}/properties.json"
         with open(path, "r") as f:
             properties = json.loads(f.read())

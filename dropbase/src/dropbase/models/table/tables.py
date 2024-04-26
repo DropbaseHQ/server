@@ -8,6 +8,13 @@ from dropbase.models.table.button_column import ButtonColumnDefinedProperty
 from dropbase.models.table.pg_column import PgColumnDefinedProperty
 from dropbase.models.table.py_column import PyColumnDefinedProperty
 from dropbase.models.table.sqlite_column import SqliteColumnDefinedProperty
+from dropbase.models.widget import (
+    BooleanDefinedProperty,
+    ButtonDefinedProperty,
+    InputDefinedProperty,
+    SelectDefinedProperty,
+    TextDefinedProperty,
+)
 
 
 class Filter(BaseModel):
@@ -52,24 +59,13 @@ class TableDefinedProperty(BaseModel):
     name: Annotated[str, PropertyCategory.default]
     description: Annotated[Optional[str], PropertyCategory.default]
 
-    # header widget
-    widget: Annotated[Optional[str], PropertyCategory.default]
-
-    # settings
-
-    size: Annotated[Optional[int], PropertyCategory.default] = 20
-
-    # table filters
-    filters: Annotated[Optional[List[PinnedFilter]], PropertyCategory.other]
-
     # internal
     w: Annotated[Optional[int], PropertyCategory.internal] = 0
     h: Annotated[Optional[int], PropertyCategory.internal] = 0
     x: Annotated[Optional[int], PropertyCategory.internal] = 1
     y: Annotated[Optional[int], PropertyCategory.internal] = 4
 
-    type: Optional[Literal["python", "sql"]] = "sql"
-    smart: Optional[bool] = False
+    # internal
     context: ModelMetaclass = TableContextProperty
     columns: Annotated[
         List[
@@ -78,6 +74,30 @@ class TableDefinedProperty(BaseModel):
                 PyColumnDefinedProperty,
                 ButtonColumnDefinedProperty,
                 SqliteColumnDefinedProperty,
+            ]
+        ],
+        PropertyCategory.default,
+    ]
+    header: Annotated[
+        List[
+            Union[
+                ButtonDefinedProperty,
+                InputDefinedProperty,
+                SelectDefinedProperty,
+                TextDefinedProperty,
+                BooleanDefinedProperty,
+            ]
+        ],
+        PropertyCategory.default,
+    ]
+    footer: Annotated[
+        List[
+            Union[
+                ButtonDefinedProperty,
+                InputDefinedProperty,
+                SelectDefinedProperty,
+                TextDefinedProperty,
+                BooleanDefinedProperty,
             ]
         ],
         PropertyCategory.default,

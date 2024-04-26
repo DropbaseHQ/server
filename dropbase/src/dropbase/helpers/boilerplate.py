@@ -103,7 +103,9 @@ properties_json_boilerplate = """{
         "name":"table1",
         "label":"Table 1",
         "block_type": "table",
-        "columns": []
+        "columns": [],
+        "header": [],
+        "footer": []
     },
     "widget1": {
         "name": "widget1",

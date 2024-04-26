@@ -16,6 +16,7 @@ def run(r, response):
         state = json.loads(os.getenv("state"))
         action = os.getenv("action")
         resource = os.getenv("resource")
+        section = os.getenv("section")
         component = os.getenv("component")
 
         # run python script and get result
@@ -35,7 +36,10 @@ def run(r, response):
             edits = os.getenv("edits")
             new_context = script.__getattribute__(resource).update(edits)
         else:
-            new_context = script.__getattribute__(resource).__getattribute__(f"{action}{component}")()
+            # action - on_select, on_click, on_input, on_tobble
+            new_context = script.__getattribute__(resource).__getattribute__(
+                f"{section}_{component}_{action}"
+            )()
 
         response["type"] = "context"
         response["context"] = new_context.dict()
