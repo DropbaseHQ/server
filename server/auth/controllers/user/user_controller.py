@@ -34,7 +34,6 @@ from ...schemas.user import (
 )
 from ...schemas.workspace import ReadWorkspace
 from ...utils.hash import get_confirmation_token_hash
-from ...utils.helper import raise_http_exception
 
 
 def get_user(db: Session, user_email: str):
@@ -42,7 +41,7 @@ def get_user(db: Session, user_email: str):
         return crud.user.get_user_by_email(db, email=user_email)
     except Exception as e:
         print("error", e)
-        raise_http_exception(status_code=404, message="User not found")
+        raise HTTPException(404, "User not found")
 
 
 def login_user(db: Session, Authorize: AuthJWT, request: LoginUser):
@@ -90,10 +89,10 @@ def login_user(db: Session, Authorize: AuthJWT, request: LoginUser):
         }
 
     except HTTPException as e:
-        raise_http_exception(status_code=e.status_code, message=e.detail)
+        raise e
     except Exception as e:
         print("error", e)
-        raise_http_exception(status_code=500, message="Internal server error")
+        raise HTTPException(500, "Internal server error")
 
 
 def logout_user(response: Response, Authorize: AuthJWT):
@@ -105,7 +104,7 @@ def logout_user(response: Response, Authorize: AuthJWT):
         return {"msg": "Successfully logout"}
     except Exception as e:
         print("error", e)
-        raise_http_exception(status_code=500, message="Internal server error")
+        raise HTTPException(500, "Internal server error")
 
 
 def refresh_token(Authorize: AuthJWT):
@@ -120,7 +119,7 @@ def refresh_token(Authorize: AuthJWT):
         return {"msg": "Successfully refresh token", "access_token": new_access_token}
     except Exception as e:
         print("error", e)
-        raise_http_exception(status_code=500, message="Internal server error")
+        raise HTTPException(500, "Internal server error")
 
 
 def register_user(db: Session, request: CreateUserRequest):
@@ -146,7 +145,7 @@ def register_user(db: Session, request: CreateUserRequest):
     except Exception as e:
         db.rollback()
         print("error", e)
-        raise_http_exception(status_code=500, message="Internal server error")
+        raise HTTPException(500, "Internal server error")
 
 
 def verify_user(db: Session, token: str, user_id: UUID):
@@ -160,8 +159,8 @@ def verify_user(db: Session, token: str, user_id: UUID):
         except Exception as e:
             db.rollback()
             print("error", e)
-            raise_http_exception(status_code=500, message="Internal server error")
-    raise_http_exception(status_code=404, message="User not found")
+            raise HTTPException(500, "Internal server error")
+    raise HTTPException(404, "User not found")
 
 
 def onboard_user(db: Session, request: OnboardUser, user_id: UUID):
@@ -178,7 +177,7 @@ def onboard_user(db: Session, request: OnboardUser, user_id: UUID):
     except Exception as e:
         db.rollback()
         print("error", e)
-        raise_http_exception(status_code=500, message="Internal server error")
+        raise HTTPException(500, "Internal server error")
 
     return {"message": "User successfully onboarded"}
 
@@ -204,7 +203,7 @@ def add_policy(db: Session, user_id: UUID, request: AddPolicyRequest):
     except Exception as e:
         print("error", e)
         db.rollback()
-        raise_http_exception(status_code=500, message="Internal server error")
+        raise HTTPException(500, "Internal server error")
 
 
 def remove_policy(db: Session, user_id: UUID, request: AddPolicyRequest):
@@ -222,7 +221,7 @@ def remove_policy(db: Session, user_id: UUID, request: AddPolicyRequest):
     except Exception as e:
         print("error", e)
         db.rollback()
-        raise_http_exception(status_code=500, message="Internal server error")
+        raise HTTPException(500, "Internal server error")
 
 
 def get_user_permissions(db: Session, user_id: UUID, workspace_id: UUID):
@@ -324,24 +323,24 @@ def request_reset_password(db: Session, request: ResetPasswordRequest):
         #     },
         # )
         return {"message": "Successfully sent password reset email."}
-    raise_http_exception(400, message="No user associated with this email.")
+    raise HTTPException(400, "No user associated with this email.")
 
 
 def reset_password(db: Session, request: ResetPasswordRequest):
     user = crud.user.get_user_by_email(db, email=request.email)
     if not user:
-        raise_http_exception(400, "No user associated with this email.")
+        raise HTTPException(400, "No user associated with this email.")
 
     user_reset_token = crud.reset_token.get_latest_user_refresh_token(db, user.id)
     if not verify_password(request.reset_token, user_reset_token.hashed_token):
-        raise_http_exception(403, "Incorrect reset token.")
+        raise HTTPException(403, "Incorrect reset token.")
 
     if user_reset_token.status != "valid":
-        raise_http_exception(400, "Token is no longer valid.")
+        raise HTTPException(400, "Token is no longer valid.")
 
     if datetime.now() > user_reset_token.expiration_time:
         crud.reset_token.update_by_pk(db, pk=user_reset_token.id, obj_in={"status": "expired"})
-        raise_http_exception(400, "Token is expired.")
+        raise HTTPException(400, "Token is expired.")
 
     try:
         new_hashed_password = get_password_hash(request.new_password)
@@ -360,7 +359,7 @@ def reset_password(db: Session, request: ResetPasswordRequest):
     except Exception as e:
         print(e)
         db.rollback()
-        raise_http_exception(500, message="Failed to reset password.")
+        raise HTTPException(500, "Failed to reset password.")
 
 
 def delete_user(db: Session, user_id: UUID):
@@ -373,7 +372,7 @@ def delete_user(db: Session, user_id: UUID):
         db.commit()
     except Exception:
         db.rollback()
-        raise_http_exception(status_code=500, message="Internal server error")
+        raise HTTPException(500, "Internal server error")
     return {"message": "User successfully deleted"}
 
 
