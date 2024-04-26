@@ -5,22 +5,15 @@ from pydantic import BaseModel
 from dropbase.schemas.files import DataFile
 
 
-class CellProps(BaseModel):
-    name: str
-    schema_name: Optional[str]
-    # table_name: str
-    # edit_keys: List[str]
+class EditInfo(BaseModel):
+    new: dict
+    old: dict
 
 
 class CellEdit(BaseModel):
-    column_name: str  # Redundant
-    data_type: str  # Technically don't need
-    old_value: Any  # Technically isn't used
-    new_value: Any
-    row: dict
-    columns: List[CellProps]
+    row_edits: List[EditInfo]
 
 
-class EditCellRequest(BaseModel):
+class EditCellRequest(BaseModel):  # Don't use anymore
     edits: List[CellEdit]
     file: DataFile
