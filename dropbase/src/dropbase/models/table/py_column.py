@@ -12,4 +12,6 @@ class PyColumnDefinedProperty(BaseColumnDefinedProperty):
 
     # visibility
     hidden: Annotated[bool, PropertyCategory.default] = False
+    editable: Annotated[bool, PropertyCategory.default] = False
+
     context: ModelMetaclass = ColumnDisplayProperties

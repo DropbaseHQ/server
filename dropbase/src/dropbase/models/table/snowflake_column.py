@@ -18,8 +18,6 @@ class SnowflakeColumnDefinedProperty(BaseColumnDefinedProperty):
     nullable: Annotated[bool, PropertyCategory.view_only] = False
     unique: Annotated[bool, PropertyCategory.view_only] = False
 
-    edit_keys: Annotated[list, PropertyCategory.internal] = []
-
     # internal
     column_type: Annotated[
         Literal[ColumnTypeEnum.SNOWFLAKE], PropertyCategory.internal

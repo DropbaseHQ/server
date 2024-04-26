@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import List, Optional
 
 from pydantic import BaseModel
 
@@ -20,4 +20,4 @@ class RunClass(BaseModel):
     resource: str
     component: Optional[str]
     state: dict
-    edits: Optional[CellEdit]
+    edits: Optional[List[CellEdit]]
