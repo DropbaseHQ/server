@@ -18,6 +18,7 @@ class RunClass(BaseModel):
     page_name: str
     action: str
     resource: str
+    section: Optional[str]
     component: Optional[str]
     state: dict
     row_edits: Optional[List[dict]]

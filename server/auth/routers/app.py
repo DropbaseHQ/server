@@ -27,15 +27,19 @@ class UpdateAppRequest(BaseModel):
 
 
 @router.post("/{app_id}/share")
-def share_app(app_id: UUID, request: AppShareRequest, db: Session = Depends(get_db)):
-    target_app = crud.app.get_object_by_id_or_404(db=db, id=app_id)
-
+def share_app(
+    base_request: Request,
+    app_id: UUID,
+    request: AppShareRequest,
+    db: Session = Depends(get_db),
+):
+    workspace_id = base_request.headers.get("workspace-id")
     successful_changes = []
     for subject_id in request.subjects:
         policy_updater = PolicyUpdater(
             db=db,
             subject_id=subject_id,
-            workspace_id=target_app.workspace_id,
+            workspace_id=workspace_id,
             request=UpdateAppRequest(resource=str(app_id), action=request.action),
         )
         policy_updater.update_policy()
@@ -51,13 +55,13 @@ def share_app(app_id: UUID, request: AppShareRequest, db: Session = Depends(get_
 
 
 @router.get("/{app_id}/has_access")
-def get_app_access(app_id: UUID, db: Session = Depends(get_db)):
-    app = crud.app.get_object_by_id_or_404(db=db, id=app_id)
+def get_app_access(base_request: Request, app_id: UUID, db: Session = Depends(get_db)):
+    workspace_id = base_request.headers.get("workspace-id")
     workspace_users = crud.workspace.get_workspace_users(
-        db=db, workspace_id=app.workspace_id
+        db=db, workspace_id=workspace_id
     )
     workspace_groups = crud.workspace.get_workspace_groups(
-        db=db, workspace_id=app.workspace_id
+        db=db, workspace_id=workspace_id
     )
 
     def get_highest_permissions_for_list(workspace_subjects):
@@ -67,7 +71,7 @@ def get_app_access(app_id: UUID, db: Session = Depends(get_db)):
             permissions = get_all_action_permissions(
                 db=db,
                 user_id=user.id,
-                workspace_id=app.workspace_id,
+                workspace_id=workspace_id,
                 app_id=str(app_id),
             )
             app_permissions = permissions.get("app_permissions")

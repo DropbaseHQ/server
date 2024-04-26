@@ -27,6 +27,7 @@ async def run_class_req(req: RunClass, response: Response):
             "page_name": req.page_name,
             "action": req.action,
             "resource": req.resource,
+            "section": req.section,
             "component": req.component if req.component else "",
             "row_edits": json.dumps(req.row_edits if req.row_edits else [{}]),
             "state": json.dumps(req.state),
@@ -34,6 +35,7 @@ async def run_class_req(req: RunClass, response: Response):
         }
 
         print("job ID: ", job_id)
+
         # start a job
         run_container(env_vars)
 
@@ -47,8 +49,6 @@ async def run_class_req(req: RunClass, response: Response):
         # set initial status to pending
         r.set(job_id, json.dumps(reponse_payload))
         r.expire(job_id, 300)  # timeout in 5 minutes
-
-        print("set job_id", job_id, "to pending")
 
         response.status_code = status_code
         reponse_payload.pop("status_code")
