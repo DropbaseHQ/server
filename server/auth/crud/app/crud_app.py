@@ -11,5 +11,9 @@ class CRUDApp(CRUDBase[App, App, App]):
             .first()
         )
 
+    def get_app_id(self, db: Session, app_name: str, workspace_id: str):
+        app = self.get_app_by_name(db, app_name, workspace_id)
+        return app.id if app else None
+
 
 app = CRUDApp(App)
