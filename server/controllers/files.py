@@ -64,28 +64,6 @@ class FileController:
         finally:
             self._delete_backup()
 
-    def get_python_files(self):
-        try:
-            if not (
-                re.match(FILE_NAME_REGEX, self.app_name) and re.match(FILE_NAME_REGEX, self.page_name)
-            ):  # noqa
-                raise HTTPException(
-                    status_code=400,
-                    detail="No files found. Please check if the app name and page name are valid.",
-                )
-            dir_path = cwd + f"/workspace/{self.app_name}/{self.page_name}/scripts"
-            py_files = glob.glob(os.path.join(dir_path, "*.py"))
-            py_files = [file for file in py_files if not file.endswith("__init__.py")]
-            return {"files": py_files}
-        except HTTPException as e:
-            self._revert_backup()
-            raise e
-        except Exception as e:
-            self._revert_backup()
-            raise HTTPException(status_code=500, detail=str(e))
-        finally:
-            self._delete_backup()
-
     def get_functions(self):
         functions = []
         python_data = self.get_all_files(sql=False)  # files are a list of strings
@@ -224,10 +202,6 @@ class FileController:
             self.file_name = file_name
             self.file_path = file_path
 
-    def _get_file_path(self, file_name: str, file_type: str):
-        file_ext = ".sql" if file_type == "sql" else ".py"
-        return cwd + f"/workspace/{self.app_name}/{self.page_name}/scripts/{file_name}{file_ext}"
-
     def _write_file(self, code: str):
         with open(self.file_path, "w") as f:
             f.write(code)
@@ -262,11 +236,6 @@ class FileController:
     def _check_file_exists(self):
         if not os.path.exists(self.file_path):
             raise HTTPException(status_code=400, detail="The file does not exist")
-
-    def _get_depend_table_names(self, user_sql: str):
-        pattern = re.compile(r"\{\{state\.(\w+)\.\w+\}\}")
-        matches = pattern.findall(user_sql)
-        return list(set(matches))
 
 
 def compose_boilerplate_code(req: CreateFile):

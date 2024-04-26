@@ -1,3 +1,4 @@
+# reverting this
 from enum import Enum
 from typing import List, Optional
 
@@ -11,10 +12,6 @@ class TypeEnum(str, Enum):
     data_fetcher = "data_fetcher"
     ui = "ui"
     python = "python"
-
-
-class ReadRequest(BaseModel):
-    path: str
 
 
 class CreateFile(BaseModel):
