@@ -28,7 +28,7 @@ async def run_class_req(req: RunClass, response: Response):
             "action": req.action,
             "resource": req.resource,
             "component": req.component if req.component else "",
-            "edits": req.edits if req.edits else "",
+            "edits": json.dumps(req.edits if req.edits else [{}]),
             "state": json.dumps(req.state),
             "job_id": job_id,
         }

@@ -20,4 +20,4 @@ class RunClass(BaseModel):
     resource: str
     component: Optional[str]
     state: dict
-    edits: Optional[List[CellEdit]]
+    edits: Optional[List[dict]]

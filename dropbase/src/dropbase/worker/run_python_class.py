@@ -5,6 +5,8 @@ import traceback
 
 from dotenv import load_dotenv
 
+from dropbase.schemas.edit_cell import CellEdit
+
 load_dotenv()
 
 
@@ -32,7 +34,10 @@ def run(r, response):
         if action == "get_data":
             new_context = script.__getattribute__(resource).get_table_data()
         elif action == "update":
-            edits = os.getenv("edits")
+            edits = json.loads(os.getenv("edits"))
+            for i in range(len(edits)):
+                edits[i] = CellEdit(**edits[i])
+
             new_context = script.__getattribute__(resource).update(edits)
         else:
             new_context = script.__getattribute__(resource).__getattribute__(f"{action}{component}")()

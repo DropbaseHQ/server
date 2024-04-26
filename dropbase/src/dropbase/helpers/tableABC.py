@@ -1,4 +1,5 @@
 from abc import ABC, abstractmethod
+from typing import List
 
 import pandas as pd
 
@@ -21,7 +22,7 @@ class TableABC(ABC):
     def get_data(self):
         pass
 
-    def update(self, edits: list[CellEdit]):
+    def update(self, edits: List[CellEdit]):
         pass
 
     def create_row(self, row: dict):
