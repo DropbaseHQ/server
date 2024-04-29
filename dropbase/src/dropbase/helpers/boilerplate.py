@@ -105,7 +105,11 @@ properties_json_boilerplate = """{
         "block_type": "table",
         "columns": [],
         "header": [],
-        "footer": []
+        "footer": [],
+        "w": 4,
+        "h": 1,
+        "x": 0,
+        "y": 0
     },
     "widget1": {
         "name": "widget1",

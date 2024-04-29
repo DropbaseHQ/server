@@ -13,7 +13,6 @@ router = APIRouter(prefix="/app", tags=["app"], responses={404: {"description": 
 
 @router.post("/", dependencies=get_permission_dependency_array("edit", "workspace"))
 def create_app_req(request: CreateAppRequest):
-    print("Creating app!!!")
     appController = AppController(request.app_name, request.app_label)
     appController.create_app()
     pageController = PageController(request.app_name, "page1")

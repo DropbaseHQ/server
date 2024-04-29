@@ -7,18 +7,15 @@ from casbin import persist
 from sqlalchemy.orm import Session
 
 from .. import crud
-from ..models import Policy
 from ..connect import SQLALCHEMY_DATABASE_URL
-from .casbin_sqlalchemy_adaptor import Adapter
 from ..controllers.policy import ALLOWED_ACTIONS
-
+from ..models import Policy
+from .casbin_sqlalchemy_adaptor import Adapter
 
 adapter = Adapter(SQLALCHEMY_DATABASE_URL, db_class=Policy)
 
 casbin_config = ""
-with open(
-    str(Path(__file__).parent.absolute().joinpath("./casbin_model.conf")), "r"
-) as f:
+with open(str(Path(__file__).parent.absolute().joinpath("./casbin_model.conf")), "r") as f:
     casbin_config = f.read()
 
 
@@ -60,20 +57,15 @@ def get_contexted_enforcer(db, workspace_id):
 
     _ = enforcer.get_policy()
     grouping_policies = enforcer.get_grouping_policy()
-    # print("Loaded grouping policies", grouping_policies)
 
     return enforcer
 
 
-def enforce_action(
-    db, user_id, workspace_id, resource, action, resource_crud, resource_id=None
-):
+def enforce_action(db, user_id, workspace_id, resource, action, resource_crud, resource_id=None):
     enforcer = get_contexted_enforcer(db, workspace_id)
     workspace = crud.workspace.get(db, id=workspace_id)
     workspace_owner = crud.workspace.get_oldest_user(db, workspace_id)
-    can_use_granular_permissions = workspace.in_trial or workspace_owner.email.endswith(
-        "@dropbase.io"
-    )
+    can_use_granular_permissions = workspace.in_trial or workspace_owner.email.endswith("@dropbase.io")
     try:
         if resource_id:
             # Check if user has permission to perform action on specific resource
@@ -165,13 +157,9 @@ def unload_policy_line(line, model):
         pass
 
 
-def high_level_enforce(
-    db: Session, enforcer: casbin.Enforcer, user_id, resource, action, workspace
-):
+def high_level_enforce(db: Session, enforcer: casbin.Enforcer, user_id, resource, action, workspace):
     workspace_owner = crud.workspace.get_oldest_user(db, workspace.id)
-    can_use_granular_permissions = workspace.in_trial or workspace_owner.email.endswith(
-        "@dropbase.io"
-    )
+    can_use_granular_permissions = workspace.in_trial or workspace_owner.email.endswith("@dropbase.io")
     if enforcer.enforce(str(user_id), "workspace", action):
         return True
     if can_use_granular_permissions:
@@ -181,15 +169,11 @@ def high_level_enforce(
         return True
 
 
-def get_all_action_permissions(
-    db: Session, user_id: str, workspace_id: str, app_id: str = None
-):
+def get_all_action_permissions(db: Session, user_id: str, workspace_id: str, app_id: str = None):
     enforcer = get_contexted_enforcer(db, workspace_id)
     workspace = crud.workspace.get_object_by_id_or_404(db, id=workspace_id)
     workspace_owner = crud.workspace.get_oldest_user(db, workspace_id)
-    can_use_granular_permissions = workspace.in_trial or workspace_owner.email.endswith(
-        "@dropbase.io"
-    )
+    can_use_granular_permissions = workspace.in_trial or workspace_owner.email.endswith("@dropbase.io")
 
     permissions_dict = {"workspace_permissions": {}, "app_permissions": {}}
     # Go through allowed actions and check if user has permission to perform action on resource

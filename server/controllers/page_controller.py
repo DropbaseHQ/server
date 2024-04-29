@@ -124,7 +124,6 @@ class PageController:
                     base_name = base.attr if isinstance(base, ast.Attribute) else base.id
                     if base_name == "TableABC" or base_name == "WidgetABC":
                         if node.name not in required_classes:
-                            print("removing ", node.name)
                             module.body.remove(node)
 
         modified_code = astor.to_source(module)
@@ -211,6 +210,8 @@ class PageController:
     def get_page(self, initial=False):
         self.reload_properties()
         response = get_page_state_context(self.app_name, self.page_name, initial)
+        # set first widget visibility to true
+        set_widget_visibility(response)
         # get methods
         response["properties"] = self.properties
         response["methods"] = self.get_main_class_methods()
@@ -253,6 +254,16 @@ class PageController:
                                 parse_component_methods(n.name, class_name, class_methods, "widget")
 
         return class_methods
+
+
+def set_widget_visibility(response):
+    if "widget1" in response["context"]:
+        response["context"]["widget1"]["visible"] = True
+    else:
+        for _, value in response["context"].items():
+            if "components" in value:
+                value["visible"] = True
+                break
 
 
 # helper functions

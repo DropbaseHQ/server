@@ -30,6 +30,9 @@ class TableABC(ABC):
     def delete_row(self, row: dict):
         pass
 
+    def on_row_change(self):
+        pass
+
     # generic methods used by dropbase
     def get_table_data(self):
         self.context.__getattribute__(self.name).data = self.get_data().to_dtable()
