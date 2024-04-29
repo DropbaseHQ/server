@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import List, Optional
 
 from pydantic import BaseModel
 
@@ -21,4 +21,4 @@ class RunClass(BaseModel):
     section: Optional[str]
     component: Optional[str]
     state: dict
-    edits: Optional[CellEdit]
+    row_edits: Optional[List[dict]]

@@ -20,7 +20,5 @@ class SqlSmartColumnProperty(BaseModel):
     nullable: bool = True
     unique: bool = False
 
-    edit_keys: list = []
-
     visible: bool = True
     editable: bool = False
