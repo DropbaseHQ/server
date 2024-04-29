@@ -4,7 +4,7 @@ from pydantic import BaseModel
 from pydantic.main import ModelMetaclass
 
 from dropbase.models.category import PropertyCategory
-from dropbase.models.common import ColumnDisplayProperties, OnEvent
+from dropbase.models.common import ColumnDisplayProperties
 
 
 class ButtonColumnDefinedProperty(BaseModel):
@@ -27,9 +27,6 @@ class ButtonColumnDefinedProperty(BaseModel):
         ],
         PropertyCategory.default,
     ]
-
-    # events
-    on_click: Annotated[Optional[OnEvent], PropertyCategory.events]
 
     # visibility
     hidden: Annotated[bool, PropertyCategory.default] = False

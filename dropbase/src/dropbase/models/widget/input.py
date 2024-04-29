@@ -4,7 +4,7 @@ from pydantic import BaseModel
 from pydantic.main import ModelMetaclass
 
 from dropbase.models.category import PropertyCategory
-from dropbase.models.common import ComponentDisplayProperties, OnEvent
+from dropbase.models.common import ComponentDisplayProperties
 
 
 class InputDefinedProperty(BaseModel):
@@ -21,9 +21,6 @@ class InputDefinedProperty(BaseModel):
 
     # display rules
     display_rules: Annotated[Optional[List[dict]], PropertyCategory.display_rules]
-
-    # events
-    on_submit: Annotated[Optional[OnEvent], PropertyCategory.events]
 
     # internal
     context: ModelMetaclass = ComponentDisplayProperties

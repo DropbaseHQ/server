@@ -17,7 +17,7 @@ class ConfigTypeEnum(str, Enum):
 
 
 class ComponentDisplayProperties(BaseModel):
-    visible: Optional[bool]
+    visible: Optional[bool] = True
 
 
 class ColumnDisplayProperties(BaseModel):

@@ -14,6 +14,7 @@ from dropbase.models.widget import (
 
 
 class WidgetContextProperty(BaseModel):
+    visible: Optional[bool]
     message: Optional[str]
     message_type: Optional[str]
     components: Optional[dict] = {}
