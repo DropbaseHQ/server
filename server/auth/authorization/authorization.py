@@ -208,7 +208,12 @@ class AuthZDepFactory:
         if not is_authorized:
             self._raise_forbidden(user, resource_id)
 
-    def use_params(self, resource_type: str = None, action: str = None):
+    def use_params(
+        self,
+        resource_type: str = None,
+        action: str = None,
+        get_permissions: bool = False,
+    ):
         """Returns a one time dependency that uses the given resource type and action."""
 
         def verify_user_can_act_on_resource(
@@ -234,8 +239,10 @@ class AuthZDepFactory:
 
             if not is_authorized:
                 self._raise_forbidden(user, resource_id)
-            return user_controller.check_permissions(
-                db=db, user=user, request=request, workspace_id=workspace_id
-            )
+            if get_permissions:
+                return user_controller.check_permissions(
+                    db=db, user=user, request=request, workspace_id=workspace_id
+                )
+            return None
 
         return verify_user_can_act_on_resource
