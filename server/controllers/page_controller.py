@@ -186,25 +186,17 @@ class PageController:
         for key, values in self.properties:
             class_name = key.capitalize()
             if isinstance(values, TableDefinedProperty):
-                for columns in values.columns:
+                for column in values.columns:
                     # loop through columns and check if they are buttons
-                    if isinstance(columns, ButtonColumnDefinedProperty):
-                        if class_name not in required_methods:
-                            required_methods[class_name] = {}
-                        name = f"on_click_{columns.name}"
-                        required_methods[class_name][name] = update_button_methods_main.format(
-                            columns.name
-                        )
+                    if isinstance(column, ButtonColumnDefinedProperty):
+                        add_button_method(column, "columns", class_name, required_methods)
+                for component in values.header:
+                    add_button_method(component, "header", class_name, required_methods)
+                for component in values.footer:
+                    add_button_method(component, "footer", class_name, required_methods)
             if isinstance(values, WidgetDefinedProperty):
                 for component in values.components:
-                    # loop through components and check if they are buttons
-                    if isinstance(component, ButtonDefinedProperty):
-                        if class_name not in required_methods:
-                            required_methods[class_name] = {}
-                        name = f"on_click_{component.name}"
-                        required_methods[class_name][name] = update_button_methods_main.format(
-                            component.name
-                        )
+                    add_button_method(component, "components", class_name, required_methods)
         return required_methods
 
     def get_page(self, initial=False):
@@ -241,7 +233,7 @@ class PageController:
                                 # parse component methods
                                 parse_component_methods(n.name, class_name, class_methods, "table")
                                 # parse table methods
-                                if n.name in ["get_data", "update", "delete", "add"]:
+                                if n.name in ["get_data", "update", "delete", "add", "on_row_change"]:
                                     class_methods[class_name]["methods"].append(n.name)
 
                     if base_name == "WidgetABC":
@@ -254,6 +246,15 @@ class PageController:
                                 parse_component_methods(n.name, class_name, class_methods, "widget")
 
         return class_methods
+
+
+def add_button_method(component, section, class_name, required_methods):
+    # loop through components and check if they are buttons
+    if isinstance(component, ButtonDefinedProperty):
+        if class_name not in required_methods:
+            required_methods[class_name] = {}
+        name = f"{section}_{component.name}_on_click"
+        required_methods[class_name][name] = update_button_methods_main.format(name)
 
 
 def set_widget_visibility(response):

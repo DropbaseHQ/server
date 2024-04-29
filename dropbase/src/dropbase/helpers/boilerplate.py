@@ -56,7 +56,12 @@ from ..context import Context
 
 class Script(ScriptBase):{0}
 """
-update_button_methods_main = "\n\ndef on_click_{0}(self) -> Context:\n    # TODO: implement this method\n    return self.context"  # noqa
+update_button_methods_main = """
+
+def {0}(self) -> Context:
+    # TODO: implement this method
+    return self.context
+"""
 
 
 table_class_boilerplate = """class {0}(TableABC):
