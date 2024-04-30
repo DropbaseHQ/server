@@ -1,19 +1,12 @@
-# @JON: CAN YOU REVIEW THIS FILE. I DON'T THINK WE NEED MOST OF THESE
-# Removed some endpoints but, kept the ones we need
 from uuid import UUID
 
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
-
-from ..authorization import RESOURCES, AuthZDepFactory, ACTIONS
+from ..authorization import ACTIONS, RESOURCES, AuthZDepFactory
 from ..connect import get_db
 from ..controllers import workspace as workspace_controller
-from ..schemas.workspace import (
-    AddUserRequest,
-    RemoveUserRequest,
-    UpdateUserRoleRequest,
-)
+from ..schemas.workspace import AddUserRequest, RemoveUserRequest, UpdateUserRoleRequest
 
 workspace_authorizer = AuthZDepFactory(default_resource_type=RESOURCES.WORKSPACE)
 
@@ -37,16 +30,10 @@ def get_workspace_groups(workspace_id: UUID, db: Session = Depends(get_db)):
 @router.post(
     "/{workspace_id}/add_user",
     dependencies=[
-        Depends(
-            workspace_authorizer.use_params(
-                resource_type=RESOURCES.WORKSPACE, action=ACTIONS.OWN
-            )
-        )
+        Depends(workspace_authorizer.use_params(resource_type=RESOURCES.WORKSPACE, action=ACTIONS.OWN))
     ],
 )
-def add_user_to_workspace(
-    workspace_id: UUID, request: AddUserRequest, db: Session = Depends(get_db)
-):
+def add_user_to_workspace(workspace_id: UUID, request: AddUserRequest, db: Session = Depends(get_db)):
     return workspace_controller.add_user_to_workspace(
         db, workspace_id, request.user_email, request.role_id
     )
@@ -55,29 +42,19 @@ def add_user_to_workspace(
 @router.post(
     "/{workspace_id}/remove_user",
     dependencies=[
-        Depends(
-            workspace_authorizer.use_params(
-                resource_type=RESOURCES.WORKSPACE, action=ACTIONS.OWN
-            )
-        )
+        Depends(workspace_authorizer.use_params(resource_type=RESOURCES.WORKSPACE, action=ACTIONS.OWN))
     ],
 )
 def remove_user_from_workspace(
     workspace_id: UUID, request: RemoveUserRequest, db: Session = Depends(get_db)
 ):
-    return workspace_controller.remove_user_from_workspace(
-        db, workspace_id, request.user_id
-    )
+    return workspace_controller.remove_user_from_workspace(db, workspace_id, request.user_id)
 
 
 @router.put(
     "/{workspace_id}/user_role",
     dependencies=[
-        Depends(
-            workspace_authorizer.use_params(
-                resource_type=RESOURCES.WORKSPACE, action=ACTIONS.OWN
-            )
-        )
+        Depends(workspace_authorizer.use_params(resource_type=RESOURCES.WORKSPACE, action=ACTIONS.OWN))
     ],
 )
 def update_user_role_in_workspace(
@@ -89,11 +66,7 @@ def update_user_role_in_workspace(
 @router.delete(
     "/{workspace_id}",
     dependencies=[
-        Depends(
-            workspace_authorizer.use_params(
-                resource_type=RESOURCES.WORKSPACE, action=ACTIONS.OWN
-            )
-        )
+        Depends(workspace_authorizer.use_params(resource_type=RESOURCES.WORKSPACE, action=ACTIONS.OWN))
     ],
 )
 def delete_workspace(workspace_id: UUID, db: Session = Depends(get_db)):

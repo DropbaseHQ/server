@@ -1,6 +1,6 @@
 import logging
 
-from fastapi import Depends, HTTPException, Request, status
+from fastapi import Depends, HTTPException, status
 from fastapi_jwt_auth import AuthJWT
 from fastapi_jwt_auth.exceptions import JWTDecodeError
 from jwt.exceptions import InvalidSignatureError
@@ -10,7 +10,6 @@ from sqlalchemy.orm import Session
 
 from .. import crud
 from ..connect import get_db
-from ..models import Workspace
 
 logger = logging.getLogger(__name__)
 
@@ -56,36 +55,3 @@ def verify_password(plain_password, hashed_password):
 
 def get_password_hash(password):
     return pwd_context.hash(password)
-
-
-def verify_worker_token(request: Request, db: Session = Depends(get_db)):
-    worker_token = request.headers.get("dropbase-token")
-    if worker_token is None:
-        logger.info("Worker token is missing")
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Worker token is missing",
-            headers={"WWW-Authenticate": "Bearer"},
-        )
-
-    target_token = crud.token.get_token_by_value(db, token=worker_token)
-    if not target_token:
-        logger.info("Invalid worker token")
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid worker token",
-            headers={"WWW-Authenticate": "Bearer"},
-        )
-
-    if not target_token.is_active:
-        logger.info("Worker token is inactive")
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Worker token is inactive",
-            headers={"WWW-Authenticate": "Bearer"},
-        )
-    workspace: Workspace = crud.workspace.get(db, target_token.workspace_id)
-    return workspace
-
-
-# Path: server/utils/connect.py

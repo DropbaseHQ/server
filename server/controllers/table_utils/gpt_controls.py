@@ -1,10 +1,13 @@
-from typing import Any, Dict, Optional
-from pydantic import BaseModel
-from fastapi import HTTPException
-from server.constants import GPT_MODEL, GPT_TEMPERATURE
-from . import gpt_templates as templates
-import openai
 import json
+from typing import Any, Dict, Optional
+
+import openai
+from fastapi import HTTPException
+from pydantic import BaseModel
+
+from server.constants import GPT_MODEL, GPT_TEMPERATURE
+
+from . import gpt_templates as templates
 
 
 class ColumnInfo(BaseModel):
@@ -21,9 +24,7 @@ class OutputSchema(BaseModel):
 FullDBSchema = dict[str, dict[str, dict[str, dict[str, Any]]]]
 
 
-def get_gpt_input(
-    db_schema: dict, user_sql: str, column_names: list, db_type: str
-) -> str:
+def get_gpt_input(db_schema: dict, user_sql: str, column_names: list, db_type: str) -> str:
     match db_type:
         case "postgres":
             return templates.get_postgres_gpt_input(db_schema, user_sql, column_names)
@@ -37,9 +38,7 @@ def get_gpt_input(
             return templates.get_postgres_gpt_input(db_schema, user_sql, column_names)
 
 
-def call_gpt(
-    user_sql: str, column_names: list, db_schema: dict, db_type: str
-) -> OutputSchema:
+def call_gpt(user_sql: str, column_names: list, db_schema: dict, db_type: str) -> OutputSchema:
     try:
         gpt_input = get_gpt_input(db_schema, user_sql, column_names, db_type)
         gpt_output = str(
@@ -50,16 +49,13 @@ def call_gpt(
             )
         )
 
-        output_dict = json.loads(gpt_output).get(
-            "choices", [{"message": {"content": "{}"}}]
-        )[0]["message"]["content"]
+        output_dict = json.loads(gpt_output).get("choices", [{"message": {"content": "{}"}}])[0][
+            "message"
+        ]["content"]
 
         output = json.loads(output_dict)
         # validate output
         OutputSchema(output=output)
         return output
-    except Exception as e:
-
-        raise HTTPException(
-            status_code=500, detail="API call failed. Please try again."
-        )
+    except Exception:
+        raise HTTPException(status_code=500, detail="API call failed. Please try again.")

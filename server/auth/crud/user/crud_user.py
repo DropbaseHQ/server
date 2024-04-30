@@ -1,7 +1,8 @@
 from sqlalchemy.orm import Session
-from ..base import CRUDBase
-from ...models import User, UserRole, Workspace
+
+from ...models import User
 from ...schemas.user import CreateUser, UpdateUser
+from ..base import CRUDBase
 
 
 class CRUDUser(CRUDBase[User, CreateUser, UpdateUser]):

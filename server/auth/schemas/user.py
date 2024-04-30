@@ -50,26 +50,9 @@ class LoginUser(BaseModel):
     password: str
 
 
-class LoginGoogleUser(BaseModel):
-    credential: str
-
-
-class CreateGoogleUserRequest(BaseModel):
-    credential: str
-
-
 class CreateUserRequest(BaseModel):
     email: str
     password: str
-
-
-class PowerCreateUserRequest(BaseModel):
-    name: str
-    last_name: str
-    company: str
-    email: str
-    password: str
-    active: Optional[bool]
 
 
 class ResetPasswordRequest(BaseModel):
@@ -86,10 +69,6 @@ class AddPolicy(BaseModel):
 class AddPolicyRequest(BaseModel):
     workspace_id: str
     policies: list[AddPolicy]
-
-
-class GetUserDetails(BaseModel):
-    workspace_id: str
 
 
 class UpdateUserPolicyRequest(BaseModel):
@@ -122,38 +101,8 @@ class PageObject(BaseModel):
     label: Optional[str]
 
 
-class AppObject(BaseModel):
-    name: str
-    id: Optional[str]
-    label: Optional[str]
-    pages: Optional[list[PageObject]]
-
-
-class SyncStructureRequest(BaseModel):
-    apps: list[AppObject]
-
-
 class SyncAppRequest(BaseModel):
     app_name: Optional[str] = None
     app_label: Optional[str] = None
     generate_new: bool = True
     pages: Optional[list[PageObject]] = None
-
-
-class CheckAppsPermissionsRequest(BaseModel):
-    app_ids: list
-
-
-class CreateTestUserRequest(BaseModel):
-    name: str
-    last_name: str
-    company: str
-    email: str
-    password: str
-    workspace_id: str
-
-
-class CreateTestDBTableRequest(BaseModel):
-    name: str
-    last_name: str
-    password: str
