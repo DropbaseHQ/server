@@ -15,7 +15,9 @@ from .casbin_sqlalchemy_adaptor import Adapter
 adapter = Adapter(SQLALCHEMY_DATABASE_URL, db_class=Policy)
 
 casbin_config = ""
-with open(str(Path(__file__).parent.absolute().joinpath("./casbin_model.conf")), "r") as f:
+with open(
+    str(Path(__file__).parent.absolute().joinpath("./casbin_model.conf")), "r"
+) as f:
     casbin_config = f.read()
 
 
@@ -55,41 +57,31 @@ def get_contexted_enforcer(db, workspace_id):
     formatted_groups = [str(g_policy).split(", ")[1:] for g_policy in grouping_policies]
     enforcer.add_grouping_policies(formatted_groups)
 
-    # @JON why do we need these?
-    _ = enforcer.get_policy()
-    grouping_policies = enforcer.get_grouping_policy()
-
     return enforcer
 
 
-def enforce_action(db, user_id, workspace_id, resource, action, resource_crud, resource_id=None):
+def enforce_action(
+    db, user_id, workspace_id, resource, action, resource_crud, resource_id=None
+):
     enforcer = get_contexted_enforcer(db, workspace_id)
-    workspace = crud.workspace.get(db, id=workspace_id)
-    workspace_owner = crud.workspace.get_oldest_user(db, workspace_id)
-    can_use_granular_permissions = workspace.in_trial or workspace_owner.email.endswith("@dropbase.io")
     try:
         if resource_id:
             # Check if user has permission to perform action on specific resource
-            if can_use_granular_permissions:
-                if enforcer.enforce(str(user_id), resource_id, action):
+            if enforcer.enforce(str(user_id), resource_id, action):
+                return True
+            # Check if user has permission to perform action parent app
+            if hasattr(resource_crud, "get_app_id"):
+                app_id = resource_crud.get_app_id(db, resource_id)
+                if enforcer.enforce(str(user_id), str(app_id), action):
                     return True
-                # Check if user has permission to perform action parent app
-                if hasattr(resource_crud, "get_app_id"):
-                    app_id = resource_crud.get_app_id(db, resource_id)
-                    if enforcer.enforce(str(user_id), str(app_id), action):
-                        return True
 
         # Check if user themselves has permission to perform action on resource
-
         if enforcer.enforce(str(user_id), resource, action):
             return True
 
         return False
     except Exception as e:
         print("Permission enforcement error", e)
-    # finally:
-    #     if formatted_policies:
-    #         unload_specific_policies(formatted_policies)
 
 
 def add_policy(db: Session, role_id: UUID, resource, action):
@@ -158,23 +150,20 @@ def unload_policy_line(line, model):
         pass
 
 
-def high_level_enforce(db: Session, enforcer: casbin.Enforcer, user_id, resource, action, workspace):
-    workspace_owner = crud.workspace.get_oldest_user(db, workspace.id)
-    can_use_granular_permissions = workspace.in_trial or workspace_owner.email.endswith("@dropbase.io")
+def high_level_enforce(enforcer: casbin.Enforcer, user_id, resource, action):
+
     if enforcer.enforce(str(user_id), "workspace", action):
         return True
-    if can_use_granular_permissions:
-        if enforcer.enforce(str(user_id), resource, action):
-            return True
+    if enforcer.enforce(str(user_id), resource, action):
+        return True
     if enforcer.enforce(str(user_id), "app", action):
         return True
 
 
-def get_all_action_permissions(db: Session, user_id: str, workspace_id: str, app_id: str = None):
+def get_all_action_permissions(
+    db: Session, user_id: str, workspace_id: str, app_id: str = None
+):
     enforcer = get_contexted_enforcer(db, workspace_id)
-    workspace = crud.workspace.get_object_by_id_or_404(db, id=workspace_id)
-    workspace_owner = crud.workspace.get_oldest_user(db, workspace_id)
-    can_use_granular_permissions = workspace.in_trial or workspace_owner.email.endswith("@dropbase.io")
 
     permissions_dict = {"workspace_permissions": {}, "app_permissions": {}}
     # Go through allowed actions and check if user has permission to perform action on resource
@@ -185,9 +174,9 @@ def get_all_action_permissions(db: Session, user_id: str, workspace_id: str, app
             permissions_dict["workspace_permissions"][action] = False
         if app_id not in permissions_dict["app_permissions"]:
             permissions_dict["app_permissions"][action] = False
-        if can_use_granular_permissions:
-            if enforcer.enforce(str(user_id), app_id, action):
-                permissions_dict["app_permissions"][action] = True
+
+        if enforcer.enforce(str(user_id), app_id, action):
+            permissions_dict["app_permissions"][action] = True
         if enforcer.enforce(str(user_id), "app", action):
             permissions_dict["app_permissions"][action] = True
     return permissions_dict
