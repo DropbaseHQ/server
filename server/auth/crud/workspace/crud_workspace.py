@@ -4,9 +4,10 @@ from uuid import UUID
 from sqlalchemy import and_
 from sqlalchemy.orm import Session, aliased
 from sqlalchemy.sql import func
-from ..base import CRUDBase
+
 from ...models import Group, Policy, Role, User, UserRole, Workspace
 from ...schemas.workspace import CreateWorkspace, UpdateWorkspace
+from ..base import CRUDBase
 
 
 class CRUDWorkspace(CRUDBase[Workspace, CreateWorkspace, UpdateWorkspace]):
@@ -20,9 +21,6 @@ class CRUDWorkspace(CRUDBase[Workspace, CreateWorkspace, UpdateWorkspace]):
                 Workspace.id,
                 Workspace.name,
                 Role.name.label("role_name"),
-                Workspace.worker_url,
-                Workspace.in_trial,
-                Workspace.trial_end_date,
                 Workspace.date,
             )
             .all()
@@ -80,9 +78,7 @@ class CRUDWorkspace(CRUDBase[Workspace, CreateWorkspace, UpdateWorkspace]):
         UserRoleAlias = aliased(UserRole)
 
         oldest_users_subquery = (
-            db.query(
-                UserRoleAlias.workspace_id, func.min(UserRoleAlias.date).label("date")
-            )
+            db.query(UserRoleAlias.workspace_id, func.min(UserRoleAlias.date).label("date"))
             .group_by(UserRoleAlias.workspace_id)
             .subquery("oldest_users_subquery")
         )

@@ -1,4 +1,3 @@
-import hashlib
 import secrets
 from datetime import datetime, timedelta
 from urllib.parse import parse_qs, urlencode, urlparse, urlunparse
@@ -45,11 +44,6 @@ def login_user(db: Session, Authorize: AuthJWT, request: LoginUser):
                 detail="Incorrect username or password",
                 headers={"WWW-Authenticate": "Bearer"},
             )
-        if user.social_login is not None and user.social_login != "":
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="Account not registered with email",
-            )
         if not verify_password(request.password, user.hashed_password):
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
@@ -77,7 +71,6 @@ def login_user(db: Session, Authorize: AuthJWT, request: LoginUser):
             "workspace": workspace,
             "access_token": access_token,
             "refresh_token": refresh_token,
-            "onboarding": not user.onboarded,
         }
 
     except HTTPException as e:
@@ -117,7 +110,6 @@ def refresh_token(Authorize: AuthJWT):
 def register_user(db: Session, request: CreateUserRequest):
     try:
         hashed_password = get_password_hash(request.password)
-        confirmation_token = get_confirmation_token_hash(request.email + hashed_password)
 
         user_obj = CreateUser(
             name="",
@@ -125,10 +117,7 @@ def register_user(db: Session, request: CreateUserRequest):
             company="",
             email=request.email,
             hashed_password=hashed_password,
-            trial_eligible=True,
             active=False,
-            confirmation_token=confirmation_token,
-            onboarded=False,
         )
         crud.user.create(db, obj_in=user_obj, auto_commit=False)
 
@@ -141,18 +130,8 @@ def register_user(db: Session, request: CreateUserRequest):
 
 
 def verify_user(db: Session, token: str, user_id: UUID):
-    user = crud.user.get_object_by_id_or_404(db, id=user_id)
-    if user.confirmation_token == token:
-        try:
-            user.confirmation_token = None
-            user.active = True
-            db.commit()
-            return {"message": "User successfully confirmed"}
-        except Exception as e:
-            db.rollback()
-            print("error", e)
-            raise HTTPException(500, "Internal server error")
-    raise HTTPException(404, "User not found")
+    # TODO: implement another way to verify user
+    crud.user.get_object_by_id_or_404(db, id=user_id)
 
 
 def onboard_user(db: Session, request: OnboardUser, user_id: UUID):
@@ -160,7 +139,6 @@ def onboard_user(db: Session, request: OnboardUser, user_id: UUID):
 
     try:
         user.active = True
-        user.onboarded = True
         user.name = request.name
         user.last_name = request.last_name
         user.company = request.company
@@ -256,9 +234,6 @@ def get_user_workspaces(db: Session, user_id: UUID):
                 "id": workspace.id,
                 "name": workspace.name,
                 "oldest_user": workspace_oldest_user,
-                "worker_url": workspace.worker_url,
-                "in_trial": workspace.in_trial,
-                "trial_end_date": workspace.trial_end_date,
                 "role_name": workspace.role_name,
             }
         )
@@ -268,13 +243,6 @@ def get_user_workspaces(db: Session, user_id: UUID):
 
 def resend_confirmation_email(db: Session, user_email: str):
     pass
-    # user = crud.user.get_user_by_email(db, email=user_email)
-    # confirmation_link = f"{CLIENT_URL}/email-confirmation/{user.confirmation_token}/{user.id}"
-
-    # send_email(
-    #     email_name="verifyEmail",
-    #     email_params={"email": user.email, "url": confirmation_link},
-    # )
 
 
 def _add_query_params(url, params):
@@ -375,8 +343,3 @@ def check_permissions(db: Session, user: User, request: CheckPermissionRequest, 
 
     permissions_dict = get_all_action_permissions(db, str(user.id), workspace_id, app_id)
     return permissions_dict
-
-
-def get_confirmation_token_hash(payload: str):
-    hash_object = hashlib.sha256(payload.encode("utf-8"))
-    return hash_object.hexdigest()

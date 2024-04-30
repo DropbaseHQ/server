@@ -9,7 +9,6 @@ class BaseUser(BaseModel):
     name: str
     email: str
     hashed_password: str
-    trial_eligible: bool
     active: bool
 
     class Config:
@@ -23,9 +22,6 @@ class CreateUser(BaseModel):
     email: str
     hashed_password: Optional[str]
     active: bool = False
-    trial_eligible: bool = True
-    confirmation_token: Optional[str]
-    social_login: Optional[str]
 
 
 class ReadUser(BaseModel):

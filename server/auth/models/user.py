@@ -14,10 +14,6 @@ class User(Base):
     email = Column(String, nullable=False, unique=True)
     hashed_password = Column(String)
     active = Column(Boolean, default=False)
-    trial_eligible = Column(Boolean, default=True)
-    confirmation_token = Column(String)
-    social_login = Column(String)
-    onboarded = Column(Boolean, default=False)
 
     date = Column(TIMESTAMP, server_default=func.now())
 

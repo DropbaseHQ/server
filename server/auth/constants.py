@@ -11,3 +11,4 @@ REFRESH_TOKEN_EXPIRE_SECONDS = 60 * 60 * 24 * 7  # 7 days
 
 # Ordered from most to least privileged
 ALLOWED_ACTIONS = ["own", "edit", "use"]
+WORKSPACE_ID = "00000000-0000-0000-0000-000000000000"

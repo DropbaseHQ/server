@@ -12,7 +12,7 @@ repos:
         args:
           - "--profile=black"
           - "--line-length=105"
-        exclude: ^lsp/
+        exclude: ^(lsp|alembic)/
         language_version: python3.11
 
   # black
@@ -23,7 +23,7 @@ repos:
         args: # arguments to configure black
           - "--line-length=105"
           # - --include='\.pyi?$']
-        exclude: (^lsp/)
+        exclude: ^(lsp|alembic)/
         language_version: python3.11
 
   # flake8
@@ -31,7 +31,7 @@ repos:
     rev: 6.1.0
     hooks:
       - id: flake8
-        exclude: (^lsp/)
+        exclude: ^(lsp|alembic)/
         args: # arguments to configure flake8
           # making isort line length compatible with black
           - "--max-line-length=105"
