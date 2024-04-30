@@ -23,7 +23,7 @@ class CRUDUserRole(CRUDBase[UserRole, CreateRole, UpdateRole]):
             .join(Role, UserRole.role_id == Role.id)
             .filter(UserRole.user_id == user_id)
             .filter(UserRole.workspace_id == workspace_id)
-            .with_entities(UserRole.id, UserRole.role_id, Role.name)
+            .with_entities(UserRole.id, UserRole.role_id, Role.id)
             .one_or_none()
         )
 

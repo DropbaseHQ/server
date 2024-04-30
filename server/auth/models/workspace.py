@@ -1,4 +1,4 @@
-from sqlalchemy import TIMESTAMP, Boolean, Column, DateTime, String
+from sqlalchemy import TIMESTAMP, Boolean, Column, String
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.sql import func, text
 
@@ -12,8 +12,5 @@ class Workspace(Base):
     active = Column(Boolean, default=True)
 
     date = Column(TIMESTAMP, server_default=func.now())
-    worker_url = Column(String)
-    in_trial = Column(Boolean, default=False)
-    trial_end_date = Column(DateTime, server_default=text("(NOW() + INTERVAL '14 days')"))
 
     __tablename__ = "workspace"

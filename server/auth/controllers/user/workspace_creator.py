@@ -38,13 +38,13 @@ class WorkspaceCreator:
         return default_admin_role
 
     def _create_default_user_policies(self, admin_role_id: str):
-        admin_role = crud.role.get(self.db, id=admin_role_id)
+        # admin_role = crud.role.get(self.db, id=admin_role_id)
         return crud.policy.create(
             self.db,
             obj_in=Policy(
                 ptype="g",
                 v0=self.user_id,
-                v1=admin_role.name,
+                v1=admin_role_id,
                 workspace_id=self.workspace_id,
             ),
             auto_commit=False,
