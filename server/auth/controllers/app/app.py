@@ -9,12 +9,10 @@ def filter_apps(db: Session, apps, workspace_id, user_id):
     enforcer = get_contexted_enforcer(db, workspace_id)
     for app in apps:
         can_use = high_level_enforce(
-            db=db,
             enforcer=enforcer,
             user_id=user_id,
             resource=str(app.get("id")),
             action="use",
-            workspace=workspace,
         )
         if can_use:
             filtered_apps.append(app)
