@@ -48,12 +48,6 @@ def check_if_object_exists(path: str):
     return Path(path).exists()
 
 
-def process_query_result(res) -> pd.DataFrame:
-    df = pd.DataFrame(res)
-    df = clean_df(df)
-    return df
-
-
 def read_page_properties(app_name: str, page_name: str):
     path = f"workspace/{app_name}/{page_name}/properties.json"
     with open(path, "r") as f:
@@ -79,14 +73,6 @@ def compose_properties_schema(properties: dict):
         fields[key] = (block_type_mapping[block_type], ...)
 
     return create_model("Properties", **fields)
-
-
-def get_page_properties_schema(app_name: str, page_name: str):
-    # load page schema
-    module_path = f"workspace.{app_name}.{page_name}.schema"
-    page_module = importlib.import_module(module_path)
-    importlib.reload(page_module)
-    return getattr(page_module, "Properties")
 
 
 def get_page_properties(app_name: str, page_name: str):

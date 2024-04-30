@@ -1,4 +1,4 @@
-import random
+import hashlib
 import secrets
 from datetime import datetime, timedelta
 from urllib.parse import parse_qs, urlencode, urlparse, urlunparse
@@ -11,19 +11,12 @@ from sqlalchemy.orm import Session
 from ... import crud
 from ...authentication import get_password_hash, verify_password
 from ...constants import ACCESS_TOKEN_EXPIRE_SECONDS, CLIENT_URL, REFRESH_TOKEN_EXPIRE_SECONDS
-from ...controllers import workspace as workspace_controller
 from ...controllers.policy import PolicyUpdater, format_permissions_for_highest_action
-from ...models import Policy, User, Workspace
-from ...permissions.casbin_utils import (
-    get_all_action_permissions,
-    get_contexted_enforcer,
-    high_level_enforce,
-)
+from ...models import Policy, User
+from ...permissions.casbin_utils import get_all_action_permissions, get_contexted_enforcer
 from ...schemas.user import (
     AddPolicyRequest,
-    CheckAppsPermissionsRequest,
     CheckPermissionRequest,
-    CreateTestUserRequest,
     CreateUser,
     CreateUserRequest,
     LoginUser,
@@ -33,7 +26,6 @@ from ...schemas.user import (
     UpdateUserPolicyRequest,
 )
 from ...schemas.workspace import ReadWorkspace
-from ...utils.hash import get_confirmation_token_hash
 
 
 def get_user(db: Session, user_email: str):
@@ -385,111 +377,6 @@ def check_permissions(db: Session, user: User, request: CheckPermissionRequest, 
     return permissions_dict
 
 
-def check_apps_permissions(
-    db: Session, user: User, request: CheckAppsPermissionsRequest, workspace: Workspace
-):
-    # Checks that a user has permissions to see and use and app
-    app_ids = request.app_ids
-    permissions = {}
-    enforcer = get_contexted_enforcer(db, workspace_id=workspace.id)
-
-    for app_id in app_ids:
-
-        permissions[app_id] = high_level_enforce(
-            db=db,
-            enforcer=enforcer,
-            user_id=user.id,
-            resource=app_id,
-            action="use",
-            workspace=workspace,
-        )
-    return permissions
-
-
-def create_test_user(db: Session, request: CreateTestUserRequest):
-    try:
-        hashed_password = get_password_hash(request.password)
-        user_obj = CreateUser(
-            name=request.name,
-            last_name=request.last_name,
-            company=request.company,
-            email=request.email,
-            hashed_password=hashed_password,
-            trial_eligible=True,
-            active=True,
-            onboarded=False,
-        )
-        user = crud.user.create(db, obj_in=user_obj, auto_commit=False)
-        db.flush()
-
-        # Invite user to workspace as Member
-
-        workspace_controller.add_user_to_workspace(
-            db=db,
-            workspace_id=request.workspace_id,
-            user_email=request.email,
-            role_id="00000000-0000-0000-0000-000000000004",
-        )
-
-        response = {
-            "user_id": user.id,
-            "email": user.email,
-            "password": request.password,
-            "permission": "edit",
-        }
-
-        return response
-    except Exception as e:
-        print("e", e)
-        db.rollback()
-        raise HTTPException(status_code=500, detail="Internal server error")
-
-
-def generate_name():
-    first_names = [
-        "Alice",
-        "Bob",
-        "Charlie",
-        "David",
-        "Emma",
-        "Frank",
-        "Grace",
-        "Henry",
-        "Ivy",
-        "Jack",
-    ]
-    last_names = [
-        "Smith",
-        "Johnson",
-        "Williams",
-        "Jones",
-        "Brown",
-        "Davis",
-        "Miller",
-        "Wilson",
-        "Moore",
-        "Taylor",
-    ]
-    return f"{random.choice(first_names)} {random.choice(last_names)}"
-
-
-def generate_random_country():
-    # List of 10 well  known countries
-    countries = [
-        "United States",
-        "China",
-        "Japan",
-        "Germany",
-        "United Kingdom",
-        "India",
-        "France",
-        "Italy",
-        "Brazil",
-        "Canada",
-    ]
-    return random.choice(countries)
-
-
-def generate_membership_level():
-    membership_levels = ["Free", "Basic", "Pro", "Enterprise"]
-    return random.choice(membership_levels)
+def get_confirmation_token_hash(payload: str):
+    hash_object = hashlib.sha256(payload.encode("utf-8"))
+    return hash_object.hexdigest()

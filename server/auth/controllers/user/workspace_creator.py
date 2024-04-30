@@ -21,9 +21,7 @@ class WorkspaceCreator:
             name=workspace_name,
             active=True,
         )
-        workspace = crud.workspace.create(
-            db=self.db, obj_in=workspace_obj, auto_commit=False
-        )
+        workspace = crud.workspace.create(db=self.db, obj_in=workspace_obj, auto_commit=False)
         self.db.flush()
         self.workspace_id = workspace.id
         return workspace
@@ -34,9 +32,7 @@ class WorkspaceCreator:
             workspace_id=self.workspace_id,
             role_id=self.admin_role_id,
         )
-        default_admin_role = crud.user_role.create(
-            self.db, obj_in=role_obj, auto_commit=False
-        )
+        default_admin_role = crud.user_role.create(self.db, obj_in=role_obj, auto_commit=False)
         self.db.flush()
 
         return default_admin_role

@@ -1,7 +1,6 @@
 from abc import ABC
 
 
-# TODO: modular classes
 class WidgetABC(ABC):
     def __init__(self, **kwargs):
         # todo: maybe change to pydantic model

@@ -1,4 +1,0 @@
-from .mysql_gpt_template import get_mysql_gpt_input
-from .postgres_gpt_template import get_postgres_gpt_input
-from .snowflake_gpt_template import get_snowflake_gpt_input
-from .sqlite_gpt_template import get_sqlite_gpt_input

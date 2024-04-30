@@ -1,17 +1,20 @@
 import json
-from typing import Any, Dict, Union
-from fastapi import HTTPException
 import logging
+from typing import Any, Dict, Optional, Union
 
 import openai
-from typing import Optional
+from fastapi import HTTPException
 from pydantic import BaseModel
 
 from server.constants import GPT_MODEL, GPT_TEMPERATURE
-from .pg_column import SqlSmartColumnProperty
-from server.credentials import OPENAI_API_KEY, OPENAI_ORG_ID
+from server.settings import config
 
-from .gpt_controls import get_gpt_input
+from . import gpt_templates as templates
+from .pg_column import SqlSmartColumnProperty
+
+OPENAI_API_KEY = config.get("open_api_key")
+OPENAI_ORG_ID = config.get("open_api_org_id")
+
 
 openai.organization = OPENAI_ORG_ID
 openai.api_key = OPENAI_API_KEY
@@ -59,14 +62,10 @@ def fill_smart_cols_data(
         return {"columns": smart_cols_data}
     except Exception as e:
         logger.info(str(e))
-        raise HTTPException(
-            status_code=500, detail="API call failed. Please try again."
-        )
+        raise HTTPException(status_code=500, detail="API call failed. Please try again.")
 
 
-def call_gpt(
-    user_sql: str, column_names: list, db_schema: dict, db_type: str
-) -> OutputSchema:
+def call_gpt(user_sql: str, column_names: list, db_schema: dict, db_type: str) -> OutputSchema:
     try:
         gpt_input = get_gpt_input(db_schema, user_sql, column_names, db_type)
         gpt_output = str(
@@ -77,9 +76,9 @@ def call_gpt(
             )
         )
 
-        output_dict = json.loads(gpt_output).get(
-            "choices", [{"message": {"content": "{}"}}]
-        )[0]["message"]["content"]
+        output_dict = json.loads(gpt_output).get("choices", [{"message": {"content": "{}"}}])[0][
+            "message"
+        ]["content"]
 
         output = json.loads(output_dict)
         # validate output
@@ -87,6 +86,18 @@ def call_gpt(
         return output
     except Exception as e:
         logger.info(str(e))
-        raise HTTPException(
-            status_code=500, detail="API call failed. Please try again."
-        )
+        raise HTTPException(status_code=500, detail="API call failed. Please try again.")
+
+
+def get_gpt_input(db_schema: dict, user_sql: str, column_names: list, db_type: str) -> str:
+    match db_type:
+        case "postgres":
+            return templates.get_postgres_gpt_input(db_schema, user_sql, column_names)
+        case "mysql":
+            return templates.get_mysql_gpt_input(db_schema, user_sql, column_names)
+        case "snowflake":
+            return templates.get_snowflake_gpt_input(db_schema, user_sql, column_names)
+        case "sqlite":
+            return templates.get_sqlite_gpt_input(db_schema, user_sql, column_names)
+        case _:
+            return templates.get_postgres_gpt_input(db_schema, user_sql, column_names)

@@ -35,6 +35,9 @@ def delete_app_req(app_name: str):
     return {"message": "App deleted successfully"}
 
 
-@router.get("/list/", dependencies=get_permission_dependency_array("use", "workspace"))
+@router.get(
+    "/list/"
+    # , dependencies=get_permission_dependency_array("use", "workspace")
+)
 def get_user_apps():
     return get_workspace_apps().get("apps")

@@ -4,7 +4,7 @@ from pydantic import BaseModel
 from pydantic.main import ModelMetaclass
 
 from dropbase.models.category import PropertyCategory
-from dropbase.models.common import ComponentDisplayProperties, OnEvent
+from dropbase.models.common import ComponentDisplayProperties
 
 
 class ButtonDefinedProperty(BaseModel):
@@ -26,9 +26,6 @@ class ButtonDefinedProperty(BaseModel):
         ],
         PropertyCategory.default,
     ]
-
-    # events
-    on_click: Annotated[Optional[OnEvent], PropertyCategory.events]
 
     # display rules
     display_rules: Annotated[Optional[List[dict]], PropertyCategory.display_rules]

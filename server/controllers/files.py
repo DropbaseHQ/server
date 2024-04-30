@@ -269,6 +269,7 @@ class FileController:
         return list(set(matches))
 
 
+# TODO: remove, legacy
 def compose_boilerplate_code(req: CreateFile):
     if req.type == "sql":
         return ""

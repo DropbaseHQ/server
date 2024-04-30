@@ -4,7 +4,7 @@ from pydantic import BaseModel
 from pydantic.main import ModelMetaclass
 
 from dropbase.models.category import PropertyCategory
-from dropbase.models.common import ComponentDisplayProperties, OnEvent
+from dropbase.models.common import ComponentDisplayProperties
 
 
 class SelectContextProperty(ComponentDisplayProperties):
@@ -25,9 +25,6 @@ class SelectDefinedProperty(BaseModel):
 
     default: Annotated[Optional[Any], PropertyCategory.other]
     multiple: Annotated[Optional[bool], PropertyCategory.other] = False
-
-    # events
-    on_change: Annotated[Optional[OnEvent], PropertyCategory.events]
 
     # display_rules
     display_rules: Annotated[Optional[List[dict]], PropertyCategory.display_rules]

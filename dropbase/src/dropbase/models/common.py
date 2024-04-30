@@ -44,20 +44,11 @@ class CurrencyType(BaseModel):
         Literal[ConfigTypeEnum.CURRENCY], PropertyCategory.internal
     ] = ConfigTypeEnum.CURRENCY
     symbol: Optional[str]
-    # precision: Optional[int]
-
-
-class WeightType(BaseModel):
-    config_type: Annotated[
-        Literal[ConfigTypeEnum.WEIGHT], PropertyCategory.internal
-    ] = ConfigTypeEnum.WEIGHT
-    unit: Optional[str]
 
 
 class IntegerTypes(BaseModel):
     integer: Optional[IntType]
     currency: Optional[CurrencyType]
-    # weight: Optional[WeightType]x
 
     @root_validator
     def check_at_least_one(cls, values):
@@ -70,7 +61,6 @@ class IntegerTypes(BaseModel):
 class FloatTypes(BaseModel):
     float: Optional[FloatType]
     currency: Optional[CurrencyType]
-    # weight: Optional[WeightType]x
 
     @root_validator
     def check_at_least_one(cls, values):
@@ -159,12 +149,6 @@ class BaseColumnDefinedProperty(BaseModel):
         Optional[Union[IntegerTypes, FloatTypes, TextTypes, ArrayTypes]],
         PropertyCategory.default,
     ]
-
-
-class OnEvent(BaseModel):
-    type: Literal["widget", "table", "function"] = "function"
-    value: str
-    file: Optional[str]
 
 
 class BaseContext(BaseModel):

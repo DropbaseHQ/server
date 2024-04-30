@@ -17,22 +17,6 @@ from dropbase.models.widget import (
 )
 
 
-class Filter(BaseModel):
-    column_name: str
-    condition: Literal["=", ">", "<", ">=", "<=", "like", "in"]
-    value: Any
-
-
-class Sort(BaseModel):
-    column_name: str
-    value: Literal["asc", "desc"]
-
-
-class PinnedFilter(BaseModel):
-    column_name: str
-    condition: Literal["=", ">", "<", ">=", "<=", "like", "in"]
-
-
 class TableColumn(BaseModel):
     name: str
     column_type: str

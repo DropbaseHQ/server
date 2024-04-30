@@ -6,30 +6,20 @@ from fastapi import Depends, HTTPException, Request, status
 from sqlalchemy.orm import Session
 
 from .. import crud
-from ..models import User
 from ..authentication import get_current_user
 from ..connect import get_db
-from ..permissions.casbin_utils import enforce_action
 from ..controllers import user as user_controller
+from ..models import User
+from ..permissions.casbin_utils import enforce_action
 
 logger = logging.getLogger(__name__)
 
 
 class RESOURCES:
-    WIDGET = "widget"
     APP = "app"
-    COLUMNS = "columns"
-    COMPONENTS = "components"
-    FILES = "files"
-    PAGE = "page"
     ROLE = "role"
-    SOURCE = "source"
     USER = "user"
     WORKSPACE = "workspace"
-    TABLE = "table"  # FIXME: columns endpoints take "table_id" instead of "tables_id"
-    TABLES = "tables"
-    TASK = "task"
-    TOKEN = "token"
 
 
 class ACTIONS:
@@ -68,15 +58,11 @@ class AuthZDepFactory:
         self.default_resource_type = default_resource_type
 
     @staticmethod
-    def _get_resource_id_from_path_params(
-        resource_id_accessor: str, request: Request
-    ) -> Optional[str]:
+    def _get_resource_id_from_path_params(resource_id_accessor: str, request: Request) -> Optional[str]:
         return request.path_params.get(resource_id_accessor, None)
 
     @staticmethod
-    def _get_resource_id_from_req_body(
-        resource_id_accessor: str, request: Request
-    ) -> Optional[str]:
+    def _get_resource_id_from_req_body(resource_id_accessor: str, request: Request) -> Optional[str]:
         if request.headers.get("content-type") == "application/json":
             body = asyncio.run(request.json())
             return body.get(resource_id_accessor)
@@ -88,18 +74,12 @@ class AuthZDepFactory:
         body = asyncio.run(request.json())
         return body.get("workspace_id")
 
-    def _get_resource_id(
-        self, resource_id_accessor: str, request: Request
-    ) -> Optional[str]:
+    def _get_resource_id(self, resource_id_accessor: str, request: Request) -> Optional[str]:
         resource_id = None
 
-        resource_id = self._get_resource_id_from_path_params(
-            resource_id_accessor, request
-        )
+        resource_id = self._get_resource_id_from_path_params(resource_id_accessor, request)
         if resource_id is None:
-            resource_id = self._get_resource_id_from_req_body(
-                resource_id_accessor, request
-            )
+            resource_id = self._get_resource_id_from_req_body(resource_id_accessor, request)
 
         if resource_id is None:
             # logger.warning(
@@ -113,9 +93,7 @@ class AuthZDepFactory:
         workspace_id = self._get_workspace_id_from_req_body(request)
 
         if workspace_id is None and resource_id is None:
-            logger.warning(
-                f"Workspace ID not found in request {request}. Resource ID not found either."
-            )
+            logger.warning(f"Workspace ID not found in request {request}. Resource ID not found either.")
             return False
 
     @staticmethod
@@ -149,15 +127,11 @@ class AuthZDepFactory:
             if request.headers.get("workspace-id"):
                 resource_workspace_id = request.headers.get("workspace-id")
             if resource_workspace_id is None:
-                resource_workspace_id = self._get_resource_id_from_req_body(
-                    "workspace_id", request
-                )
+                resource_workspace_id = self._get_resource_id_from_req_body("workspace_id", request)
             if resource_workspace_id is None:
                 return None, None, None, None
         else:
-            resource_workspace_id = self._get_resource_workspace_id(
-                db, resource_id, resource_type
-            )
+            resource_workspace_id = self._get_resource_workspace_id(db, resource_id, resource_type)
 
         if resource_workspace_id is None:
             raise HTTPException(
@@ -221,8 +195,8 @@ class AuthZDepFactory:
             db: Session = Depends(get_db),
             user: User = Depends(get_current_user),
         ):
-            workspace_id, resource_type_inner, action_inner, resource_id = (
-                self._get_enforcement_params(db, request, user, resource_type, action)
+            workspace_id, resource_type_inner, action_inner, resource_id = self._get_enforcement_params(
+                db, request, user, resource_type, action
             )
             # TODO: Remove this hack. Get endpoints need workspace_id
             if workspace_id is None:

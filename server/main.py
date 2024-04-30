@@ -61,14 +61,11 @@ if auth_module_is_installed:
 
 
 # routes for resources
-app.include_router(routers.query_router)
 app.include_router(routers.function_router)
 app.include_router(routers.files_router)
 app.include_router(routers.sources_router)
-app.include_router(routers.tables_router)
 app.include_router(routers.component_router)
 app.include_router(routers.app_router)
-app.include_router(routers.edit_cell_router)
 app.include_router(routers.page_router)
 app.include_router(routers.websocket_router)
 app.include_router(routers.workspace_router)
