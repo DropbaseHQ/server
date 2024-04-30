@@ -202,8 +202,9 @@ class PageController:
     def get_page(self, initial=False):
         self.reload_properties()
         response = get_page_state_context(self.app_name, self.page_name, initial)
-        # set first widget visibility to true
-        set_widget_visibility(response)
+        if initial:
+            # set first widget visibility to true
+            set_widget_visibility(response)
         # get methods
         response["properties"] = self.properties
         response["methods"] = self.get_main_class_methods()

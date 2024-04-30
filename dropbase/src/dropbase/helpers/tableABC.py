@@ -25,10 +25,10 @@ class TableABC(ABC):
     def update(self, edits: List[CellEdit]):
         pass
 
-    def create_row(self, row: dict):
+    def add(self, row: dict):
         pass
 
-    def delete_row(self, row: dict):
+    def delete(self, row: dict):
         pass
 
     def on_row_change(self):
