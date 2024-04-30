@@ -55,6 +55,7 @@ def get_contexted_enforcer(db, workspace_id):
     formatted_groups = [str(g_policy).split(", ")[1:] for g_policy in grouping_policies]
     enforcer.add_grouping_policies(formatted_groups)
 
+    # @JON why do we need these?
     _ = enforcer.get_policy()
     grouping_policies = enforcer.get_grouping_policy()
 

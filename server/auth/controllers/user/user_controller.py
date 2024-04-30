@@ -1,3 +1,4 @@
+import hashlib
 import secrets
 from datetime import datetime, timedelta
 from urllib.parse import parse_qs, urlencode, urlparse, urlunparse
@@ -25,7 +26,6 @@ from ...schemas.user import (
     UpdateUserPolicyRequest,
 )
 from ...schemas.workspace import ReadWorkspace
-from ...utils.hash import get_confirmation_token_hash
 
 
 def get_user(db: Session, user_email: str):
@@ -375,3 +375,8 @@ def check_permissions(db: Session, user: User, request: CheckPermissionRequest, 
 
     permissions_dict = get_all_action_permissions(db, str(user.id), workspace_id, app_id)
     return permissions_dict
+
+
+def get_confirmation_token_hash(payload: str):
+    hash_object = hashlib.sha256(payload.encode("utf-8"))
+    return hash_object.hexdigest()

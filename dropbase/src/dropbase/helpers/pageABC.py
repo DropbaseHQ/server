@@ -17,7 +17,8 @@ class PageABC(ABC):
         importlib.reload(state_context_module)
         # init state
         # State = getattr(state_context_module, "State")
-        # state = State(**state) TODO: Figure out why this is invalid for edit cells (temporarily commented out)
+        # state = State(**state)
+        # TODO: Figure out why this is invalid for edit cells (temporarily commented out)
         # init context
         Context = getattr(state_context_module, "Context")
         context = _dict_from_pydantic_model(Context)

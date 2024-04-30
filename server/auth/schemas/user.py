@@ -93,16 +93,3 @@ class OnboardUser(BaseModel):
 
 class CheckPermissionRequest(BaseModel):
     app_id: Optional[str]
-
-
-class PageObject(BaseModel):
-    name: str
-    id: Optional[str]
-    label: Optional[str]
-
-
-class SyncAppRequest(BaseModel):
-    app_name: Optional[str] = None
-    app_label: Optional[str] = None
-    generate_new: bool = True
-    pages: Optional[list[PageObject]] = None

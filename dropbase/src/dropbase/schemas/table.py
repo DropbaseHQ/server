@@ -1,8 +1,6 @@
-from typing import Any, Dict, List, Literal, Optional, Union
+from typing import Any, Literal
 
-from pydantic import BaseModel, Field
-
-from dropbase.constants import FILE_NAME_REGEX
+from pydantic import BaseModel
 
 
 class TableFilter(BaseModel):
@@ -20,22 +18,3 @@ class TableSort(BaseModel):
 class TablePagination(BaseModel):
     page: int
     page_size: int
-
-
-class FilterSort(BaseModel):
-    filters: List[Optional[TableFilter]]
-    sorts: List[Optional[TableSort]]
-    pagination: Optional[TablePagination]
-
-
-class TableBase(BaseModel):
-    name: str
-    type: Optional[str]
-    fetcher: Optional[Union[str, Dict]]
-
-
-class ConvertTableRequest(BaseModel):
-    app_name: str = Field(regex=FILE_NAME_REGEX)
-    page_name: str = Field(regex=FILE_NAME_REGEX)
-    table: TableBase
-    state: dict
