@@ -12,8 +12,8 @@ from server.settings import config
 from . import gpt_templates as templates
 from .pg_column import SqlSmartColumnProperty
 
-OPENAI_API_KEY = config.get("open_api_key")
-OPENAI_ORG_ID = config.get("open_api_org_id")
+OPENAI_API_KEY = config.get("openai_api_key")
+OPENAI_ORG_ID = config.get("openai_org_key")
 
 
 openai.organization = OPENAI_ORG_ID
