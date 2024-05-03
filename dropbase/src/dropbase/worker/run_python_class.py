@@ -39,6 +39,12 @@ def run(r, response):
             for i in range(len(edits)):
                 edits[i] = EditInfo(**edits[i])
             new_context = script.__getattribute__(resource).update(edits)
+        elif action == "delete":
+            row = state.get(resource).get("columns")
+            script.__getattribute__(resource).delete(row)
+        elif action == "add":
+            row = json.loads(os.getenv("row"))
+            script.__getattribute__(resource).add(row)
         else:
             # action - on_select, on_click, on_input, on_tobble
             new_context = script.__getattribute__(resource).__getattribute__(
