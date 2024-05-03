@@ -35,11 +35,10 @@ def run(r, response):
         if action == "get_data":
             new_context = script.__getattribute__(resource).get_table_data()
         elif action == "update":
-            row_edits = json.loads(os.getenv("row_edits"))
-            for i in range(len(row_edits)):
-                row_edits[i] = EditInfo(**row_edits[i])
-
-            new_context = script.__getattribute__(resource).update(row_edits)
+            edits = json.loads(os.getenv("edits"))
+            for i in range(len(edits)):
+                edits[i] = EditInfo(**edits[i])
+            new_context = script.__getattribute__(resource).update(edits)
         else:
             # action - on_select, on_click, on_input, on_tobble
             new_context = script.__getattribute__(resource).__getattribute__(

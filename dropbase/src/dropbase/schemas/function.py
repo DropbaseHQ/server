@@ -11,4 +11,4 @@ class RunClass(BaseModel):
     section: Optional[str]
     component: Optional[str]
     state: dict
-    row_edits: Optional[List[dict]]
+    edits: Optional[List[dict]]

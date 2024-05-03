@@ -9,4 +9,4 @@ class EditInfo(BaseModel):
 
 
 class CellEdit(BaseModel):
-    row_edits: List[EditInfo]
+    edits: List[EditInfo]
