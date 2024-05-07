@@ -36,8 +36,8 @@ def run(r, response):
             new_context = script.__getattribute__(resource).get_table_data()
         elif action == "update":
             edits = json.loads(os.getenv("edits"))
-            for i in range(len(edits)):
-                edits[i] = EditInfo(**edits[i])
+            for edit in edits:
+                edit = EditInfo(**edit)
             new_context = script.__getattribute__(resource).update(edits)
         elif action == "delete":
             row = state.get(resource).get("columns")
