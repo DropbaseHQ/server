@@ -20,6 +20,7 @@ router = APIRouter(
 # run function
 @router.post("/class")
 async def run_class_req(req: RunClass, response: Response):
+    # TODO: move this to controllers
     try:
         job_id = uuid.uuid4().hex
         env_vars = {
@@ -33,8 +34,6 @@ async def run_class_req(req: RunClass, response: Response):
             "state": json.dumps(req.state),
             "job_id": job_id,
         }
-
-        print("job ID: ", job_id)
 
         # start a job
         run_container(env_vars)

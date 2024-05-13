@@ -5,6 +5,7 @@ import traceback
 
 from dotenv import load_dotenv
 
+from dropbase.helpers.utils import _dict_from_pydantic_model
 from dropbase.schemas.edit_cell import EditInfo
 
 load_dotenv()
@@ -21,6 +22,15 @@ def run(r, response):
         section = os.getenv("section")
         component = os.getenv("component")
 
+        page_path = f"workspace.{app_name}.{page_name}"
+        state_context_module = importlib.import_module(page_path)
+        Context = getattr(state_context_module, "Context")
+        context = _dict_from_pydantic_model(Context)
+        context = Context(**context)
+
+        State = getattr(state_context_module, "State")
+        state = State(**state)
+
         # run python script and get result
         # sample path: from workspace.class_9.page1.schema import Script
         script_path = f"workspace.{app_name}.{page_name}.schema"
@@ -33,7 +43,7 @@ def run(r, response):
         # run function
         # TODO: make actions more generalizable
         if action == "get_data":
-            new_context = script.__getattribute__(resource).get_table_data()
+            new_context = script.__getattribute__(resource).get(state, context)
         elif action == "update":
             edits = json.loads(os.getenv("edits"))
             for edit in edits:
@@ -49,7 +59,7 @@ def run(r, response):
             # action - on_select, on_click, on_input, on_tobble
             new_context = script.__getattribute__(resource).__getattribute__(
                 f"{section}_{component}_{action}"
-            )()
+            )(state, context)
 
         response["type"] = "context"
         response["context"] = new_context.dict()
