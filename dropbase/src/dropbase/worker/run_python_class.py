@@ -13,51 +13,53 @@ load_dotenv()
 
 def run(r, response):
     try:
-        # get evn variables
+        # read state and context
         app_name = os.getenv("app_name")
         page_name = os.getenv("page_name")
+
+        # get page module
+        page_path = f"workspace.{app_name}.{page_name}"
+        state_context_module = importlib.import_module(page_path)
+
+        # initialize context
+        Context = getattr(state_context_module, "Context")
+        context = _dict_from_pydantic_model(Context)
+        context = Context(**context)
+
+        # initialize state
         state = json.loads(os.getenv("state"))
+        State = getattr(state_context_module, "State")
+        state = State(**state)
+
+        # initialize page script
+        script_path = f"workspace.{app_name}.{page_name}.script"
+        page_module = importlib.import_module(script_path)
+        importlib.reload(page_module)
+        Script = getattr(page_module, "Script")
+        script = Script(app_name, page_name)
+
+        # get function specific variables
         action = os.getenv("action")
         resource = os.getenv("resource")
         section = os.getenv("section")
         component = os.getenv("component")
 
-        page_path = f"workspace.{app_name}.{page_name}"
-        state_context_module = importlib.import_module(page_path)
-        Context = getattr(state_context_module, "Context")
-        context = _dict_from_pydantic_model(Context)
-        context = Context(**context)
-
-        State = getattr(state_context_module, "State")
-        state = State(**state)
-
-        # run python script and get result
-        # sample path: from workspace.class_9.page1.schema import Script
-        script_path = f"workspace.{app_name}.{page_name}.page"
-        page_module = importlib.import_module(script_path)
-        importlib.reload(page_module)
-        Page = getattr(page_module, "Page")
-
-        page = Page(app_name, page_name, state)
-
-        # run function
-        # TODO: make actions more generalizable
         if action == "get_data":
-            new_context = page.__getattribute__(resource).get(state, context)
+            new_context = script.__getattribute__(resource).get(state, context)
         elif action == "update":
             edits = json.loads(os.getenv("edits"))
             for edit in edits:
                 edit = EditInfo(**edit)
-            new_context = page.__getattribute__(resource).update(edits)
+            new_context = script.__getattribute__(resource).update(edits)
         elif action == "delete":
             row = state.get(resource).get("columns")
-            new_context = page.__getattribute__(resource).delete(row)
+            new_context = script.__getattribute__(resource).delete(row)
         elif action == "add":
             row = json.loads(os.getenv("row"))
-            new_context = page.__getattribute__(resource).add(row)
+            new_context = script.__getattribute__(resource).add(row)
         else:
             # action - on_select, on_click, on_input, on_tobble
-            new_context = page.__getattribute__(resource).__getattribute__(
+            new_context = script.__getattribute__(resource).__getattribute__(
                 f"{section}_{component}_{action}"
             )(state, context)
 
