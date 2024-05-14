@@ -3,7 +3,7 @@ schema_boilerplate_init = """from dropbase.helpers.pageABC import PageABC
 from .scripts.main import *  # noqa, here we're importing all user defined classes
 
 
-class Script(PageABC):
+class Page(PageABC):
     def __init__(self, app_name, page_name, state):
         super().__init__(app_name, page_name, state)
         kwards = {
@@ -36,53 +36,45 @@ main_class_init = """import pandas as pd
 from dropbase.helpers.tableABC import TableABC
 from dropbase.helpers.widgetABC import WidgetABC
 from ..context import Context
+from ..state import State
 
 
 class Table1(TableABC):
 
-    def get_data(self) -> pd.DataFrame:
+    def get_data(self, state: State, context: Context) ->pd.DataFrame:
         # TODO: implement this method
         return pd.DataFrame()
 
+    def get(self, state: State, context: Context):
+        context.table1.data = self.get_data(state, context).to_dtable()
+        return context
 
 class Widget1(WidgetABC):
     pass
 """
-main_class = """
-import pandas as pd
-from ..base_class import ScriptBase
-from ..context import Context
 
-
-class Script(ScriptBase):{0}
-"""
 update_button_methods_main = """
 
-def {0}(self) -> Context:
+def {0}(self, state: State, context: Context) -> Context:
     # TODO: implement this method
-    return self.context
+    return context
 """
 
 
 table_class_boilerplate = """class {0}(TableABC):
-    def get_data(self) -> pd.DataFrame:
+    def get_data(self, state: State, context: Context) -> pd.DataFrame:
         # Add your code here
         return pd.DataFrame()
+
+    def get(self, state: State, context: Context):
+        context.{1}.data = self.get_data(state, context).to_dtable()
+        return context
 """
 
 widget_class_boilerplate = """class {0}(WidgetABC):
     pass
 """
 
-# properties boilerplate
-properties_boilerplate = """from dropbase.models import *
-from .schema import Properties
-
-table1 = TableDefinedProperty(label="Table 1", name="table1")
-widget1 = WidgetDefinedProperty(label="Widget 1", name="widget1")
-page = Properties(table1=table1, widget1=widget1)
-
-"""
 
 # workspace boilerplate
 app_init_boilerplate = """
@@ -132,6 +124,6 @@ app_properties_boilerplate = {
 }
 
 get_data_template = """
-def get_data(self) -> pd.DataFrame:
+def get_data(self, state: State, context: Context) -> pd.DataFrame:
     # Add your code here
     return pd.DataFrame()"""

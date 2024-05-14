@@ -33,31 +33,31 @@ def run(r, response):
 
         # run python script and get result
         # sample path: from workspace.class_9.page1.schema import Script
-        script_path = f"workspace.{app_name}.{page_name}.schema"
+        script_path = f"workspace.{app_name}.{page_name}.page"
         page_module = importlib.import_module(script_path)
         importlib.reload(page_module)
-        Script = getattr(page_module, "Script")
+        Page = getattr(page_module, "Page")
 
-        script = Script(app_name, page_name, state)
+        page = Page(app_name, page_name, state)
 
         # run function
         # TODO: make actions more generalizable
         if action == "get_data":
-            new_context = script.__getattribute__(resource).get(state, context)
+            new_context = page.__getattribute__(resource).get(state, context)
         elif action == "update":
             edits = json.loads(os.getenv("edits"))
             for edit in edits:
                 edit = EditInfo(**edit)
-            new_context = script.__getattribute__(resource).update(edits)
+            new_context = page.__getattribute__(resource).update(edits)
         elif action == "delete":
             row = state.get(resource).get("columns")
-            new_context = script.__getattribute__(resource).delete(row)
+            new_context = page.__getattribute__(resource).delete(row)
         elif action == "add":
             row = json.loads(os.getenv("row"))
-            new_context = script.__getattribute__(resource).add(row)
+            new_context = page.__getattribute__(resource).add(row)
         else:
             # action - on_select, on_click, on_input, on_tobble
-            new_context = script.__getattribute__(resource).__getattribute__(
+            new_context = page.__getattribute__(resource).__getattribute__(
                 f"{section}_{component}_{action}"
             )(state, context)
 

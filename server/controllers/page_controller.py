@@ -32,7 +32,7 @@ class PageController:
 
     def create_schema(self):
         # create page schema
-        with open(self.page_path + "/schema.py", "w") as f:
+        with open(self.page_path + "/page.py", "w") as f:
             f.write(schema_boilerplate_init)
 
     def create_page_properties(self):
@@ -176,7 +176,7 @@ class PageController:
         for key, values in self.properties:
             class_name = key.capitalize()
             if isinstance(values, TableDefinedProperty):
-                required_classes[class_name] = table_class_boilerplate.format(class_name)
+                required_classes[class_name] = table_class_boilerplate.format(class_name, key)
             if isinstance(values, WidgetDefinedProperty):
                 required_classes[class_name] = widget_class_boilerplate.format(class_name)
         return required_classes

@@ -15,31 +15,28 @@ class TableABC(ABC):
         self.name = kwargs.get("name")
         self.app_name = kwargs.get("app_name")
         self.page_name = kwargs.get("page_name")
-        self.state = kwargs.get("state")
-        self.context = kwargs.get("context")
 
     @abstractmethod
-    def get_data(self):
+    def get_data(self) -> pd.DataFrame:
         pass
 
-    def update(self, edits: List[CellEdit]):
+    @abstractmethod
+    def get(self, state, context):
         pass
 
-    def add(self, row: dict):
+    def update(self, state, context, edits: List[CellEdit]):
         pass
 
-    def delete(self, row: dict):
+    def add(self, state, context, row: dict):
         pass
 
-    def on_row_change(self):
+    def delete(self, state, context, row: dict):
         pass
 
-    # generic methods used by dropbase
-    def get_table_data(self):
-        self.context.__getattribute__(self.name).data = self.get_data().to_dtable()
-        return self.context
+    def on_row_change(self, state, context):
+        pass
 
-    def load_page(self):
+    def load_page(self, state, context):
         # todo: get tables from context
         tables = self.get_table_names()
         for table in tables:
