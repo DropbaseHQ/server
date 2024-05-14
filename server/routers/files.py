@@ -2,14 +2,8 @@ from fastapi import APIRouter
 
 from dropbase.schemas.files import CreateFile, DeleteFile, RenameFile, UpdateFile
 from server.controllers.files import FileController
-from server.utils import get_permission_dependency_array
 
-router = APIRouter(
-    prefix="/files",
-    tags=["files"],
-    responses={404: {"description": "Not found"}},
-    dependencies=get_permission_dependency_array(action="edit", resource="app"),
-)
+router = APIRouter(prefix="/files", tags=["files"], responses={404: {"description": "Not found"}})
 
 
 @router.post("/")

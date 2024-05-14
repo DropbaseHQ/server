@@ -18,7 +18,6 @@ class WorkspaceFolderController:
             with open(os.path.join(self.r_path_to_workspace, "properties.json"), "r") as file:
 
                 props = json.load(file)
-                # return props.get("apps", [])
                 return props
 
         return None

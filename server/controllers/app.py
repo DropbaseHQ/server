@@ -1,9 +1,10 @@
 import json
 import os
 import uuid
+
 from dropbase.helpers.boilerplate import app_properties_boilerplate
 from server.constants import cwd
-from server.controllers.workspace import WorkspaceFolderController, get_subdirectories
+from server.controllers.workspace import get_subdirectories
 
 
 class AppController:
@@ -65,9 +66,7 @@ def get_workspace_apps():
             apps = json.load(file)["apps"]
     else:
         app_names = get_subdirectories(folder_path)
-        apps = [
-            {"name": app_name, "label": app_name, "id": None} for app_name in app_names
-        ]
+        apps = [{"name": app_name, "label": app_name, "id": None} for app_name in app_names]
     response = []
     for app in apps:
         if not app.get("name"):
@@ -86,8 +85,4 @@ def get_workspace_apps():
                 "pages": pages,
             }
         )
-    workspace_folder_controller = WorkspaceFolderController(
-        r_path_to_workspace=os.path.join(cwd, "workspace")
-    )
-    workspace_props = workspace_folder_controller.get_workspace_properties()
-    return {"apps": response, "workspace_id": workspace_props.get("id")}
+    return {"apps": response}
