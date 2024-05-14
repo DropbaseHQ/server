@@ -1,5 +1,6 @@
 import json
 import os
+import shutil
 import uuid
 
 from dropbase.helpers.boilerplate import app_properties_boilerplate
@@ -33,7 +34,7 @@ class AppController:
             file.write(json.dumps(workspace_properties, indent=2))
 
     def delete_app(self):
-        os.rmdir(self.app_path)
+        shutil.rmtree(self.app_path)
 
     def create_app(self):
         # TODO: handle workspace properties

@@ -11,7 +11,6 @@ class Script(ScriptABC):
             class_name = key.capitalize()
             class_ = globals()[class_name]  # Get the actual class name from globals
             self.__dict__[key] = class_(**kwards, name=key)
-
 """
 # create
 schema_boilerplate = """from pydantic import BaseModel
