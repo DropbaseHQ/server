@@ -130,6 +130,9 @@ class PageController:
         with open(file_path, "w") as f:
             f.write(modified_code)
 
+        # format with black
+        os.system(f"black {file_path}")
+
     def add_inits(self):
         with open(f"workspace/{self.app_name}/__init__.py", "w") as f:
             f.write(app_init_boilerplate)
@@ -172,6 +175,13 @@ class PageController:
         self.remove_page_from_app_properties()
 
     def get_require_classes(self):
+        """
+        returns a dictionary with table and widget classes that are required along with
+        their boilerplate code
+        {
+            "Table1": "class Table1(TableABC):...",
+        }
+        """
         required_classes = {}
         for key, values in self.properties:
             class_name = key.capitalize()
@@ -187,9 +197,7 @@ class PageController:
             class_name = key.capitalize()
             if isinstance(values, TableDefinedProperty):
                 for column in values.columns:
-                    # loop through columns and check if they are buttons
-                    if isinstance(column, ButtonColumnDefinedProperty):
-                        add_button_method(column, "columns", class_name, required_methods)
+                    add_button_method(column, "columns", class_name, required_methods)
                 for component in values.header:
                     add_button_method(component, "header", class_name, required_methods)
                 for component in values.footer:
@@ -216,6 +224,7 @@ class PageController:
             module = ast.parse(f.read())
 
         class_methods = {}
+
         for node in module.body:
             if isinstance(node, ast.ClassDef):
                 for base in node.bases:
@@ -223,7 +232,7 @@ class PageController:
                     if base_name == "TableABC":
                         class_name = node.name.lower()
                         for n in node.body:
-                            if isinstance(n, ast.FunctionDef):
+                            if isinstance(n, ast.FunctionDef) and not is_simple_return_context(n):
                                 if class_name not in class_methods:
                                     class_methods[class_name] = {
                                         "columns": {},
@@ -234,13 +243,13 @@ class PageController:
                                 # parse component methods
                                 parse_component_methods(n.name, class_name, class_methods, "table")
                                 # parse table methods
-                                if n.name in ["get_data", "update", "delete", "add", "on_row_change"]:
+                                if n.name in ["get", "add", "update", "delete", "on_row_change"]:
                                     class_methods[class_name]["methods"].append(n.name)
 
                     if base_name == "WidgetABC":
                         class_name = node.name.lower()
                         for n in node.body:
-                            if isinstance(n, ast.FunctionDef):
+                            if isinstance(n, ast.FunctionDef) and not is_simple_return_context(n):
                                 if class_name not in class_methods:
                                     class_methods[class_name] = {"components": {}}
                                 # parse component methods
@@ -249,12 +258,43 @@ class PageController:
         return class_methods
 
 
+def is_simple_return_context(node):
+    """
+    Check if the function node consists only of a single return context statement.
+    """
+    if len(node.body) == 1:
+        stmt = node.body[0]
+        if (
+            isinstance(stmt, ast.Return)
+            and isinstance(stmt.value, ast.Name)
+            and stmt.value.id == "context"
+        ):
+            return True
+    return False
+
+
 def add_button_method(component, section, class_name, required_methods):
     # loop through components and check if they are buttons
-    if isinstance(component, ButtonDefinedProperty):
+    if isinstance(
+        component,
+        (
+            ButtonDefinedProperty,
+            ButtonColumnDefinedProperty,
+            InputDefinedProperty,
+            SelectDefinedProperty,
+            BooleanDefinedProperty,
+        ),
+    ):
         if class_name not in required_methods:
             required_methods[class_name] = {}
-        name = f"{section}_{component.name}_on_click"
+        if isinstance(component, (ButtonDefinedProperty, ButtonColumnDefinedProperty)):
+            name = f"{section}_{component.name}_on_click"
+        if isinstance(component, InputDefinedProperty):
+            name = f"{section}_{component.name}_on_submit"
+        if isinstance(component, SelectDefinedProperty):
+            name = f"{section}_{component.name}_on_select"
+        if isinstance(component, BooleanDefinedProperty):
+            name = f"{section}_{component.name}_on_toggle"
         required_methods[class_name][name] = update_button_methods_main.format(name)
 
 

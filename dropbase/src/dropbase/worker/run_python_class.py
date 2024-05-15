@@ -44,7 +44,7 @@ def run(r, response):
         section = os.getenv("section")
         component = os.getenv("component")
 
-        if action == "get_data":
+        if action == "get":
             new_context = script.__getattribute__(resource).get(state, context)
         elif action == "update":
             edits = json.loads(os.getenv("edits"))
