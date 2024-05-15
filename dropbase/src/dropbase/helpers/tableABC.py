@@ -17,28 +17,17 @@ class TableABC(ABC):
         self.page_name = kwargs.get("page_name")
 
     @abstractmethod
-    def get_data(self) -> pd.DataFrame:
-        pass
-
-    @abstractmethod
     def get(self, state, context):
-        pass
+        return context
 
     def update(self, state, context, edits: List[CellEdit]):
-        pass
+        return context
 
     def add(self, state, context, row: dict):
-        pass
+        return context
 
     def delete(self, state, context, row: dict):
-        pass
+        return context
 
     def on_row_change(self, state, context):
-        pass
-
-    def load_page(self, state, context):
-        # todo: get tables from context
-        tables = self.get_table_names()
-        for table in tables:
-            self.get_table_data(table)
-        return self.context
+        return context

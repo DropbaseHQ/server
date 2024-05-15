@@ -36,12 +36,10 @@ from ..state import State
 
 class Table1(TableABC):
 
-    def get_data(self, state: State, context: Context) ->pd.DataFrame:
-        # TODO: implement this method
-        return pd.DataFrame()
-
     def get(self, state: State, context: Context):
-        context.table1.data = self.get_data(state, context).to_dtable()
+        # Add your code here
+        table_data = pd.DataFrame()
+        context.table1.data = table_data.to_dtable()
         return context
 
 class Widget1(WidgetABC):
@@ -57,12 +55,11 @@ def {0}(self, state: State, context: Context) -> Context:
 
 
 table_class_boilerplate = """class {0}(TableABC):
-    def get_data(self, state: State, context: Context) -> pd.DataFrame:
-        # Add your code here
-        return pd.DataFrame()
 
     def get(self, state: State, context: Context):
-        context.{1}.data = self.get_data(state, context).to_dtable()
+        # Add your code here
+        table_data = pd.DataFrame()
+        context.{1}.data = table_data.to_dtable()
         return context
 """
 
