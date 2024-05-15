@@ -116,6 +116,6 @@ app_properties_boilerplate = {
 }
 
 get_data_template = """
-def get_data(self, state: State, context: Context) -> pd.DataFrame:
+def get(self, state: State, context: Context):
     # Add your code here
-    return pd.DataFrame()"""
+    return context"""

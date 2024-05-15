@@ -57,6 +57,8 @@ def run(r, response):
         elif action == "add":
             row = json.loads(os.getenv("row"))
             new_context = script.__getattribute__(resource).add(row)
+        elif action == "on_row_change":
+            new_context = script.__getattribute__(resource).on_row_change(state, context)
         else:
             # action - on_select, on_click, on_input, on_tobble
             new_context = script.__getattribute__(resource).__getattribute__(
