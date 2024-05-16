@@ -25,7 +25,7 @@ If a user needs to rename or update components, modify their label, not their na
 """
 
 
-def get_func_prompt(base_path: str, method: str, user_prompt: str):
+def get_func_prompt(base_path: str, parent: str, method: str, user_prompt: str):
     # read files
     with open(base_path + "scripts/main.py", "r") as file:
         main_str = file.read()
@@ -43,14 +43,14 @@ and context.py:
 {context_str}
 '''
 
-implement the method {method} in this main.py:
+implement the method {method} in {parent} in this main.py:
 '''python
 {main_str}
 '''
 
 following the user's command: {user_prompt}.
 
-Only return the code for a new main.py file, nothing else.
+ONLY return the code for a new main.py file, nothing else.
 
 Useful notes:
 - Table state contains the selected row for a specific table; each of the values in the state object is a column

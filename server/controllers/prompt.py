@@ -15,7 +15,7 @@ def handle_prompt(request: Prompt):
     if request.type == "ui":
         content = get_ui_prompt(base_path, request.prompt)
     elif request.type == "function":
-        content = get_func_prompt(base_path, request.method, request.prompt)
+        content = get_func_prompt(base_path, request.parent, request.method, request.prompt)
 
     client = OpenAI(api_key=config["openai_api_key"])
     chat_completion = client.chat.completions.create(
