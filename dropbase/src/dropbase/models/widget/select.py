@@ -14,6 +14,11 @@ class SelectContextProperty(ComponentProperty):
 data_type_options = Literal["string", "integer", "float", "boolean", "string_array"]
 
 
+class SelectOptions(BaseModel):
+    name: str
+    value: Any
+
+
 class SelectProperty(BaseModel):
     component_type: Literal["select"]
 
@@ -21,7 +26,7 @@ class SelectProperty(BaseModel):
     label: Annotated[str, PropertyCategory.default]
     name: Annotated[str, PropertyCategory.default]
     data_type: Annotated[data_type_options, PropertyCategory.default]
-    options: Annotated[Optional[List[Dict]], PropertyCategory.default]
+    options: Annotated[Optional[List[SelectOptions]], PropertyCategory.default]
 
     default: Annotated[Optional[Any], PropertyCategory.other]
     multiple: Annotated[Optional[bool], PropertyCategory.other] = False

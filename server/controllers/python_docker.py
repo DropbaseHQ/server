@@ -32,7 +32,7 @@ def run_container(env_vars: dict, docker_script: str = "inside_docker"):
     host_path = config.get("host_workspace_path")
     workspace_mount = docker.types.Mount(
         target="/app/workspace", source=host_path + "/workspace", type="bind"
-    )  # noqa
+    )
     files_mount = docker.types.Mount(target="/app/files", source=host_path + "/files", type="bind")
     mounts = [workspace_mount, files_mount]
 

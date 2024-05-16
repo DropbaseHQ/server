@@ -95,12 +95,16 @@ class Input(BaseModel):
     multiline: Optional[bool] = False
     display_rules: Optional[List[dict]]
 
+class SelectOptions(BaseModel):
+    name: str
+    value: Any
+
 class Select(BaseModel):
     component_type: Literal["select"]
     name: str
     label: str
     data_type: Literal["string", "integer", "float", "boolean", "string_array"] = "string"
-    options: Optional[List[Dict]]
+    options: Optional[List[SelectOptions]]
     default: Optional[Any]
     multiple: Optional[bool] = False
     display_rules: Optional[List[dict]]
