@@ -217,6 +217,9 @@ class PageController:
         response["methods"] = self.get_main_class_methods()
         return response
 
+    def get_methods(self):
+        return self.get_main_class_methods()
+
     def get_main_class_methods(self):
         file_path = self.page_path + "/scripts/main.py"
         with open(file_path, "r") as f:

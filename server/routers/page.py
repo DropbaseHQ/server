@@ -14,6 +14,12 @@ def get_page_init_req(app_name: str, page_name: str):
     return pageController.get_page(initial=True)
 
 
+@router.get("/{app_name}/{page_name}/methods")
+def get_page_methods_req(app_name: str, page_name: str):
+    pageController = PageController(app_name, page_name)
+    return pageController.get_methods()
+
+
 @router.get("/{app_name}/{page_name}")
 def get_page_req(app_name: str, page_name: str):
     pageController = PageController(app_name, page_name)
