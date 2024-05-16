@@ -18,8 +18,6 @@ class TextDefinedProperty(BaseModel):
                 "blue",
                 "green",
                 "yellow",
-                "black",
-                "white",
                 "grey",
                 "orange",
                 "purple",
