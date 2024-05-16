@@ -7,11 +7,11 @@ from dropbase.models.common import BaseColumnProperty, ColumnProperty
 
 
 class PyColumnProperty(BaseColumnProperty):
-    # internal
     column_type: Annotated[Literal["python"], PropertyCategory.internal] = "python"
 
-    # visibility
+    # general
     hidden: Annotated[bool, PropertyCategory.default] = False
     editable: Annotated[bool, PropertyCategory.default] = False
 
+    # internal
     context: ModelMetaclass = ColumnProperty

@@ -39,11 +39,27 @@ class TableContextProperty(BaseModel):
 
 class TableProperty(BaseModel):
     block_type: Literal["table"]
+
+    # general
     label: Annotated[str, PropertyCategory.default]
     name: Annotated[str, PropertyCategory.default]
     description: Annotated[Optional[str], PropertyCategory.default]
 
-    # internal
+    # children
+    columns: Annotated[
+        List[Union[PgColumnProperty, PyColumnProperty, ButtonColumnProperty, SqliteColumnProperty]],
+        PropertyCategory.default,
+    ]
+    header: Annotated[
+        List[Union[ButtonProperty, InputProperty, SelectProperty, TextProperty, BooleanProperty]],
+        PropertyCategory.default,
+    ]
+    footer: Annotated[
+        List[Union[ButtonProperty, InputProperty, SelectProperty, TextProperty, BooleanProperty]],
+        PropertyCategory.default,
+    ]
+
+    # position
     w: Annotated[Optional[int], PropertyCategory.internal] = 4
     h: Annotated[Optional[int], PropertyCategory.internal] = 1
     x: Annotated[Optional[int], PropertyCategory.internal] = 0
@@ -51,38 +67,3 @@ class TableProperty(BaseModel):
 
     # internal
     context: ModelMetaclass = TableContextProperty
-    columns: Annotated[
-        List[
-            Union[
-                PgColumnProperty,
-                PyColumnProperty,
-                ButtonColumnProperty,
-                SqliteColumnProperty,
-            ]
-        ],
-        PropertyCategory.default,
-    ]
-    header: Annotated[
-        List[
-            Union[
-                ButtonProperty,
-                InputProperty,
-                SelectProperty,
-                TextProperty,
-                BooleanProperty,
-            ]
-        ],
-        PropertyCategory.default,
-    ]
-    footer: Annotated[
-        List[
-            Union[
-                ButtonProperty,
-                InputProperty,
-                SelectProperty,
-                TextProperty,
-                BooleanProperty,
-            ]
-        ],
-        PropertyCategory.default,
-    ]

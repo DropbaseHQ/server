@@ -9,6 +9,8 @@ from dropbase.models.common import ComponentProperty
 
 class TextProperty(BaseModel):
     component_type: Literal["text"]
+
+    # general
     name: Annotated[str, PropertyCategory.default]
     text: Annotated[str, PropertyCategory.default]
 

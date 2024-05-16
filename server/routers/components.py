@@ -3,9 +3,7 @@ from fastapi import APIRouter
 from server.controllers.components import get_component_properties
 
 router = APIRouter(
-    prefix="/components",
-    tags=["components"],
-    responses={404: {"description": "Not found"}},
+    prefix="/components", tags=["components"], responses={404: {"description": "Not found"}}
 )
 
 

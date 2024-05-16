@@ -61,10 +61,7 @@ def read_app_properties(app_name: str):
 
 
 def compose_properties_schema(properties: dict):
-    block_type_mapping = {
-        "table": TableProperty,
-        "widget": WidgetProperty,
-    }
+    block_type_mapping = {"table": TableProperty, "widget": WidgetProperty}
 
     # compose fields for pydantic model
     fields = {}

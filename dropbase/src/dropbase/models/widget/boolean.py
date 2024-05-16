@@ -8,16 +8,16 @@ from dropbase.models.common import ComponentProperty
 
 
 class BooleanProperty(BaseModel):
+    component_type: Literal["boolean"]
+
+    # general
     label: Annotated[str, PropertyCategory.default]
     name: Annotated[str, PropertyCategory.default]
-
     default: Annotated[Optional[Any], PropertyCategory.default] = False
+    data_type: Literal["boolean"] = "boolean"
 
     # display rules
     display_rules: Annotated[Optional[List[dict]], PropertyCategory.display_rules]
 
     # internal
-    data_type: Literal["boolean"] = "boolean"
-    component_type: Literal["boolean"]
-
     context: ModelMetaclass = ComponentProperty
