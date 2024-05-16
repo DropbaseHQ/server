@@ -4,7 +4,7 @@ import logging
 from pydantic import ValidationError
 
 from dropbase.schemas.database import MySQLCreds, PgCreds, SnowflakeCreds, SqliteCreds
-from server.settings import config
+from server.config import config
 
 db_type_to_class = {
     "postgres": PgCreds,

@@ -3,7 +3,7 @@ import logging
 
 import docker
 
-from server.settings import config
+from server.config import config
 
 logger = logging.getLogger(__name__)
 

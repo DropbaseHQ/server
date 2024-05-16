@@ -4,7 +4,7 @@ from sqlalchemy import create_engine
 
 from alembic import context
 from server.auth.models.base import Base  # now it can be imported
-from server.settings import config
+from server.config import config
 
 DATABASE_URL = "postgresql+psycopg2://{0}:{1}@{2}:{3}/{4}".format(
     config["database"]["user"],

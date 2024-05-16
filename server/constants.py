@@ -1,7 +1,7 @@
 import os
 
+from server.config import config
 from server.controllers.sources import get_sources
-from server.settings import config
 
 cwd = os.getcwd()
 

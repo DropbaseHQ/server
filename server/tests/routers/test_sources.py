@@ -1,5 +1,5 @@
 def test_get_sources(test_client):
-    from server.settings import config
+    from server.config import config
 
     # Arrange
     sources = config.get("sources")

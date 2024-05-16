@@ -59,3 +59,11 @@ def save_table_columns_req(request: SaveTableColumns):
     pageController = PageController(request.app_name, request.page_name)
     pageController.save_table_columns(request.table_name, request.columns)
     return {"message": "success"}
+
+
+# gpt promps
+@router.post("/gpt/")
+def call_gpt(request: SaveTableColumns):
+    pageController = PageController(request.app_name, request.page_name)
+    pageController.save_table_columns(request.table_name, request.columns)
+    return {"message": "success"}

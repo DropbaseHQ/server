@@ -11,7 +11,16 @@ from dropbase.schemas.edit_cell import EditInfo
 load_dotenv()
 
 
-def run(r, response):
+def run(r):
+
+    # TODO: only return stdout and traceback in dev mode
+    response = {
+        "stdout": "",
+        "traceback": "",
+        "message": "",
+        "type": "",
+        "status_code": 202,
+    }
     try:
         # read state and context
         app_name = os.getenv("app_name")
