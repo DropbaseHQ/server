@@ -1,9 +1,11 @@
-# from typing import List, Optional, Union
+from typing import Optional
+
 from pydantic import BaseModel
 
 
 class Prompt(BaseModel):
     prompt: str
-    method: str
     app_name: str
     page_name: str
+    type: str
+    method: Optional[str]
