@@ -92,8 +92,7 @@ class PageController:
                     base_name = base.attr if isinstance(base, ast.Attribute) else base.id
                     if base_name == "TableABC":
                         # make sure get_table is defined
-                        get_data_present = "get_data" in [n.name for n in node.body]
-                        if not get_data_present:
+                        if "get" not in [n.name for n in node.body]:
                             new_method_node = ast.parse(get_data_template).body[0]
                             node.body.append(new_method_node)
 
@@ -185,9 +184,9 @@ class PageController:
         required_classes = {}
         for key, values in self.properties:
             class_name = key.capitalize()
-            if isinstance(values, TableDefinedProperty):
+            if isinstance(values, TableProperty):
                 required_classes[class_name] = table_class_boilerplate.format(class_name, key)
-            if isinstance(values, WidgetDefinedProperty):
+            if isinstance(values, WidgetProperty):
                 required_classes[class_name] = widget_class_boilerplate.format(class_name)
         return required_classes
 
@@ -195,14 +194,14 @@ class PageController:
         required_methods = {}
         for key, values in self.properties:
             class_name = key.capitalize()
-            if isinstance(values, TableDefinedProperty):
+            if isinstance(values, TableProperty):
                 for column in values.columns:
                     add_button_method(column, "columns", class_name, required_methods)
                 for component in values.header:
                     add_button_method(component, "header", class_name, required_methods)
                 for component in values.footer:
                     add_button_method(component, "footer", class_name, required_methods)
-            if isinstance(values, WidgetDefinedProperty):
+            if isinstance(values, WidgetProperty):
                 for component in values.components:
                     add_button_method(component, "components", class_name, required_methods)
         return required_methods
@@ -278,22 +277,22 @@ def add_button_method(component, section, class_name, required_methods):
     if isinstance(
         component,
         (
-            ButtonDefinedProperty,
-            ButtonColumnDefinedProperty,
-            InputDefinedProperty,
-            SelectDefinedProperty,
-            BooleanDefinedProperty,
+            ButtonProperty,
+            ButtonColumnProperty,
+            InputProperty,
+            SelectProperty,
+            BooleanProperty,
         ),
     ):
         if class_name not in required_methods:
             required_methods[class_name] = {}
-        if isinstance(component, (ButtonDefinedProperty, ButtonColumnDefinedProperty)):
+        if isinstance(component, (ButtonProperty, ButtonColumnProperty)):
             name = f"{section}_{component.name}_on_click"
-        if isinstance(component, InputDefinedProperty):
+        if isinstance(component, InputProperty):
             name = f"{section}_{component.name}_on_submit"
-        if isinstance(component, SelectDefinedProperty):
+        if isinstance(component, SelectProperty):
             name = f"{section}_{component.name}_on_select"
-        if isinstance(component, BooleanDefinedProperty):
+        if isinstance(component, BooleanProperty):
             name = f"{section}_{component.name}_on_toggle"
         required_methods[class_name][name] = update_button_methods_main.format(name)
 

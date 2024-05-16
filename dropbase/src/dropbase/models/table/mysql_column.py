@@ -3,10 +3,10 @@ from typing import Annotated, Literal
 from pydantic.main import ModelMetaclass
 
 from dropbase.models.category import PropertyCategory
-from dropbase.models.common import BaseColumnDefinedProperty, ColumnDisplayProperties, ColumnTypeEnum
+from dropbase.models.common import BaseColumnProperty, ColumnProperty, ColumnTypeEnum
 
 
-class MySqlColumnDefinedProperty(BaseColumnDefinedProperty):
+class MySqlColumnProperty(BaseColumnProperty):
 
     database_name: Annotated[str, PropertyCategory.view_only] = None
     table_name: Annotated[str, PropertyCategory.view_only] = None
@@ -27,4 +27,4 @@ class MySqlColumnDefinedProperty(BaseColumnDefinedProperty):
     hidden: Annotated[bool, PropertyCategory.default] = False
     editable: Annotated[bool, PropertyCategory.default] = False
 
-    context: ModelMetaclass = ColumnDisplayProperties
+    context: ModelMetaclass = ColumnProperty

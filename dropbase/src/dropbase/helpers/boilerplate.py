@@ -15,13 +15,13 @@ class Script(ScriptABC):
 # create
 schema_boilerplate = """from pydantic import BaseModel
 
-from dropbase.models.table import TableDefinedProperty
-from dropbase.models.widget import WidgetDefinedProperty
+from dropbase.models.table import TableProperty
+from dropbase.models.widget import WidgetProperty
 
 
 class Properties(BaseModel):
-    table1: TableDefinedProperty
-    widget1: WidgetDefinedProperty
+    table1: TableProperty
+    widget1: WidgetProperty
 """
 
 

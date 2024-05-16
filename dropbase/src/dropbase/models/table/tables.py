@@ -4,16 +4,16 @@ from pydantic import BaseModel
 from pydantic.main import ModelMetaclass
 
 from dropbase.models.category import PropertyCategory
-from dropbase.models.table.button_column import ButtonColumnDefinedProperty
-from dropbase.models.table.pg_column import PgColumnDefinedProperty
-from dropbase.models.table.py_column import PyColumnDefinedProperty
-from dropbase.models.table.sqlite_column import SqliteColumnDefinedProperty
+from dropbase.models.table.button_column import ButtonColumnProperty
+from dropbase.models.table.pg_column import PgColumnProperty
+from dropbase.models.table.py_column import PyColumnProperty
+from dropbase.models.table.sqlite_column import SqliteColumnProperty
 from dropbase.models.widget import (
-    BooleanDefinedProperty,
-    ButtonDefinedProperty,
-    InputDefinedProperty,
-    SelectDefinedProperty,
-    TextDefinedProperty,
+    BooleanProperty,
+    ButtonProperty,
+    InputProperty,
+    SelectProperty,
+    TextProperty,
 )
 
 
@@ -37,7 +37,7 @@ class TableContextProperty(BaseModel):
     reload: Annotated[Optional[bool], PropertyCategory.other] = False
 
 
-class TableDefinedProperty(BaseModel):
+class TableProperty(BaseModel):
     block_type: Literal["table"]
     label: Annotated[str, PropertyCategory.default]
     name: Annotated[str, PropertyCategory.default]
@@ -54,10 +54,10 @@ class TableDefinedProperty(BaseModel):
     columns: Annotated[
         List[
             Union[
-                PgColumnDefinedProperty,
-                PyColumnDefinedProperty,
-                ButtonColumnDefinedProperty,
-                SqliteColumnDefinedProperty,
+                PgColumnProperty,
+                PyColumnProperty,
+                ButtonColumnProperty,
+                SqliteColumnProperty,
             ]
         ],
         PropertyCategory.default,
@@ -65,11 +65,11 @@ class TableDefinedProperty(BaseModel):
     header: Annotated[
         List[
             Union[
-                ButtonDefinedProperty,
-                InputDefinedProperty,
-                SelectDefinedProperty,
-                TextDefinedProperty,
-                BooleanDefinedProperty,
+                ButtonProperty,
+                InputProperty,
+                SelectProperty,
+                TextProperty,
+                BooleanProperty,
             ]
         ],
         PropertyCategory.default,
@@ -77,11 +77,11 @@ class TableDefinedProperty(BaseModel):
     footer: Annotated[
         List[
             Union[
-                ButtonDefinedProperty,
-                InputDefinedProperty,
-                SelectDefinedProperty,
-                TextDefinedProperty,
-                BooleanDefinedProperty,
+                ButtonProperty,
+                InputProperty,
+                SelectProperty,
+                TextProperty,
+                BooleanProperty,
             ]
         ],
         PropertyCategory.default,

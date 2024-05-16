@@ -7,7 +7,7 @@ from sqlalchemy.inspection import inspect
 from sqlalchemy.sql import text
 
 from dropbase.database.database import Database
-from dropbase.models.table.snowflake_column import SnowflakeColumnDefinedProperty
+from dropbase.models.table.snowflake_column import SnowflakeColumnProperty
 from dropbase.schemas.edit_cell import CellEdit
 from dropbase.schemas.table import TableFilter, TablePagination, TableSort
 
@@ -214,7 +214,7 @@ class SnowflakeDatabase(Database):
 
         validated = []
         for col_name, col_data in smart_cols.items():
-            col_data = SnowflakeColumnDefinedProperty(**col_data)
+            col_data = SnowflakeColumnProperty(**col_data)
 
             pk_name = primary_keys.get(self._get_table_path(col_data))
 
@@ -250,7 +250,7 @@ class SnowflakeDatabase(Database):
                     if res[0][0] is None:
                         raise Exception("Can not convert empty table into smart table")
                     raise Exception("Invalid column")
-            except (SQLAlchemyError):
+            except SQLAlchemyError:
                 continue
         return validated
 
@@ -258,7 +258,7 @@ class SnowflakeDatabase(Database):
         primary_keys = {}
         alias_keys = {}
         for col_data in smart_cols.values():
-            col_data = SnowflakeColumnDefinedProperty(**col_data)
+            col_data = SnowflakeColumnProperty(**col_data)
             if col_data.primary_key:
                 if col_data.name != col_data.column_name:
                     alias_keys[col_data.column_name] = col_data.name
@@ -267,7 +267,7 @@ class SnowflakeDatabase(Database):
                 primary_keys[self._get_table_path(col_data)] = col_data.column_name
         return primary_keys, alias_keys
 
-    def _get_table_path(self, col_data: SnowflakeColumnDefinedProperty) -> str:
+    def _get_table_path(self, col_data: SnowflakeColumnProperty) -> str:
         return f"{col_data.schema_name}.{col_data.table_name}"
 
     def _run_query(self, sql: str, values: dict):

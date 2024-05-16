@@ -4,10 +4,10 @@ from pydantic import BaseModel
 from pydantic.main import ModelMetaclass
 
 from dropbase.models.category import PropertyCategory
-from dropbase.models.common import ComponentDisplayProperties
+from dropbase.models.common import ComponentProperty
 
 
-class BooleanDefinedProperty(BaseModel):
+class BooleanProperty(BaseModel):
     label: Annotated[str, PropertyCategory.default]
     name: Annotated[str, PropertyCategory.default]
 
@@ -20,4 +20,4 @@ class BooleanDefinedProperty(BaseModel):
     data_type: Literal["boolean"] = "boolean"
     component_type: Literal["boolean"]
 
-    context: ModelMetaclass = ComponentDisplayProperties
+    context: ModelMetaclass = ComponentProperty

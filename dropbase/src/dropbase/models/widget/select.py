@@ -4,14 +4,14 @@ from pydantic import BaseModel
 from pydantic.main import ModelMetaclass
 
 from dropbase.models.category import PropertyCategory
-from dropbase.models.common import ComponentDisplayProperties
+from dropbase.models.common import ComponentProperty
 
 
-class SelectContextProperty(ComponentDisplayProperties):
+class SelectContextProperty(ComponentProperty):
     options: Annotated[Optional[List[Dict]], PropertyCategory.default]
 
 
-class SelectDefinedProperty(BaseModel):
+class SelectProperty(BaseModel):
     component_type: Literal["select"]
     label: Annotated[str, PropertyCategory.default]
     name: Annotated[str, PropertyCategory.default]

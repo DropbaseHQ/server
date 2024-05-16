@@ -3,10 +3,10 @@ from typing import Annotated, Literal
 from pydantic.main import ModelMetaclass
 
 from dropbase.models.category import PropertyCategory
-from dropbase.models.common import BaseColumnDefinedProperty, ColumnDisplayProperties, ColumnTypeEnum
+from dropbase.models.common import BaseColumnProperty, ColumnProperty, ColumnTypeEnum
 
 
-class SnowflakeColumnDefinedProperty(BaseColumnDefinedProperty):
+class SnowflakeColumnProperty(BaseColumnProperty):
 
     schema_name: Annotated[str, PropertyCategory.view_only] = None
     table_name: Annotated[str, PropertyCategory.view_only] = None
@@ -26,4 +26,4 @@ class SnowflakeColumnDefinedProperty(BaseColumnDefinedProperty):
     # visibility
     hidden: Annotated[bool, PropertyCategory.default] = False
     editable: Annotated[bool, PropertyCategory.default] = False
-    context: ModelMetaclass = ColumnDisplayProperties
+    context: ModelMetaclass = ColumnProperty

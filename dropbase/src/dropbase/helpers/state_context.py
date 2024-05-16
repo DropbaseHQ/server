@@ -8,7 +8,7 @@ from dropbase.helpers.dataframe import to_dtable
 from dropbase.helpers.display_rules import run_display_rule
 from dropbase.helpers.utils import _dict_from_pydantic_model, get_empty_context, get_state_context_model
 from dropbase.models.common import BaseContext
-from dropbase.models.widget import WidgetDefinedProperty
+from dropbase.models.widget import WidgetProperty
 
 pd.DataFrame.to_dtable = to_dtable
 
@@ -19,7 +19,7 @@ def generate_context_model(properties):
         class_name = key.capitalize() + "Context"
 
         # create components contexts
-        if isinstance(value, WidgetDefinedProperty):
+        if isinstance(value, WidgetProperty):
             components_dir = {}
             for component in value.components:
                 components_dir[component.name] = (component.context, ...)
@@ -110,7 +110,7 @@ def compose_state_model(properties):
     state = {}
     for key, value in properties:
         class_name = key.capitalize() + "State"
-        if isinstance(value, WidgetDefinedProperty):
+        if isinstance(value, WidgetProperty):
             # props["component"] = {}
             components_dir = compose_components_dir(value.components)
             components_class_name = key.capitalize() + "ComponentsState"

@@ -4,10 +4,10 @@ from pydantic import BaseModel
 from pydantic.main import ModelMetaclass
 
 from dropbase.models.category import PropertyCategory
-from dropbase.models.common import ComponentDisplayProperties
+from dropbase.models.common import ComponentProperty
 
 
-class ButtonDefinedProperty(BaseModel):
+class ButtonProperty(BaseModel):
     component_type: Literal["button"]
     label: Annotated[str, PropertyCategory.default]
     name: Annotated[str, PropertyCategory.default]
@@ -31,4 +31,4 @@ class ButtonDefinedProperty(BaseModel):
     display_rules: Annotated[Optional[List[dict]], PropertyCategory.display_rules]
 
     # internal
-    context: ModelMetaclass = ComponentDisplayProperties
+    context: ModelMetaclass = ComponentProperty

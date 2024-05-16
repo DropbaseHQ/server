@@ -16,15 +16,15 @@ class ConfigTypeEnum(str, Enum):
     ARRAY = "array"
 
 
-class ComponentDisplayProperties(BaseModel):
+class ComponentProperty(BaseModel):
     visible: Optional[bool] = True
 
 
-class ColumnDisplayProperties(BaseModel):
+class ColumnProperty(BaseModel):
     visible: Optional[bool]
 
 
-class PageDisplayProperties(BaseModel):
+class PageProperty(BaseModel):
     message: Optional[str]
     message_type: Optional[str]
 
@@ -141,7 +141,7 @@ class ColumnTypeEnum(str, Enum):
     BUTTON = "button"
 
 
-class BaseColumnDefinedProperty(BaseModel):
+class BaseColumnProperty(BaseModel):
     name: Annotated[str, PropertyCategory.default]
     data_type: Annotated[Optional[str], PropertyCategory.default]
     display_type: Annotated[Optional[DisplayType], PropertyCategory.default]
@@ -152,4 +152,4 @@ class BaseColumnDefinedProperty(BaseModel):
 
 
 class BaseContext(BaseModel):
-    page: PageDisplayProperties
+    page: PageProperty

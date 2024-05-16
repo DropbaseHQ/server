@@ -6,7 +6,7 @@ from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.sql import text
 
 from dropbase.database.database import Database
-from dropbase.models.table.sqlite_column import SqliteColumnDefinedProperty
+from dropbase.models.table.sqlite_column import SqliteColumnProperty
 from dropbase.schemas.edit_cell import CellEdit
 from dropbase.schemas.table import TableFilter, TablePagination, TableSort
 
@@ -217,7 +217,7 @@ class SqliteDatabase(Database):
 
         validated = []
         for col_name, col_data in smart_cols.items():
-            col_data = SqliteColumnDefinedProperty(**col_data)
+            col_data = SqliteColumnProperty(**col_data)
 
             pk_name = primary_keys.get(self._get_table_path(col_data))
 
@@ -260,7 +260,7 @@ class SqliteDatabase(Database):
         primary_keys = {}
         alias_keys = {}
         for col_data in smart_cols.values():
-            col_data = SqliteColumnDefinedProperty(**col_data)
+            col_data = SqliteColumnProperty(**col_data)
             if col_data.primary_key:
                 if col_data.name != col_data.column_name:
                     alias_keys[col_data.column_name] = col_data.name
@@ -269,7 +269,7 @@ class SqliteDatabase(Database):
                 primary_keys[self._get_table_path(col_data)] = col_data.column_name
         return primary_keys, alias_keys
 
-    def _get_table_path(self, col_data: SqliteColumnDefinedProperty) -> str:
+    def _get_table_path(self, col_data: SqliteColumnProperty) -> str:
         return f"{col_data.table_name}"
 
     def _run_query(self, sql: str, values: dict):

@@ -4,10 +4,10 @@ from pydantic import BaseModel
 from pydantic.main import ModelMetaclass
 
 from dropbase.models.category import PropertyCategory
-from dropbase.models.common import ColumnDisplayProperties
+from dropbase.models.common import ColumnProperty
 
 
-class ButtonColumnDefinedProperty(BaseModel):
+class ButtonColumnProperty(BaseModel):
     name: Annotated[str, PropertyCategory.default]
     column_type: Literal["button_column"] = "button_column"
 
@@ -32,4 +32,4 @@ class ButtonColumnDefinedProperty(BaseModel):
     hidden: Annotated[bool, PropertyCategory.default] = False
 
     # internal
-    context: ModelMetaclass = ColumnDisplayProperties
+    context: ModelMetaclass = ColumnProperty

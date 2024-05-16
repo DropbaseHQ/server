@@ -4,10 +4,10 @@ from pydantic import BaseModel
 from pydantic.main import ModelMetaclass
 
 from dropbase.models.category import PropertyCategory
-from dropbase.models.common import ComponentDisplayProperties
+from dropbase.models.common import ComponentProperty
 
 
-class InputDefinedProperty(BaseModel):
+class InputProperty(BaseModel):
     component_type: Literal["input"]
     label: Annotated[str, PropertyCategory.default]
     name: Annotated[str, PropertyCategory.default]
@@ -23,7 +23,7 @@ class InputDefinedProperty(BaseModel):
     display_rules: Annotated[Optional[List[dict]], PropertyCategory.display_rules]
 
     # internal
-    context: ModelMetaclass = ComponentDisplayProperties
+    context: ModelMetaclass = ComponentProperty
 
     def __init__(self, **data):
         data.setdefault("data_type", "text")

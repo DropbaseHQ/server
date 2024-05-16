@@ -5,11 +5,11 @@ from pydantic.main import ModelMetaclass
 
 from dropbase.models.category import PropertyCategory
 from dropbase.models.widget import (
-    BooleanDefinedProperty,
-    ButtonDefinedProperty,
-    InputDefinedProperty,
-    SelectDefinedProperty,
-    TextDefinedProperty,
+    BooleanProperty,
+    ButtonProperty,
+    InputProperty,
+    SelectProperty,
+    TextProperty,
 )
 
 
@@ -20,7 +20,7 @@ class WidgetContextProperty(BaseModel):
     components: Optional[dict] = {}
 
 
-class WidgetDefinedProperty(BaseModel):
+class WidgetProperty(BaseModel):
     block_type: Literal["widget"]
     label: Annotated[str, PropertyCategory.default]
     name: Annotated[str, PropertyCategory.default]
@@ -31,11 +31,11 @@ class WidgetDefinedProperty(BaseModel):
     components: Annotated[
         List[
             Union[
-                ButtonDefinedProperty,
-                InputDefinedProperty,
-                SelectDefinedProperty,
-                TextDefinedProperty,
-                BooleanDefinedProperty,
+                ButtonProperty,
+                InputProperty,
+                SelectProperty,
+                TextProperty,
+                BooleanProperty,
             ]
         ],
         PropertyCategory.default,
