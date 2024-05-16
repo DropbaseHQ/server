@@ -2,6 +2,7 @@ import json
 import logging
 
 import docker
+from docker.errors import ContainerError
 
 from server.config import config
 
@@ -47,13 +48,16 @@ def run_container(env_vars: dict, docker_script: str = "inside_docker"):
             mounts.append(docker.types.Mount(target=target, source=source, type="bind"))
 
     # Run the Docker container with the mount
-    client.containers.run(
-        "dropbase/worker",
-        command=f"python {docker_script}.py",
-        mounts=mounts,
-        environment=env_vars,
-        network="dropbase_default",
-        working_dir="/app",
-        detach=True,
-        auto_remove=True,
-    )
+    try:
+        client.containers.run(
+            "dropbase/worker",
+            command=f"python {docker_script}.py",
+            mounts=mounts,
+            environment=env_vars,
+            network="dropbase_default",
+            working_dir="/app",
+            detach=True,
+            auto_remove=True,
+        )
+    except ContainerError as e:
+        raise e

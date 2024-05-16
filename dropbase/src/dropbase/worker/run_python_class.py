@@ -13,15 +13,15 @@ load_dotenv()
 
 def run(r):
 
-    # TODO: only return stdout and traceback in dev mode
-    response = {
-        "stdout": "",
-        "traceback": "",
-        "message": "",
-        "type": "",
-        "status_code": 202,
-    }
     try:
+        # TODO: only return stdout and traceback in dev mode
+        response = {
+            "stdout": "",
+            "traceback": "",
+            "message": "",
+            "type": "",
+            "status_code": 202,
+        }
         # read state and context
         app_name = os.getenv("app_name")
         page_name = os.getenv("page_name")
@@ -59,13 +59,13 @@ def run(r):
             edits = json.loads(os.getenv("edits"))
             for edit in edits:
                 edit = EditInfo(**edit)
-            new_context = script.__getattribute__(resource).update(edits)
+            new_context = script.__getattribute__(resource).update(state, context, edits)
         elif action == "delete":
             row = state.get(resource).get("columns")
-            new_context = script.__getattribute__(resource).delete(row)
+            new_context = script.__getattribute__(resource).delete(state, context, row)
         elif action == "add":
             row = json.loads(os.getenv("row"))
-            new_context = script.__getattribute__(resource).add(row)
+            new_context = script.__getattribute__(resource).add(state, context, row)
         elif action == "on_row_change":
             new_context = script.__getattribute__(resource).on_row_change(state, context)
         else:
