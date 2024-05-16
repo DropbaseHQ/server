@@ -11,21 +11,6 @@ class TextProperty(BaseModel):
     component_type: Literal["text"]
     name: Annotated[str, PropertyCategory.default]
     text: Annotated[str, PropertyCategory.default]
-    color: Annotated[
-        Optional[
-            Literal[
-                "red",
-                "blue",
-                "green",
-                "yellow",
-                "grey",
-                "orange",
-                "purple",
-                "pink",
-            ]
-        ],
-        PropertyCategory.default,
-    ]
 
     # display_rules
     display_rules: Annotated[Optional[List[Dict]], PropertyCategory.display_rules]
