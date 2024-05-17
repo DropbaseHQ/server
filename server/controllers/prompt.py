@@ -1,21 +1,20 @@
+import json
+
 from openai import OpenAI
 
-from dropbase.schemas.prompt import Prompt
+from dropbase.schemas.prompt import FuncPrompt, UIPrompt
 from server.config import config
+from server.controllers.page_controller import PageController
 from server.helpers.prompt_composer import get_func_prompt, get_ui_prompt
 
 
-def handle_prompt(request: Prompt):
+def handle_func_prompt(request: FuncPrompt):
 
     if config.get("openai_api_key") is None:
         raise Exception("OpenAI API key not found")
 
     base_path = f"workspace/{request.app_name}/{request.page_name}/"
-
-    if request.type == "ui":
-        content = get_ui_prompt(base_path, request.prompt)
-    elif request.type == "function":
-        content = get_func_prompt(base_path, request.parent, request.method, request.prompt)
+    content = get_func_prompt(base_path, request.component, request.prompt)
 
     client = OpenAI(api_key=config["openai_api_key"])
     chat_completion = client.chat.completions.create(
@@ -24,6 +23,27 @@ def handle_prompt(request: Prompt):
     )
     updated_code = chat_completion.choices[0].message.content
     return remove_markdown_formatting(updated_code)
+
+
+def handle_ui_prompt(request: UIPrompt):
+
+    if config.get("openai_api_key") is None:
+        raise Exception("OpenAI API key not found")
+
+    base_path = f"workspace/{request.app_name}/{request.page_name}/"
+    content = get_ui_prompt(base_path, request.prompt)
+
+    client = OpenAI(api_key=config["openai_api_key"])
+    chat_completion = client.chat.completions.create(
+        messages=[{"role": "user", "content": content}],
+        model="gpt-4o",
+    )
+    updated_code = chat_completion.choices[0].message.content
+    new_props = remove_markdown_formatting(updated_code)
+
+    pageController = PageController(request.app_name, request.page_name)
+    pageController.update_page_properties(json.loads(new_props))
+    return {"message": "success"}
 
 
 def remove_markdown_formatting(code_snippet):

@@ -1,3 +1,6 @@
+from dropbase.schemas.prompt import PromptComponent
+
+
 def get_ui_prompt(base_path: str, user_prompt: str):
     with open(base_path + "properties.json", "r") as file:
         props = file.read()
@@ -25,7 +28,13 @@ If a user needs to rename or update components, modify their label, not their na
 """
 
 
-def get_func_prompt(base_path: str, parent: str, method: str, user_prompt: str):
+def get_func_prompt(base_path: str, component: PromptComponent, user_prompt: str):
+    if component.section and component.component:
+        # widget1: components_button1_on_click
+        method_name = f"{component.section}_{component.component}_{component.action}"
+    else:
+        method_name = component.action
+    # print(method_name)
     # read files
     with open(base_path + "scripts/main.py", "r") as file:
         main_str = file.read()
@@ -43,7 +52,7 @@ and context.py:
 {context_str}
 '''
 
-implement the method {method} in {parent} in this main.py:
+implement the method {method_name} in {component.block} in this main.py:
 '''python
 {main_str}
 '''
