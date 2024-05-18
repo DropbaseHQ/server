@@ -1,17 +1,15 @@
-from dropbase.schemas.prompt import PromptComponent
-
-
 def get_ui_prompt(base_path: str, user_prompt: str):
     with open(base_path + "properties.json", "r") as file:
         props = file.read()
-    return f"""follow the user prompt to modify properties.json file
+    return f"""Follow the user prompt to modify properties.json file
 
 properties.json:
 {props}
 
 Useful notes:
 - Tables and widgets are the highest level objects
-- Add as many tables or widgets as specified in the user prompt; uniquely name each new table or widget by adding an incremental number after its name
+- Add as many tables or widgets as specified in the user prompt; uniquely name each
+- Table, widget and component names must be alphanumeric and CANNOT contain underscores
 - Tables have columns of various types
 - Each table can have at most one header and one footer
 - Headers and footers can contain components such as inputs, buttons, selects/dropdowns, boolean/toggles, and text displays
@@ -28,13 +26,11 @@ If a user needs to rename or update components, modify their label, not their na
 """
 
 
-def get_func_prompt(base_path: str, component: PromptComponent, user_prompt: str):
-    if component.section and component.component:
-        # widget1: components_button1_on_click
-        method_name = f"{component.section}_{component.component}_{component.action}"
-    else:
-        method_name = component.action
-    # print(method_name)
+def get_func_prompt(base_path: str, user_prompt: str):
+    # if component.section and component.component:
+    #     method_name = f"{component.section}_{component.component}_{component.action}"
+    # else:
+    #     method_name = component.action
     # read files
     with open(base_path + "scripts/main.py", "r") as file:
         main_str = file.read()
@@ -52,14 +48,11 @@ and context.py:
 {context_str}
 '''
 
-implement the method {method_name} in {component.block} in this main.py:
+follow the user prompt to modify this main.py:
 '''python
 {main_str}
 '''
 
-following the user's command: {user_prompt}.
-
-ONLY return the code for a new main.py file, nothing else.
 
 Useful notes:
 - Table state contains the selected row for a specific table; each of the values in the state object is a column
@@ -67,12 +60,17 @@ Useful notes:
 - Context contains information used by the Dropbase UI to display components/data as well as component or column visibility and messages
 - The data attribute in context contains data to be displayed in a table component in the Dropbase UI/client
 - Use "to_dtable()" to format a dataframe into a format that can be displayed by the Dropbase UI/client; data sent to Dropbase tables MUST be formatted correctly
-- Tables can have one header and/or one footer. headers and footers can have various components, including text, input, select dropdowns, buttons, and boolean toggles
+- Tables can have one header and/or one footer. Headers and footers can have various components, including text, input, select dropdowns, buttons, and boolean toggles
 - Header and footer methods should be defined inside the corresponding table class
 - To display a modal, set a model widget's visibility to True
 - Use page context exclusively for passing/displaying messages to the user. this is the preferred way to show user messages
 - Import any python sdk needed to perform the task, but don't modify or delete existing import statements
 - By default, Dropbase UI/client sends dates as a string in Unix epoch
+
+User prompt:
+{user_prompt}.
+
+ONLY return the code for a new main.py file, nothing else.
 """
 
 

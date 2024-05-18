@@ -1,23 +1,10 @@
-from typing import Optional
+from typing import Literal
 
 from pydantic import BaseModel
 
 
-class PromptComponent(BaseModel):
-    action: str
-    block: str
-    section: Optional[str]
-    component: Optional[str]
-
-
-class FuncPrompt(BaseModel):
-    prompt: str
-    app_name: str
-    page_name: str
-    component: Optional[PromptComponent]
-
-
-class UIPrompt(BaseModel):
+class Prompt(BaseModel):
+    type: Literal["function", "ui"]
     prompt: str
     app_name: str
     page_name: str

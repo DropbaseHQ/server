@@ -42,6 +42,18 @@ class Table1(TableABC):
         context.table1.data = table_data.to_dtable()
         return context
 
+    def add(self, state, context, row: dict) -> Context:
+        return context
+
+    def update(self, state, context, row: dict) -> Context:
+        return context
+
+    def delete(self, state, context, row: dict) -> Context:
+        return context
+
+    def on_row_change(self, state, context) -> Context:
+        return context
+
 class Widget1(WidgetABC):
     pass
 """
@@ -115,7 +127,43 @@ app_properties_boilerplate = {
     }
 }
 
+
+table_method_templates = {
+    "get": """
+def get(self, state: State, context: Context):
+    # Add your code here
+    return context""",
+    "add": """
+def add(self, state, context, row: dict) -> Context:
+    return context""",
+    "update": """
+def update(self, state, context, row: dict) -> Context:
+    return context""",
+    "delete": """
+def delete(self, state, context, row: dict) -> Context:
+    return context""",
+    "on_row_change": """
+def on_row_change(self, state, context) -> Context:
+    return context""",
+}
+
 get_data_template = """
 def get(self, state: State, context: Context):
     # Add your code here
+    return context"""
+
+add_data_template = """
+def add(self, state, context, row: dict) -> Context:
+    return context"""
+
+update_data_template = """
+def update(self, state, context, row: dict) -> Context:
+    return context"""
+
+delete_data_template = """
+def delete(self, state, context, row: dict) -> Context:
+    return context"""
+
+on_row_change_template = """
+def on_row_change(self, state, context) -> Context:
     return context"""

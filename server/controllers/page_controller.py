@@ -92,9 +92,11 @@ class PageController:
                     base_name = base.attr if isinstance(base, ast.Attribute) else base.id
                     if base_name == "TableABC":
                         # make sure get_table is defined
-                        if "get" not in [n.name for n in node.body]:
-                            new_method_node = ast.parse(get_data_template).body[0]
-                            node.body.append(new_method_node)
+                        function_names = [n.name for n in node.body]
+                        for method in ["get", "add", "update", "delete", "on_row_change"]:
+                            if method not in function_names:
+                                new_method_node = ast.parse(table_method_templates.get(method)).body[0]
+                                node.body.append(new_method_node)
 
                     if base_name == "TableABC" or base_name == "WidgetABC":
                         if node.name not in required_methods:

@@ -3,9 +3,9 @@ from fastapi import APIRouter
 from dropbase.schemas.page import CreatePageRequest, PageProperties, SaveTableColumns
 
 # prompt related
-from dropbase.schemas.prompt import FuncPrompt, UIPrompt
+from dropbase.schemas.prompt import Prompt
 from server.controllers.page_controller import PageController
-from server.controllers.prompt import handle_func_prompt, handle_ui_prompt
+from server.controllers.prompt import handle_prompt
 
 def_responses = {404: {"description": "Not found"}}
 
@@ -66,11 +66,6 @@ def save_table_columns_req(request: SaveTableColumns):
 
 
 # gpt promps
-@router.post("/prompt/ui/")
-def ui_prompt_request(request: UIPrompt):
-    return handle_ui_prompt(request)
-
-
-@router.post("/prompt/function/")
-def func_prompt_request(request: FuncPrompt):
-    return handle_func_prompt(request)
+@router.post("/prompt/")
+def ui_prompt_request(request: Prompt):
+    return handle_prompt(request)
