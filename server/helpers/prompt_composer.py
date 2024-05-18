@@ -96,7 +96,7 @@ class Input(BaseModel):
     component_type: Literal["input"]
     name: str
     label: str
-    data_type: Literal["string", "integer", "float", "datetime", "date", "time"] = "string"
+    data_type: Literal["text", "integer", "float", "datetime", "date", "time"] = "text"
     placeholder: Optional[str]
     default: Optional[Any]
     multiline: Optional[bool] = False
