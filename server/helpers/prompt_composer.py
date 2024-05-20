@@ -12,7 +12,7 @@ properties.json:
 Useful notes:
 - Tables and widgets are the highest level objects
 - Add as many tables or widgets as specified in the user prompt; uniquely name each
-- Table, widget and component names must be alphanumeric and CANNOT contain underscores
+- Table, widget and component names MUST be lowercase and alphanumeric; however, their labels can be any string that's human readable
 - Tables have columns of various types
 - Each table can have at most one header and one footer
 - Headers and footers can contain components such as inputs, buttons, selects/dropdowns, boolean/toggles, and text displays
@@ -50,7 +50,7 @@ and context.py:
 {context_str}
 '''
 
-follow the user prompt to modify this main.py:
+follow the user prompt to update this main.py:
 '''python
 {main_str}
 '''
@@ -75,11 +75,15 @@ db.execute("insert into table_name values (1, 'name')")
 
 
 Useful notes:
+- Tables have methods for get, add, update, delete, and on row change; only update the methods that correspond to what the user asks for
+- Inputs have a method for on submit, booleans for on toggle, buttons for on click, select dropdowns for on select
 - Table state contains the selected row for a specific table; each of the values in the state object is a column
 - Context state contains all the inputs currently entered by a user in various Dropbase UI/client components
 - Context contains information used by the Dropbase UI to display components/data as well as component or column visibility and messages
 - The data attribute in context contains data to be displayed in a table component in the Dropbase UI/client
-- Use "to_dtable()" to format a dataframe into a format that can be displayed by the Dropbase UI/client; data sent to Dropbase tables MUST be formatted correctly
+- To pass/display data to any table, first compose a pandas dataframe and then format it with to_dtable() before assigning it to the table's data attribute in its context; assume to_dtable() already exists
+- Any data sent to Dropbase tables MUST be formatted correctly by calling "to_dtable()"
+- Column names in tables should not have spaces: only underscores, lowercase, and alphanumeric are allowed
 - Tables can have one header and/or one footer. Headers and footers can have various components, including text, input, select dropdowns, buttons, and boolean toggles
 - Header and footer methods should be defined inside the corresponding table class
 - To display a modal, set a model widget's visibility to True
@@ -91,6 +95,7 @@ User prompt:
 {user_prompt}.
 
 ONLY return the code for a new main.py file, nothing else.
+ONLY make code changes to in the corresponding class methods that matches the user prompt
 """
 
 
