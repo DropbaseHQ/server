@@ -39,7 +39,7 @@ def get_func_prompt(base_path: str, user_prompt: str):
         context_str = file.read()
 
     sources = get_source_name_type()
-    sources_list = "\n".join([f"{s[0]}: {s[1]}" for s in sources])
+    sources_list = "\n".join([f"{s['name']}: {s['type']}" for s in sources])
 
     return f"""Given state.py:
 '''python
@@ -59,7 +59,7 @@ these are the database names available along with their types:
 name: type
 {sources_list}
 
-to query a database, use a connection object from the database module. example:
+to query a database, use a connect object from the database module. example:
 ```python
 from dropbase.database.connect import connect
 db = connect("database_name")

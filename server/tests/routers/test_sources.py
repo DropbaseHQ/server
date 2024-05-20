@@ -1,11 +1,11 @@
 def test_get_sources(test_client):
-    from server.config import config
+    from server.config import worker_envs
 
     # Arrange
-    sources = config.get("sources")
+    databases = worker_envs.get("database")
     db_names = []
-    for db_type in sources:
-        for key in sources[db_type].keys():
+    for db_type in databases:
+        for key in databases[db_type].keys():
             db_names.append(key)
 
     # Act

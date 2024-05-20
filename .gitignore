@@ -25,3 +25,4 @@ dump.rdb
 *.db
 *.db-journal
 config.toml
+worker_envs.toml

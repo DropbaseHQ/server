@@ -17,12 +17,12 @@ db_type_to_class = {
 
 def get_sources():
     # get sources from environment variable
-    env_sources = os.environ.get("sources", "{}")
-    env_sources = json.loads(env_sources)
+    env_databases = os.environ.get("database", "{}")
+    env_databases = json.loads(env_databases)
 
     sources = {}
-    for db_type in env_sources:
-        for name, creds in env_sources[db_type].items():
+    for db_type in env_databases:
+        for name, creds in env_databases[db_type].items():
             try:
                 # in this step, we both validate and ingest additional fields to the creds
                 SourceClass = db_type_to_class.get(db_type)

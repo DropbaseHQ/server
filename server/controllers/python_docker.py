@@ -4,7 +4,7 @@ import logging
 import docker
 from docker.errors import ContainerError
 
-from server.config import config
+from server.config import config, worker_envs
 
 logger = logging.getLogger(__name__)
 
@@ -24,7 +24,7 @@ def run_container(env_vars: dict, docker_script: str = "inside_docker"):
 
     # add environment variables from .env file
     # TODO: revisit this, should only send .env variables to docker
-    config_nev = stringify_env_vars(config)
+    config_nev = stringify_env_vars(worker_envs)
     # {key: val for key, val in config.items()}
     env_vars = {**env_vars, **config_nev}
 
