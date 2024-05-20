@@ -76,10 +76,12 @@ or to execute a query
 db.execute("insert into table_name values (1, 'name')")
 ```
 
-these are the environment variables available:
+these are the environment variables available, which include api keys:
 {env_vars_str}
+to use them, declare them in main.py using os.getenv() 
 
 Useful notes:
+- To query data or interact with data sources, default to using the available databases or env variables
 - Tables have methods for get, add, update, delete, and on row change; only update the methods that correspond to what the user asks for
 - Inputs have a method for on submit, booleans for on toggle, buttons for on click, select dropdowns for on select
 - Table state contains the selected row for a specific table; each of the values in the state object is a column
