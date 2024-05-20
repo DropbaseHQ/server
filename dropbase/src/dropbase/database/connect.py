@@ -4,26 +4,18 @@ from dropbase.database.databases.snowflake import SnowflakeDatabase
 from dropbase.database.databases.sqlite import SqliteDatabase
 from dropbase.database.sources import get_sources
 
-WORKSPACE_SOURCES = get_sources()
 
-
-def connect(name: str):
-    creds = WORKSPACE_SOURCES.get(name)
-    creds_fields = creds.get("fields")
-
-    creds_dict = creds_fields.dict()
-    schema_name = "public"
-
-    match creds.get("type"):
+def connect(name: str, schema_name="public"):
+    sources = get_sources()
+    source = sources.get(name)
+    match source.get("type"):
         case "postgres":
-            return PostgresDatabase(creds_dict, schema=schema_name)
-        case "pg":
-            return PostgresDatabase(creds_dict, schema=schema_name)
+            return PostgresDatabase(source.get("creds"), schema=schema_name)
         case "mysql":
-            return MySqlDatabase(creds_dict)
+            return MySqlDatabase(source.get("creds"))
         case "snowflake":
-            return SnowflakeDatabase(creds_dict, schema=schema_name)
+            return SnowflakeDatabase(source.get("creds"), schema=schema_name)
         case "sqlite":
-            return SqliteDatabase(creds_dict)
+            return SqliteDatabase(source.get("creds"))
         case _:
-            raise Exception(f"Database type {creds_fields.get('type')} not supported")
+            raise Exception(f"Database type {source.get('type')} not supported")

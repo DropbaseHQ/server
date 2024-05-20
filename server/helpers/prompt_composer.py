@@ -1,3 +1,6 @@
+from server.controllers.sources import get_source_name_type
+
+
 def get_ui_prompt(base_path: str, user_prompt: str):
     with open(base_path + "properties.json", "r") as file:
         props = file.read()
@@ -27,10 +30,6 @@ If a user needs to rename or update components, modify their label, not their na
 
 
 def get_func_prompt(base_path: str, user_prompt: str):
-    # if component.section and component.component:
-    #     method_name = f"{component.section}_{component.component}_{component.action}"
-    # else:
-    #     method_name = component.action
     # read files
     with open(base_path + "scripts/main.py", "r") as file:
         main_str = file.read()
@@ -38,6 +37,9 @@ def get_func_prompt(base_path: str, user_prompt: str):
         state_str = file.read()
     with open(base_path + "context.py", "r") as file:
         context_str = file.read()
+
+    sources = get_source_name_type()
+    sources_list = "\n".join([f"{s[0]}: {s[1]}" for s in sources])
 
     return f"""Given state.py:
 '''python
@@ -52,6 +54,24 @@ follow the user prompt to modify this main.py:
 '''python
 {main_str}
 '''
+
+these are the database names available along with their types:
+name: type
+{sources_list}
+
+to query a database, use a connection object from the database module. example:
+```python
+from dropbase.database.connect import connect
+db = connect("database_name")
+table_data = db.query("select * from table_name")
+# MUST convert the data to a pandas dataframe before assigning it to the context with the to_dtable() method
+table_df = df(table_data)
+context.table1.data = table_df.to_dtable()
+```
+or to execute a query
+```python
+db.execute("insert into table_name values (1, 'name')")
+```
 
 
 Useful notes:

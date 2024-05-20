@@ -11,26 +11,21 @@ def to_dtable(self, data_type: str = "python"):
     # for example if it's originated from querying sqlite, it will be "sqlite"
     if "dropbase_data_type" in self.__dict__:
         data_type = self.dropbase_data_type
-    return convert_df_to_resp_obj(self, data_type)
 
-
-# TODO: az rename this functions
-def convert_df_to_resp_obj(df: pd.DataFrame, data_type: str = "python") -> dict:
-    # TODO: az do we need column_type as input? where is it used?
-    values = json.loads(df.to_json(orient="split", default_handler=str))
+    values = json.loads(self.to_json(orient="split", default_handler=str))
 
     # sample down
-    if len(df) > INFER_TYPE_SAMPLE_SIZE:
-        df = df.sample(INFER_TYPE_SAMPLE_SIZE)
+    if len(self) > INFER_TYPE_SAMPLE_SIZE:
+        self = self.sample(INFER_TYPE_SAMPLE_SIZE)
 
     # infer column types
-    columns = get_column_types(df, column_type=data_type)
+    columns = get_column_types(self, column_type=data_type)
     values["columns"] = columns
     values["type"] = data_type
     return values
 
 
-def get_column_types(df, column_type="python"):
+def get_column_types(df: pd.DataFrame, column_type: str = "python"):
     columns = []
     for col, dtype in df.dtypes.items():
         data_type = str(dtype).lower()
