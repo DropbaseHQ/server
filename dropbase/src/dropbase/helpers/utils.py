@@ -79,6 +79,11 @@ def get_page_properties(app_name: str, page_name: str):
     return Properties(**properties)
 
 
+def validate_page_properties(properties: dict):
+    Properties = compose_properties_schema(properties)
+    return Properties(**properties)
+
+
 def get_function_by_name(app_name: str, page_name: str, file_name: str, function_name: str):
     # need to pass in the function name rather than the file name
     file_module = f"workspace.{app_name}.{page_name}.scripts.{file_name}"

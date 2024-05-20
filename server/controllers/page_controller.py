@@ -7,7 +7,12 @@ import astor
 
 from dropbase.helpers.boilerplate import *
 from dropbase.helpers.state_context import compose_state_context_models, get_page_state_context
-from dropbase.helpers.utils import get_page_properties, read_app_properties, read_page_properties
+from dropbase.helpers.utils import (
+    get_page_properties,
+    read_app_properties,
+    read_page_properties,
+    validate_page_properties,
+)
 from dropbase.models import *
 
 
@@ -45,23 +50,21 @@ class PageController:
             f.write(json.dumps(app_properties_boilerplate, indent=2))
 
     def add_page_to_app_properties(self, page_label: str):
-        app_properties = read_app_properties(self.app_name)
-        app_properties[self.page_name] = {"label": page_label}
+        properties = read_app_properties(self.app_name)
+        properties[self.page_name] = {"label": page_label}
+        validate_page_properties(properties)
         with open(f"workspace/{self.app_name}/properties.json", "w") as f:
-            f.write(json.dumps(app_properties, indent=2))
+            f.write(json.dumps(properties, indent=2))
 
     def remove_page_from_app_properties(self):
-        app_properties = read_app_properties(self.app_name)
-        app_properties.pop(self.page_name)
+        properties = read_app_properties(self.app_name)
+        properties.pop(self.page_name)
+        validate_page_properties(properties)
         with open(f"workspace/{self.app_name}/properties.json", "w") as f:
-            f.write(json.dumps(app_properties, indent=2))
+            f.write(json.dumps(properties, indent=2))
 
     def update_page_properties(self, properties: dict):
-        """
-        NOTE: properties are not validated against Properties schema since
-        if component is removed from incoming properties, Properties will fail the validation
-        """
-
+        validate_page_properties(properties)
         # write properties to file
         with open(self.page_path + "/properties.json", "w") as f:
             f.write(json.dumps(properties, indent=2))
@@ -150,8 +153,9 @@ class PageController:
     def update_table_columns(self, table_name: str, columns: list):
         # TODO: validate columns here
         properties = read_page_properties(self.app_name, self.page_name)
-        filepath = f"workspace/{self.app_name}/{self.page_name}/properties.json"
         properties.get(table_name)["columns"] = columns
+        validate_page_properties(properties)
+        filepath = f"workspace/{self.app_name}/{self.page_name}/properties.json"
         with open(filepath, "w") as f:
             f.write(json.dumps(properties, indent=2))
 
