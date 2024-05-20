@@ -1,4 +1,4 @@
-from server.controllers.sources import get_source_name_type
+from server.controllers.sources import get_env_vars, get_source_name_type
 
 
 def get_ui_prompt(base_path: str, user_prompt: str):
@@ -41,6 +41,9 @@ def get_func_prompt(base_path: str, user_prompt: str):
     sources = get_source_name_type()
     sources_list = "\n".join([f"{s['name']}: {s['type']}" for s in sources])
 
+    env_vars = get_env_vars()
+    env_vars_str = ", ".join(env_vars)
+
     return f"""Given state.py:
 '''python
 {state_str}
@@ -73,6 +76,8 @@ or to execute a query
 db.execute("insert into table_name values (1, 'name')")
 ```
 
+these are the environment variables available:
+{env_vars_str}
 
 Useful notes:
 - Tables have methods for get, add, update, delete, and on row change; only update the methods that correspond to what the user asks for

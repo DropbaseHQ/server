@@ -26,3 +26,4 @@ dump.rdb
 *.db-journal
 config.toml
 worker_envs.toml
+requirements-worker-custom.txt
