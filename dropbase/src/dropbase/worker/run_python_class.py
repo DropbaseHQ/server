@@ -61,10 +61,11 @@ def run(r):
             updates = [ColumnUpdate(**update) for update in updates]
             new_context = script.__getattribute__(resource).update(state, context, updates)
         elif action == "delete":
-            row = state.get(resource).get("columns")
-            new_context = script.__getattribute__(resource).delete(state, context, row)
+            new_context = script.__getattribute__(resource).delete(state, context)
         elif action == "add":
             row = json.loads(os.getenv("row"))
+            ColumnsState = getattr(state_context_module, resource.capitalize() + "ColumnsState")
+            row = ColumnsState(**row)
             new_context = script.__getattribute__(resource).add(state, context, row)
         elif action == "on_row_change":
             new_context = script.__getattribute__(resource).on_row_change(state, context)

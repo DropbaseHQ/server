@@ -12,3 +12,4 @@ class RunClass(BaseModel):
     component: Optional[str]
     state: dict
     updates: Optional[List[dict]]
+    row: Optional[dict]
