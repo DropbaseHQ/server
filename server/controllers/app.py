@@ -1,17 +1,16 @@
 import json
 import os
 import shutil
-import uuid
+
+from fastapi import HTTPException
 
 from dropbase.helpers.boilerplate import app_properties_boilerplate
-from server.constants import cwd
 from server.controllers.workspace import get_subdirectories
 
 
 class AppController:
-    def __init__(self, app_name: str, app_label: str) -> None:
+    def __init__(self, app_name: str) -> None:
         self.app_name = app_name
-        self.app_label = app_label
         self.app_path = f"workspace/{self.app_name}"
         self.app = None
 
@@ -23,25 +22,68 @@ class AppController:
         with open(f"workspace/{self.app_name}/properties.json", "w") as f:
             f.write(json.dumps(app_properties_boilerplate, indent=2))
 
-    def add_app_to_workspace(self):
+    def delete_app(self):
+        shutil.rmtree(self.app_path)
+        # delete from workspace properties
         with open("workspace/properties.json", "r") as f:
             workspace_properties = json.loads(f.read())
-        apps = workspace_properties.get("apps", [])
-        app = {"name": self.app_name, "label": self.app_label, "id": str(uuid.uuid4())}
-        apps.append(app)
+        apps = workspace_properties.get("apps", {})
+        apps.pop(self.app_name)
         workspace_properties["apps"] = apps
         with open("workspace/properties.json", "w") as file:
             file.write(json.dumps(workspace_properties, indent=2))
 
-    def delete_app(self):
-        shutil.rmtree(self.app_path)
+    def create_app(self, app_label: str):
 
-    def create_app(self):
         # TODO: handle workspace properties
+        if self._check_app_exists():
+            raise HTTPException(status_code=400, detail="App with such name already exists")
+        if self._check_label_exists(app_label):
+            raise HTTPException(status_code=400, detail="Label already exists")
+        # check if app already exists
         self.create_dirs()
         self.create_app_init_properties()
-        self.add_app_to_workspace()
+        self.add_app_to_workspace(app_label)
         return {"message": "success"}
+
+    def add_app_to_workspace(self, app_label: str):
+        with open("workspace/properties.json", "r") as f:
+            workspace_properties = json.loads(f.read())
+        apps = workspace_properties.get("apps", {})
+        apps[self.app_name] = {"label": app_label}
+        workspace_properties["apps"] = apps
+        with open("workspace/properties.json", "w") as file:
+            file.write(json.dumps(workspace_properties, indent=2))
+
+    def rename(self, new_label: str):
+        if self._check_label_exists(new_label):
+            raise HTTPException(status_code=400, detail="Label already exists")
+        with open("workspace/properties.json", "r") as f:
+            workspace_properties = json.loads(f.read())
+        apps = workspace_properties.get("apps", {})
+        apps[self.app_name]["label"] = new_label
+        workspace_properties["apps"] = apps
+        with open("workspace/properties.json", "w") as file:
+            file.write(json.dumps(workspace_properties, indent=2))
+
+    def _check_app_exists(self):
+        if os.path.exists(self.app_path):
+            return True
+        # check in workspace properties
+        with open("workspace/properties.json", "r") as f:
+            workspace_properties = json.loads(f.read())
+        apps = workspace_properties.get("apps", {})
+        if self.app_name in apps.keys():
+            return True
+
+    def _check_label_exists(self, label):
+        with open("workspace/properties.json", "r") as f:
+            workspace_properties = json.loads(f.read())
+        apps = workspace_properties.get("apps", {})
+        for app in apps.values():
+            if app["label"] == label:
+                return True
+        return False
 
     def get_pages(self):
         if os.path.exists(os.path.join(self.app_path, "properties.json")):
@@ -60,30 +102,19 @@ class AppController:
 
 
 def get_workspace_apps():
-    folder_path = os.path.join(cwd, "workspace")
-    apps = []
-    if os.path.exists(os.path.join(folder_path, "properties.json")):
-        with open(os.path.join(folder_path, "properties.json"), "r") as file:
-            apps = json.load(file)["apps"]
-    else:
-        app_names = get_subdirectories(folder_path)
-        apps = [{"name": app_name, "label": app_name, "id": None} for app_name in app_names]
-    response = []
-    for app in apps:
-        if not app.get("name"):
-            continue
-        if not os.path.exists(os.path.join(folder_path, app.get("name"))):
-            continue
-
-        app_controller = AppController(app.get("name"), app.get("label"))
-        pages = app_controller.get_pages()
-        response.append(
+    # TODO: confirm apps exist
+    app_response = []
+    with open("workspace/properties.json", "r") as f:
+        workspace_properties = json.loads(f.read())
+    apps = workspace_properties.get("apps", {})
+    for app_name, app in apps.items():
+        with open(f"workspace/{app_name}/properties.json", "r") as f:
+            app_properties = json.loads(f.read())
+        app_response.append(
             {
-                "name": app.get("name"),
+                "name": app_name,
                 "label": app.get("label"),
-                "id": app.get("id"),
-                "status": app.get("status"),
-                "pages": pages,
+                "pages": [{"name": p} for p in app_properties.keys()],
             }
         )
-    return {"apps": response}
+    return app_response
