@@ -41,9 +41,12 @@ class Database(ABC):
             self.session.rollback()  # Roll back the session on error.
             raise e  # Propagate the error.
 
-    def query(self, sql: str) -> pd.DataFrame:
+    def query(self, sql: str, values: dict = None) -> pd.DataFrame:
         try:
-            result_proxy = self.session.execute(text(sql))
+            if values:
+                result_proxy = self.session.execute(text(sql), values)
+            else:
+                result_proxy = self.session.execute(text(sql))
             return result_proxy.fetchall()
         except SQLAlchemyError as e:
             self.session.rollback()  # Rollback the session on error.
