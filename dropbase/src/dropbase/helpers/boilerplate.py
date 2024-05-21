@@ -111,8 +111,8 @@ for importer, modname, ispkg in pkgutil.iter_modules([os.path.dirname(__file__)]
 """
 
 
-page_init_boilerplate = """from workspace.{0}.{1}.context import Context
-from workspace.{0}.{1}.state import State
+page_init_boilerplate = """from workspace.{0}.{1}.context import *
+from workspace.{0}.{1}.state import *
 """
 
 
