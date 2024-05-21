@@ -78,7 +78,7 @@ db.execute("insert into table_name values (1, 'name')")
 
 these are the environment variables available, which include api keys:
 {env_vars_str}
-to use them, declare them in main.py using os.getenv() 
+to use them, declare them in main.py using os.getenv()
 
 Useful notes:
 - To query data or interact with data sources, default to using the available databases or env variables
@@ -97,6 +97,7 @@ Useful notes:
 - Use page context exclusively for passing/displaying messages to the user. this is the preferred way to show user messages
 - Import any python sdk needed to perform the task, but don't modify or delete existing import statements
 - By default, Dropbase UI/client sends dates as a string in Unix epoch
+- When composing SQL query, DO NOT use unnamed parameters (`?`) and use dics instead
 
 User prompt:
 {user_prompt}.
