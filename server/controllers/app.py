@@ -2,8 +2,6 @@ import json
 import os
 import shutil
 
-from fastapi import HTTPException
-
 from dropbase.helpers.boilerplate import app_properties_boilerplate
 from server.controllers.workspace import get_subdirectories
 
@@ -37,9 +35,9 @@ class AppController:
 
         # TODO: handle workspace properties
         if self._check_app_exists():
-            raise HTTPException(status_code=400, detail="App with such name already exists")
+            raise Exception("App with such name already exists")
         if self._check_label_exists(app_label):
-            raise HTTPException(status_code=400, detail="Label already exists")
+            raise Exception("Label already exists")
         # check if app already exists
         self.create_dirs()
         self.create_app_init_properties()
@@ -57,7 +55,7 @@ class AppController:
 
     def rename(self, new_label: str):
         if self._check_label_exists(new_label):
-            raise HTTPException(status_code=400, detail="Label already exists")
+            raise Exception("Label already exists")
         with open("workspace/properties.json", "r") as f:
             workspace_properties = json.loads(f.read())
         apps = workspace_properties.get("apps", {})

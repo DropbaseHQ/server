@@ -4,12 +4,11 @@ from dropbase.schemas.page import CreatePageRequest, PageProperties, SaveTableCo
 
 # prompt related
 from dropbase.schemas.prompt import Prompt
+from server.constants import DEFAULT_RESPONSES
 from server.controllers.page_controller import PageController
 from server.controllers.prompt import handle_prompt
 
-def_responses = {404: {"description": "Not found"}}
-
-router = APIRouter(prefix="/page", tags=["page"], responses=def_responses)
+router = APIRouter(prefix="/page", tags=["page"], responses=DEFAULT_RESPONSES)
 
 
 @router.get("/{app_name}/{page_name}/init")

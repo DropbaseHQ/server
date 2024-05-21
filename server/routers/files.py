@@ -1,9 +1,10 @@
 from fastapi import APIRouter
 
 from dropbase.schemas.files import CreateFile, DeleteFile, RenameFile, UpdateFile
+from server.constants import DEFAULT_RESPONSES
 from server.controllers.files import FileController
 
-router = APIRouter(prefix="/files", tags=["files"], responses={404: {"description": "Not found"}})
+router = APIRouter(prefix="/files", tags=["files"], responses=DEFAULT_RESPONSES)
 
 
 @router.post("/")

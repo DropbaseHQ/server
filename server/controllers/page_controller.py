@@ -77,8 +77,8 @@ class PageController:
 
     def update_main_class(self):
 
-        required_classes = self.get_require_classes()
-        required_methods = self.get_required_methods()
+        required_classes = self._get_require_classes()
+        required_methods = self._get_required_methods()
 
         file_path = self.page_path + "/scripts/main.py"
 
@@ -87,6 +87,24 @@ class PageController:
             module = ast.parse(f.read())
 
         visited_classes = []
+
+        # add missing methods
+        self._add_missing_methods(module, required_methods, visited_classes)
+
+        # add missing classes
+        self._add_missing_classes(module, required_classes, visited_classes)
+
+        # removed deleted classes
+        self._remove_deleted_classes(module, required_classes)
+
+        modified_code = astor.to_source(module)
+        with open(file_path, "w") as f:
+            f.write(modified_code)
+
+        # format with black
+        os.system(f"black {file_path}")
+
+    def _add_missing_methods(self, module, required_methods, visited_classes):
         for node in module.body:
             if isinstance(node, ast.ClassDef):
                 visited_classes.append(node.name)
@@ -114,13 +132,13 @@ class PageController:
                 if any(isinstance(child, ast.Pass) for child in node.body) and len(node.body) > 1:
                     node.body = [n for n in node.body if not isinstance(n, ast.Pass)]
 
-        # add missing classes
+    def _add_missing_classes(self, module, required_classes, visited_classes):
         for req_class in required_classes:
             if req_class not in visited_classes:
                 new_class_node = ast.parse(required_classes[req_class]).body[0]
                 module.body.append(new_class_node)
 
-        # removed deleted classes
+    def _remove_deleted_classes(self, module, required_classes):
         for node in module.body:
             if isinstance(node, ast.ClassDef):
                 for base in node.bases:
@@ -128,13 +146,6 @@ class PageController:
                     if base_name == "TableABC" or base_name == "WidgetABC":
                         if node.name not in required_classes:
                             module.body.remove(node)
-
-        modified_code = astor.to_source(module)
-        with open(file_path, "w") as f:
-            f.write(modified_code)
-
-        # format with black
-        os.system(f"black {file_path}")
 
     def add_inits(self):
         with open(f"workspace/{self.app_name}/__init__.py", "w") as f:
@@ -179,7 +190,7 @@ class PageController:
         shutil.rmtree(page_folder_path)
         self.remove_page_from_app_properties()
 
-    def get_require_classes(self):
+    def _get_require_classes(self):
         """
         returns a dictionary with table and widget classes that are required along with
         their boilerplate code
@@ -196,7 +207,7 @@ class PageController:
                 required_classes[class_name] = widget_class_boilerplate.format(class_name)
         return required_classes
 
-    def get_required_methods(self):
+    def _get_required_methods(self):
         required_methods = {}
         for key, values in self.properties:
             class_name = key.capitalize()

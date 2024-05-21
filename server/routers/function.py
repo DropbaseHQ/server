@@ -5,10 +5,11 @@ from fastapi import APIRouter, HTTPException, Response
 
 from dropbase.schemas.function import RunClass
 from dropbase.schemas.run_python import RunPythonStringRequestNew
+from server.constants import DEFAULT_RESPONSES
 from server.controllers.python_docker import run_container
 from server.controllers.redis import r
 
-router = APIRouter(prefix="/function", tags=["function"], responses={404: {"description": "Not found"}})
+router = APIRouter(prefix="/function", tags=["function"], responses=DEFAULT_RESPONSES)
 
 
 # run function

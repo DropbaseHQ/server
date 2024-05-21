@@ -3,11 +3,10 @@ import os
 from fastapi import APIRouter
 
 from dropbase.helpers.utils import check_if_object_exists
+from server.constants import DEFAULT_RESPONSES
 from server.controllers.workspace import WorkspaceFolderController
 
-router = APIRouter(
-    prefix="/worker_workspace", tags=["worker_workspace"], responses={404: {"description": "Not found"}}
-)
+router = APIRouter(prefix="/worker_workspace", tags=["worker_workspace"], responses=DEFAULT_RESPONSES)
 
 
 @router.get("/")
