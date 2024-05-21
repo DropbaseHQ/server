@@ -56,10 +56,10 @@ def run(r):
         if action == "get":
             new_context = script.__getattribute__(resource).get(state, context)
         elif action == "update":
-            edits = json.loads(os.getenv("edits"))
-            for edit in edits:
-                edit = EditInfo(**edit)
-            new_context = script.__getattribute__(resource).update(state, context, edits)
+            updates = json.loads(os.getenv("updates"))
+            ColumnUpdate = getattr(state_context_module, resource.capitalize() + "ColumnUpdate")
+            updates = [ColumnUpdate(**update) for update in updates]
+            new_context = script.__getattribute__(resource).update(state, context, updates)
         elif action == "delete":
             row = state.get(resource).get("columns")
             new_context = script.__getattribute__(resource).delete(state, context, row)

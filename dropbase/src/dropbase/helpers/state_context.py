@@ -108,6 +108,7 @@ def compose_column_dir(columns):
 
 def compose_state_model(properties):
     state = {}
+    table_update_classes = ""
     for key, value in properties:
         class_name = key.capitalize() + "State"
         if isinstance(value, WidgetProperty):
@@ -137,8 +138,16 @@ def compose_state_model(properties):
                     "footer": (footer_class, ...),
                 },
             )
+
+            # compose table update classes that will be used by table update method
+            table_update_class_name = key.capitalize() + "ColumnUpdate"
+            table_update_classes += f"""\n
+class {table_update_class_name}(BaseModel):
+    new: {columns_class_name}
+    old: {columns_class_name}\n"""
+
         state[key] = (locals()[class_name], ...)
-    return create_model("State", **state)
+    return create_model("State", **state), table_update_classes
 
 
 def compose_state_context_models(app_name: str, page_name: str, properties):
@@ -146,18 +155,21 @@ def compose_state_context_models(app_name: str, page_name: str, properties):
     page_dir_path = f"workspace/{app_name}/{page_name}"
 
     Context = generate_context_model(properties)
-    State = compose_state_model(properties)
     generate(
         input_=Context.schema_json(indent=2),
         input_file_type="json",
         output=Path(page_dir_path + "/context.py"),
     )
 
+    State, table_update_classes = compose_state_model(properties)
     generate(
         input_=State.schema_json(indent=2),
         input_file_type="json",
         output=Path(page_dir_path + "/state.py"),
     )
+    # open state file and append table updates classes
+    with open(Path(page_dir_path + "/state.py"), "a") as f:
+        f.write(table_update_classes)
 
 
 def get_page_state_context(app_name: str, page_name: str, initial=False):

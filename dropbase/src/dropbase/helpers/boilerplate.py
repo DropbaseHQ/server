@@ -28,13 +28,16 @@ class Properties(BaseModel):
 # main boilerplates
 # create
 main_class_init = """import pandas as pd
+from typing import List
 from dropbase.helpers.tableABC import TableABC
 from dropbase.helpers.widgetABC import WidgetABC
-from ..context import Context
-from ..state import State
+from workspace.{0}.{1}.context import *
+from workspace.{0}.{1}.state import *
 
 
 class Table1(TableABC):
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
 
     def get(self, state: State, context: Context):
         # Add your code here
@@ -42,16 +45,16 @@ class Table1(TableABC):
         context.table1.data = table_data.to_dtable()
         return context
 
-    def add(self, state, context, row: dict) -> Context:
+    def add(self, state: State, context: Context, row: Table1ColumnsState) -> Context:
         return context
 
-    def update(self, state, context, row: dict) -> Context:
+    def update(self, state: State, context: Context, updates: List[Table1ColumnUpdate]) -> Context:
         return context
 
-    def delete(self, state, context, row: dict) -> Context:
+    def delete(self, state: State, context: Context) -> Context:
         return context
 
-    def on_row_change(self, state, context) -> Context:
+    def on_row_change(self, state: State, context: Context) -> Context:
         return context
 
 class Widget1(WidgetABC):
@@ -67,11 +70,25 @@ def {0}(self, state: State, context: Context) -> Context:
 
 
 table_class_boilerplate = """class {0}(TableABC):
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
 
     def get(self, state: State, context: Context):
         # Add your code here
         table_data = pd.DataFrame()
         context.{1}.data = table_data.to_dtable()
+        return context
+
+    def add(self, state: State, context: Context, row: {0}ColumnsState) -> Context:
+        return context
+
+    def update(self, state: State, context: Context, updates: List[{0}ColumnUpdate]) -> Context:
+        return context
+
+    def delete(self, state: State, context: Context) -> Context:
+        return context
+
+    def on_row_change(self, state: State, context: Context) -> Context:
         return context
 """
 
@@ -94,8 +111,8 @@ for importer, modname, ispkg in pkgutil.iter_modules([os.path.dirname(__file__)]
 """
 
 
-page_init_boilerplate = """from .context import Context
-from .state import State
+page_init_boilerplate = """from workspace.{0}.{1}.context import Context
+from workspace.{0}.{1}.state import State
 """
 
 

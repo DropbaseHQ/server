@@ -50,18 +50,16 @@ class PageController:
             f.write(json.dumps(app_properties_boilerplate, indent=2))
 
     def add_page_to_app_properties(self, page_label: str):
-        properties = read_app_properties(self.app_name)
-        properties[self.page_name] = {"label": page_label}
-        validate_page_properties(properties)
+        app_properties = read_app_properties(self.app_name)
+        app_properties[self.page_name] = {"label": page_label}
         with open(f"workspace/{self.app_name}/properties.json", "w") as f:
-            f.write(json.dumps(properties, indent=2))
+            f.write(json.dumps(app_properties, indent=2))
 
     def remove_page_from_app_properties(self):
-        properties = read_app_properties(self.app_name)
-        properties.pop(self.page_name)
-        validate_page_properties(properties)
+        app_properties = read_app_properties(self.app_name)
+        app_properties.pop(self.page_name)
         with open(f"workspace/{self.app_name}/properties.json", "w") as f:
-            f.write(json.dumps(properties, indent=2))
+            f.write(json.dumps(app_properties, indent=2))
 
     def update_page_properties(self, properties: dict):
         validate_page_properties(properties)
@@ -73,8 +71,9 @@ class PageController:
         self.update_page()
 
     def create_main_class(self):
+        main_class_init_str = main_class_init.format(self.app_name, self.page_name)
         with open(self.page_path + "/scripts/main.py", "w") as f:
-            f.write(main_class_init)
+            f.write(main_class_init_str)
 
     def update_main_class(self):
 
@@ -141,8 +140,9 @@ class PageController:
         with open(f"workspace/{self.app_name}/__init__.py", "w") as f:
             f.write(app_init_boilerplate)
 
+        page_init_boilerplate_str = page_init_boilerplate.format(self.app_name, self.page_name)
         with open(self.page_path + "/__init__.py", "w") as f:
-            f.write(page_init_boilerplate)
+            f.write(page_init_boilerplate_str)
 
     def save_table_columns(self, table_name: str, columns: list):
         # update page properties file
