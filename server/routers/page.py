@@ -1,8 +1,6 @@
 from fastapi import APIRouter, HTTPException
 
 from dropbase.schemas.page import CreatePageRequest, PageProperties, SaveTableColumns
-
-# prompt related
 from dropbase.schemas.prompt import Prompt
 from server.constants import DEFAULT_RESPONSES
 from server.controllers.page_controller import PageController

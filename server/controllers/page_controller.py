@@ -1,6 +1,7 @@
 import ast
 import json
 import os
+import re
 import shutil
 
 import astor
@@ -14,6 +15,16 @@ from dropbase.helpers.utils import (
     validate_page_properties,
 )
 from dropbase.models import *
+
+prefixes = ["header", "footer", "columns", "components"]
+suffixes = ["on_click", "on_select", "on_toggle", "on_submit"]
+
+# Join prefixes and suffixes to form a regex pattern
+prefix_pattern = "|".join(re.escape(prefix) for prefix in prefixes)
+suffix_pattern = "|".join(re.escape(suffix) for suffix in suffixes)
+
+# Compile the complete regex pattern
+pattern = re.compile(f"^({prefix_pattern})_(.*?)_({suffix_pattern})$")
 
 
 class PageController:
@@ -91,6 +102,9 @@ class PageController:
         # add missing methods
         self._add_missing_methods(module, required_methods, visited_classes)
 
+        # remove deleted methods
+        self._remove_deleted_methods(module)
+
         # add missing classes
         self._add_missing_classes(module, required_classes, visited_classes)
 
@@ -131,6 +145,41 @@ class PageController:
                 # remove pass statements from class
                 if any(isinstance(child, ast.Pass) for child in node.body) and len(node.body) > 1:
                     node.body = [n for n in node.body if not isinstance(n, ast.Pass)]
+
+    def _remove_deleted_methods(self, module):
+        properties = read_page_properties(self.app_name, self.page_name)
+        for node in module.body:
+            if isinstance(node, ast.ClassDef):
+                for base in node.bases:
+                    base_name = base.attr if isinstance(base, ast.Attribute) else base.id
+                    if base_name == "TableABC" or base_name == "WidgetABC":
+                        block_name = node.name.lower()
+                        # make sure get_table is defined
+                        for method in node.body:
+                            # if it's not a method, skip
+                            if not isinstance(method, ast.FunctionDef):
+                                continue
+
+                            # find methods that match the pattern components_name_on_click
+                            match = pattern.match(method.name)
+
+                            # if found, confirm it's present in properties.json
+                            if match:
+                                section, comp_name = match.group(1), match.group(2)
+                                # section would be header, footer, columns, components
+                                # comp_name would be the name of the component
+                                if block_name in properties:
+                                    if section in properties[block_name]:
+                                        # get all component names in the section
+                                        component_names = [
+                                            c["name"] for c in properties[block_name][section]
+                                        ]
+                                        if comp_name not in component_names:
+                                            """
+                                            if function is present in main.py but component is not
+                                            in properties.json, then remove method from module
+                                            """
+                                            node.body.remove(method)
 
     def _add_missing_classes(self, module, required_classes, visited_classes):
         for req_class in required_classes:
@@ -330,6 +379,7 @@ def set_widget_visibility(response):
 # helper functions
 def parse_component_methods(method_name: str, class_name: str, class_methods: dict, class_type: str):
     # check header
+    # TODO: refactor this to use regex
     sections = ["header", "footer", "columns"] if class_type == "table" else ["components"]
     methods = ["on_click", "on_select", "on_toggle", "on_submit"]
     for section in sections:
