@@ -93,7 +93,8 @@ table_class_boilerplate = """class {0}(TableABC):
 """
 
 widget_class_boilerplate = """class {0}(WidgetABC):
-    pass
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
 """
 
 

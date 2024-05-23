@@ -181,6 +181,14 @@ class PageController:
                                             """
                                             node.body.remove(method)
 
+                    # if all the methods are removed, add a pass statement to the class
+                    if not any(
+                        isinstance(member, (ast.FunctionDef, ast.AsyncFunctionDef, ast.Pass))
+                        for member in node.body
+                    ):
+                        # Add a `pass` statement if the class is empty
+                        node.body.append(ast.Pass())
+
     def _add_missing_classes(self, module, required_classes, visited_classes):
         for req_class in required_classes:
             if req_class not in visited_classes:
