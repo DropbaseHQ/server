@@ -295,43 +295,46 @@ class PageController:
         return self.get_main_class_methods()
 
     def get_main_class_methods(self):
-        file_path = self.page_path + "/scripts/main.py"
-        with open(file_path, "r") as f:
-            module = ast.parse(f.read())
+        try:
+            file_path = self.page_path + "/scripts/main.py"
+            with open(file_path, "r") as f:
+                module = ast.parse(f.read())
 
-        class_methods = {}
+            class_methods = {}
 
-        for node in module.body:
-            if isinstance(node, ast.ClassDef):
-                for base in node.bases:
-                    base_name = base.attr if isinstance(base, ast.Attribute) else base.id
-                    if base_name == "TableABC":
-                        class_name = node.name.lower()
-                        for n in node.body:
-                            if isinstance(n, ast.FunctionDef) and not is_simple_return_context(n):
-                                if class_name not in class_methods:
-                                    class_methods[class_name] = {
-                                        "columns": {},
-                                        "header": {},
-                                        "footer": {},
-                                        "methods": [],
-                                    }
-                                # parse component methods
-                                parse_component_methods(n.name, class_name, class_methods, "table")
-                                # parse table methods
-                                if n.name in ["get", "add", "update", "delete", "on_row_change"]:
-                                    class_methods[class_name]["methods"].append(n.name)
+            for node in module.body:
+                if isinstance(node, ast.ClassDef):
+                    for base in node.bases:
+                        base_name = base.attr if isinstance(base, ast.Attribute) else base.id
+                        if base_name == "TableABC":
+                            class_name = node.name.lower()
+                            for n in node.body:
+                                if isinstance(n, ast.FunctionDef) and not is_simple_return_context(n):
+                                    if class_name not in class_methods:
+                                        class_methods[class_name] = {
+                                            "columns": {},
+                                            "header": {},
+                                            "footer": {},
+                                            "methods": [],
+                                        }
+                                    # parse component methods
+                                    parse_component_methods(n.name, class_name, class_methods, "table")
+                                    # parse table methods
+                                    if n.name in ["get", "add", "update", "delete", "on_row_change"]:
+                                        class_methods[class_name]["methods"].append(n.name)
 
-                    if base_name == "WidgetABC":
-                        class_name = node.name.lower()
-                        for n in node.body:
-                            if isinstance(n, ast.FunctionDef) and not is_simple_return_context(n):
-                                if class_name not in class_methods:
-                                    class_methods[class_name] = {"components": {}}
-                                # parse component methods
-                                parse_component_methods(n.name, class_name, class_methods, "widget")
+                        if base_name == "WidgetABC":
+                            class_name = node.name.lower()
+                            for n in node.body:
+                                if isinstance(n, ast.FunctionDef) and not is_simple_return_context(n):
+                                    if class_name not in class_methods:
+                                        class_methods[class_name] = {"components": {}}
+                                    # parse component methods
+                                    parse_component_methods(n.name, class_name, class_methods, "widget")
 
-        return class_methods
+            return class_methods
+        except Exception:
+            return {}
 
 
 def is_simple_return_context(node):
