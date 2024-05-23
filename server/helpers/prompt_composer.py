@@ -1,13 +1,15 @@
+import json
+
 from server.controllers.sources import get_env_vars, get_source_name_type
 
 
 def get_ui_prompt(base_path: str, user_prompt: str):
     with open(base_path + "properties.json", "r") as file:
-        props = file.read()
+        props = json.loads(file.read())
     return f"""Follow the user prompt to modify properties.json file
 
 properties.json:
-{props}
+{json.dumps(props, separators=(',', ':'))}
 
 Useful notes:
 - Tables and widgets are the highest level objects
