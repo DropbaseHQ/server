@@ -1,43 +1,48 @@
-import os
-
-from fastapi import APIRouter
+from fastapi import APIRouter, HTTPException
 
 from dropbase.schemas.workspace import CreateAppRequest, RenameAppRequest
+from server.constants import DEFAULT_RESPONSES
 from server.controllers.app import AppController, get_workspace_apps
 from server.controllers.page_controller import PageController
-from server.controllers.workspace import WorkspaceFolderController
-from server.utils import get_permission_dependency_array
 
-router = APIRouter(prefix="/app", tags=["app"], responses={404: {"description": "Not found"}})
+router = APIRouter(prefix="/app", tags=["app"], responses=DEFAULT_RESPONSES)
 
 
-@router.post("/", dependencies=get_permission_dependency_array("edit", "workspace"))
+@router.post("/")
 def create_app_req(request: CreateAppRequest):
-    appController = AppController(request.app_name, request.app_label)
-    appController.create_app()
-    pageController = PageController(request.app_name, "page1")
-    pageController.create_page("Page 1")
-    return {"message": "success"}
+    try:
+        appController = AppController(request.app_name)
+        appController.create_app(request.app_label)
+        pageController = PageController(request.app_name, "page1")
+        pageController.create_page("Page 1")
+        return {"message": "success"}
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
 
 
-@router.put("/", dependencies=get_permission_dependency_array("edit", "workspace"))
-def rename_app_req(req: RenameAppRequest):
-    # assert page does not exist
-    path_to_workspace = os.path.join(os.path.dirname(__file__), "../../workspace")
-    workspace_folder_controller = WorkspaceFolderController(r_path_to_workspace=path_to_workspace)
-    return workspace_folder_controller.update_app_info(app_id=req.app_id, new_label=req.new_label)
+@router.put("/")
+def rename_app_req(request: RenameAppRequest):
+    try:
+        appController = AppController(request.app_name)
+        appController.rename(request.new_label)
+        return {"message": "success"}
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
 
 
-@router.delete("/{app_name}", dependencies=get_permission_dependency_array("edit", "workspace"))
+@router.delete("/{app_name}")
 def delete_app_req(app_name: str):
-    appController = AppController(app_name, "")
-    appController.delete_app()
-    return {"message": "App deleted successfully"}
+    try:
+        appController = AppController(app_name)
+        appController.delete_app()
+        return {"message": "App deleted successfully"}
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
 
 
-@router.get(
-    "/list/"
-    # , dependencies=get_permission_dependency_array("use", "workspace")
-)
+@router.get("/list/")
 def get_user_apps():
-    return get_workspace_apps().get("apps")
+    try:
+        return get_workspace_apps()
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))

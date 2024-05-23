@@ -6,8 +6,8 @@ from pathlib import Path
 import pandas as pd
 from pydantic import BaseModel, create_model
 
-from dropbase.models.table import TableDefinedProperty
-from dropbase.models.widget import WidgetDefinedProperty
+from dropbase.models.table import TableProperty
+from dropbase.models.widget import WidgetProperty
 
 
 def get_state(app_name: str, page_name: str, state: dict):
@@ -61,10 +61,7 @@ def read_app_properties(app_name: str):
 
 
 def compose_properties_schema(properties: dict):
-    block_type_mapping = {
-        "table": TableDefinedProperty,
-        "widget": WidgetDefinedProperty,
-    }
+    block_type_mapping = {"table": TableProperty, "widget": WidgetProperty}
 
     # compose fields for pydantic model
     fields = {}
@@ -79,6 +76,11 @@ def get_page_properties(app_name: str, page_name: str):
     properties = read_page_properties(app_name, page_name)
     Properties = compose_properties_schema(properties)
     # create page object
+    return Properties(**properties)
+
+
+def validate_page_properties(properties: dict):
+    Properties = compose_properties_schema(properties)
     return Properties(**properties)
 
 

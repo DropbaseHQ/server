@@ -7,5 +7,3 @@ class WidgetABC(ABC):
         self.name = kwargs.get("name")
         self.app_name = kwargs.get("app_name")
         self.page_name = kwargs.get("page_name")
-        self.state = kwargs.get("state")
-        self.context = kwargs.get("context")

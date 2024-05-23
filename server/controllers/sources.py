@@ -4,7 +4,7 @@ import logging
 from pydantic import ValidationError
 
 from dropbase.schemas.database import MySQLCreds, PgCreds, SnowflakeCreds, SqliteCreds
-from server.settings import config
+from server.config import worker_envs
 
 db_type_to_class = {
     "postgres": PgCreds,
@@ -15,30 +15,21 @@ db_type_to_class = {
 }
 
 
-def get_sources():
-    sources = {}
-    env_sources = config.get("sources", {})
-    for db_type in env_sources:
-        for key, value in env_sources[db_type].items():
-            value["type"] = db_type
+def get_source_name_type():
+    sources = []
+    databases = worker_envs.get("database", {})
+    for db_type in databases:
+        for key, creds in databases[db_type].items():
+            try:
+                # assert that the creds are valid by casting them to the appropriate class
+                SourceClass = db_type_to_class.get(db_type)
+                SourceClass(**creds)
+                # if the creds are valid, add them to the list of sources
+                sources.append({"name": key, "type": db_type})
+            except ValidationError as e:
+                logging.warning(f"Failed to validate source {key}.\n\nError: " + str(e))
+    return sources
 
-            if "schema" in value:
-                value["dbschema"] = value.pop("schema")
 
-            sources[key] = value
-
-    verified_sources = {}
-    for name, source in sources.items():
-        db_type = source["type"]
-        SourceClass = db_type_to_class.get(source["type"])
-
-        try:
-            source = SourceClass(**source)
-            """
-            NOTE: For now, the "name" is the unique identifier, which means there can not be classes of
-            the same name, even if they are of different types
-            """
-            verified_sources[name] = {"fields": source, "type": db_type}
-        except ValidationError as e:
-            logging.warning(f"Failed to validate source {name}.\n\nError: " + str(e))
-    return verified_sources
+def get_env_vars():
+    return [key for key, value in worker_envs.items() if not isinstance(value, dict)]

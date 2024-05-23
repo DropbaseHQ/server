@@ -6,7 +6,7 @@ from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.sql import text
 
 from dropbase.database.database import Database
-from dropbase.models.table.mysql_column import MySqlColumnDefinedProperty
+from dropbase.models.table.mysql_column import MySqlColumnProperty
 from dropbase.schemas.edit_cell import CellEdit
 from dropbase.schemas.table import TableFilter, TablePagination, TableSort
 
@@ -201,7 +201,7 @@ class MySqlDatabase(Database):
 
         validated = []
         for col_name, col_data in smart_cols.items():
-            col_data = MySqlColumnDefinedProperty(**col_data)
+            col_data = MySqlColumnProperty(**col_data)
 
             pk_name = primary_keys.get(self._get_table_path(col_data))
 
@@ -236,7 +236,7 @@ class MySqlDatabase(Database):
                     if res[0][0] is None:
                         raise Exception("Can not convert empty table into smart table")
                     raise Exception("Invalid column")
-            except (SQLAlchemyError):
+            except SQLAlchemyError:
                 raise (SQLAlchemyError)
 
         return validated
@@ -245,7 +245,7 @@ class MySqlDatabase(Database):
         primary_keys = {}
         alias_keys = {}
         for col_data in smart_cols.values():
-            col_data = MySqlColumnDefinedProperty(**col_data)
+            col_data = MySqlColumnProperty(**col_data)
             if col_data.primary_key:
                 if col_data.name != col_data.column_name:
                     alias_keys[col_data.column_name] = col_data.name
@@ -254,7 +254,7 @@ class MySqlDatabase(Database):
                 primary_keys[self._get_table_path(col_data)] = col_data.column_name
         return primary_keys, alias_keys
 
-    def _get_table_path(self, col_data: MySqlColumnDefinedProperty) -> str:
+    def _get_table_path(self, col_data: MySqlColumnProperty) -> str:
         return f"{col_data.table_name}"
 
     def _run_query(self, sql: str, values: dict):
@@ -322,6 +322,7 @@ class MySqlDatabase(Database):
 
 
 # helper functions --> if these helper functions are compatible with mysql maybe move it to utils?
+
 
 # NOTE: Certain CTEs are not valid prior to MySQL 8.0.0
 def _get_fast_sql(

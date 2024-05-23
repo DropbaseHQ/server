@@ -2,38 +2,33 @@ import operator
 from functools import reduce
 
 from dropbase.models.common import DisplayTypeConfigurations
-from dropbase.models.table import (
-    ButtonColumnDefinedProperty,
-    PgColumnDefinedProperty,
-    PyColumnDefinedProperty,
-    TableDefinedProperty,
-)
-from dropbase.models.table.mysql_column import MySqlColumnDefinedProperty
-from dropbase.models.table.snowflake_column import SnowflakeColumnDefinedProperty
-from dropbase.models.table.sqlite_column import SqliteColumnDefinedProperty
+from dropbase.models.table import ButtonColumnProperty, PgColumnProperty, PyColumnProperty, TableProperty
+from dropbase.models.table.mysql_column import MySqlColumnProperty
+from dropbase.models.table.snowflake_column import SnowflakeColumnProperty
+from dropbase.models.table.sqlite_column import SqliteColumnProperty
 from dropbase.models.widget import (
-    BooleanDefinedProperty,
-    ButtonDefinedProperty,
-    InputDefinedProperty,
-    SelectDefinedProperty,
-    TextDefinedProperty,
-    WidgetDefinedProperty,
+    BooleanProperty,
+    ButtonProperty,
+    InputProperty,
+    SelectProperty,
+    TextProperty,
+    WidgetProperty,
 )
 
 component_property_types = {
-    "table": TableDefinedProperty,
-    "button_column": ButtonColumnDefinedProperty,
-    "pycolumn": PyColumnDefinedProperty,
-    "pgcolumn": PgColumnDefinedProperty,
-    "mysqlcolumn": MySqlColumnDefinedProperty,
-    "snowflakecolumn": SnowflakeColumnDefinedProperty,
-    "sqlitecolumn": SqliteColumnDefinedProperty,
-    "widget": WidgetDefinedProperty,
-    "input": InputDefinedProperty,
-    "button": ButtonDefinedProperty,
-    "text": TextDefinedProperty,
-    "select": SelectDefinedProperty,
-    "boolean": BooleanDefinedProperty,
+    "table": TableProperty,
+    "button_column": ButtonColumnProperty,
+    "pycolumn": PyColumnProperty,
+    "pgcolumn": PgColumnProperty,
+    "mysqlcolumn": MySqlColumnProperty,
+    "snowflakecolumn": SnowflakeColumnProperty,
+    "sqlitecolumn": SqliteColumnProperty,
+    "widget": WidgetProperty,
+    "input": InputProperty,
+    "button": ButtonProperty,
+    "text": TextProperty,
+    "select": SelectProperty,
+    "boolean": BooleanProperty,
     "display_type_configurations": DisplayTypeConfigurations,
 }
 

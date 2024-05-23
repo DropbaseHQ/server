@@ -2,50 +2,45 @@ from typing import List, Optional, Union
 
 from pydantic import BaseModel
 
-from dropbase.models.table import (
-    ButtonColumnDefinedProperty,
-    PgColumnDefinedProperty,
-    PyColumnDefinedProperty,
-    TableDefinedProperty,
-)
-from dropbase.models.table.mysql_column import MySqlColumnDefinedProperty
-from dropbase.models.table.snowflake_column import SnowflakeColumnDefinedProperty
-from dropbase.models.table.sqlite_column import SqliteColumnDefinedProperty
+from dropbase.models.table import ButtonColumnProperty, PgColumnProperty, PyColumnProperty, TableProperty
+from dropbase.models.table.mysql_column import MySqlColumnProperty
+from dropbase.models.table.snowflake_column import SnowflakeColumnProperty
+from dropbase.models.table.sqlite_column import SqliteColumnProperty
 from dropbase.models.widget import (
-    BooleanDefinedProperty,
-    ButtonDefinedProperty,
-    InputDefinedProperty,
-    SelectDefinedProperty,
-    TextDefinedProperty,
-    WidgetDefinedProperty,
+    BooleanProperty,
+    ButtonProperty,
+    InputProperty,
+    SelectProperty,
+    TextProperty,
+    WidgetProperty,
 )
 from dropbase.schemas.files import DataFile
 
 
-class WidgetProperties(WidgetDefinedProperty):
+class WidgetProperties(WidgetProperty):
     components: List[
         Optional[
             Union[
-                InputDefinedProperty,
-                SelectDefinedProperty,
-                TextDefinedProperty,
-                ButtonDefinedProperty,
-                BooleanDefinedProperty,
+                InputProperty,
+                SelectProperty,
+                TextProperty,
+                ButtonProperty,
+                BooleanProperty,
             ]
         ]
     ] = []
 
 
-class TableProperties(TableDefinedProperty):
+class TableProperties(TableProperty):
     columns: List[
         Optional[
             Union[
-                PgColumnDefinedProperty,
-                SnowflakeColumnDefinedProperty,
-                MySqlColumnDefinedProperty,
-                SqliteColumnDefinedProperty,
-                PyColumnDefinedProperty,
-                ButtonColumnDefinedProperty,
+                PgColumnProperty,
+                SnowflakeColumnProperty,
+                MySqlColumnProperty,
+                SqliteColumnProperty,
+                PyColumnProperty,
+                ButtonColumnProperty,
             ]
         ]
     ] = []

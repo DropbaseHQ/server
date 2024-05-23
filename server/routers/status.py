@@ -2,9 +2,10 @@ import json
 
 from fastapi import APIRouter, Response
 
+from server.constants import DEFAULT_RESPONSES
 from server.controllers.redis import r
 
-router = APIRouter(prefix="/status", tags=["status"], responses={404: {"description": "Not found"}})
+router = APIRouter(prefix="/status", tags=["status"], responses=DEFAULT_RESPONSES)
 
 
 @router.get("/{job_id}")

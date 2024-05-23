@@ -1,9 +1,11 @@
 from importlib.util import find_spec
+
 from fastapi import Depends
 
 auth_module_is_installed = find_spec("server.auth") is not None
 
 
+# TODO: REMOVE THIS
 def get_permission_dependency(action: str, resource: str):
     if not auth_module_is_installed:
         return None

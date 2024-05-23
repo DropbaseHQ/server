@@ -3,20 +3,14 @@ import os
 from fastapi import APIRouter
 
 from dropbase.helpers.utils import check_if_object_exists
+from server.constants import DEFAULT_RESPONSES
 from server.controllers.workspace import WorkspaceFolderController
 
-router = APIRouter(
-    prefix="/worker_workspace",
-    tags=["worker_workspace"],
-    responses={404: {"description": "Not found"}},
-)
+router = APIRouter(prefix="/worker_workspace", tags=["worker_workspace"], responses=DEFAULT_RESPONSES)
 
 
 @router.get("/")
 async def get_workspace() -> dict:
-
-    # response = router.auth.get_worker_workspace()
-    # workspace_info = response.json()
     workspace_folder_controller = WorkspaceFolderController(
         r_path_to_workspace=os.path.join(os.getcwd(), "workspace")
     )

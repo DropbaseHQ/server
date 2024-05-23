@@ -1,12 +1,9 @@
 from fastapi import APIRouter
 
+from server.constants import DEFAULT_RESPONSES
 from server.controllers.components import get_component_properties
 
-router = APIRouter(
-    prefix="/components",
-    tags=["components"],
-    responses={404: {"description": "Not found"}},
-)
+router = APIRouter(prefix="/components", tags=["components"], responses=DEFAULT_RESPONSES)
 
 
 @router.get("/properties/{component_type}")

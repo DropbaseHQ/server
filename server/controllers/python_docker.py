@@ -2,8 +2,9 @@ import json
 import logging
 
 import docker
+from docker.errors import ContainerError
 
-from server.settings import config
+from server.config import config, worker_envs
 
 logger = logging.getLogger(__name__)
 
@@ -23,7 +24,7 @@ def run_container(env_vars: dict, docker_script: str = "inside_docker"):
 
     # add environment variables from .env file
     # TODO: revisit this, should only send .env variables to docker
-    config_nev = stringify_env_vars(config)
+    config_nev = stringify_env_vars(worker_envs)
     # {key: val for key, val in config.items()}
     env_vars = {**env_vars, **config_nev}
 
@@ -31,7 +32,7 @@ def run_container(env_vars: dict, docker_script: str = "inside_docker"):
     host_path = config.get("host_workspace_path")
     workspace_mount = docker.types.Mount(
         target="/app/workspace", source=host_path + "/workspace", type="bind"
-    )  # noqa
+    )
     files_mount = docker.types.Mount(target="/app/files", source=host_path + "/files", type="bind")
     mounts = [workspace_mount, files_mount]
 
@@ -47,13 +48,16 @@ def run_container(env_vars: dict, docker_script: str = "inside_docker"):
             mounts.append(docker.types.Mount(target=target, source=source, type="bind"))
 
     # Run the Docker container with the mount
-    client.containers.run(
-        "dropbase/worker",
-        command=f"python {docker_script}.py",
-        mounts=mounts,
-        environment=env_vars,
-        network="dropbase_default",
-        working_dir="/app",
-        detach=True,
-        auto_remove=True,
-    )
+    try:
+        client.containers.run(
+            "dropbase/worker",
+            command=f"python {docker_script}.py",
+            mounts=mounts,
+            environment=env_vars,
+            network="dropbase_default",
+            working_dir="/app",
+            detach=True,
+            auto_remove=True,
+        )
+    except ContainerError as e:
+        raise e

@@ -5,21 +5,17 @@ from fastapi import APIRouter, HTTPException, Response
 
 from dropbase.schemas.function import RunClass
 from dropbase.schemas.run_python import RunPythonStringRequestNew
+from server.constants import DEFAULT_RESPONSES
 from server.controllers.python_docker import run_container
 from server.controllers.redis import r
-from server.utils import get_permission_dependency_array
 
-router = APIRouter(
-    prefix="/function",
-    tags=["function"],
-    responses={404: {"description": "Not found"}},
-    dependencies=get_permission_dependency_array(action="use", resource="app"),
-)
+router = APIRouter(prefix="/function", tags=["function"], responses=DEFAULT_RESPONSES)
 
 
 # run function
 @router.post("/class")
 async def run_class_req(req: RunClass, response: Response):
+    # TODO: move this to controllers
     try:
         job_id = uuid.uuid4().hex
         env_vars = {
@@ -29,12 +25,11 @@ async def run_class_req(req: RunClass, response: Response):
             "resource": req.resource,
             "section": req.section,
             "component": req.component if req.component else "",
-            "edits": json.dumps(req.edits if req.edits else [{}]),
+            "updates": json.dumps(req.updates if req.updates else [{}]),
+            "row": json.dumps(req.row if req.row else {}),
             "state": json.dumps(req.state),
             "job_id": job_id,
         }
-
-        print("job ID: ", job_id)
 
         # start a job
         run_container(env_vars)
