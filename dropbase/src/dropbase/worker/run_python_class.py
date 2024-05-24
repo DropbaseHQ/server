@@ -6,7 +6,6 @@ import traceback
 from dotenv import load_dotenv
 
 from dropbase.helpers.utils import _dict_from_pydantic_model
-from dropbase.schemas.edit_cell import EditInfo
 
 load_dotenv()
 
