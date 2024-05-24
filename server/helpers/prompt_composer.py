@@ -84,6 +84,7 @@ to use them, declare them in main.py using os.getenv()
 
 Useful notes:
 - Do not attempt to implement the get method for tables just because they are not implemented
+- Do not modify method signatures in main.py
 - To query data or interact with data sources, default to using the available databases or env variables
 - Tables have methods for get, add, update, delete, and on row change; only update the methods that correspond to what the user asks for
 - Inputs have a method for on submit, booleans for on toggle, buttons for on click, select dropdowns for on select
