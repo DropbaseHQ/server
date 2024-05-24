@@ -1,8 +1,8 @@
 from fastapi import APIRouter
 
-from dropbase.schemas.files import CreateFile, DeleteFile, RenameFile, UpdateFile
+from dropbase.schemas.files import CreateFile, DeleteFile, RenameFile, UpdateFile, UpdateMainFile
 from server.constants import DEFAULT_RESPONSES
-from server.controllers.files import FileController
+from server.controllers.files import FileController, update_main_file
 
 router = APIRouter(prefix="/files", tags=["files"], responses=DEFAULT_RESPONSES)
 
@@ -41,3 +41,8 @@ def get_all_files_req(app_name: str, page_name: str):
 def get_functions_req(app_name, page_name):
     file = FileController(app_name, page_name)
     return file.get_functions()
+
+
+@router.put("/main/")
+def update_main_files_req(req: UpdateMainFile):
+    return update_main_file(req)

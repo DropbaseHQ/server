@@ -58,3 +58,10 @@ class DeleteFile(BaseModel):
     page_name: str = Field(regex=FILE_NAME_REGEX)
     file_name: str = Field(regex=FILE_NAME_REGEX)
     type: TypeEnum
+
+
+class UpdateMainFile(BaseModel):
+    app_name: str = Field(regex=FILE_NAME_REGEX)
+    page_name: str = Field(regex=FILE_NAME_REGEX)
+    file_name: str = Field(regex=FILE_NAME_REGEX)
+    code: str
