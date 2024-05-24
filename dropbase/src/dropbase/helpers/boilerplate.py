@@ -1,6 +1,6 @@
 # schema boilerplates
 sctipt_boilerplate_init = """from dropbase.helpers.scriptABC import ScriptABC
-from .scripts.main import *  # noqa, here we're importing all user defined classes
+from .main import *  # noqa, here we're importing all user defined classes
 
 
 class Script(ScriptABC):

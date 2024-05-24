@@ -1,5 +1,6 @@
 import ast
 import glob
+import json
 import os
 import re
 import shutil
@@ -9,8 +10,9 @@ from fastapi import HTTPException
 
 from dropbase.constants import FILE_NAME_REGEX
 from dropbase.helpers.utils import read_page_properties
-from dropbase.schemas.files import CreateFile, DeleteFile, RenameFile, UpdateFile
+from dropbase.schemas.files import CreateFile, DeleteFile, RenameFile, UpdateFile, UpdateMainFile
 from server.constants import cwd
+from server.controllers.page_controller import PageController
 
 
 class FileController:
@@ -37,6 +39,7 @@ class FileController:
             shutil.rmtree(self.page_dir_path_backup)
 
     def get_all_files(self, python: bool = True, sql: bool = True):
+        # NOTE: This function is not used in the current codebase
         try:
             if not (
                 re.match(FILE_NAME_REGEX, self.app_name) and re.match(FILE_NAME_REGEX, self.page_name)
@@ -128,8 +131,7 @@ class FileController:
             self._check_for_duplicate_file_names(req.name)
 
             # update file content
-            boilerplate_code = compose_boilerplate_code(req)
-            self._write_file(boilerplate_code)
+            self._write_file("")
 
             return {"status": "success"}
         except HTTPException as e:
@@ -214,9 +216,7 @@ class FileController:
     def _set_file_name(self, file_name: str, file_type: str, new: bool = False):
         self.file_ext = ".sql" if file_type == "sql" else ".py"
         file_name = file_name
-        file_path = (
-            cwd + f"/workspace/{self.app_name}/{self.page_name}/scripts/{file_name + self.file_ext}"
-        )
+        file_path = cwd + f"/workspace/{self.app_name}/{self.page_name}/{file_name + self.file_ext}"
         if new:
             self.new_name = file_name
             self.new_path = file_path
@@ -226,7 +226,7 @@ class FileController:
 
     def _get_file_path(self, file_name: str, file_type: str):
         file_ext = ".sql" if file_type == "sql" else ".py"
-        return cwd + f"/workspace/{self.app_name}/{self.page_name}/scripts/{file_name}{file_ext}"
+        return cwd + f"/workspace/{self.app_name}/{self.page_name}/{file_name}{file_ext}"
 
     def _write_file(self, code: str):
         with open(self.file_path, "w") as f:
@@ -269,18 +269,18 @@ class FileController:
         return list(set(matches))
 
 
-# TODO: remove, legacy
-def compose_boilerplate_code(req: CreateFile):
-    if req.type == "sql":
-        return ""
-    else:
-        return f"""from workspace.{req.app_name}.{req.page_name} import State, Context
-import pandas as pd
-
-
-def {req.name}(state: State, context: Context) -> Context:
-    context.page.message = "Hello World"
-    df = pd.DataFrame({{"a": [1, 2, 3]}})
-    context.table1.data = df.to_dtable()
-    return context
-"""
+def update_main_file(req: UpdateMainFile):
+    try:
+        # if properties.json, validate properties
+        if req.file_name == "properties.json":
+            pageController = PageController(req.app_name, req.page_name)
+            pageController.update_page_properties(json.loads(req.code))
+        else:
+            # TODO: backup file
+            file_path = f"workspace/{req.app_name}/{req.page_name}/{req.file_name}"
+            with open(file_path, "w") as f:
+                f.write(req.code)
+        return {"status": "success"}
+    except HTTPException as e:
+        # TODO: implement revert backup
+        raise HTTPException(status_code=400, detail=str(e))

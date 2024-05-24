@@ -83,7 +83,7 @@ class PageController:
 
     def create_main_class(self):
         main_class_init_str = main_class_init.format(self.app_name, self.page_name)
-        with open(self.page_path + "/scripts/main.py", "w") as f:
+        with open(self.page_path + "/main.py", "w") as f:
             f.write(main_class_init_str)
 
     def update_main_class(self):
@@ -91,7 +91,7 @@ class PageController:
         required_classes = self._get_require_classes()
         required_methods = self._get_required_methods()
 
-        file_path = self.page_path + "/scripts/main.py"
+        file_path = self.page_path + "/main.py"
 
         # Parse the existing code
         with open(file_path, "r") as f:
@@ -296,7 +296,7 @@ class PageController:
 
     def get_main_class_methods(self):
         try:
-            file_path = self.page_path + "/scripts/main.py"
+            file_path = self.page_path + "/main.py"
             with open(file_path, "r") as f:
                 module = ast.parse(f.read())
 

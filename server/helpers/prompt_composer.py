@@ -33,7 +33,7 @@ If a user needs to rename or update components, modify their label, not their na
 
 def get_func_prompt(base_path: str, user_prompt: str):
     # read files
-    with open(base_path + "scripts/main.py", "r") as file:
+    with open(base_path + "main.py", "r") as file:
         main_str = file.read()
     with open(base_path + "state.py", "r") as file:
         state_str = file.read()

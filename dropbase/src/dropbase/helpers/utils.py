@@ -84,15 +84,6 @@ def validate_page_properties(properties: dict):
     return Properties(**properties)
 
 
-def get_function_by_name(app_name: str, page_name: str, file_name: str, function_name: str):
-    # need to pass in the function name rather than the file name
-    file_module = f"workspace.{app_name}.{page_name}.scripts.{file_name}"
-    scripts = importlib.import_module(file_module)
-    importlib.reload(scripts)
-    function = getattr(scripts, function_name)
-    return function
-
-
 def _dict_from_pydantic_model(model):
     data = {}
     for name, field in model.__fields__.items():
