@@ -16,7 +16,7 @@ data_type_options = Literal["string", "integer", "float", "boolean", "string_arr
 
 class SelectOptions(BaseModel):
     id: Optional[str]
-    name: str
+    label: str
     value: Any
 
 
