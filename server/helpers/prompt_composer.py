@@ -77,6 +77,7 @@ or to execute a query
 ```python
 db.execute("insert into table_name values (1, 'name')")
 ```
+when writing sql statements, use sqlalchemy compatible syntax
 
 these are the environment variables available, which include api keys:
 {env_vars_str}

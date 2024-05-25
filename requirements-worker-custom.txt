@@ -6,3 +6,4 @@
 # Django==5.0.2
 # django-grappelli==3.0.8
 # djangorestframework==3.14.0
+stripe
