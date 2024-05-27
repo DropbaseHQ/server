@@ -1,16 +1,15 @@
 # schema boilerplates
 sctipt_boilerplate_init = """from dropbase.helpers.scriptABC import ScriptABC
-from .main import *  # noqa, here we're importing all user defined classes
+from workspace.{0}.{1}.main import *  # noqa, here we're importing all user defined classes
 
 
 class Script(ScriptABC):
     def __init__(self, app_name, page_name):
         super().__init__(app_name, page_name)
-        kwards = {"app_name": self.app_name, "page_name": self.page_name}
         for key, _ in self.properties:
             class_name = key.capitalize()
             class_ = globals()[class_name]  # Get the actual class name from globals
-            self.__dict__[key] = class_(**kwards, name=key)
+            self.__dict__[key] = class_()
 """
 # create
 schema_boilerplate = """from pydantic import BaseModel

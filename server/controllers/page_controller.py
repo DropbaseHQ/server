@@ -48,8 +48,9 @@ class PageController:
 
     def create_schema(self):
         # create page schema
+        sctipt_boilerplate_init_str = sctipt_boilerplate_init.format(self.app_name, self.page_name)
         with open(self.page_path + "/script.py", "w") as f:
-            f.write(sctipt_boilerplate_init)
+            f.write(sctipt_boilerplate_init_str)
 
     def create_page_properties(self):
         with open(self.page_path + "/properties.json", "w") as f:

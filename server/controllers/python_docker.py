@@ -22,8 +22,7 @@ def stringify_env_vars(env_vars: dict) -> dict:
 def run_container(env_vars: dict, docker_script: str = "inside_docker"):
     client = docker.from_env()
 
-    # add environment variables from .env file
-    # TODO: revisit this, should only send .env variables to docker
+    # add environment variables from .worker_envs
     config_nev = stringify_env_vars(worker_envs)
     # {key: val for key, val in config.items()}
     env_vars = {**env_vars, **config_nev}
