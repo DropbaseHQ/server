@@ -124,7 +124,7 @@ properties_json_boilerplate = """{
         "columns": [],
         "header": [],
         "footer": [],
-        "w": 4,
+        "w": 3,
         "h": 1,
         "x": 0,
         "y": 0
@@ -133,7 +133,11 @@ properties_json_boilerplate = """{
         "name": "widget1",
         "label": "Widget 1",
         "block_type": "widget",
-        "components": []
+        "components": [],
+        "w": 1,
+        "h": 1,
+        "x": 3,
+        "y": 0
     }
 }"""
 
