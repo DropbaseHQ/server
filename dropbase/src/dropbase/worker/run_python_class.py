@@ -13,14 +13,7 @@ load_dotenv()
 def run(r):
 
     try:
-        # TODO: only return stdout and traceback in dev mode
-        response = {
-            "stdout": "",
-            "traceback": "",
-            "message": "",
-            "type": "",
-            "status_code": 202,
-        }
+        response = {"stdout": "", "traceback": "", "message": "", "type": "", "status_code": 202}
         # read state and context
         app_name = os.getenv("app_name")
         page_name = os.getenv("page_name")

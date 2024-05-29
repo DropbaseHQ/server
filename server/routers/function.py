@@ -4,7 +4,7 @@ import uuid
 from fastapi import APIRouter, HTTPException, Response
 
 from dropbase.schemas.function import RunClass
-from dropbase.schemas.run_python import RunPythonStringRequestNew
+from dropbase.schemas.run_python import RunPythonStringRequest
 from server.constants import DEFAULT_RESPONSES
 from server.controllers.python_docker import run_container
 from server.controllers.redis import r
@@ -29,17 +29,14 @@ async def run_class_req(req: RunClass, response: Response):
             "row": json.dumps(req.row if req.row else {}),
             "state": json.dumps(req.state),
             "job_id": job_id,
+            "type": "class",
         }
 
         # start a job
         run_container(env_vars)
 
         status_code = 202
-        reponse_payload = {
-            "message": "Job started",
-            "status_code": status_code,
-            "job_id": job_id,
-        }
+        reponse_payload = {"message": "Job started", "status_code": status_code, "job_id": job_id}
 
         # set initial status to pending
         r.set(job_id, json.dumps(reponse_payload))
@@ -53,15 +50,13 @@ async def run_class_req(req: RunClass, response: Response):
 
 
 @router.post("/string/")
-async def run_python_string(req: RunPythonStringRequestNew, response: Response):
+async def run_python_string(req: RunPythonStringRequest, response: Response):
     # TODO: update this to use class based method
     try:
         job_id = uuid.uuid4().hex
         env_vars = {
-            "file_code": req.file_code,
-            "test_code": req.test_code,
-            "app_name": req.app_name,
-            "page_name": req.page_name,
+            "code": req.code,
+            "test": req.test,
             "state": json.dumps(req.state),
             "job_id": job_id,
             "type": "string",
@@ -69,11 +64,7 @@ async def run_python_string(req: RunPythonStringRequestNew, response: Response):
         run_container(env_vars)
 
         status_code = 202
-        reponse_payload = {
-            "message": "job started",
-            "status_code": status_code,
-            "job_id": job_id,
-        }
+        reponse_payload = {"message": "job started", "status_code": status_code, "job_id": job_id}
 
         # set initial status to pending
         r.set(job_id, json.dumps(reponse_payload))

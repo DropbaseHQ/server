@@ -10,11 +10,8 @@ pd.DataFrame.to_dtable = to_dtable
 
 
 class TableABC(ABC):
-    def __init__(self, **kwargs):
-        # todo: maybe change to pydantic model
-        self.name = kwargs.get("name")
-        self.app_name = kwargs.get("app_name")
-        self.page_name = kwargs.get("page_name")
+    def __init__(self):
+        pass
 
     @abstractmethod
     def get(self, state, context):
