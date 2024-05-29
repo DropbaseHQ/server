@@ -77,7 +77,8 @@ or to execute a query
 ```python
 db.execute("insert into table_name values (1, 'name')")
 ```
-when writing sql statements, use sqlalchemy compatible syntax
+- When writing sql statements, use sqlalchemy compatible syntax
+- For any date column, add python code to convert them from unix epoch in ms to datetime string
 
 these are the environment variables available, which include api keys:
 {env_vars_str}
@@ -101,7 +102,7 @@ Useful notes:
 - To display a modal, set a model widget's visibility to True
 - Use page context exclusively for passing/displaying messages to the user. this is the preferred way to show user messages
 - Import any python sdk needed to perform the task, but don't modify or delete existing import statements
-- By default, Dropbase UI/client sends dates as a string in Unix epoch
+- By default Dropbase UI/client sends dates as a string in Unix epoch ms
 - When composing SQL query, DO NOT use unnamed parameters (`?`) and use dics instead
 
 User prompt:
