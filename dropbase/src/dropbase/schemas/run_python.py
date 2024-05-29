@@ -2,8 +2,6 @@ from pydantic import BaseModel
 
 
 class RunPythonStringRequest(BaseModel):
-    app_name: str
-    page_name: str
-    python_string: str
-    line_number: int
+    code: str
+    test: str
     state: dict

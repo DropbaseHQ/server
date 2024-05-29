@@ -36,11 +36,7 @@ async def run_class_req(req: RunClass, response: Response):
         run_container(env_vars)
 
         status_code = 202
-        reponse_payload = {
-            "message": "Job started",
-            "status_code": status_code,
-            "job_id": job_id,
-        }
+        reponse_payload = {"message": "Job started", "status_code": status_code, "job_id": job_id}
 
         # set initial status to pending
         r.set(job_id, json.dumps(reponse_payload))
@@ -59,10 +55,8 @@ async def run_python_string(req: RunPythonStringRequest, response: Response):
     try:
         job_id = uuid.uuid4().hex
         env_vars = {
-            "app_name": req.app_name,
-            "page_name": req.page_name,
-            "python_string": req.python_string,
-            "line_number": req.line_number,
+            "code": req.code,
+            "test": req.test,
             "state": json.dumps(req.state),
             "job_id": job_id,
             "type": "string",
@@ -70,11 +64,7 @@ async def run_python_string(req: RunPythonStringRequest, response: Response):
         run_container(env_vars)
 
         status_code = 202
-        reponse_payload = {
-            "message": "job started",
-            "status_code": status_code,
-            "job_id": job_id,
-        }
+        reponse_payload = {"message": "job started", "status_code": status_code, "job_id": job_id}
 
         # set initial status to pending
         r.set(job_id, json.dumps(reponse_payload))
