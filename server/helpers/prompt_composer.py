@@ -78,7 +78,7 @@ or to execute a query
 db.execute("insert into table_name values (1, 'name')")
 ```
 - When writing sql statements, use sqlalchemy compatible syntax
-- For any date column, add python code to convert them from unix epoch in ms to datetime string
+- For any date column, add python code to try converting from a timestamp_ms string to a datetime string using pandas functions
 
 these are the environment variables available, which include api keys:
 {env_vars_str}
