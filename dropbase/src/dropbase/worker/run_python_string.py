@@ -2,8 +2,10 @@ import ast
 import importlib
 import json
 import os
+import sys
 import traceback
 import uuid
+from io import StringIO
 
 import astor
 from dotenv import load_dotenv
@@ -13,17 +15,24 @@ load_dotenv()
 
 def run(r):
 
+    file_name = "f" + uuid.uuid4().hex + ".py"
+    response = {"stdout": "", "traceback": "", "message": "", "type": "", "status_code": 202}
+
     try:
-        response = {"stdout": "", "traceback": "", "message": "", "type": "", "status_code": 202}
+        # redirect stdout
+        old_stdout = sys.stdout
+        redirected_output = StringIO()
+        sys.stdout = redirected_output
+
         # read state and context
         state = json.loads(os.getenv("state"))
         code = os.getenv("code")
         test = os.getenv("test")
 
+        # compose code
         code_str = compose_code(code, test, state)
         code_str = assign_last_expression(code_str)
 
-        file_name = "f" + uuid.uuid4().hex + ".py"
         with open(file_name, "w") as f:
             f.write(code_str)
 
@@ -50,9 +59,17 @@ def run(r):
         response["message"] = str(e)
         response["status_code"] = 500
     finally:
+        response["status_code"] = 200
+        # get stdout
+        response["stdout"] = redirected_output.getvalue()
+        sys.stdout = old_stdout
+
         # send result to redis
         r.set(os.getenv("job_id"), json.dumps(response))
         r.expire(os.getenv("job_id"), 60)
+
+        # remove temp file
+        os.remove(file_name)
 
 
 def compose_code(code: str, test: str, state: dict) -> str:
