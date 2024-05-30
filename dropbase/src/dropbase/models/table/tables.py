@@ -60,7 +60,7 @@ class TableProperty(BaseModel):
     ]
 
     # position
-    w: Annotated[Optional[int], PropertyCategory.internal] = 4
+    w: Annotated[Optional[int], PropertyCategory.internal] = 3
     h: Annotated[Optional[int], PropertyCategory.internal] = 1
     x: Annotated[Optional[int], PropertyCategory.internal] = 0
     y: Annotated[Optional[int], PropertyCategory.internal] = 0
