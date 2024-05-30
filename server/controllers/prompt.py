@@ -9,7 +9,6 @@ from server.helpers.prompt_composer import get_func_prompt, get_ui_prompt
 
 
 def handle_prompt(request: Prompt):
-
     if config.get("openai_api_key") is None:
         raise Exception("OpenAI API key not found")
 
@@ -25,7 +24,7 @@ def handle_prompt(request: Prompt):
         model="gpt-4o",
     )
     updated_code = chat_completion.choices[0].message.content
-    new_props = remove_markdown_formatting(updated_code)
+    new_props = _remove_markdown_formatting(updated_code)
     if request.type == "function":
         return new_props
     if request.type == "ui":
@@ -34,7 +33,7 @@ def handle_prompt(request: Prompt):
         return {"message": "success"}
 
 
-def remove_markdown_formatting(code_snippet):
+def _remove_markdown_formatting(code_snippet):
     lines = code_snippet.splitlines()
     cleaned_lines = []
     inside_code_block = False

@@ -1,6 +1,6 @@
 from fastapi import APIRouter, HTTPException
 
-from dropbase.schemas.page import CreatePageRequest, PageProperties, SaveTableColumns
+from dropbase.schemas.page import CreateRenamePageRequest, PageProperties, SaveTableColumns
 from dropbase.schemas.prompt import Prompt
 from server.constants import DEFAULT_RESPONSES
 from server.controllers.page_controller import PageController
@@ -37,7 +37,7 @@ def get_page_req(app_name: str, page_name: str):
 
 
 @router.post("/")
-def create_page_req(request: CreatePageRequest):
+def create_page_req(request: CreateRenamePageRequest):
     try:
         pageController = PageController(request.app_name, request.page_name)
         pageController.create_page(request.page_label)
@@ -57,10 +57,10 @@ def update_page_req(request: PageProperties):
 
 
 @router.put("/rename/")
-def rename_page_req(request: CreatePageRequest):
+def rename_page_req(request: CreateRenamePageRequest):
     try:
         pageController = PageController(request.app_name, request.page_name)
-        pageController.update_page_to_app_properties(request.page_label)
+        pageController.rename_page(request.page_label)
         return {"message": "success"}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
@@ -89,4 +89,7 @@ def save_table_columns_req(request: SaveTableColumns):
 # gpt promps
 @router.post("/prompt/")
 def ui_prompt_request(request: Prompt):
-    return handle_prompt(request)
+    try:
+        return handle_prompt(request)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
