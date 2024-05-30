@@ -80,6 +80,9 @@ def get_page_properties(app_name: str, page_name: str):
 
 
 def validate_page_properties(properties: dict):
+    for key, value in properties.items():
+        if key != value["name"]:
+            raise ValueError(f"Key {key} does not match name {value['name']}")
     Properties = compose_properties_schema(properties)
     return Properties(**properties)
 

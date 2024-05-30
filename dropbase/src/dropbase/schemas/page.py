@@ -14,7 +14,6 @@ from dropbase.models.widget import (
     TextProperty,
     WidgetProperty,
 )
-from dropbase.schemas.files import DataFile
 
 
 class WidgetProperties(WidgetProperty):
@@ -46,18 +45,13 @@ class TableProperties(TableProperty):
     ] = []
 
 
-class Properties(BaseModel):
-    blocks: List[Union[TableProperties, WidgetProperties]]
-    files: List[DataFile]
-
-
 class PageProperties(BaseModel):
     app_name: str
     page_name: str
     properties: dict
 
 
-class CreatePageRequest(BaseModel):
+class CreateRenamePageRequest(BaseModel):
     app_name: str
     page_name: str
     page_label: str

@@ -61,7 +61,7 @@ class PageController:
         with open(f"workspace/{self.app_name}/properties.json", "w") as f:
             f.write(json.dumps(app_properties_boilerplate, indent=2))
 
-    def add_page_to_app_properties(self, page_label: str):
+    def add_update_page_to_app_properties(self, page_label: str):
         app_properties = read_app_properties(self.app_name)
         app_properties[self.page_name] = {"label": page_label}
         with open(f"workspace/{self.app_name}/properties.json", "w") as f:
@@ -232,11 +232,14 @@ class PageController:
         self.create_page_dirs()
         self.create_schema()
         self.create_page_properties()
-        self.add_page_to_app_properties(page_label)
+        self.add_update_page_to_app_properties(page_label)
         properties = self.reload_properties()
         compose_state_context_models(self.app_name, self.page_name, properties)
         self.create_main_class()
         self.add_inits()
+
+    def rename_page(self, page_label: str):
+        self.add_update_page_to_app_properties(page_label)
 
     def update_page(self):
         properties = self.reload_properties()

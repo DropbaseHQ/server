@@ -112,7 +112,7 @@ def get_workspace_apps():
             {
                 "name": app_name,
                 "label": app.get("label"),
-                "pages": [{"name": p} for p in app_properties.keys()],
+                "pages": [{"name": p, "label": v.get("label")} for p, v in app_properties.items()],
             }
         )
     return app_response
