@@ -1,7 +1,9 @@
 import importlib
 import json
 import os
+import sys
 import traceback
+from io import StringIO
 
 from dotenv import load_dotenv
 
@@ -12,8 +14,15 @@ load_dotenv()
 
 def run(r):
 
+    response = {"stdout": "", "traceback": "", "message": "", "type": "", "status_code": 202}
+
     try:
-        response = {"stdout": "", "traceback": "", "message": "", "type": "", "status_code": 202}
+
+        # redirect stdout
+        old_stdout = sys.stdout
+        redirected_output = StringIO()
+        sys.stdout = redirected_output
+
         # read state and context
         app_name = os.getenv("app_name")
         page_name = os.getenv("page_name")
@@ -68,16 +77,19 @@ def run(r):
             )(state, context)
 
         response["type"] = "context"
-        response["context"] = new_context.dict()
-        response["message"] = "job completed"
+        response["message"] = "Job completed"
         response["status_code"] = 200
+        response["context"] = new_context.dict()
     except Exception as e:
         # catch any error and tracebacks and send to rabbitmq
         response["type"] = "error"
-        response["traceback"] = traceback.format_exc()
         response["message"] = str(e)
         response["status_code"] = 500
+        response["traceback"] = traceback.format_exc()
     finally:
+        # get stdout
+        response["stdout"] = redirected_output.getvalue()
+        sys.stdout = old_stdout
         # send result to redis
         r.set(os.getenv("job_id"), json.dumps(response))
         r.expire(os.getenv("job_id"), 60)

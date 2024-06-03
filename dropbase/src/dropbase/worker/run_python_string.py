@@ -43,23 +43,21 @@ def run(r):
 
         # convert result to json
         if result.__class__.__name__ == "Context":
-            response["context"] = result.dict()
             response["type"] = "context"
+            response["context"] = result.dict()
         else:
-            response["data"] = result
             response["type"] = "generic"
+            response["data"] = result
 
-        response["message"] = "Job has been completed"
-        response["message"] = "job completed"
+        response["message"] = "Job completed"
         response["status_code"] = 200
     except Exception as e:
         # catch any error and tracebacks and send to rabbitmq
         response["type"] = "error"
-        response["traceback"] = traceback.format_exc()
         response["message"] = str(e)
         response["status_code"] = 500
+        response["traceback"] = traceback.format_exc()
     finally:
-        response["status_code"] = 200
         # get stdout
         response["stdout"] = redirected_output.getvalue()
         sys.stdout = old_stdout
