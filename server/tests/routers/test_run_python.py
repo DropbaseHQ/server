@@ -1,23 +1,124 @@
-def test_run_python_string(test_client):
+import importlib
+import json
+import os
+import time
+
+from dotenv import load_dotenv
+
+from dropbase.helpers.utils import read_page_properties
+from server.tests.utils import setup_redis  # noqa
+
+load_dotenv()
+
+
+PAGE_MESSAGE = "Hello World"
+FILE_CODE = f"""from workspace.test_app.page1 import State, Context
+import pandas as pd
+
+
+def test(state: State, context: Context) -> Context:
+    context.page.message = "{PAGE_MESSAGE}"
+    df = pd.DataFrame({{\"a\": [1, 2, 3]}})
+    context.table1.data = df.to_dtable()
+    return context
+"""
+TEST_CODE = "test(state,context)"
+STATE = {"table1": {}}
+APP_NAME = "dropbase_test_app"
+PAGE_NAME = "page1"
+
+
+def test_run_python_string(setup_redis):  # noqa
     # Arrange
-    data = {
-        "app_name": "dropbase_test_app",
-        "page_name": "page1",
-        "python_string": "print(0)\nx=3\nprint(1)\nprint(2)\nprint(x)",
-        "payload": {
-            "state": {"widgets": {"widget1": {}}, "tables": {"table1": {}}},
-            "context": {
-                "widgets": {"widget1": {"components": {}}},
-                "tables": {"table1": {"columns": {}}},
-            },
-        },
-        "file": {"name": "function1"},
+    os.environ["type"] = "string"
+    job_id = "test_job_id"
+    response = {
+        "stdout": "",
+        "traceback": "",
+        "message": "",
+        "type": "",
+        "status_code": 202,
+        "job_id": job_id,
     }
 
+    # Set env vars to use the run function
+    os.environ["job_id"] = job_id
+    os.environ["file_code"] = FILE_CODE
+    os.environ["test_code"] = TEST_CODE
+    os.environ["state"] = json.dumps(STATE)
+    os.environ["app_name"] = APP_NAME
+    os.environ["page_name"] = PAGE_NAME
+
+    module_name = "dropbase.worker.run_python_string"
+
+    run_module = importlib.import_module(module_name)
+
     # Act
-    res = test_client.post("/run_python/run_python_string", json=data)
+    run_module.run(setup_redis, response)
+
+    time.sleep(1)
+
+    res = setup_redis.get(job_id)
+    res_data = json.loads(res)
 
     # Assert
-    assert res.status_code == 200
-    assert res.json()["success"]
-    assert res.json()["stdout"] == "0\n1\n2\n3\n"
+    assert res_data["status_code"] == 200
+
+    assert res_data["context"]["page"]["message"] == PAGE_MESSAGE
+    assert res_data["context"]["table1"]["data"]["columns"] == [
+        {"name": "a", "data_type": "int64", "display_type": "integer"}
+    ]
+    assert res_data["context"]["table1"]["data"]["data"] == [[1], [2], [3]]
+
+
+def test_run_python_datafetcher(setup_redis):  # noqa
+    # Arrange
+    job_id = "test_job_id"
+    response = {"status_code": 202, "job_id": job_id}
+    os.environ["app_name"] = APP_NAME
+    os.environ["page_name"] = PAGE_NAME
+    os.environ["job_id"] = job_id
+    os.environ["state"] = json.dumps(STATE)
+
+    # Act
+    module_name = "dropbase.worker.run_python_file"
+    run_module = importlib.import_module(module_name)
+    run_module.run(setup_redis, response)
+
+    time.sleep(1)
+
+    res = setup_redis.get(job_id)
+    res_data = json.loads(res)
+
+    # Assert
+    assert res_data["status_code"] == 200
+    assert res_data["context"]["table1"]["data"] == {
+        "columns": [{"name": "a", "data_type": "int64", "display_type": "integer"}],
+        "index": [0, 1, 2],
+        "data": [[1], [2], [3]],
+        "type": "python",
+    }
+
+
+def test_run_python_ui(setup_redis):  # noqa
+    # Arrange
+    job_id = "test_job_id"
+    response = {"status_code": 202, "job_id": job_id}
+    os.environ["app_name"] = APP_NAME
+    os.environ["page_name"] = PAGE_NAME
+    os.environ["job_id"] = job_id
+    os.environ["state"] = json.dumps(STATE)
+
+    # Act
+    module_name = "dropbase.worker.run_python_file"
+    run_module = importlib.import_module(module_name)
+    run_module.run(setup_redis, response)
+
+    time.sleep(1)
+
+    res = setup_redis.get(job_id)
+    res_data = json.loads(res)
+
+    # Assert
+    assert res_data["status_code"] == 200
+    assert res_data["context"]["page"]["message"] == "Test page message"

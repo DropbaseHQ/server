@@ -1,68 +1,48 @@
-import os
-import shutil
-import sys
+from fastapi import APIRouter, HTTPException
 
-from fastapi import APIRouter, HTTPException, Depends
+from dropbase.schemas.app import CreateAppRequest, RenameAppRequest
+from server.constants import DEFAULT_RESPONSES
+from server.controllers.app import AppController, get_workspace_apps
+from server.controllers.page_controller import PageController
 
-from server.constants import DROPBASE_API_URL
-from server.controllers.workspace import AppCreator
-from server.schemas.workspace import (
-    CreateAppRequest,
-    DeleteAppRequest,
-    RenameAppRequest,
-)
-from server.requests.dropbase_router import DropbaseRouter, get_dropbase_router
-
-cwd = os.getcwd()
-
-router = APIRouter(
-    prefix="/app", tags=["app"], responses={404: {"description": "Not found"}}
-)
+router = APIRouter(prefix="/app", tags=["app"], responses=DEFAULT_RESPONSES)
 
 
 @router.post("/")
-def create_app_req(
-    req: CreateAppRequest, router: DropbaseRouter = Depends(get_dropbase_router)
-):
-    sys.path.insert(0, cwd)
-
-    app_response = router.app.get_app(app_id=req.app_id)
-    app_object = app_response.json()
-    if app_response.status_code != 200:
-        raise HTTPException(status_code=404, detail="App not found")
-
-    r_path_to_workspace = os.path.join(os.path.dirname(__file__), "../../workspace")
-    app_creator = AppCreator(
-        app_object=app_object,
-        app_template=req.app_template,
-        r_path_to_workspace=r_path_to_workspace,
-        dropbase_api_url=DROPBASE_API_URL,
-        router=router,
-    )
-    return app_creator.create()
+def create_app_req(request: CreateAppRequest):
+    try:
+        appController = AppController(request.app_name)
+        appController.create_app(request.app_label)
+        pageController = PageController(request.app_name, "page1")
+        pageController.create_page("Page 1")
+        return {"message": "success"}
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
 
 
-@router.put("/{app_id}")
-def rename_app_req(
-    app_id, req: RenameAppRequest, router: DropbaseRouter = Depends(get_dropbase_router)
-):
-    workspace_folder_path = os.path.join(os.path.dirname(__file__), "../../workspace")
-    app_path = os.path.join(workspace_folder_path, req.old_name)
-    new_path = os.path.join(workspace_folder_path, req.new_name)
-    if os.path.exists(app_path):
-        os.rename(app_path, new_path)
-    resp = router.app.rename_app(rename_data={"app_id": app_id, **req.dict()})
-    if resp.status_code != 200:
-        raise HTTPException(status_code=500, detail="Unable to rename app")
+@router.put("/")
+def rename_app_req(request: RenameAppRequest):
+    try:
+        appController = AppController(request.app_name)
+        appController.rename(request.new_label)
+        return {"message": "success"}
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
 
 
-@router.delete("/{app_id}")
-def delete_app_req(
-    app_id, req: DeleteAppRequest, router: DropbaseRouter = Depends(get_dropbase_router)
-):
-    app_path = os.path.join(os.path.dirname(__file__), "../../workspace", req.app_name)
-    del_resp = router.app.delete_app(app_id=app_id)
-    if del_resp.status_code != 200:
-        raise HTTPException(status_code=500, detail="Unable to delete app")
-    if os.path.exists(app_path):
-        shutil.rmtree(app_path)
+@router.delete("/{app_name}")
+def delete_app_req(app_name: str):
+    try:
+        appController = AppController(app_name)
+        appController.delete_app()
+        return {"message": "App deleted successfully"}
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+
+@router.get("/list/")
+def get_user_apps():
+    try:
+        return get_workspace_apps()
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))

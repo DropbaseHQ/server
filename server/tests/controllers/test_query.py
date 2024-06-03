@@ -1,54 +1,83 @@
-import unittest.mock
+import copy
 
-from server.schemas.table import TableFilter, TableSort
+import pytest
+
+base_data = {
+    "app_name": "dropbase_test_app",
+    "page_name": "page1",
+    "table_name": "table1",
+    "fetcher": "test_sql",
+    "state": {"table1": {}},
+    "filter_sort": {"filters": [], "sorts": [], "pagination": {"page": 0, "page_size": 10}},
+}
 
 
-def test_query_db(mocker):
+@pytest.mark.parametrize("mock_db", ["postgres", "mysql", "snowflake", "sqlite"], indirect=True)
+def test_query_db(mocker, mock_db):
     # Arrange
-    mock_db = unittest.mock.MagicMock()
-    mocker.patch("server.controllers.query.connect_to_user_db", return_value=mock_db)
-
-    from sqlalchemy import text
-    from server.controllers.query import query_db
+    mocker.patch("dropbase.database.connect.connect", return_value=mock_db)
 
     # Act
-    output = query_db("select 1;", {}, "mock source")
+    output = mock_db._run_query("select * from users;", {})
 
     # Assert
-    call_args_sql, call_args_values = mock_db.connect().execution_options().__enter__().execute.call_args.args
-    assert str(call_args_sql) == "select 1;"
-    assert call_args_values == {}
-    mock_db.dispose.assert_called_once()
+    # TODO: improve assertions
+    assert len(output) > 0
+    assert len(output[0]) > 0
 
 
-def test_apply_filters(mocker):
+@pytest.mark.parametrize("mock_db", ["postgres", "mysql", "snowflake", "sqlite"], indirect=True)
+def test_apply_filters(test_client, mocker, mock_db):
     # Arrange
-    from server.controllers.query import apply_filters
+    data = copy.deepcopy(base_data)
+    data["filter_sort"]["filters"] = [
+        {
+            "column_name": "user_id",
+            "value": 1,
+            "condition": "=",
+            "id": "ee446ffd-6427-4118-be46-4f2971c94b7d",
+            "column_type": "integer",
+        }
+    ]
 
-    table_sql = "select id, name, age from users where name='johncena'"
-    filters = [TableFilter(column_name="age", condition=">", value=67)]
-    sorts = []
+    mocker.patch("server.controllers.run_sql.connect", return_value=mock_db)
 
     # Act
-    filter_sql, filter_values = apply_filters(table_sql, filters, sorts)
+    res = test_client.post("/query", json=data)
+    response_data = res.json()
+    job_id = response_data["job_id"]
 
-    # Assert
-    filter = filters[0]
-    assert filter_sql == f"WITH user_query as ({table_sql}) SELECT * FROM user_query\nWHERE \nuser_query.\"{filter.column_name}\" {filter.condition} :age_filter\n\n"
-    assert filter_values == {"age_filter": 67}
+    import time
+
+    time.sleep(2)
+
+    res = test_client.get(f"/status/{job_id}")
+    assert res.status_code == 200
+    res_data = res.json()
+    assert isinstance(res_data["context"]["table1"]["data"]["data"], list)
+    assert isinstance(res_data["context"]["table1"]["data"]["columns"], list)
 
 
-def test_apply_sorts(mocker):
+@pytest.mark.parametrize("mock_db", ["postgres", "mysql", "snowflake", "sqlite"], indirect=True)
+def test_apply_sorts(test_client, mocker, mock_db):
     # Arrange
-    from server.controllers.query import apply_filters
+    data = copy.deepcopy(base_data)
+    data["filter_sort"]["sorts"] = [{"column_name": "user_id", "value": "desc"}]
 
-    table_sql = "select * from users where name='johncena'"
-    filters = []
-    sorts = [TableSort(column_name="age", value="desc")]
+    mocker.patch("server.controllers.run_sql.connect", return_value=mock_db)
 
     # Act
-    filter_sql, filter_values = apply_filters(table_sql, filters, sorts)
+    res = test_client.post("/query", json=data)
+    response_data = res.json()
+    job_id = response_data["job_id"]
 
-    # Assert
-    sort = sorts[0]
-    assert filter_sql == f"WITH user_query as ({table_sql}) SELECT * FROM user_query\n\nORDER BY \nuser_query.\"{sort.column_name}\" {sort.value}\n"
+    import time
+
+    time.sleep(2)
+
+    res = test_client.get(f"/status/{job_id}")
+    assert res.status_code == 200
+    res_data = res.json()
+    # assert res_data["type"] == "table"
+    assert isinstance(res_data["context"]["table1"]["data"]["data"], list)
+    assert isinstance(res_data["context"]["table1"]["data"]["columns"], list)

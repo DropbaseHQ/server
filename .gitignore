@@ -15,7 +15,15 @@ htmlcov
 .venv
 *node_modules/
 notebooks/
+backups/
 
-proxy/frpc
 workspace/*
 !workspace/__init__.py
+.temp/
+*.db
+requirements-worker-custom.txt
+
+dump.rdb
+
+server.toml
+worker.toml

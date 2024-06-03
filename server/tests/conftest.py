@@ -2,71 +2,157 @@ import shutil
 import tempfile
 
 import pytest
+import pytest_postgresql.factories
 from fastapi.testclient import TestClient
+from pytest_mysql import factories
 
+from dropbase.helpers.utils import read_page_properties
+from server.auth.dependency import CheckUserPermissions
+from server.controllers.properties import update_properties
+from server.controllers.workspace import WorkspaceFolderController
 from server.main import app
-from server.requests.dropbase_router import get_dropbase_router
-from server.tests.constants import *
+from server.requests.dropbase_router import WSDropbaseRouterGetter, get_dropbase_router
+from server.tests.constants import (
+    MYSQL_TEST_CONNECTION_PARAMS,
+    MYSQL_TEST_CREDS,
+    SNOWFLAKE_TEST_CONNECTION_PARAMS,
+    SNOWFLAKE_TEST_CREDS,
+    SQLITE_TEST_CONNECTION_PARAMS,
+    SQLITE_TEST_CREDS,
+    TEMPDIR_PATH,
+    TEST_APP_NAME,
+    TEST_PAGE_NAME,
+    WORKSPACE_PATH,
+)
+from server.tests.databases import snowflake_db, sqlite_db  # noqa NOTE: used by mock_db, do not remove
 from server.tests.mocks.dropbase_router_mocker import DropbaseRouterMocker
+from server.tests.templates import get_test_data_fetcher, get_test_ui
+from server.tests.utils import connect_to_test_db, load_test_db
+
+postgresql_proc = pytest_postgresql.factories.postgresql_proc(load=[load_test_db])
+postgres_db = pytest_postgresql.factories.postgresql("postgresql_proc")
+
+mysql_proc = factories.mysql_proc(port=3307)
+mysql_db = factories.mysql("mysql_proc")
 
 
-@pytest.fixture(autouse=True)
+@pytest.fixture(scope="module", autouse=True)
 def test_workspace():
+    # used by all tests, so autouse=True
     with tempfile.TemporaryDirectory() as workspace_backup_path:
+        # backup workspace
         shutil.copytree(WORKSPACE_PATH, workspace_backup_path, dirs_exist_ok=True)
         yield
+        # delete workspace modified by test
         shutil.rmtree(WORKSPACE_PATH)
+        # restore backup
         shutil.copytree(workspace_backup_path, WORKSPACE_PATH)
 
 
 @pytest.fixture(scope="session")
 def test_client():
+    def override_check_user_app_permissions():
+        return {"use": True, "edit": True, "own": True}
+
+    app.dependency_overrides[CheckUserPermissions(action="edit")] = override_check_user_app_permissions
+    app.dependency_overrides[CheckUserPermissions(action="use")] = override_check_user_app_permissions
+    app.dependency_overrides[
+        CheckUserPermissions(action="edit", resource=CheckUserPermissions.APP)
+    ] = override_check_user_app_permissions
+    app.dependency_overrides[
+        CheckUserPermissions(action="use", resource=CheckUserPermissions.APP)
+    ] = override_check_user_app_permissions
     return TestClient(app)
 
 
 @pytest.fixture
 def dropbase_router_mocker():
     mocker = DropbaseRouterMocker()
+    # app.dependency_overrides uses function as a key. part of fastapi
     app.dependency_overrides[get_dropbase_router] = lambda: mocker.get_mock_dropbase_router()
+    app.dependency_overrides[
+        WSDropbaseRouterGetter(access_token="temp")
+    ] = lambda: mocker.get_mock_dropbase_router()
     yield mocker
+    # delete get_dropbase_router from dependency overwrite once test is done
     del app.dependency_overrides[get_dropbase_router]
 
 
+@pytest.fixture
+def mock_db(request, postgres_db, mysql_db, snowflake_db, sqlite_db):  # noqa
+    # returns a database instance rather than an engine
+    db_type = request.param
+    creds_dict = {}
+    match db_type:
+        case "postgres":
+            creds_dict = {
+                "host": postgres_db.info.host,
+                "drivername": "postgresql+psycopg2",
+                "database": postgres_db.info.dbname,
+                "username": postgres_db.info.user,
+                "password": "",  # Not required for pytest-postgresql
+                "port": postgres_db.info.port,
+            }
+
+            db_instance = connect_to_test_db("postgres", creds_dict)
+
+        case "mysql":
+            load_test_db("mysql", **MYSQL_TEST_CONNECTION_PARAMS)
+            db_instance = connect_to_test_db("mysql", MYSQL_TEST_CREDS)
+
+        case "snowflake":
+            load_test_db("snowflake", **SNOWFLAKE_TEST_CONNECTION_PARAMS)
+            db_instance = connect_to_test_db("snowflake", SNOWFLAKE_TEST_CREDS)
+
+        case "sqlite":
+            load_test_db("sqlite", **SQLITE_TEST_CONNECTION_PARAMS)
+            db_instance = connect_to_test_db("sqlite", SQLITE_TEST_CREDS)
+
+    return db_instance
+
+
 def pytest_sessionstart():
-    import unittest.mock
+    from server.controllers.workspace import AppFolderController, create_file, create_folder
 
-    from server.controllers.workspace import AppCreator, create_file
-    from server.tests.mocks.dropbase.app import get_app_response, update_app_response
-    from server.tests.mocks.dropbase.sync import sync_components_response_empty
+    create_folder(TEMPDIR_PATH)
 
-    mock_dropbase_router = unittest.mock.MagicMock()
-    mock_dropbase_router.misc.sync_components.side_effect = sync_components_response_empty
-    mock_dropbase_router.app.update_app.side_effect = update_app_response
-
-    AppCreator(
-        get_app_response()("random-uuid").json(),
-        {"page": {"name": "page1"}},
+    AppFolderController(
+        TEST_APP_NAME,
         WORKSPACE_PATH,
-        "mock url",
-        mock_dropbase_router,
-    ).create()
+    ).create_app()
 
-    scripts_path = WORKSPACE_PATH.joinpath("dropbase_test_app/page1/scripts")
+    scripts_path = WORKSPACE_PATH.joinpath(f"{TEST_APP_NAME}/{TEST_PAGE_NAME}/scripts")
     create_file(scripts_path, "", "function1.py")
-    create_file(
-        scripts_path,
-        'from workspace.dropbase_test_app.page1 import State, Context\ndef test_function(state: State, context: Context) -> Context:\n    print("test")\n    return context',
-        "test_function.py",
-    )
-    create_file(
-        scripts_path,
-        'import pandas as pd\nfrom workspace.dropbase_test_app.page1 import State, Context\ndef test_function_data_fetcher(state: State) -> pd.DataFrame:\n    return pd.DataFrame(data=[[1]], columns=["x"])\n    return context',
-        "test_function_data_fetcher.py",
-    )
-    create_file(scripts_path, "select 1;", "test_sql.sql")
+    create_file(scripts_path, get_test_ui(), "test_ui.py")
+    create_file(scripts_path, get_test_data_fetcher(), "test_data_fetcher.py")
+    create_file(scripts_path, "select * from users;", "test_sql.sql")
+
+    # add files to properties
+    properties = read_page_properties(TEST_APP_NAME, TEST_PAGE_NAME)
+    properties["files"] = [
+        {"name": "test_sql", "type": "sql", "source": "local", "depends_on": []},
+        {"name": "test_ui", "type": "ui", "source": None, "depends_on": None},
+        {
+            "name": "test_data_fetcher",
+            "type": "data_fetcher",
+            "source": None,
+            "depends_on": None,
+        },
+    ]
+    update_properties(TEST_APP_NAME, TEST_PAGE_NAME, properties)
 
 
 def pytest_sessionfinish():
     import shutil
 
     shutil.rmtree(WORKSPACE_PATH.joinpath("dropbase_test_app"))
+    # Workspace properties is still written to the non test workspace
+    # Its easier to clean it up here
+    workspace_folder_controller = WorkspaceFolderController(r_path_to_workspace=WORKSPACE_PATH)
+    workspace_props = workspace_folder_controller.get_workspace_properties()
+    workspace_apps = workspace_props.get("apps", [])
+    for one_app in workspace_apps:
+        if one_app["name"] == TEST_APP_NAME:
+            workspace_apps.remove(one_app)
+
+    workspace_folder_controller.write_workspace_properties({**workspace_props, "apps": workspace_apps})

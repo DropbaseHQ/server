@@ -12,7 +12,8 @@ repos:
         args:
           - "--profile=black"
           - "--line-length=105"
-        exclude: ^lsp/
+        exclude: ^(lsp|alembic)/
+        language_version: python3.11
 
   # black
   - repo: https://github.com/psf/black
@@ -22,7 +23,7 @@ repos:
         args: # arguments to configure black
           - "--line-length=105"
           # - --include='\.pyi?$']
-        exclude: (^lsp/)
+        exclude: ^(lsp|alembic)/
         language_version: python3.11
 
   # flake8
@@ -30,7 +31,7 @@ repos:
     rev: 6.1.0
     hooks:
       - id: flake8
-        exclude: (^lsp/)
+        exclude: ^(lsp|alembic)/
         args: # arguments to configure flake8
           # making isort line length compatible with black
           - "--max-line-length=105"
@@ -40,3 +41,4 @@ repos:
           # check out their meaning here
           # https://flake8.pycqa.org/en/latest/user/error-codes.html
           - "--ignore=E203,E266,E501,W503,F403,F401,E402,F405,W605,C901"
+        language_version: python3.11

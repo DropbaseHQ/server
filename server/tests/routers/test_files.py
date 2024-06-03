@@ -1,165 +1,374 @@
-import os
-import shutil
+import copy
 
-from server.tests.mocks.dropbase.file import (
-    create_file_response,
-    delete_file_response,
-    update_file_response,
-    update_file_name_response,
-)
-from server.tests.mocks.util import mock_response
+from server.tests.constants import TEST_APP_NAME, TEST_PAGE_NAME, WORKSPACE_PATH
 from server.tests.verify_file_exists import workspace_file_exists
-from server.tests.verify_folder_structure import is_valid_folder_structure
-from server.tests.constants import WORKSPACE_PATH
+from server.tests.verify_property_exists import verify_object_prop_exists
+from server.tests.verify_state_and_context import verify_object_in_state_context
+
+base_data = {
+    "name": "REPLACE_ME",
+    "app_name": TEST_APP_NAME,
+    "page_name": TEST_PAGE_NAME,
+    "type": "sql",
+    "source": None,
+}
 
 
-def test_create_file_req(test_client, dropbase_router_mocker):
+def test_create_file_req(test_client):
     # Arrange
-    dropbase_router_mocker.patch("file", "create_file", side_effect=create_file_response)
-
-    data = {
-        "app_name": "dropbase_test_app",
-        "page_name": "page1",
-        "name": "test_file",
-        "type": "random gibberish type",
-        "page_id": "8f1dabeb-907b-4e59-8417-ba67a801ba0e",
-    }
+    data = copy.deepcopy(base_data)
+    data["name"] = "test_file"
 
     # Act
-    res = test_client.post("/files", json=data)
+    res = test_client.post("/files/", json=data)
 
     # Assert
     assert res.status_code == 200
-    assert is_valid_folder_structure()
-    assert workspace_file_exists("scripts/test_file.py")
+    assert workspace_file_exists("scripts/test_file.sql")
 
 
-def test_create_file_req_ui(test_client, dropbase_router_mocker):
+def test_create_file_req_ui(test_client):
     # Arrange
-    dropbase_router_mocker.patch("file", "create_file", side_effect=create_file_response)
-
-    data = {
-        "app_name": "dropbase_test_app",
-        "page_name": "page1",
-        "name": "test_file",
-        "type": "ui",
-        "page_id": "8f1dabeb-907b-4e59-8417-ba67a801ba0e",
-    }
+    data = copy.deepcopy(base_data)
+    data["name"] = "test_file_ui"
+    data["type"] = "ui"
 
     # Act
-    res = test_client.post("/files", json=data)
+    res = test_client.post("/files/", json=data)
 
     # Assert
     assert res.status_code == 200
-    assert is_valid_folder_structure()
-    assert workspace_file_exists("scripts/test_file.py")
+    assert workspace_file_exists("scripts/test_file_ui.py")
 
 
-def test_create_file_req_data_fetcher(test_client, dropbase_router_mocker):
+def test_create_file_req_data_fetcher(test_client):
     # Arrange
-    dropbase_router_mocker.patch("file", "create_file", side_effect=create_file_response)
-
-    data = {
-        "app_name": "dropbase_test_app",
-        "page_name": "page1",
-        "name": "test_file",
-        "type": "data_fetcher",
-        "page_id": "8f1dabeb-907b-4e59-8417-ba67a801ba0e",
-    }
+    data = copy.deepcopy(base_data)
+    data["name"] = "data_fetcher"
+    data["type"] = "data_fetcher"
 
     # Act
-    res = test_client.post("/files", json=data)
+    res = test_client.post("/files/", json=data)
 
     # Assert
     assert res.status_code == 200
-    assert is_valid_folder_structure()
-    assert workspace_file_exists("scripts/test_file.py")
+    assert workspace_file_exists("scripts/data_fetcher.py")
 
 
-def test_create_file_req_bad_request(test_client, dropbase_router_mocker):
+def test_create_file_req_bad_request(test_client):
     # Arrange
-    dropbase_router_mocker.patch(
-        "file",
-        "create_file",
-        side_effect=lambda *args, **kwargs: mock_response(json={}, status_code=500),
-    )
-
-    data = {
-        "app_name": "dropbase_test_appadasdadsd",
-        "page_name": "page1",
-        "name": "test_file",
-        "type": "random gibberish type",
-        "page_id": "8f1dabeb-907b-4e59-8417-ba67a801ba0e",
-    }
+    data = copy.deepcopy(base_data)
+    data["name"] = "test_file"
+    data["type"] = "bad_type"
 
     # Act
-    res = test_client.post("/files", json=data)
+    res = test_client.post("/files/", json=data)
 
     # Assert
     assert res.status_code != 200
-    assert is_valid_folder_structure()
     assert not workspace_file_exists("scripts/test_file.py")
 
 
-def test_create_file_req_block_path_traversal_vulnerability(test_client, dropbase_router_mocker):
+def test_create_file_req_error_duplicate_names(test_client):
     # Arrange
-    dropbase_router_mocker.patch("file", "create_file", side_effect=create_file_response)
-
-    data = {
-        "app_name": "dropbase_test_app",
-        "page_name": "page1",
-        "name": "../test_file",
-        "type": "random gibberish type",
-        "page_id": "8f1dabeb-907b-4e59-8417-ba67a801ba0e",
-    }
+    data = copy.deepcopy(base_data)
+    data["name"] = "test_file"
+    data["type"] = "data_fetcher"
 
     # Act
-    res = test_client.post("/files", json=data)
+    if workspace_file_exists("scripts/test_file"):
+        res = test_client.post("/files/", json=data)
+    else:
+        test_client.post("/files/", json=data)
+        res = test_client.post("/files/", json=data)
+
+    res_data = res.json()
 
     # Assert
     assert res.status_code != 200
-    assert is_valid_folder_structure()
-    assert not workspace_file_exists("test_file.py")
+
+    assert res_data["detail"] == "File with the same name already exists"
 
 
-def test_get_all_files(test_client, dropbase_router_mocker):
+def test_create_file_req_error_illegal_name_space_between(test_client):
     # Arrange
-    scripts_path = WORKSPACE_PATH.joinpath("dropbase_test_app/page1/scripts/")
-    shutil.rmtree(scripts_path)
-    os.mkdir(scripts_path)
-
-    files = ["test1.py", "test2.py", "test3.sql", "test4.sql"]
-    for i in range(len(files)):
-        path = scripts_path.joinpath(files[i]).absolute()
-        with open(path, "w") as wf:
-            pass
-        files[i] = str(path)
+    data = copy.deepcopy(base_data)
+    data["name"] = "test file"
+    data["type"] = "data_fetcher"
 
     # Act
-    res = test_client.get("/files/all/dropbase_test_app/page1")
+    res = test_client.post("/files/", json=data)
+    res_data = res.json()
+
+    # Assert
+    assert res.status_code != 200
+
+    assert not workspace_file_exists("scripts/test file.py")
+
+    assert res_data["detail"][0]["msg"] == 'string does not match regex "^[A-Za-z0-9_.]+$"'
+
+
+def test_create_file_req_error_illegal_name_special_characters(test_client):
+    # Arrange
+    data = copy.deepcopy(base_data)
+    data["name"] = "test_file$"
+    data["type"] = "data_fetcher"
+
+    # Act
+    res = test_client.post("/files/", json=data)
+    res_data = res.json()
+
+    # Assert
+    assert res.status_code != 200
+
+    assert not workspace_file_exists("scripts/test file.py")
+
+    assert res_data["detail"][0]["msg"] == 'string does not match regex "^[A-Za-z0-9_.]+$"'
+
+
+def test_create_file_req_block_path_traversal_vulnerability(test_client):
+    # Arrange
+    data = copy.deepcopy(base_data)
+    data["name"] = "../test_file"
+
+    # Act
+    res = test_client.post("/files/", json=data)
+
+    # Assert
+    assert res.status_code != 200
+    assert not workspace_file_exists("test_file.sql")
+
+
+def test_rename_file_req(test_client):
+    # Arrange
+    data = {
+        "app_name": TEST_APP_NAME,
+        "page_name": TEST_PAGE_NAME,
+        "old_name": "test_ui",
+        "new_name": "test_renamed",
+        "type": "ui",
+    }
+
+    # Act
+    res = test_client.put("/files/rename", json=data)
 
     # Assert
     assert res.status_code == 200
-    assert is_valid_folder_structure()
-    assert set(res.json()["files"]) == set(files)
+    assert not workspace_file_exists("scripts/test_ui.py")
+    assert workspace_file_exists("scripts/test_renamed.py")
 
 
-def test_rename_file_req(test_client, dropbase_router_mocker):
+def test_rename_file_req_file_not_exists(test_client):
     # Arrange
-    dropbase_router_mocker.patch("file", "update_file_name", side_effect=update_file_name_response)
+    data = {
+        "app_name": TEST_APP_NAME,
+        "page_name": TEST_PAGE_NAME,
+        "old_name": "test_ui_not_exists",
+        "new_name": "test_renamed_not_exists",
+        "type": "ui",
+    }
 
-    scripts_path = WORKSPACE_PATH.joinpath("dropbase_test_app/page1/scripts/")
-    with open(scripts_path.joinpath("test_rename.sql"), "w") as wf:
-        pass
+    # Act
+    res = test_client.put("/files/rename", json=data)
 
-    assert workspace_file_exists("scripts/test_rename.sql")
+    # Assert
+    assert res.status_code == 400
+    assert not workspace_file_exists("scripts/test_ui_not_exists.py")
+    assert not workspace_file_exists("scripts/test_renamed_not_exists.py")
+
+
+def test_delete_file_req(test_client):
+    # Arrange
+    if not workspace_file_exists("scripts/test_file.sql"):
+        data = copy.deepcopy(base_data)
+        data["name"] = "test_file"
+
+        test_client.post("/files/", json=data)
 
     data = {
-        "page_id": "8f1dabeb-907b-4e59-8417-ba67a801ba0e",
-        "old_name": "test_rename",
-        "new_name": "test_renamed",
-        "app_name": "dropbase_test_app",
-        "page_name": "page1",
+        "app_name": TEST_APP_NAME,
+        "page_name": TEST_PAGE_NAME,
+        "file_name": "test_file",
+        "type": "sql",
+    }
+
+    # Act
+    res = test_client.request("DELETE", "/files/", json=data)
+
+    # Assert
+    assert res.status_code == 200
+    assert not workspace_file_exists("scripts/test_ui.sql")
+
+
+def test_delete_file_req_platform_error(test_client):
+    # Arrange
+    if not workspace_file_exists("scripts/test_file.sql"):
+        data = copy.deepcopy(base_data)
+        data["name"] = "test_file"
+
+        test_client.post("/files/", json=data)
+
+    data = {
+        "app_name": TEST_APP_NAME,
+        "page_name": TEST_PAGE_NAME,
+        "file_name": "test_file.sql",
+        "type": "sql",
+    }
+
+    # Act
+    res = test_client.request("DELETE", "/files/", json=data)
+
+    # Assert
+    assert res.status_code != 200
+    assert workspace_file_exists("scripts/test_file.sql")
+
+
+def test_delete_file_req_not_exists(test_client):
+    # Arrange
+    data = {
+        "app_name": TEST_APP_NAME,
+        "page_name": TEST_PAGE_NAME,
+        "file_name": "test_uis.py",
+        "type": "ui",
+    }
+    # Act
+    res = test_client.request("DELETE", "/files/", json=data)
+
+    # Assert
+    assert res.status_code != 200
+
+
+def test_update_file_req(test_client):
+    # Arrange
+    if not workspace_file_exists("scripts/test_fetcher.sql"):
+        data = copy.deepcopy(base_data)
+        data["name"] = "test_fetcher"
+
+        test_client.post("/files/", json=data)
+
+    file_name = "test_fetcher"
+    data = {
+        "app_name": TEST_APP_NAME,
+        "page_name": TEST_PAGE_NAME,
+        "file_name": file_name,
+        "code": "mock sql",
+        "type": "sql",
+    }
+
+    # Act
+    res = test_client.put(f"/files/{file_name}", json=data)
+
+    # Assert
+    assert res.status_code == 200
+
+    file_path = WORKSPACE_PATH.joinpath(f"{TEST_APP_NAME}/{TEST_PAGE_NAME}/scripts/{file_name}.sql")
+    with open(file_path, "r") as r:
+        assert r.read() == "mock sql"
+
+
+def test_delete_binded_fetcher(test_client):
+    # Arrange
+    if not workspace_file_exists("scripts/test_fetcher.sql"):
+        data = copy.deepcopy(base_data)
+        data["name"] = "test_fetcher"
+
+        test_client.post("/files/", json=data)
+
+        assert workspace_file_exists("scripts/test_fetcher.sql")
+
+    if not verify_object_in_state_context("TablesState", "table2"):
+        data = {
+            "app_name": TEST_APP_NAME,
+            "page_name": TEST_PAGE_NAME,
+            "properties": {
+                "blocks": [
+                    {
+                        "block_type": "table",
+                        "label": "Table2",
+                        "name": "table2",
+                        "description": None,
+                        "fetcher": "test_fetcher",
+                        "height": "",
+                        "size": 10,
+                        "filters": None,
+                        "type": "sql",
+                        "smart": False,
+                        "columns": [],
+                        "depends_on": None,
+                        "w": 4,
+                        "h": 1,
+                        "x": 0,
+                        "y": 0,
+                    }
+                ],
+                "files": [{"name": "test_fetcher", "type": "sql", "source": None, "depends_on": []}],
+            },
+        }
+
+        headers = {"access-token": "mock access token"}
+
+        test_client.put("/page", json=data, headers=headers)
+
+    data = {
+        "app_name": TEST_APP_NAME,
+        "page_name": TEST_PAGE_NAME,
+        "file_name": "test_fetcher",
+        "type": "sql",
+    }
+
+    # Act
+    res = test_client.request("DELETE", "/files/", json=data)
+
+    # Assert
+    assert res.status_code == 200
+    assert not workspace_file_exists("scripts/test_fetcher.sql")
+    assert verify_object_prop_exists(TEST_APP_NAME, TEST_PAGE_NAME, "table", "table2", "fetcher") == ""
+
+
+def test_rename_binded_fetcher(test_client):
+    # Arrange
+    if not workspace_file_exists("scripts/test_fetcher.sql"):
+        data = copy.deepcopy(base_data)
+        data["name"] = "test_fetcher"
+
+        test_client.post("/files/", json=data)
+
+        assert workspace_file_exists("scripts/test_fetcher.sql")
+
+    if not verify_object_in_state_context("TablesState", "table2"):
+        data = {
+            "app_name": TEST_APP_NAME,
+            "page_name": TEST_PAGE_NAME,
+            "properties": {
+                "blocks": [
+                    {
+                        "block_type": "table",
+                        "label": "Table2",
+                        "name": "table2",
+                        "description": None,
+                        "fetcher": "test_fetcher",
+                        "height": "",
+                        "size": 10,
+                        "filters": None,
+                        "type": "sql",
+                        "smart": False,
+                        "columns": [],
+                        "depends_on": None,
+                    }
+                ],
+                "files": [{"name": "test_fetcher", "type": "sql", "source": None, "depends_on": []}],
+            },
+        }
+
+        headers = {"access-token": "mock access token"}
+
+        test_client.put("/page", json=data, headers=headers)
+
+    data = {
+        "app_name": TEST_APP_NAME,
+        "page_name": TEST_PAGE_NAME,
+        "old_name": "test_fetcher",
+        "new_name": "test_new_fetcher",
         "type": "sql",
     }
 
@@ -168,155 +377,9 @@ def test_rename_file_req(test_client, dropbase_router_mocker):
 
     # Assert
     assert res.status_code == 200
-    assert is_valid_folder_structure()
-    assert not workspace_file_exists("scripts/test_rename.sql")
-    assert workspace_file_exists("scripts/test_renamed.sql")
-
-
-def test_rename_file_req_dropbase_call_failed(test_client, dropbase_router_mocker):
-    # Arrange
-    update_file_name_response_failure = lambda *args, **kwargs: mock_response(json={}, status_code=500, text="fail")
-    dropbase_router_mocker.patch("file", "update_file_name", side_effect=update_file_name_response_failure)
-
-    scripts_path = WORKSPACE_PATH.joinpath("dropbase_test_app/page1/scripts/")
-    with open(scripts_path.joinpath("test_rename.sql"), "w") as wf:
-        pass
-
-    assert workspace_file_exists("scripts/test_rename.sql")
-
-    data = {
-        "page_id": "8f1dabeb-907b-4e59-8417-ba67a801ba0e",
-        "old_name": "test_rename",
-        "new_name": "test_renamed",
-        "app_name": "dropbase_test_app",
-        "page_name": "page1",
-        "type": "sql",
-    }
-
-    # Act
-    res = test_client.put("/files/rename", json=data)
-
-    # Assert
-    assert res.status_code == 200
-    assert res.json()["status"] == "error"
-    assert is_valid_folder_structure()
-    assert workspace_file_exists("scripts/test_rename.sql")
-    assert not workspace_file_exists("scripts/test_renamed.sql")
-
-
-def test_rename_file_req_file_not_exists(test_client, dropbase_router_mocker):
-    # Arrange
-    dropbase_router_mocker.patch("file", "update_file_name", side_effect=update_file_name_response)
-
-    assert not workspace_file_exists("scripts/test_rename.sql")
-
-    data = {
-        "page_id": "8f1dabeb-907b-4e59-8417-ba67a801ba0e",
-        "old_name": "test_rename",
-        "new_name": "test_renamed",
-        "app_name": "dropbase_test_app",
-        "page_name": "page1",
-        "type": "sql",
-    }
-
-    # Act
-    res = test_client.put("/files/rename", json=data)
-
-    # Assert
-    assert res.status_code == 200
-    assert res.json()["status"] == "error"
-    assert is_valid_folder_structure()
-
-
-def test_delete_file_req(test_client, dropbase_router_mocker):
-    # Arrange
-    dropbase_router_mocker.patch("file", "delete_file", side_effect=delete_file_response)
-
-    scripts_path = WORKSPACE_PATH.joinpath("dropbase_test_app/page1/scripts/")
-    with open(scripts_path.joinpath("test_delete.sql"), "w") as wf:
-        pass
-
-    assert workspace_file_exists("scripts/test_delete.sql")
-
-    data = {
-        "app_name": "dropbase_test_app",
-        "page_name": "page1",
-        "file_name": "test_delete.sql",
-        "type": "sql",
-    }
-
-    # Act
-    res = test_client.request("DELETE", "/files/8f1dabeb-907b-4e59-8417-ba67a801ba0e/", json=data)
-
-    # Assert
-    assert res.status_code == 200
-    assert is_valid_folder_structure()
-    assert not workspace_file_exists("scripts/test_delete.sql")
-
-
-def test_delete_file_req_platform_error(test_client, dropbase_router_mocker):
-    # Arrange
-    dropbase_router_mocker.patch("file", "delete_file", side_effect=lambda *args, **kwargs: mock_response(json={}, status_code=500))
-
-    scripts_path = WORKSPACE_PATH.joinpath("dropbase_test_app/page1/scripts/")
-    with open(scripts_path.joinpath("test_delete.sql"), "w") as wf:
-        pass
-
-    assert workspace_file_exists("scripts/test_delete.sql")
-
-    data = {
-        "app_name": "dropbase_test_app",
-        "page_name": "page1",
-        "file_name": "test_delete.sql",
-        "type": "sql",
-    }
-
-    # Act
-    res = test_client.request("DELETE", "/files/8f1dabeb-907b-4e59-8417-ba67a801ba0e/", json=data)
-
-    # Assert
-    assert res.status_code != 200
-    assert is_valid_folder_structure()
-    assert workspace_file_exists("scripts/test_delete.sql")
-
-
-def test_delete_file_req_not_exists(test_client, dropbase_router_mocker):
-    # Arrange
-    dropbase_router_mocker.patch("file", "delete_file", side_effect=delete_file_response)
-
-    data = {
-        "app_name": "dropbase_test_app",
-        "page_name": "page1",
-        "file_name": "test_delete.sql",
-        "type": "sql",
-    }
-
-    # Act
-    res = test_client.request("DELETE", "/files/8f1dabeb-907b-4e59-8417-ba67a801ba0e/", json=data)
-
-    # Assert
-    assert res.status_code != 200
-
-
-def test_update_file_req(test_client, dropbase_router_mocker):
-    # Arrange
-    dropbase_router_mocker.patch("file", "update_file", side_effect=update_file_response)
-
-    data = {
-        "app_name": "dropbase_test_app",
-        "page_name": "page1",
-        "name": "test_sql",
-        "sql": "mock sql",
-        "file_id": "8f1dabeb-907b-4e59-8417-ba67a801ba0e",
-        "type": "sql",
-    }
-
-    # Act
-    res = test_client.put("/files/8f1dabeb-907b-4e59-8417-ba67a801ba0e", json=data)
-
-    # Assert
-    assert res.status_code == 200
-    assert is_valid_folder_structure()
-
-    with open(WORKSPACE_PATH.joinpath("dropbase_test_app/page1/scripts/test_sql.sql"), "r") as rf:
-        assert rf.read() == "mock sql"
+    assert not workspace_file_exists("scripts/test_fetcher.sql")
+    assert workspace_file_exists("scripts/test_new_fetcher.sql")
+    assert (
+        verify_object_prop_exists(TEST_APP_NAME, TEST_PAGE_NAME, "table", "table2", "fetcher")
+        == "test_new_fetcher"
+    )  # noqa

@@ -1,28 +1,35 @@
+# todo: group with dropbase package sources
 import logging
-import os
+
 from pydantic import ValidationError
-from server.schemas.database import PgCreds
 
-db_type_to_class = {"postgres": PgCreds, "pg": PgCreds}
+from dropbase.schemas.database import MySQLCreds, PgCreds, SnowflakeCreds, SqliteCreds
+from server.config import worker_envs
+
+db_type_to_class = {
+    "postgres": PgCreds,
+    "pg": PgCreds,
+    "mysql": MySQLCreds,
+    "sqlite": SqliteCreds,
+    "snowflake": SnowflakeCreds,
+}
 
 
-def get_sources():
-    # config = dotenv_values(".env")
-    config = {key: os.getenv(key) for key in os.environ.keys()}
-    sources = {}
-    for key, value in config.items():
-        if key.startswith("SOURCE"):
-            _, type, name, field = key.lower().split("_")
-            if name in sources:
-                sources[name][field] = value
-            else:
-                sources[name] = {field: value, "type": type}
-    verified_sources = {}
-    for name, source in sources.items():
-        SourceClass = db_type_to_class.get(source["type"])
-        try:
-            SourceClass(**source)
-            verified_sources[name] = source
-        except ValidationError as e:
-            logging.warning(f"Failed to validate source {name}.\n\nError: " + str(e))
-    return verified_sources
+def get_source_name_type():
+    sources = []
+    databases = worker_envs.get("database", {})
+    for db_type in databases:
+        for key, creds in databases[db_type].items():
+            try:
+                # assert that the creds are valid by casting them to the appropriate class
+                SourceClass = db_type_to_class.get(db_type)
+                SourceClass(**creds)
+                # if the creds are valid, add them to the list of sources
+                sources.append({"name": key, "type": db_type})
+            except ValidationError as e:
+                logging.warning(f"Failed to validate source {key}.\n\nError: " + str(e))
+    return sources
+
+
+def get_env_vars():
+    return [key for key, value in worker_envs.items() if not isinstance(value, dict)]
