@@ -13,3 +13,9 @@ class RunClass(BaseModel):
     state: dict
     updates: Optional[List[dict]]
     row: Optional[dict]
+
+
+class RunPythonStringRequest(BaseModel):
+    code: str
+    test: str
+    state: dict

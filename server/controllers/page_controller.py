@@ -6,8 +6,6 @@ import shutil
 
 import astor
 
-from dropbase.helpers.boilerplate import *
-from dropbase.helpers.state_context import compose_state_context_models, get_page_state_context
 from dropbase.helpers.utils import (
     get_page_properties,
     read_app_properties,
@@ -15,6 +13,8 @@ from dropbase.helpers.utils import (
     validate_page_properties,
 )
 from dropbase.models import *
+from server.helpers.boilerplate import *
+from server.helpers.state_context import compose_state_context_models, get_page_state_context
 
 prefixes = ["header", "footer", "columns", "components"]
 suffixes = ["on_click", "on_select", "on_toggle", "on_submit"]

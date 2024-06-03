@@ -1,10 +1,8 @@
 from abc import ABC, abstractmethod
-from typing import List
 
 import pandas as pd
 
 from dropbase.helpers.dataframe import to_dtable
-from dropbase.schemas.edit_cell import CellEdit
 
 pd.DataFrame.to_dtable = to_dtable
 
@@ -17,13 +15,13 @@ class TableABC(ABC):
     def get(self, state, context):
         return context
 
-    def update(self, state, context, edits: List[CellEdit]):
+    def update(self, state, context, updates):
         return context
 
-    def add(self, state, context, row: dict):
+    def add(self, state, context, row):
         return context
 
-    def delete(self, state, context, row: dict):
+    def delete(self, state, context):
         return context
 
     def on_row_change(self, state, context):

@@ -142,7 +142,10 @@ def display_rule(state, context, rules: DisplayRules):
             target_component = rule.target.split(".")[2]
 
             target_widget_context = getattr(context, target_widget)
-            """if a component depends on another component that is hidden, it should be hidden even if display rule is true"""
+            """
+            if a component depends on another component that is hidden,
+            it should be hidden even if display rule is true
+            """
             if hasattr(target_widget_context, target_section):
                 components_context = getattr(target_widget_context, target_section)
                 component_context = getattr(components_context, target_component)

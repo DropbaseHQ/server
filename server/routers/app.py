@@ -1,6 +1,6 @@
 from fastapi import APIRouter, HTTPException
 
-from dropbase.schemas.workspace import CreateAppRequest, RenameAppRequest
+from dropbase.schemas.app import CreateAppRequest, RenameAppRequest
 from server.constants import DEFAULT_RESPONSES
 from server.controllers.app import AppController, get_workspace_apps
 from server.controllers.page_controller import PageController

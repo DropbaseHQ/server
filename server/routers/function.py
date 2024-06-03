@@ -3,8 +3,7 @@ import uuid
 
 from fastapi import APIRouter, HTTPException, Response
 
-from dropbase.schemas.function import RunClass
-from dropbase.schemas.run_python import RunPythonStringRequest
+from dropbase.schemas.function import RunClass, RunPythonStringRequest
 from server.constants import DEFAULT_RESPONSES
 from server.controllers.python_docker import run_container
 from server.helpers.redis import r

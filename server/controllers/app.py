@@ -2,8 +2,8 @@ import json
 import os
 import shutil
 
-from dropbase.helpers.boilerplate import app_properties_boilerplate
 from server.controllers.workspace import get_subdirectories
+from server.helpers.boilerplate import app_properties_boilerplate
 
 
 class AppController:
