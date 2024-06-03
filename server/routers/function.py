@@ -7,7 +7,7 @@ from dropbase.schemas.function import RunClass
 from dropbase.schemas.run_python import RunPythonStringRequest
 from server.constants import DEFAULT_RESPONSES
 from server.controllers.python_docker import run_container
-from server.controllers.redis import r
+from server.helpers.redis import r
 
 router = APIRouter(prefix="/function", tags=["function"], responses=DEFAULT_RESPONSES)
 

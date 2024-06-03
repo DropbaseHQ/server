@@ -33,7 +33,6 @@ component_property_types = {
 }
 
 
-# TODO: THIS IS A HELPER, MOVE TO HERLPSERS
 def get_component_properties(compnent_type: str):  # this needs to be modified to support mysql
     response = {}
     if compnent_type == "all":

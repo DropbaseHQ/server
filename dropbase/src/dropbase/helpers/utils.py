@@ -1,9 +1,6 @@
 import importlib
 import json
-import re
-from pathlib import Path
 
-import pandas as pd
 from pydantic import BaseModel, create_model
 
 from dropbase.models.table import TableProperty
@@ -18,34 +15,11 @@ def get_state(app_name: str, page_name: str, state: dict):
     return State(**state)
 
 
-def clean_df(df: pd.DataFrame) -> pd.DataFrame:
-    # TODO: implement cleaning
-    return df
-
-
-def validate_column_name(column: str):
-    pattern = re.compile(r"^[a-zA-Z_][a-zA-Z0-9_]*$")
-    return False if pattern.fullmatch(column) is None else True
-
-
 def get_state_context_model(app_name: str, page_name: str, model_type: str):
     module_name = f"workspace.{app_name}.{page_name}.{model_type}"
     module = importlib.import_module(module_name)
     module = importlib.reload(module)
     return getattr(module, model_type.capitalize())
-
-
-def get_table_data_fetcher(files: list, fetcher_name: str):
-    file_data = None
-    for file in files:
-        if file["name"] == fetcher_name:
-            file_data = file
-            break
-    return file_data
-
-
-def check_if_object_exists(path: str):
-    return Path(path).exists()
 
 
 def read_page_properties(app_name: str, page_name: str):

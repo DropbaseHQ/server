@@ -3,9 +3,7 @@ import logging
 import pandas as pd
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
-from fastapi_jwt_auth.exceptions import AuthJWTException
 from starlette.websockets import WebSocketDisconnect
 
 # register to_dtype function to pandas DataFrame
@@ -13,7 +11,6 @@ from starlette.websockets import WebSocketDisconnect
 from dropbase.helpers.dataframe import to_dtable
 from server import routers
 from server.constants import CORS_ORIGINS, WORKER_VERSION
-from server.utils import auth_module_is_installed
 
 pd.DataFrame.to_dtable = to_dtable
 
@@ -49,16 +46,6 @@ app.add_middleware(
 
 # static file server for lsp
 app.mount("/workspace", NoCacheStaticFiles(directory="workspace"), name="workspace")
-
-if auth_module_is_installed:
-    from server.auth.routers import premium_router
-
-    app.include_router(premium_router)
-
-    @app.exception_handler(AuthJWTException)
-    async def authjwt_exception_handler(_, exc: AuthJWTException):
-        return JSONResponse(status_code=exc.status_code, content={"detail": exc.message})
-
 
 # routes for resources
 app.include_router(routers.function_router)

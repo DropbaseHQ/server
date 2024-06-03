@@ -1,8 +1,8 @@
 import os
+from pathlib import Path
 
 from fastapi import APIRouter
 
-from dropbase.helpers.utils import check_if_object_exists
 from server.constants import DEFAULT_RESPONSES
 from server.controllers.workspace import WorkspaceFolderController
 
@@ -15,7 +15,7 @@ async def get_workspace() -> dict:
         r_path_to_workspace=os.path.join(os.getcwd(), "workspace")
     )
     # Adds workspace id to workspace properties if not there already
-    if check_if_object_exists("workspace/properties.json"):
+    if Path("workspace/properties.json").exists()():
         workspace_props = workspace_folder_controller.get_workspace_properties()
         return workspace_props
     return None

@@ -3,7 +3,7 @@ import json
 from fastapi import APIRouter, Response
 
 from server.constants import DEFAULT_RESPONSES
-from server.controllers.redis import r
+from server.helpers.redis import r
 
 router = APIRouter(prefix="/status", tags=["status"], responses=DEFAULT_RESPONSES)
 

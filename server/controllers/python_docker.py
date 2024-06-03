@@ -24,7 +24,6 @@ def run_container(env_vars: dict, docker_script: str = "inside_docker"):
 
     # add environment variables from .worker_envs
     config_nev = stringify_env_vars(worker_envs)
-    # {key: val for key, val in config.items()}
     env_vars = {**env_vars, **config_nev}
 
     # get absolute path of the workspace directory from the environment variable

@@ -1,5 +1,5 @@
 # schema boilerplates
-sctipt_boilerplate_init = """from dropbase.helpers.scriptABC import ScriptABC
+sctipt_boilerplate_init = """from dropbase.classes.scriptABC import ScriptABC
 from workspace.{0}.{1}.main import *  # noqa, here we're importing all user defined classes
 
 
@@ -28,8 +28,8 @@ class Properties(BaseModel):
 # create
 main_class_init = """import pandas as pd
 from typing import List
-from dropbase.helpers.tableABC import TableABC
-from dropbase.helpers.widgetABC import WidgetABC
+from dropbase.classes.tableABC import TableABC
+from dropbase.classes.widgetABC import WidgetABC
 from workspace.{0}.{1}.context import *
 from workspace.{0}.{1}.state import *
 

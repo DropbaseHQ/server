@@ -5,8 +5,7 @@ import time
 
 from dotenv import load_dotenv
 
-from dropbase.helpers.utils import get_table_data_fetcher, read_page_properties
-from dropbase.schemas.files import DataFile
+from dropbase.helpers.utils import read_page_properties
 from server.tests.utils import setup_redis  # noqa
 
 load_dotenv()
@@ -81,11 +80,6 @@ def test_run_python_datafetcher(setup_redis):  # noqa
     os.environ["job_id"] = job_id
     os.environ["state"] = json.dumps(STATE)
 
-    properties = read_page_properties(APP_NAME, PAGE_NAME)
-    file = get_table_data_fetcher(properties["files"], "test_data_fetcher")
-    file = DataFile(**file)
-    os.environ["file"] = json.dumps(file.dict())
-
     # Act
     module_name = "dropbase.worker.run_python_file"
     run_module = importlib.import_module(module_name)
@@ -114,11 +108,6 @@ def test_run_python_ui(setup_redis):  # noqa
     os.environ["page_name"] = PAGE_NAME
     os.environ["job_id"] = job_id
     os.environ["state"] = json.dumps(STATE)
-
-    properties = read_page_properties(APP_NAME, PAGE_NAME)
-    file = get_table_data_fetcher(properties["files"], "test_ui")
-    file = DataFile(**file)
-    os.environ["file"] = json.dumps(file.dict())
 
     # Act
     module_name = "dropbase.worker.run_python_file"

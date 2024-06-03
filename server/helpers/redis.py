@@ -1,4 +1,3 @@
-# TODO: move to helpers
 import redis
 
 from server.constants import REDIS_HOST
