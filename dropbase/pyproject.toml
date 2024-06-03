@@ -9,12 +9,7 @@ authors = [{ name = "Dropbase", email = "support@dropbase.io" }]
 description = "Dropbase"
 readme = "README.md"
 requires-python = ">=3.11"
-dependencies = [
-  "sqlalchemy==1.4.46",
-  "pymysql==1.1.0",
-  "snowflake-sqlalchemy==1.5.1",
-  "psycopg2-binary==2.9.9",
-]
+dependencies = ["sqlalchemy==1.4.46", "psycopg2-binary==2.9.9"]
 classifiers = [
   "Programming Language :: Python :: 3",
   "License :: OSI Approved :: MIT License",

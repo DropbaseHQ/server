@@ -17,13 +17,11 @@ htmlcov
 notebooks/
 backups/
 
-proxy/frpc
 workspace/*
 !workspace/__init__.py
 .temp/
-dump.rdb
 *.db
-*.db-journal
-config.toml
-worker_envs.toml
 requirements-worker-custom.txt
+
+server.toml
+worker.toml

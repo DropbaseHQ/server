@@ -3,13 +3,13 @@ import json
 from openai import OpenAI
 
 from dropbase.schemas.prompt import Prompt
-from server.config import config
+from server.config import server_envs
 from server.controllers.page_controller import PageController
 from server.helpers.prompt_composer import get_func_prompt, get_ui_prompt
 
 
 def handle_prompt(request: Prompt):
-    if config.get("openai_api_key") is None:
+    if server_envs.get("openai_api_key") is None:
         raise Exception("OpenAI API key not found")
 
     base_path = f"workspace/{request.app_name}/{request.page_name}/"
@@ -18,7 +18,7 @@ def handle_prompt(request: Prompt):
     elif request.type == "ui":
         content = get_ui_prompt(base_path, request.prompt)
 
-    client = OpenAI(api_key=config["openai_api_key"])
+    client = OpenAI(api_key=server_envs["openai_api_key"])
     chat_completion = client.chat.completions.create(
         messages=[{"role": "user", "content": content}],
         model="gpt-4o",

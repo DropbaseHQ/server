@@ -6,5 +6,5 @@ def load_toml(file_name: str):
         return toml.load(file)
 
 
-config = load_toml("config.toml")
-worker_envs = load_toml("worker_envs.toml")
+server_envs = load_toml("server.toml")
+worker_envs = load_toml("worker.toml")

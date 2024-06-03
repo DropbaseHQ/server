@@ -1,4 +1,3 @@
-import os
 from pathlib import Path
 
 import toml
@@ -35,11 +34,11 @@ MYSQL_TEST_CONNECTION_PARAMS = {
 }
 
 
-with open("config.toml", "r") as toml_file:
-    config = toml.load(toml_file)
+with open("server.toml", "r") as toml_file:
+    server_env = toml.load(toml_file)
 
 
-SNOWFLAKE_TEST_CREDS = config["sources"]["snowflake"]["test"]
+SNOWFLAKE_TEST_CREDS = server_env["sources"]["snowflake"]["test"]
 SNOWFLAKE_TEST_CREDS["drivername"] = "snowflake"
 SNOWFLAKE_TEST_CREDS["dbschema"] = SNOWFLAKE_TEST_CREDS.pop("schema")
 
