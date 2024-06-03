@@ -23,5 +23,7 @@ workspace/*
 *.db
 requirements-worker-custom.txt
 
+dump.rdb
+
 server.toml
 worker.toml

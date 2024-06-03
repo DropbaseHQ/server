@@ -3,3 +3,4 @@ redis==5.0.1
 sqlalchemy==1.4.46
 pydantic==1.10.15
 python-dotenv==1.0.0
+astor==0.8.1
