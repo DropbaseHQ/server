@@ -10,21 +10,8 @@ WORKDIR /project
 COPY requirements.txt requirements.txt
 RUN pip3 install --no-cache-dir --upgrade -r requirements.txt
 
-# Install dropbase package
-# ADD dropbase/. dropbase/.
-# RUN pip install dropbase/.
-
 ADD server/. server/.
 
 EXPOSE 9090
 
-# Make our startup script executable
-RUN mkdir .temp
-
-# Copy the startup script into known file location in container
-COPY start.sh /start.sh
-
-# Make our startup script executable
-RUN chmod +x /start.sh
-
-CMD ["/start.sh"]
+CMD ["uvicorn", "server.main:app", "--host", "0.0.0.0", "--port", "9090"]
