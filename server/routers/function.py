@@ -4,7 +4,7 @@ import uuid
 from fastapi import APIRouter, HTTPException, Response
 
 from dropbase.schemas.function import RunClass, RunPythonStringRequest
-from server.constants import DEFAULT_RESPONSES
+from server.constants import DEFAULT_RESPONSES, TASK_TIMEOUT
 from server.controllers.python_docker import run_container
 from server.helpers.redis import r
 
@@ -39,7 +39,7 @@ async def run_class_req(req: RunClass, response: Response):
 
         # set initial status to pending
         r.set(job_id, json.dumps(reponse_payload))
-        r.expire(job_id, 300)  # timeout in 5 minutes
+        r.expire(job_id, TASK_TIMEOUT)  # timeout in 5 minutes
 
         response.status_code = status_code
         reponse_payload.pop("status_code")
@@ -67,7 +67,7 @@ async def run_python_string(req: RunPythonStringRequest, response: Response):
 
         # set initial status to pending
         r.set(job_id, json.dumps(reponse_payload))
-        r.expire(job_id, 300)  # timeout in 5 minutes
+        r.expire(job_id, TASK_TIMEOUT)  # timeout in 5 minutes
 
         response.status_code = status_code
         reponse_payload.pop("status_code")
