@@ -15,7 +15,7 @@ def create_app_req(request: CreateAppRequest):
         appController.create_app(request.app_label)
         pageController = PageController(request.app_name, "page1")
         pageController.create_page("Page 1")
-        return {"message": "success"}
+        return {"message": f"App {request.app_name} created successfully"}
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
 
