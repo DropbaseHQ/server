@@ -55,7 +55,6 @@ app.include_router(routers.component_router)
 app.include_router(routers.app_router)
 app.include_router(routers.page_router)
 app.include_router(routers.websocket_router)
-app.include_router(routers.workspace_router)
 app.include_router(routers.status_router)
 
 
