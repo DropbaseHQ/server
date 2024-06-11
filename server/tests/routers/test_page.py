@@ -9,6 +9,13 @@ def test_get_page(client):
     assert response.json() == get_page1_response
 
 
+def test_get_page_methods(client):
+    app_name, page_name = "pages", "page3"
+    response = client.get(f"/page/{app_name}/{page_name}/methods")
+    assert response.status_code == 200
+    assert response.json() == get_page3_method_response
+
+
 def test_create_page(client):
     app_name, page_name, page_label = "pages", "test_page", "Test Page"
     payload = {"app_name": app_name, "page_name": page_name, "page_label": page_label}
@@ -104,4 +111,15 @@ get_page1_response = {
         },
     },
     "methods": {"table1": {"columns": {}, "header": {}, "footer": {}, "methods": ["get"]}},
+}
+
+
+get_page3_method_response = {
+    "table1": {
+        "columns": {},
+        "header": {"button1": ["on_click"]},
+        "footer": {},
+        "methods": ["get", "update"],
+    },
+    "widget1": {"components": {"input1": ["on_submit"], "button1": ["on_click"]}},
 }

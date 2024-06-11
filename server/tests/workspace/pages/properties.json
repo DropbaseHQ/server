@@ -4,5 +4,8 @@
   },
   "page2": {
     "label": "Page2"
+  },
+  "page3": {
+    "label": "Page3"
   }
 }
