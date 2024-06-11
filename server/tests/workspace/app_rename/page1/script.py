@@ -1,5 +1,5 @@
 from dropbase.classes.scriptABC import ScriptABC
-from workspace.jun_8.page1.main import *  # noqa, here we're importing all user defined classes
+from workspace.app_rename.page1.main import *  # noqa, here we're importing all user defined classes
 
 
 class Script(ScriptABC):

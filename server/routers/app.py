@@ -25,7 +25,7 @@ def rename_app_req(request: RenameAppRequest):
     try:
         appController = AppController(request.app_name)
         appController.rename(request.new_label)
-        return {"message": "success"}
+        return {"message": f"App {request.app_name} renamed successfully"}
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
 
@@ -35,7 +35,7 @@ def delete_app_req(app_name: str):
     try:
         appController = AppController(app_name)
         appController.delete_app()
-        return {"message": "App deleted successfully"}
+        return {"message": f"App {app_name} deleted successfully"}
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
 
