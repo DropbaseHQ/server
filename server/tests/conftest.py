@@ -1,14 +1,14 @@
+import os
 import shutil
-import tempfile
-from pathlib import Path
 
 import pytest
 from fastapi.testclient import TestClient
 
 from server.main import app
 
-ROOT_PATH = Path(__file__).parent.parent.parent
-WORKSPACE_PATH = ROOT_PATH.joinpath("workspace")
+WORKSPACE_PATH = "workspace/"
+BACKUP_WORKSPACE_PATH = "workspace_bu/"
+TEST_WORKSPACE_PATH = "server/tests/workspace/"
 
 
 @pytest.fixture
@@ -19,12 +19,11 @@ def client():
 
 @pytest.fixture(scope="module", autouse=True)
 def test_workspace():
-    # used by all tests, so autouse=True
-    with tempfile.TemporaryDirectory() as workspace_backup_path:
-        # backup workspace
-        shutil.copytree(WORKSPACE_PATH, workspace_backup_path, dirs_exist_ok=True)
-        yield
-        # delete workspace modified by test
-        shutil.rmtree(WORKSPACE_PATH)
-        # restore backup
-        shutil.copytree(workspace_backup_path, WORKSPACE_PATH)
+    # backup workspace
+    os.rename(WORKSPACE_PATH, BACKUP_WORKSPACE_PATH)
+    shutil.copytree(TEST_WORKSPACE_PATH, WORKSPACE_PATH, dirs_exist_ok=True)
+    yield
+    # delete workspace modified by test
+    shutil.rmtree(WORKSPACE_PATH)
+    # restore backup
+    os.rename(BACKUP_WORKSPACE_PATH, WORKSPACE_PATH)
