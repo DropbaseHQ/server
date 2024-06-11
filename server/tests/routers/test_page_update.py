@@ -19,6 +19,7 @@ def test_update_page(client):
 
     # check if state has been updated
     state_module = importlib.import_module(f"workspace.{app_name}.{page_name}.state")
+    importlib.reload(state_module)
     Widget1ComponentsState = getattr(state_module, "Widget1ComponentsState", None)
     assert Widget1ComponentsState is not None
     assert "input1" in Widget1ComponentsState.__annotations__
@@ -26,6 +27,7 @@ def test_update_page(client):
 
     # check if context has been updated
     context_module = importlib.import_module(f"workspace.{app_name}.{page_name}.context")
+    importlib.reload(context_module)
     Widget1ComponentsContext = getattr(context_module, "Widget1ComponentsContext", None)
     assert Widget1ComponentsContext is not None
     assert "input1" in Widget1ComponentsContext.__annotations__
@@ -52,6 +54,7 @@ def test_save_columns(client):
 
     # check if state has been updated
     state_module = importlib.import_module(f"workspace.{app_name}.{page_name}.state")
+    importlib.reload(state_module)
     Table1ColumnsState = getattr(state_module, "Table1ColumnsState", None)
     assert Table1ColumnsState is not None
     for column in save_columns:
@@ -59,6 +62,7 @@ def test_save_columns(client):
 
     # check if context has been updated
     context_module = importlib.import_module(f"workspace.{app_name}.{page_name}.context")
+    importlib.reload(context_module)
     Table1ColumnsContext = getattr(context_module, "Table1ColumnsContext", None)
     assert Table1ColumnsContext is not None
     for column in save_columns:
