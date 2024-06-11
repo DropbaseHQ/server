@@ -1,0 +1,24 @@
+{
+    "table1":{
+        "name":"table1",
+        "label":"Table 1",
+        "block_type": "table",
+        "columns": [],
+        "header": [],
+        "footer": [],
+        "w": 3,
+        "h": 1,
+        "x": 0,
+        "y": 0
+    },
+    "widget1": {
+        "name": "widget1",
+        "label": "Widget 1",
+        "block_type": "widget",
+        "components": [],
+        "w": 1,
+        "h": 1,
+        "x": 3,
+        "y": 0
+    }
+}

@@ -12,7 +12,7 @@ router = APIRouter(prefix="/function", tags=["function"], responses=DEFAULT_RESP
 
 
 # run function
-@router.post("/class")
+@router.post("/class/")
 async def run_class_req(req: RunClass, response: Response):
     # TODO: move this to controllers
     try:

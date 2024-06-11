@@ -2,7 +2,6 @@ import json
 import os
 import shutil
 
-from server.controllers.workspace import get_subdirectories
 from server.helpers.boilerplate import app_properties_boilerplate
 
 
@@ -116,3 +115,11 @@ def get_workspace_apps():
             }
         )
     return app_response
+
+
+def get_subdirectories(path):
+    return [
+        name
+        for name in os.listdir(path)
+        if os.path.isdir(os.path.join(path, name)) and name != "__pycache__"
+    ]

@@ -1,0 +1,61 @@
+{
+  "table1": {
+    "name": "table1",
+    "label": "Table 1",
+    "block_type": "table",
+    "columns": [
+      {
+        "name": "order_id",
+        "data_type": "int64",
+        "display_type": "integer",
+        "column_type": "python"
+      },
+      {
+        "name": "user_id",
+        "data_type": "int64",
+        "display_type": "integer",
+        "column_type": "python"
+      },
+      {
+        "name": "product_name",
+        "data_type": "object",
+        "display_type": "text",
+        "column_type": "python"
+      },
+      {
+        "name": "quantity",
+        "data_type": "int64",
+        "display_type": "integer",
+        "column_type": "python"
+      },
+      {
+        "name": "total_price",
+        "data_type": "float64",
+        "display_type": "float",
+        "column_type": "python"
+      },
+      {
+        "name": "order_date",
+        "data_type": "object",
+        "display_type": "text",
+        "column_type": "python"
+      }
+    ],
+    "header": [],
+    "footer": [],
+    "w": 3,
+    "h": 1,
+    "x": 0,
+    "y": 0
+  },
+  "widget1": {
+    "name": "widget1",
+    "label": "Widget 1",
+    "block_type": "widget",
+    "components": [],
+    "w": 1,
+    "h": 1,
+    "x": 3,
+    "y": 0
+  }
+}
