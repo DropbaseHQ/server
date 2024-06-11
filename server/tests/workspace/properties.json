@@ -8,6 +8,9 @@
     },
     "pages": {
       "label": "pages"
+    },
+    "functions": {
+      "label": "functions"
     }
   }
 }
