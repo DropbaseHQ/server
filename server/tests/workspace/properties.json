@@ -5,6 +5,9 @@
     },
     "app_delete": {
       "label": "app_delete"
+    },
+    "pages": {
+      "label": "pages"
     }
   }
 }
