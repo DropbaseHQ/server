@@ -170,8 +170,6 @@ class Widget(BaseModel):
     name: str
     label: str
     description: Optional[str]
-    type: Literal["base", "modal", "inline"] = "base"
-    in_menu: bool = True
     components: List[comopnents_options]
 
 class BaseColumn(BaseModel):

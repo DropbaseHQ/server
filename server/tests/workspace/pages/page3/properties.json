@@ -78,8 +78,6 @@
     "label": "Widget 1",
     "name": "widget1",
     "description": null,
-    "type": "base",
-    "in_menu": true,
     "components": [
       {
         "component_type": "input",

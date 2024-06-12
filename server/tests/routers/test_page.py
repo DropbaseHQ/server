@@ -101,8 +101,6 @@ get_page1_response = {
             "label": "Widget 1",
             "name": "widget1",
             "description": None,
-            "type": "base",
-            "in_menu": True,
             "components": [],
             "w": 1,
             "h": 1,

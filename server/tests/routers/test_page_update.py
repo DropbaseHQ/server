@@ -94,8 +94,6 @@ update_page_properties = {
         "label": "Widget 1",
         "name": "widget1",
         "description": None,
-        "type": "base",
-        "in_menu": True,
         "components": [
             {
                 "component_type": "button",
