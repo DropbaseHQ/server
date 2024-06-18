@@ -7,6 +7,5 @@ class Onboarding(BaseModel):
     email: str
     first_name: str
     last_name: str
-    use_case: str
+    use_case: Optional[str]
     company: Optional[str]
-    notes: Optional[str]

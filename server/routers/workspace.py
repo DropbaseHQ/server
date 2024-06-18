@@ -28,17 +28,14 @@ def onboarding(request: Onboarding, response: Response):
         "userGroup": "Open Source",
         "source": "Dropbase Onboarding",
     }
-    response = requests.post(ONBOARDING_WORKER_URL, headers=headers, json=data)
-    if response.status_code != 200:
-        return {"message": "Failed to submit onboarding request"}
+    requests.post(ONBOARDING_WORKER_URL, headers=headers, json=data)
 
-    if request.notes:
+    if request.use_case:
         # send notes to slack
-        feedback = f"Feedback from {request.first_name} {request.last_name} ({request.email})\n"
-        feedback += request.notes
-        response = requests.post(SLACK_WEBHOOK_FEEDBACK, headers=headers, json={"text": feedback})
-        if response.status_code != 200:
-            return {"message": "Failed to send notes to slack"}
+        feedback = f"{request.first_name} {request.last_name} ({request.email})\n"
+        if request.use_case:
+            feedback += f"Use case: {request.use_case}"
+        requests.post(SLACK_WEBHOOK_FEEDBACK, headers=headers, json={"text": feedback})
 
     # update workspace properties.json
     path = "workspace/properties.json"
