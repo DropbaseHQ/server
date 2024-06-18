@@ -98,25 +98,6 @@ class AppController:
             return json.load(file)
 
 
-def get_workspace_apps():
-    # TODO: confirm apps exist
-    app_response = []
-    with open("workspace/properties.json", "r") as f:
-        workspace_properties = json.loads(f.read())
-    apps = workspace_properties.get("apps", {})
-    for app_name, app in apps.items():
-        with open(f"workspace/{app_name}/properties.json", "r") as f:
-            app_properties = json.loads(f.read())
-        app_response.append(
-            {
-                "name": app_name,
-                "label": app.get("label"),
-                "pages": [{"name": p, "label": v.get("label")} for p, v in app_properties.items()],
-            }
-        )
-    return app_response
-
-
 def get_subdirectories(path):
     return [
         name

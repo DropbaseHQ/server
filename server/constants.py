@@ -14,3 +14,7 @@ HOST_MOUNTS = server_envs.get("host_mounts") or []
 DEFAULT_RESPONSES = {404: {"description": "Not found"}}
 INFER_TYPE_SAMPLE_SIZE = 50
 WORKER_VERSION = "0.4.*"
+SLACK_WEBHOOK_FEEDBACK = (
+    "https://hooks.slack.com/services/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"
+)
+ONBOARDING_WORKER_URL = "https://onboarding.az-74c.workers.dev/"

@@ -6,6 +6,7 @@ from server.routers.page import router as page_router
 from server.routers.sources import router as sources_router
 from server.routers.status import router as status_router
 from server.routers.websocket import router as websocket_router
+from server.routers.workspace import router as workspace_router
 
 __all__ = [
     "files_router",
@@ -15,5 +16,6 @@ __all__ = [
     "component_router",
     "page_router",
     "websocket_router",
+    "workspace_router",
     "status_router",
 ]
