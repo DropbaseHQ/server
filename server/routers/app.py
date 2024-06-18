@@ -2,7 +2,7 @@ from fastapi import APIRouter, HTTPException
 
 from dropbase.schemas.app import CreateAppRequest, RenameAppRequest
 from server.constants import DEFAULT_RESPONSES
-from server.controllers.app import AppController, get_workspace_apps
+from server.controllers.app import AppController
 from server.controllers.page_controller import PageController
 
 router = APIRouter(prefix="/app", tags=["app"], responses=DEFAULT_RESPONSES)
@@ -36,13 +36,5 @@ def delete_app_req(app_name: str):
         appController = AppController(app_name)
         appController.delete_app()
         return {"message": f"App {app_name} deleted successfully"}
-    except Exception as e:
-        raise HTTPException(status_code=400, detail=str(e))
-
-
-@router.get("/list/")
-def get_user_apps():
-    try:
-        return get_workspace_apps()
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))

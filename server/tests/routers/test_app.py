@@ -45,12 +45,6 @@ def test_rename_app(client):
     assert apps[app_name]["label"] == new_label
 
 
-def test_list_apps(client):
-    response = client.get("/app/list/")
-    assert response.status_code == 200
-    assert isinstance(response.json(), list)
-
-
 def _get_workspace_apps():
     with open("workspace/properties.json", "r") as f:
         workspace_properties = json.loads(f.read())

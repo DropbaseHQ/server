@@ -11,9 +11,17 @@ router = APIRouter(prefix="/workspaces", tags=["workspace"], responses=DEFAULT_R
 
 @router.get("/")
 def get_workspace_properties(response: Response):
-    path = "workspace/properties.json"
-    with open(path, "r") as f:
-        return json.loads(f.read())
+    with open("workspace/properties.json", "r") as f:
+        workspace_properties = json.loads(f.read())
+    apps = workspace_properties.get("apps", {})
+    for app_name, app in apps.items():
+        with open(f"workspace/{app_name}/properties.json", "r") as f:
+            app_properties = json.loads(f.read())
+        workspace_properties["apps"][app_name]["pages"] = (
+            [{"name": p, "label": v.get("label")} for p, v in app_properties.items()],
+        )
+
+    return workspace_properties
 
 
 @router.post("/onboarding")
