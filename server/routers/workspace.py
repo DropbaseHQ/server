@@ -4,7 +4,7 @@ import requests
 from fastapi import APIRouter, Response
 
 from dropbase.schemas.onboarding import Onboarding
-from server.constants import DEFAULT_RESPONSES, ONBOARDING_WORKER_URL, SLACK_WEBHOOK_FEEDBACK
+from server.constants import DEFAULT_RESPONSES, ONBOARDING_URL, SLACK_WEBHOOK_FEEDBACK
 
 router = APIRouter(prefix="/workspaces", tags=["workspace"], responses=DEFAULT_RESPONSES)
 
@@ -26,7 +26,7 @@ def get_workspace_properties(response: Response):
 
 @router.post("/onboarding")
 def onboarding(request: Onboarding, response: Response):
-    # implement onboarding logic here
+    # send onboarding request to Dropbase worker
     headers = {"Content-Type": "application/json"}
     data = {
         "email": request.email,
@@ -36,14 +36,15 @@ def onboarding(request: Onboarding, response: Response):
         "userGroup": "Open Source",
         "source": "Dropbase Onboarding",
     }
-    requests.post(ONBOARDING_WORKER_URL, headers=headers, json=data)
+    requests.post(ONBOARDING_URL, headers=headers, json=data)
 
+    # update Dropbase on slack
+    feedback = f"{request.first_name} {request.last_name} ({request.email})"
+    if request.company:
+        feedback += f" from {request.company}"
     if request.use_case:
-        # send notes to slack
-        feedback = f"{request.first_name} {request.last_name} ({request.email})\n"
-        if request.use_case:
-            feedback += f"Use case: {request.use_case}"
-        requests.post(SLACK_WEBHOOK_FEEDBACK, headers=headers, json={"text": feedback})
+        feedback += f"\nUse case: {request.use_case}"
+    requests.post(SLACK_WEBHOOK_FEEDBACK, headers=headers, json={"text": feedback})
 
     # update workspace properties.json
     path = "workspace/properties.json"
