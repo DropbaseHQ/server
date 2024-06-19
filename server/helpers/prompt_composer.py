@@ -20,7 +20,7 @@ Useful notes:
 - Headers and footers can contain components such as inputs, buttons, selects/dropdowns, boolean/toggles, and text displays
 - Widgets contains components such as inputs, buttons, selects/dropdowns, boolean/toggles, and text displays
 - Action columns, row actions, button columns are used interchangeably
-- For SelectOptions: id must be unique UUID4 string; value must be lowercase, only alphanumeric and _ allowed
+- For SelectOptions: id must be unique UUID4 string; value must be lowercase, only alphanumeric and underscore allowed
 - Each table, widget, component, and column properties MUST be validated against the following python models:
 {component_models}
 
