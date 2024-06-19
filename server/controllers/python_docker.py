@@ -5,7 +5,7 @@ import docker
 from docker.errors import ContainerError
 
 from server.config import worker_envs
-from server.constants import HOST_MOUNTS, HOST_PATH
+from server.constants import AUTO_REMOVE_CONTAINER, HOST_MOUNTS, HOST_PATH
 
 logger = logging.getLogger(__name__)
 
@@ -53,7 +53,7 @@ def run_container(env_vars: dict, docker_script: str = "inside_docker"):
             network="dropbase_default",
             working_dir="/app",
             detach=True,
-            auto_remove=True,
+            auto_remove=AUTO_REMOVE_CONTAINER,
         )
     except ContainerError as e:
         raise e
