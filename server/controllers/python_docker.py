@@ -4,7 +4,8 @@ import logging
 import docker
 from docker.errors import ContainerError
 
-from server.config import server_envs, worker_envs
+from server.config import worker_envs
+from server.constants import AUTO_REMOVE_CONTAINER, HOST_MOUNTS, HOST_PATH
 
 logger = logging.getLogger(__name__)
 
@@ -27,23 +28,20 @@ def run_container(env_vars: dict, docker_script: str = "inside_docker"):
     env_vars = {**env_vars, **worker_envs_str}
 
     # get absolute path of the workspace directory from the environment variable
-    host_path = server_envs.get("host_workspace_path")
     workspace_mount = docker.types.Mount(
-        target="/app/workspace", source=host_path + "/workspace", type="bind"
+        target="/app/workspace", source=HOST_PATH + "/workspace", type="bind"
     )
-    files_mount = docker.types.Mount(target="/app/files", source=host_path + "/files", type="bind")
+    files_mount = docker.types.Mount(target="/app/files", source=HOST_PATH + "/files", type="bind")
     mounts = [workspace_mount, files_mount]
 
     # add additional mounts from the environment variable
-    if server_envs.get("host_mounts"):
-        host_mounts = server_envs.get("host_mounts") or []
-        for mount in host_mounts:
-            # NOTE: we need to get the last part of the path to use as the target since all
-            # directories are mounted to /app
-            dir_name = mount.split("/")[-1]
-            target = f"/app/{dir_name}"
-            source = f"{mount}"
-            mounts.append(docker.types.Mount(target=target, source=source, type="bind"))
+    for mount in HOST_MOUNTS:
+        # NOTE: we need to get the last part of the path to use as the target since all
+        # directories are mounted to /app
+        dir_name = mount.split("/")[-1]
+        target = f"/app/{dir_name}"
+        source = f"{mount}"
+        mounts.append(docker.types.Mount(target=target, source=source, type="bind"))
 
     # Run the Docker container with the mount
     try:
@@ -55,7 +53,7 @@ def run_container(env_vars: dict, docker_script: str = "inside_docker"):
             network="dropbase_default",
             working_dir="/app",
             detach=True,
-            auto_remove=True,
+            auto_remove=AUTO_REMOVE_CONTAINER,
         )
     except ContainerError as e:
         raise e

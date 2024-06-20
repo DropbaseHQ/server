@@ -6,7 +6,7 @@ The Agreement specifies the terms under which Licensor permits the Licensee to e
 
 By using the Software, Licensee confirms they have read this Agreement, understand it, and consent to be bound by its terms, which shall also bind their successors and assigns as permitted herein. Licensee concurrently acknowledges acceptance of the Licensor’s standard Terms of Service, which are incorporated by reference into this Agreement. Licensee's continued use of the Software signifies ongoing agreement to the Terms of Service as updated from time to time.
 
-By agreeing to the terms of this Agreement, you represent and warrant the Licensor that you have full authority to enter this Agreement. You agree to comply with all of these terms and conditions upon any use of the software. 
+By agreeing to the terms of this Agreement, you represent and warrant the Licensor that you have full authority to enter this Agreement. You agree to comply with all of these terms and conditions upon any use of the software.
 
 "Licensee" shall refer to either the individual or the entity that is utilizing the Software as permitted herein.
 
@@ -61,5 +61,3 @@ Neither the discovery nor the inspection of the source code shall imply a licens
 10. GOVERNING LAW
 
 This Agreement shall be governed and interpreted in accordance with the laws of the jurisdiction where Licensor's principal business is located.
-
-

@@ -21,6 +21,8 @@ workspace/*
 !workspace/__init__.py
 .temp/
 *.db
+!files/test.db
+!files/demo.db
 requirements-worker-custom.txt
 
 dump.rdb

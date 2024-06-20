@@ -41,7 +41,7 @@ def create_page_req(request: CreateRenamePageRequest):
     try:
         pageController = PageController(request.app_name, request.page_name)
         pageController.create_page(request.page_label)
-        return {"message": "success"}
+        return {"message": f"Page {request.page_name} created successfully"}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -51,7 +51,7 @@ def update_page_req(request: PageProperties):
     try:
         pageController = PageController(request.app_name, request.page_name)
         pageController.update_page_properties(request.properties)
-        return {"message": "success"}
+        return {"message": f"Page {request.page_name} updated successfully"}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -61,7 +61,7 @@ def rename_page_req(request: CreateRenamePageRequest):
     try:
         pageController = PageController(request.app_name, request.page_name)
         pageController.rename_page(request.page_label)
-        return {"message": "success"}
+        return {"message": f"Page {request.page_name} renamed successfully"}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -71,7 +71,7 @@ def delete_page_req(app_name: str, page_name: str):
     try:
         pageController = PageController(app_name, page_name)
         pageController.delete_page()
-        return {"message": "success"}
+        return {"message": f"Page {page_name} deleted successfully"}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -81,7 +81,7 @@ def save_table_columns_req(request: SaveTableColumns):
     try:
         pageController = PageController(request.app_name, request.page_name)
         pageController.save_table_columns(request.table_name, request.columns)
-        return {"message": "success"}
+        return {"message": f"Table {request.table_name} columns saved successfully"}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 

@@ -13,7 +13,7 @@ pd.DataFrame.to_dtable = to_dtable
 
 
 if __name__ == "__main__":
-    # TODO: maybe move run logic here
+    # NOTE: we need to use host.docker.internal to connect to the host machine's redis. tested on mac
     r = redis.Redis(host="host.docker.internal", port=6379, db=0)
     if os.getenv("type") == "string":
         from dropbase.worker.run_python_string import run
