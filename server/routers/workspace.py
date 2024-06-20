@@ -17,9 +17,8 @@ def get_workspace_properties(response: Response):
     for app_name, app in apps.items():
         with open(f"workspace/{app_name}/properties.json", "r") as f:
             app_properties = json.loads(f.read())
-        workspace_properties["apps"][app_name]["pages"] = (
-            [{"name": p, "label": v.get("label")} for p, v in app_properties.items()],
-        )
+        pages = [{"name": p, "label": v.get("label")} for p, v in app_properties.items()]
+        workspace_properties["apps"][app_name]["pages"] = pages
 
     return workspace_properties
 
