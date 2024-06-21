@@ -32,3 +32,5 @@ if LLMS:
 else:
     DEFAULT_PROVIDER = None
     DEFAULT_MODEL = None
+
+DEFAULT_MAX_TOKENS = 4096

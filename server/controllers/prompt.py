@@ -1,11 +1,11 @@
 import json
 
-import anthropic
+from anthropic import Anthropic
 from openai import OpenAI
 
 from dropbase.schemas.prompt import Prompt
 from server.config import server_envs
-from server.constants import DEFAULT_MODEL, DEFAULT_PROVIDER
+from server.constants import DEFAULT_MAX_TOKENS, DEFAULT_MODEL, DEFAULT_PROVIDER
 from server.controllers.page_controller import PageController
 from server.helpers.prompt_composer import get_func_prompt, get_ui_prompt
 
@@ -61,8 +61,11 @@ class LLMModel:
         return message.choices[0].message.content
 
     def anthropic(self, content: str) -> str:
-        client = anthropic.Anthropic(api_key=self.api_key)
+        client = Anthropic(api_key=self.api_key)
         messages = [{"role": "user", "content": content}]
+        if self.config == {}:
+            # anthropic requires a max_tokens parameter
+            self.config = {"max_tokens": DEFAULT_MAX_TOKENS}
         message = client.messages.create(model=self.model, messages=messages, **self.config)
         return message.content[0].text
 
