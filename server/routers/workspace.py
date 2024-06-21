@@ -4,7 +4,7 @@ import requests
 from fastapi import APIRouter, Response
 
 from dropbase.schemas.onboarding import Onboarding
-from server.constants import DEFAULT_RESPONSES, ONBOARDING_URL, SLACK_WEBHOOK_FEEDBACK
+from server.constants import DEFAULT_RESPONSES, ONBOARDING_URL
 
 router = APIRouter(prefix="/workspaces", tags=["workspace"], responses=DEFAULT_RESPONSES)
 
@@ -25,25 +25,19 @@ def get_workspace_properties(response: Response):
 
 @router.post("/onboarding")
 def onboarding(request: Onboarding, response: Response):
-    # send onboarding request to Dropbase worker
-    headers = {"Content-Type": "application/json"}
-    data = {
-        "email": request.email,
-        "firstName": request.first_name,
-        "lastName": request.last_name,
-        "company": request.company or "N/A",
-        "userGroup": "Open Source",
-        "source": "Dropbase Onboarding",
-    }
-    requests.post(ONBOARDING_URL, headers=headers, json=data)
-
-    # update Dropbase on slack
-    feedback = f"{request.first_name} {request.last_name} ({request.email})"
-    if request.company:
-        feedback += f" from {request.company}"
-    if request.use_case:
-        feedback += f"\nUse case: {request.use_case}"
-    requests.post(SLACK_WEBHOOK_FEEDBACK, headers=headers, json={"text": feedback})
+    try:
+        # send onboarding request to Dropbase worker
+        headers = {"Content-Type": "application/json"}
+        data = {
+            "email": request.email,
+            "firstName": request.first_name,
+            "lastName": request.last_name,
+            "company": request.company or "N/A",
+            "useCase": request.use_case or "N/A",
+        }
+        requests.post(ONBOARDING_URL, headers=headers, json=data)
+    except Exception:
+        pass
 
     # update workspace properties.json
     path = "workspace/properties.json"
@@ -54,7 +48,7 @@ def onboarding(request: Onboarding, response: Response):
         "email": request.email,
         "first_name": request.first_name,
         "last_name": request.last_name,
-        "company": request.company or "N/A",
+        "company": request.company,
     }
     with open(path, "w") as f:
         f.write(json.dumps(ws_properties, indent=2))
