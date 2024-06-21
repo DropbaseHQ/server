@@ -5,6 +5,7 @@ from openai import OpenAI
 
 from dropbase.schemas.prompt import Prompt
 from server.config import server_envs
+from server.constants import DEFAULT_MODEL, DEFAULT_PROVIDER
 from server.controllers.page_controller import PageController
 from server.helpers.prompt_composer import get_func_prompt, get_ui_prompt
 
@@ -19,8 +20,13 @@ def handle_prompt(request: Prompt):
         content = get_func_prompt(base_path, request.prompt)
     elif request.type == "ui":
         content = get_ui_prompt(base_path, request.prompt)
+
+    # Get the provider and model from the request or use the default
+    provider = request.provider or DEFAULT_PROVIDER
+    model = request.model or DEFAULT_MODEL
+
     # Invoke the model with the prompt
-    llmModel = LLMModel()
+    llmModel = LLMModel(provider, model)
     updated_code = llmModel.invoke(content)
     # Remove markdown formatting from the updated code
     new_props = _remove_markdown_formatting(updated_code)
@@ -34,34 +40,30 @@ def handle_prompt(request: Prompt):
 
 
 class LLMModel:
-    def __init__(self):
+    def __init__(self, provider: str, model: str):
         llms = server_envs.get("llm")
-        # openai, anthropic
-        self.provider_name = next(iter(llms))
-        self.provider = llms.get(self.provider_name)
-        # model name
-        self.model_name = next(iter(self.provider))
-        model = self.provider.get(self.model_name)
-        # api_key
-        self.api_key = model.get("api_key")
-        self.config = model.copy()
-        self.config.pop("api_key")
+        self.provider = provider
+        self.model = model
+
+        # api_key and config are required for the provider
+        self.api_key = llms.get(provider).get("api_key")
+        self.config = llms.get(provider).get("config") or {}
 
     def invoke(self, content):
         # call the provider's method by name
-        method = getattr(self, self.provider_name)
+        method = getattr(self, self.provider)
         return method(content)
 
     def openai(self, content: str) -> str:
         client = OpenAI(api_key=self.api_key)
         messages = [{"role": "user", "content": content}]
-        message = client.chat.completions.create(model=self.model_name, messages=messages, **self.config)
+        message = client.chat.completions.create(model=self.model, messages=messages, **self.config)
         return message.choices[0].message.content
 
     def anthropic(self, content: str) -> str:
         client = anthropic.Anthropic(api_key=self.api_key)
         messages = [{"role": "user", "content": content}]
-        message = client.messages.create(model=self.model_name, messages=messages, **self.config)
+        message = client.messages.create(model=self.model, messages=messages, **self.config)
         return message.content[0].text
 
 

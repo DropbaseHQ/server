@@ -19,3 +19,16 @@ SLACK_WEBHOOK_FEEDBACK = (
     "https://hooks.slack.com/services/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"
 )
 ONBOARDING_URL = "https://onboarding.dropbase.io"
+
+# configure default llm provider and model
+LLMS = server_envs.get("llm")
+if LLMS:
+    # get the first provider
+    DEFAULT_PROVIDER = next(iter(LLMS))
+    default_provider_models = {"openai": "gpt-4o", "anthropic": "claude-3-5-sonnet-20240620"}
+    DEFAULT_MODEL = LLMS.get(DEFAULT_PROVIDER).get("model") or default_provider_models.get(
+        DEFAULT_PROVIDER
+    )
+else:
+    DEFAULT_PROVIDER = None
+    DEFAULT_MODEL = None
