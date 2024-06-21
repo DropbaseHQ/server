@@ -15,7 +15,4 @@ AUTO_REMOVE_CONTAINER = server_envs.get("auto_remove_container") or True
 DEFAULT_RESPONSES = {404: {"description": "Not found"}}
 INFER_TYPE_SAMPLE_SIZE = 50
 WORKER_VERSION = "0.4.*"
-SLACK_WEBHOOK_FEEDBACK = (
-    "https://hooks.slack.com/services/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"
-)
 ONBOARDING_URL = "https://onboarding.dropbase.io"
