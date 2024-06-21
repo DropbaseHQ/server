@@ -35,31 +35,33 @@ def handle_prompt(request: Prompt):
 
 class LLMModel:
     def __init__(self):
-
-        default_models = {"openai": "gpt-4o", "anthropic": "claude-3-5-sonnet-20240620"}
         llms = server_envs.get("llm")
+        # openai, anthropic
         self.provider_name = next(iter(llms))
         self.provider = llms.get(self.provider_name)
-        self.api_key = self.provider.get("api_key")
-        self.model = self.provider.get("model") or default_models.get(self.provider_name)
-        self.max_tokens = self.provider.get("max_tokens") or 4096
+        # model name
+        self.model_name = next(iter(self.provider))
+        model = self.provider.get(self.model_name)
+        # api_key
+        self.api_key = model.get("api_key")
+        self.config = model.copy()
+        self.config.pop("api_key")
 
     def invoke(self, content):
+        # call the provider's method by name
         method = getattr(self, self.provider_name)
         return method(content)
 
     def openai(self, content: str) -> str:
         client = OpenAI(api_key=self.api_key)
         messages = [{"role": "user", "content": content}]
-        message = client.chat.completions.create(
-            model=self.model, max_tokens=self.max_tokens, messages=messages
-        )
+        message = client.chat.completions.create(model=self.model_name, messages=messages, **self.config)
         return message.choices[0].message.content
 
     def anthropic(self, content: str) -> str:
         client = anthropic.Anthropic(api_key=self.api_key)
         messages = [{"role": "user", "content": content}]
-        message = client.messages.create(model=self.model, max_tokens=self.max_tokens, messages=messages)
+        message = client.messages.create(model=self.model_name, messages=messages, **self.config)
         return message.content[0].text
 
 
