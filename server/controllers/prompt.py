@@ -7,33 +7,40 @@ from dropbase.schemas.prompt import Prompt
 from server.config import server_envs
 from server.constants import DEFAULT_MAX_TOKENS, DEFAULT_MODEL, DEFAULT_PROVIDER
 from server.controllers.page_controller import PageController
-from server.helpers.prompt_composer import get_func_prompt, get_ui_prompt
+from server.helpers.prompt_composer import determine_what_to_update, get_func_prompt, get_ui_prompt
 
 
 def handle_prompt(request: Prompt):
     if not server_envs.get("llm"):
         raise Exception("API key for an LLM model is missing")
 
-    # Get the prompt content
-    base_path = f"workspace/{request.app_name}/{request.page_name}/"
-    if request.type == "function":
-        content = get_func_prompt(base_path, request.prompt)
-    elif request.type == "ui":
-        content = get_ui_prompt(base_path, request.prompt)
-
     # Get the provider and model from the request or use the default
     provider = request.provider or DEFAULT_PROVIDER
     model = request.model or DEFAULT_MODEL
 
-    # Invoke the model with the prompt
+    # init model
     llmModel = LLMModel(provider, model)
+
+    # Get the prompt content
+    infer_content_type = determine_what_to_update(request.app_name, request.page_name, request.prompt)
+    content_type = llmModel.invoke(infer_content_type)
+
+    # Get the prompt content
+    base_path = f"workspace/{request.app_name}/{request.page_name}/"
+    if "properties.json" in content_type:
+        content = get_ui_prompt(base_path, request.prompt)
+    elif "main.py" in content_type:
+        content = get_func_prompt(base_path, request.prompt)
+    else:
+        raise Exception("Please clarify your request")
+
     updated_code = llmModel.invoke(content)
     # Remove markdown formatting from the updated code
     new_props = _remove_markdown_formatting(updated_code)
 
-    if request.type == "function":
+    if "main.py" in content_type:
         return new_props
-    if request.type == "ui":
+    if "properties.json" in content_type:
         pageController = PageController(request.app_name, request.page_name)
         pageController.update_page_properties(json.loads(new_props))
         return {"message": "success"}
