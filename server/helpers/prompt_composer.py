@@ -1,5 +1,9 @@
+import ast
 import json
 
+import astor
+
+from dropbase.helpers.utils import read_page_properties
 from server.controllers.sources import get_env_vars, get_source_name_type
 
 
@@ -218,3 +222,112 @@ class Table(BaseModel):
     columns: List[columns_options]
     header: List[comopnents_options]
     footer: List[comopnents_options]"""
+
+
+def determine_what_to_update(app_name: str, page_name: str, user_prompt: str):
+    code = get_page_methods(app_name, page_name)
+    props = get_page_props(app_name, page_name)
+
+    return f"""A Dropbase web framework uses 2 files to define a page:
+- `properties.json`: Describes the UI components, their properties, and page layout. Components could be tables, widgets, inputs, buttons, booleans, selects, and text.
+
+properties.json contains the following:
+{props}
+
+- `main.py`: Describes component logic, such as getting, updating, editing, and deleting table data or an action when a component is triggered. The button component has an on_click handler, the select component has on_select, the input component has on_submit, and the boolean component has on_toggle. It's important to note that main.py cannot update the logic for a component that is not declared in properties.json.
+
+main.py has the following classes and methods:
+```python
+{code}
+```
+
+Given this command:
+
+{user_prompt}
+
+determine which file must be updated: respond with just one word: `properties.json` or `main.py`.
+
+If the command is not related to either, respond with `none`.
+
+Never include clarifications or other information in your response."""
+
+
+def get_page_props(app_name: str, page_name: str):
+    properties = read_page_properties(app_name, page_name)
+    props = ""
+    for key, value in properties.items():
+        if value.get("block_type") == "table":
+            props += f"Table {key} has "
+            if len(value["columns"]) > 0:
+                props += "the following columns: "
+                for col in value["columns"]:
+                    props += f'{col["name"]} of type {col["data_type"]}, '
+                props = props[:-2] + ".\n"
+            else:
+                props += " no columns.\n"
+
+            props += f"Table {key} header has"
+            if len(value["header"]) > 0:
+                props += "the following components: "
+                for comp in value["header"]:
+                    props += f'{comp["name"]} of type {comp["component_type"]}, '
+                props = props[:-2] + ".\n"
+            else:
+                props += " no components.\n"
+
+            props += f"Table {key} footer has"
+            if len(value["footer"]) > 0:
+                props += "the following components: "
+                for comp in value["footer"]:
+                    props += f'{comp["name"]} of type {comp["component_type"]}, '
+                props = props[:-2] + ".\n"
+            else:
+                props += " no components.\n"
+
+        elif value.get("block_type") == "widget":
+            props += f"Widget {key} has "
+            if len(value["components"]) > 0:
+                props += "the following components: "
+                for comp in value["components"]:
+                    props += f'{comp["name"]} of type {comp["component_type"]}, '
+                props = props[:-2] + ".\n"
+            else:
+                props += " no components.\n"
+        props += "\n"
+    return props
+
+
+class MethodDeclarationTrimmer(ast.NodeTransformer):
+    def visit_FunctionDef(self, node):
+        # Replace the function body with [pass]
+        node.body = [ast.Pass()]
+        return node
+
+    def visit_Import(self, node):
+        # Remove import statements
+        return None
+
+    def visit_ImportFrom(self, node):
+        # Remove import-from statements
+        return None
+
+
+def trim_method_declarations(source_code):
+    tree = ast.parse(source_code)
+    trimmer = MethodDeclarationTrimmer()
+    trimmed_tree = trimmer.visit(tree)
+    trimmed_code = astor.to_source(trimmed_tree)
+
+    # Removing extra spaces
+    lines = trimmed_code.split("\n")
+    non_empty_lines = [line for line in lines if line.strip() != ""]
+    return "\n".join(non_empty_lines)
+
+
+def get_page_methods(app_name: str, page_name: str):
+    file_path = f"workspace/{app_name}/{page_name}/main.py"
+
+    with open(file_path, "r") as file:
+        source_code = file.read()
+
+    return trim_method_declarations(source_code)
