@@ -32,18 +32,18 @@ def handle_prompt(request: Prompt):
     elif "main.py" in content_type:
         content = get_func_prompt(base_path, request.prompt)
     else:
-        raise Exception("Please clarify your request")
+        return {"type": "none", "message": "Please clarify your request"}
 
     updated_code = llmModel.invoke(content)
     # Remove markdown formatting from the updated code
     new_props = _remove_markdown_formatting(updated_code)
 
     if "main.py" in content_type:
-        return new_props
+        return {"type": "logic", "message": new_props}
     if "properties.json" in content_type:
         pageController = PageController(request.app_name, request.page_name)
         pageController.update_page_properties(json.loads(new_props))
-        return {"message": "success"}
+        return {"type": "ui", "message": "success"}
 
 
 class LLMModel:
