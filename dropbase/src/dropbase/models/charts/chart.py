@@ -1,10 +1,13 @@
-from typing import Annotated, Any, Literal, Optional, Union
+from typing import Annotated, Any, List, Literal, Optional, Union
 
 from pydantic import BaseModel
 from pydantic.main import ModelMetaclass
 
 from dropbase.models.category import PropertyCategory
 from dropbase.models.charts.bar import Bar
+from dropbase.models.charts.line import Line
+from dropbase.models.charts.pie import Pie
+from dropbase.models.charts.scatter import Scatter
 
 
 class ChartContextProperty(BaseModel):
@@ -13,6 +16,16 @@ class ChartContextProperty(BaseModel):
     message_type: Optional[str]
 
 
+class XAxis(BaseModel):
+    type: Literal["category", "value", "time", "log"] = "category"
+    data_column: Optional[str]
+
+
+class YAxis(BaseModel):
+    type: Literal["category", "value", "time", "log"] = "value"
+
+
+# https://echarts.apache.org/en/option.html#series-bar
 class ChartProperty(BaseModel):
     block_type: Literal["chart"]
 
@@ -21,7 +34,10 @@ class ChartProperty(BaseModel):
     name: Annotated[str, PropertyCategory.default]
     description: Annotated[Optional[str], PropertyCategory.default]
 
-    options: Union[Bar]
+    xAxis: Annotated[Optional[XAxis], PropertyCategory.default]
+    yAxis: Annotated[Optional[YAxis], PropertyCategory.default]
+
+    series: List[Union[Bar, Line, Pie, Scatter]] = []
 
     # position
     w: Annotated[Optional[int], PropertyCategory.internal] = 1
