@@ -7,6 +7,7 @@ from pydantic import Field, create_model
 from dropbase.helpers.dataframe import to_dtable
 from dropbase.helpers.display_rules import run_display_rule
 from dropbase.helpers.utils import _dict_from_pydantic_model, get_empty_context, get_state_context_model
+from dropbase.models.charts import ChartProperty
 from dropbase.models.common import BaseContext
 from dropbase.models.widget import WidgetProperty
 
@@ -31,6 +32,8 @@ def generate_context_model(properties):
                 **{"components": (components_class, ...)},
                 __base__=value.context,
             )
+        elif isinstance(value, ChartProperty):
+            locals()[class_name] = create_model(class_name, __base__=value.context)
         else:
             # create table context model
             columns_dir = {}
@@ -117,6 +120,9 @@ def compose_state_model(properties):
             components_class_name = key.capitalize() + "ComponentsState"
             components_class = create_model(components_class_name, **components_dir)
             locals()[class_name] = create_model(class_name, **{"components": (components_class, ...)})
+            state[key] = (locals()[class_name], ...)
+        elif isinstance(value, ChartProperty):
+            pass
         else:
             header_dir = compose_components_dir(value.header)
             header_class_name = key.capitalize() + "HeaderState"
@@ -146,7 +152,7 @@ class {table_update_class_name}(BaseModel):
     new: {columns_class_name}
     old: {columns_class_name}\n"""
 
-        state[key] = (locals()[class_name], ...)
+            state[key] = (locals()[class_name], ...)
     return create_model("State", **state), table_update_classes
 
 
