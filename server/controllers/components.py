@@ -1,6 +1,7 @@
 import operator
 from functools import reduce
 
+from dropbase.models.charts import BarProperty, ChartProperty, LineProperty, PieProperty, ScatterProperty
 from dropbase.models.common import DisplayTypeConfigurations
 from dropbase.models.table import ButtonColumnProperty, PgColumnProperty, PyColumnProperty, TableProperty
 from dropbase.models.table.mysql_column import MySqlColumnProperty
@@ -30,6 +31,11 @@ component_property_types = {
     "select": SelectProperty,
     "boolean": BooleanProperty,
     "display_type_configurations": DisplayTypeConfigurations,
+    "chart": ChartProperty,
+    "bar": BarProperty,
+    "line": LineProperty,
+    "pie": PieProperty,
+    "scatter": ScatterProperty,
 }
 
 

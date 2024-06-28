@@ -4,10 +4,10 @@ from pydantic import BaseModel
 from pydantic.main import ModelMetaclass
 
 from dropbase.models.category import PropertyCategory
-from dropbase.models.charts.bar import Bar
-from dropbase.models.charts.line import Line
-from dropbase.models.charts.pie import Pie
-from dropbase.models.charts.scatter import Scatter
+from dropbase.models.charts.bar import BarProperty
+from dropbase.models.charts.line import LineProperty
+from dropbase.models.charts.pie import PieProperty
+from dropbase.models.charts.scatter import ScatterProperty
 
 
 class ChartContextProperty(BaseModel):
@@ -37,7 +37,7 @@ class ChartProperty(BaseModel):
     xAxis: Annotated[Optional[XAxis], PropertyCategory.default]
     yAxis: Annotated[Optional[YAxis], PropertyCategory.default]
 
-    series: List[Union[Bar, Line, Pie, Scatter]] = []
+    series: List[Union[BarProperty, LineProperty, PieProperty, ScatterProperty]] = []
 
     # position
     w: Annotated[Optional[int], PropertyCategory.internal] = 1

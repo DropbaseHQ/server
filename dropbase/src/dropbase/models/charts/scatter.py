@@ -3,7 +3,8 @@ from typing import Literal
 from pydantic import BaseModel
 
 
-class Scatter(BaseModel):
-    # mabye use the same type for both
-    chart_type: Literal["scatter"]
+class ScatterProperty(BaseModel):
+    series_type: Literal["scatter"]
+    # column name
     x_axis: str
+    y_axis: str

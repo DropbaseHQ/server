@@ -3,7 +3,7 @@ from typing import Literal
 from pydantic import BaseModel
 
 
-class Line(BaseModel):
-    # mabye use the same type for both
-    chart_type: Literal["line"]
-    x_axis: str
+class LineProperty(BaseModel):
+    series_type: Literal["line"]
+    # column name
+    data_column: str
